@@ -6,6 +6,20 @@
 # Fork PRs never see them. No pull_request_target. Firmware is fetched to a
 # cache OUTSIDE the repo and deleted after the run; never cached, never an
 # artifact (a fork PR could otherwise restore it from the base-branch cache).
+#
+# Three jobs, least privilege each:
+#   plan     read-only; lists the stale catalog entries
+#   oracle   read-only + firmware secrets; one job per stale entry, uploads
+#            ONLY its manifest.tsv as an artifact
+#   publish  write token, no secrets, no firmware; collects every manifest
+#            and opens ONE pull request (parallel oracle jobs never race for
+#            the PR branch)
+#
+# Injection hygiene: no ${{ }} expression is ever expanded inside a `run:`
+# script. Values reach the shell only through `env:` and are always quoted.
+# plan.py validates every catalog entry (plain-name product / version /
+# filenames, https vendor hosts) before it can reach the matrix. Third-party
+# actions are pinned to full commit SHAs.
 name: oracle
 on:
   push:
@@ -14,16 +28,16 @@ on:
   schedule:
     - cron: "0 4 * * 1"   # weekly
 permissions:
-  contents: write         # the final job opens a PR with changed TSVs
-  pull-requests: write
+  contents: read
 jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
       - run: pip install pyyaml
       # Emit the catalog entries whose (image sha256, tool version) key is not
@@ -46,24 +60,67 @@ jobs:
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
       - run: pip install pyyaml boto3
       - run: sudo apt-get update && sudo apt-get install -y e2fsprogs
-      - name: fetch (verified by sha256, cache is outside the repo)
-        run: echo "IMG=$(python tools/fwfetch.py ${{ matrix.entry }})" >> "$GITHUB_ENV"
-      - name: unpack -> manifest
+      # One step, no $GITHUB_ENV hop: the image path never becomes an env
+      # assignment, and a failed fetch fails the step (plain assignment, not
+      # a substitution inside echo). The manifest is staged under out/ so the
+      # artifact holds that one file and nothing else.
+      - name: fetch (sha256-verified, cache outside the repo) and unpack -> manifest
+        env:
+          ENTRY: ${{ matrix.entry }}
         run: |
-          out="results/$(python tools/plan.py --result-path ${{ matrix.entry }})"
-          python tools/unpack.py ${{ matrix.entry }} "$IMG" -o "$out"
+          img="$(python tools/fwfetch.py "$ENTRY")"
+          rel="$(python tools/plan.py --result-path "$ENTRY")"
+          python tools/unpack.py "$ENTRY" "$img" -o "out/$rel"
       - name: delete firmware from the runner
         if: always()
         run: rm -rf ~/.cache/own-fw
-      - name: guard
-        run: python tools/guard.py
-      - uses: peter-evans/create-pull-request@v6
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
+          name: manifest-${{ strategy.job-index }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: [plan, oracle]
+    if: ${{ needs.plan.outputs.matrix != '[]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          pattern: manifest-*
+          merge-multiple: true
+          path: incoming
+      # Only <product>/<version>/manifest.tsv may come through; anything else
+      # in the artifacts fails the job before it can reach the PR.
+      - name: accept manifests only
+        run: |
+          find incoming -type f | while IFS= read -r f; do
+            rel="${f#incoming/}"
+            if ! printf '%s\n' "$rel" | grep -Eqx '[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*/manifest\.tsv'; then
+              echo "unexpected file in artifacts: $rel" >&2
+              exit 1
+            fi
+            mkdir -p "results/$(dirname "$rel")"
+            cp "$f" "results/$rel"
+          done
+          rm -rf incoming
+      # guard also checks untracked files, i.e. the manifests just copied in.
+      - name: guard
+        run: python3 tools/guard.py
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+        with:
+          add-paths: results
           branch: oracle/update-results
           title: "oracle: refresh firmware manifests"
           commit-message: "oracle: refresh firmware manifests"

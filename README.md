@@ -57,6 +57,14 @@ python tools/guard.py
 A clean re-run must produce a **zero diff** (sorted TSV, no timestamps) — that's
 the reproducibility check.
 
+`unpack.py` refuses any file that is not the catalog's wrapper (size + SHA-256)
+or that does not contain the catalog's inner image, and roots every manifest
+path at `wrapper.filename`, so the cache copy and a local copy give the same
+TSV. Symlinks inside a filesystem are recorded as `symlink` rows (target
+hashed), never followed. Every catalog file is validated by `tools/schema.py`:
+plain-name product / version / filenames at `catalog/<product>/<version>.yaml`,
+and `https://` vendor URLs on an allow-listed BTicino / Legrand host.
+
 ## Catalog: MH200N 1.1.8 (first entry)
 
 The MH200N firmware is a public BTicino download, so CI can fetch + verify it
@@ -100,3 +108,4 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 
 [Apache License 2.0](LICENSE). Covers this repo's own tooling, results and
 findings only — never any vendor firmware, which is not redistributed here.
+The scope and copyright line are in [NOTICE](NOTICE).

@@ -1,0 +1,13 @@
+own-firmware-oracle
+Copyright 2026 The own-firmware-oracle contributors (OpenWebNet-HA)
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The license covers the contents of this repository only: the tooling, the
+catalog metadata, the generated results (manifests, TSVs) and the findings.
+
+It does not cover, and this repository does not contain or redistribute, any
+BTicino / Legrand firmware, software or other vendor material. Catalog entries
+and manifests record facts about such material (names, sizes, SHA-256 hashes,
+download locations); the material itself remains the property of its owners
+and is obtained by each user from the vendor or from their own devices.
