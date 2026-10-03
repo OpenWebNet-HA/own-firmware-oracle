@@ -1,0 +1,3 @@
+# oracle.yml / reproduce.yml: fetch + unpack. boto3 only for R2 sources.
+pyyaml
+boto3

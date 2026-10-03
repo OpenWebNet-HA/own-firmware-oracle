@@ -1,5 +1,7 @@
-# Keeps the SHA-pinned actions current: Dependabot bumps the SHA and its
-# "# vX.Y.Z" comment together, one grouped PR a month.
+# Keeps the supply-chain pins current, one grouped PR per ecosystem a month:
+#   github-actions  bumps each SHA and its "# vX.Y.Z" comment together
+#   pip             re-locks requirements/*.txt from the .in files, hashes
+#                   included (Dependabot understands pip-compile output)
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -11,5 +13,16 @@ updates:
     open-pull-requests-limit: 3
     groups:
       github-actions:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/requirements"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "deps"
+    open-pull-requests-limit: 3
+    groups:
+      python:
         patterns:
           - "*"

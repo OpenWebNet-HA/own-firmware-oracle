@@ -6,9 +6,11 @@
 # a manifest that is supposed to re-run to a zero diff.
 #
 # Secrets live ONLY in a protected `firmware` environment limited to `main`.
-# Fork PRs never see them. No pull_request_target. Firmware is fetched to a
-# cache OUTSIDE the repo and deleted after the run; never cached, never an
-# artifact (a fork PR could otherwise restore it from the base-branch cache).
+# Fork PRs never see them. No pull_request_target. Firmware is fetched to
+# $RUNNER_TEMP (outside the repo) and deleted after the job; never cached,
+# never an artifact (a fork PR could otherwise restore it from the base-branch
+# cache). reproduce.yml is the read-only twin: it re-runs FRESH entries and
+# fails if they no longer come out byte for byte.
 #
 # Three jobs, least privilege each:
 #   plan     read-only; lists the stale catalog entries
@@ -36,9 +38,13 @@ permissions:
 concurrency:
   group: oracle
   cancel-in-progress: false
+defaults:
+  run:
+    shell: bash  # -eo pipefail
 jobs:
   plan:
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
@@ -46,7 +52,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
-      - run: pip install pyyaml
+      - run: pip install --require-hashes -r requirements/oracle.txt
       # Emit the catalog entries whose (image sha256, tool version) key is not
       # yet reflected in results/. Only out-of-date images get rebuilt.
       - id: plan
@@ -56,6 +62,7 @@ jobs:
     needs: plan
     if: ${{ needs.plan.outputs.matrix != '[]' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     environment: firmware        # protected; only main can read the secrets
     strategy:
       max-parallel: 4
@@ -71,7 +78,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
-      - run: pip install pyyaml boto3
+      - run: pip install --require-hashes -r requirements/oracle.txt
       - run: sudo apt-get update && sudo apt-get install -y e2fsprogs
       # One step, no $GITHUB_ENV hop: the image path never becomes an env
       # assignment, and a failed fetch fails the step (plain assignment, not
@@ -80,13 +87,14 @@ jobs:
       - name: fetch (sha256-verified, cache outside the repo) and unpack -> manifest
         env:
           ENTRY: ${{ matrix.entry }}
+          OWN_FW_CACHE: ${{ runner.temp }}/own-fw
         run: |
           img="$(python tools/fwfetch.py "$ENTRY")"
           rel="$(python tools/plan.py --result-path "$ENTRY")"
           python tools/unpack.py "$ENTRY" "$img" -o "out/$rel"
       - name: delete firmware from the runner
         if: always()
-        run: rm -rf ~/.cache/own-fw
+        run: rm -rf "$RUNNER_TEMP/own-fw"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: manifest-${{ strategy.job-index }}
@@ -98,6 +106,7 @@ jobs:
     needs: [plan, oracle]
     if: ${{ needs.plan.outputs.matrix != '[]' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -134,3 +143,10 @@ jobs:
           branch: oracle/update-results
           title: "oracle: refresh firmware manifests"
           commit-message: "oracle: refresh firmware manifests"
+          body: |
+            Rebuilt by the `oracle` workflow for every catalog entry whose
+            (image sha256, tool_version) key was not yet in `results/`.
+            Only `<product>/<version>/manifest.tsv` files pass the publish job,
+            and `tools/guard.py` ran over them. Once merged, `reproduce`
+            re-checks these manifests every week.
+          delete-branch: true
