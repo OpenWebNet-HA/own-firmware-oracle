@@ -9,7 +9,8 @@ never committed.
 Layers handled (auto-detected by magic, not hard-coded per image):
   zip                       wrapper and inner archives (ZipCrypto via the
                             catalog's documented password_scheme -- known
-                            vendor strings, tried in order; no brute force)
+                            vendor strings, tried in order; no brute force);
+                            Unix symlink members recorded as symlinks
   uImage (0x27051956)       64-byte U-Boot header stripped, payload recursed
   gzip / bzip2 / xz / lzma  decompressed in memory, payload recursed
   tar / cpio (newc, odc)    members recursed in memory; symlinks recorded
@@ -45,6 +46,7 @@ import tarfile
 import tempfile
 import zipfile
 import zlib
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TypedDict
@@ -58,7 +60,12 @@ from schema import CatalogEntry
 # 2: paths rooted at wrapper.filename; symlinks recorded instead of followed.
 # 3: ELF tags carry word size, byte order and ARM ABI; more container formats;
 #    ARM zImage recognised.
-TOOL_VERSION = "3"
+# 4: zip members stored as Unix symlinks are typed `symlink`, not `data`
+#    (size and sha256 were already those of the link text); empty
+#    directories of an archive or filesystem get a `dir` row.
+TOOL_VERSION = "4"
+# Row type of an empty directory; size 0, sha256 of no bytes.
+DIR_TYPE = "dir"
 
 SAFE_DEBUGFS_PATH = re.compile(r"[A-Za-z0-9_./+-]+")
 # Manifest fields are TSV: a tab or newline in a member name would add a
@@ -101,7 +108,8 @@ EF_ARM_ABI_FLOAT_HARD = 0x400
 TAR_MAGIC_OFFSET = 257
 CPIO_NEWC = (b"070701", b"070702")
 CPIO_ODC = b"070707"
-S_IFMT, S_IFREG, S_IFLNK = 0o170000, 0o100000, 0o120000
+S_IFMT, S_IFREG, S_IFLNK, S_IFDIR = 0o170000, 0o100000, 0o120000, 0o040000
+ZIP_UNIX = 3  # ZipInfo.create_system: external_attr's high word is a Unix mode
 
 
 class Row(TypedDict):
@@ -291,6 +299,19 @@ def _unzip(
     return out
 
 
+def _zip_kinds(data: bytes) -> tuple[set[str], list[str]]:
+    """(symlink members, directory members). A symlink is a member whose Unix
+    mode says so; its content is the link text, and zipfile reads it as an
+    ordinary file."""
+    infos = zipfile.ZipFile(io.BytesIO(data)).infolist()
+    links = {
+        i.filename
+        for i in infos
+        if i.create_system == ZIP_UNIX and (i.external_attr >> 16) & S_IFMT == S_IFLNK
+    }
+    return links, [i.filename for i in infos if i.is_dir()]
+
+
 def _strip_uimage(data: bytes) -> bytes:
     return data[64:]  # 64-byte legacy U-Boot header, then the payload
 
@@ -333,6 +354,12 @@ def _unlzma(data: bytes, fmt: int, limit: int = MAX_DECOMPRESS) -> bytes:
 
 # (relative path, file bytes, link target): exactly one of the last two is set
 Entry = tuple[str, bytes | None, str | None]
+# Called once per member of an archive or filesystem tree, as (container row
+# path, separator, member path, file bytes, link target); container + separator
+# + member is the member's manifest path. oracle/stage.py uses it to rebuild a
+# sysroot from exactly the bytes the manifest describes, without a second
+# extractor.
+Sink = Callable[[str, str, str, bytes | None, str | None], None]
 
 
 def _check_total(kind: str, entries: list[Entry], limit: int) -> list[Entry]:
@@ -345,6 +372,7 @@ def _check_total(kind: str, entries: list[Entry], limit: int) -> list[Entry]:
 def _tar_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
     """Members of an uncompressed tar, in memory (compression is its own layer)."""
     out: list[Entry] = []
+    dirs: list[str] = []
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:") as tf:
         members = tf.getmembers()
         if sum(m.size for m in members if m.isfile()) > limit:
@@ -356,12 +384,16 @@ def _tar_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
             elif m.isfile() or m.islnk():
                 fh = tf.extractfile(m)
                 out.append((name, fh.read() if fh else b"", None))
-    return sorted(out, key=lambda e: e[0])
+            elif m.isdir():
+                dirs.append(name)
+    return with_empty_dirs(out, dirs)
 
 
 def _cpio_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
-    """Regular files and symlinks of a newc/crc or odc cpio archive."""
+    """Regular files, symlinks and empty directories of a newc/crc or odc cpio
+    archive."""
     out: list[Entry] = []
+    dirs: list[str] = []
     pos, total = 0, 0
     while pos < len(data):
         magic = data[pos : pos + 6]
@@ -401,8 +433,10 @@ def _cpio_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
             out.append((name, None, body.decode("utf-8", "replace")))
         elif mode & S_IFMT == S_IFREG:
             out.append((name, body, None))
+        elif mode & S_IFMT == S_IFDIR:
+            dirs.append(name)
         pos = next_at
-    return sorted(out, key=lambda e: e[0])
+    return with_empty_dirs(out, dirs)
 
 
 def _tree_entries(root: Path) -> list[Entry]:
@@ -414,6 +448,7 @@ def _tree_entries(root: Path) -> list[Entry]:
     does not descend into symlinked directories either.
     """
     out: list[Entry] = []
+    dirs: list[str] = []
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames + filenames:
             p = Path(dirpath) / name
@@ -424,7 +459,27 @@ def _tree_entries(root: Path) -> list[Entry]:
                 out.append((rel, None, os.readlink(p)))  # noqa: PTH115
             elif name in filenames and p.is_file():
                 out.append((rel, p.read_bytes(), None))
-    return sorted(out, key=lambda e: e[0])
+            elif name in dirnames:
+                dirs.append(rel)
+    return with_empty_dirs(out, dirs)
+
+
+def with_empty_dirs(entries: list[Entry], dirs: list[str]) -> list[Entry]:
+    """Sorted entries plus (dir, None, None) for every directory nothing else
+    lives under.
+
+    Directories that hold an entry are implied by its path; an EMPTY one (a
+    rootfs's /var, /tmp, /mnt) would otherwise vanish from the manifest, and a
+    sysroot staged from it would lack directories the firmware writes into.
+    """
+    have = {e[0].strip("/") for e in entries}
+    wanted = {d.strip("/") for d in dirs} - {""}
+    occupied: set[str] = set()
+    for name in have | wanted:
+        parts = name.split("/")
+        occupied.update("/".join(parts[:i]) for i in range(1, len(parts)))
+    empty: list[Entry] = [(d, None, None) for d in wanted - occupied - have]
+    return sorted([*entries, *empty], key=lambda e: e[0])
 
 
 # Extraction tools run unconfined only when main() is told --no-sandbox.
@@ -538,25 +593,45 @@ class Walk:
     work: Path
     limit: int = MAX_DECOMPRESS
     rows: list[Row] = field(default_factory=list)
+    sink: Sink | None = None
 
 
 def _record_tree(
     w: Walk, name: str, entries: list[Entry], depth: int, sep: str
 ) -> None:
     for fpath, blob, target in entries:
-        if target is not None:
-            # The target is recorded by hash, like file contents, so the
-            # TSV stays one line per entry whatever the link text holds.
-            link = os.fsencode(target)
+        if blob is None and target is None:
+            # An empty directory (with_empty_dirs): a row so the sysroot
+            # staged from the manifest has it, hashed like an empty file
+            # since it has no content; never walked.
             w.rows.append(
                 {
                     "path": f"{name}{sep}{fpath}",
+                    "type": DIR_TYPE,
+                    "size": 0,
+                    "sha256": sha256(b""),
+                }
+            )
+            if w.sink:
+                w.sink(name, sep, fpath, None, None)
+        elif target is not None:
+            # The target is recorded by hash, like file contents, so the
+            # TSV stays one line per entry whatever the link text holds.
+            link = os.fsencode(target)
+            path = f"{name}{sep}{fpath}"
+            w.rows.append(
+                {
+                    "path": path,
                     "type": "symlink",
                     "size": len(link),
                     "sha256": sha256(link),
                 }
             )
+            if w.sink:
+                w.sink(name, sep, fpath, None, target)
         else:
+            if w.sink:
+                w.sink(name, sep, fpath, blob or b"", None)
             _walk(w, f"{name}{sep}{fpath}", blob or b"", depth + 1)
 
 
@@ -583,11 +658,17 @@ def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
     if tag == "zip":
         try:
             children = _unzip(data, w.pwds, w.limit)
+            links, dirs = _zip_kinds(data)
         except (zipfile.BadZipFile, zlib.error, EOFError, ValueError):
             row["type"] = "zip/unreadable"
             return
-        for child, blob in children.items():
-            _walk(w, f"{name}!{child}", blob, depth + 1)
+        # fsdecode: the link text round-trips to the exact member bytes, so
+        # the row keeps the hash it had when the member was typed `data`.
+        entries: list[Entry] = [
+            (n, None, os.fsdecode(b)) if n in links else (n, b, None)
+            for n, b in children.items()
+        ]
+        _record_tree(w, name, with_empty_dirs(entries, dirs), depth, "!")
     elif tag == "uImage":
         _walk(w, f"{name}~payload", _strip_uimage(data), depth + 1)
     elif tag in ("gzip", "bzip2", "xz", "lzma"):
@@ -640,9 +721,10 @@ def walk(
     depth: int = 0,
     *,
     limit: int = MAX_DECOMPRESS,
+    sink: Sink | None = None,
 ) -> None:
     """Recurse through container layers, recording a manifest row per file."""
-    w = Walk(pwds, work, limit, rows)
+    w = Walk(pwds, work, limit, rows, sink)
     _walk(w, name, data, depth)
 
 

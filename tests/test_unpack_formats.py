@@ -1,9 +1,10 @@
-"""Tool version 3: more layer formats, precise ELF tags, the coverage gate,
+"""Tool versions 3 and 4: more layer formats, precise ELF tags, the coverage gate,
 per-image limits and the extraction sandbox. Synthetic fixtures only."""
 
 import bz2
 import io
 import lzma
+import os
 import shutil
 import struct
 import subprocess
@@ -379,3 +380,92 @@ def test_guard_knows_the_new_container_magics(tmp_path):
         p = tmp_path / f"f{i}.txt"
         p.write_bytes(head + b"\x00" * 16)
         assert guard.is_binary(p) is not None
+
+
+# --- tool version 4: zip symlinks, and the sink oracle/stage.py uses -----------
+
+
+def _zip_with_link() -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("lib/libx.so.0.0", _elf(0x28, etype=3))
+        link = zipfile.ZipInfo("lib/libx.so")
+        link.create_system = unpack.ZIP_UNIX
+        link.external_attr = (unpack.S_IFLNK | 0o777) << 16
+        zf.writestr(link, "libx.so.0.0")
+        # a Windows-made member whose attribute bits happen to look like a link
+        odd = zipfile.ZipInfo("notes.txt")
+        odd.create_system = 0
+        odd.external_attr = (unpack.S_IFLNK | 0o777) << 16
+        zf.writestr(odd, "plain text")
+    return buf.getvalue()
+
+
+def test_zip_symlink_members_are_symlink_rows(tmp_path):
+    rows = {r["path"]: r for r in _walk("app.zip", _zip_with_link(), tmp_path)}
+    link = rows["app.zip!lib/libx.so"]
+    assert link["type"] == "symlink"
+    # same size and hash as the old `data` row: only the type changed
+    assert link["size"] == len(b"libx.so.0.0")
+    assert link["sha256"] == unpack.sha256(b"libx.so.0.0")
+    assert rows["app.zip!notes.txt"]["type"] == "data"  # only Unix modes count
+    assert rows["app.zip!lib/libx.so.0.0"]["type"].startswith("ELF/ARM/dyn")
+
+
+def test_sink_sees_every_member_with_its_bytes(tmp_path):
+    seen: dict[str, tuple[bytes | None, str | None]] = {}
+
+    def sink(container, sep, member, blob, target):
+        seen[f"{container}{sep}{member}"] = (blob, target)
+
+    rows = _walk("app.zip", _zip_with_link(), tmp_path, sink=sink)
+    members = [r for r in rows if r["path"] != "app.zip"]
+    assert sorted(seen) == sorted(r["path"] for r in members)
+    assert seen["app.zip!lib/libx.so"] == (None, "libx.so.0.0")
+    assert seen["app.zip!notes.txt"] == (b"plain text", None)
+    for r in members:
+        blob, target = seen[r["path"]]
+        data = blob if blob is not None else (target or "").encode()
+        assert unpack.sha256(data) == r["sha256"]
+
+
+def test_empty_directories_get_dir_rows_and_other_node_types_are_skipped(tmp_path):
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w", format=tarfile.USTAR_FORMAT) as tf:
+        for name, kind in (
+            ("var/run", tarfile.DIRTYPE),
+            ("dev/fifo", tarfile.FIFOTYPE),
+        ):
+            info = tarfile.TarInfo(name)
+            info.type = kind
+            tf.addfile(info)
+    assert unpack._tar_entries(buf.getvalue()) == [("var/run", None, None)]
+    cpio = _newc([("var/tmp", 0o040755, b""), ("dev/null", 0o020666, b"")])
+    assert unpack._cpio_entries(cpio) == [("var/tmp", None, None)]
+    tree = tmp_path / "tree"
+    (tree / "var" / "tmp").mkdir(parents=True)
+    (tree / "etc").mkdir()
+    (tree / "etc" / "conf").write_bytes(b"x")
+    os.mkfifo(tree / "etc" / "pipe")
+    assert unpack._tree_entries(tree) == [
+        ("etc/conf", b"x", None),
+        ("var/tmp", None, None),  # var is implied by var/tmp
+    ]
+
+
+def test_dir_rows_reach_the_manifest_and_the_sink(tmp_path):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("etc/applications/", b"")
+        zf.writestr("etc/conf", b"k=v")
+    seen = []
+    rows = _walk("a.zip", buf.getvalue(), tmp_path, sink=lambda *a: seen.append(a))
+    row = next(r for r in rows if r["path"] == "a.zip!etc/applications")
+    assert row == {
+        "path": "a.zip!etc/applications",
+        "type": unpack.DIR_TYPE,
+        "size": 0,
+        "sha256": unpack.sha256(b""),
+    }
+    assert ("a.zip", "!", "etc/applications", None, None) in seen
+    assert not unpack.undecoded(rows)  # a dir row never trips the coverage gate
