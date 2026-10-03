@@ -9,6 +9,7 @@ import io
 import struct
 import sys
 import zipfile
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,6 +113,28 @@ def test_sibling_ext_layers_get_separate_work_dirs(tmp_path, monkeypatch):
     outer = _zip({"rootfs.img": fs, "recovery.img": fs + b"\x01"})
     unpack.walk("fw.zip", outer, [], tmp_path, [])
     assert len(seen) == 2 and seen[0] != seen[1]
+
+
+def test_unzip_moves_on_when_wrong_password_passes_check_byte(monkeypatch):
+    # A wrong ZipCrypto password can pass the 1-byte check and then fail in
+    # inflate; _unzip must treat that as "wrong password" and try the next.
+    real_infolist = zipfile.ZipFile.infolist
+
+    def infolist(self):
+        infos = real_infolist(self)
+        for i in infos:
+            i.flag_bits |= 0x1
+        return infos
+
+    def read(self, info, pwd=None):
+        if self.pwd != b"right":
+            raise zlib.error("Error -3 while decompressing data")
+        return b"payload"
+
+    monkeypatch.setattr(zipfile.ZipFile, "infolist", infolist)
+    monkeypatch.setattr(zipfile.ZipFile, "read", read)
+    raw = _zip({"member": b"payload"})
+    assert unpack._unzip(raw, [b"wrong", b"right"]) == {"member": b"payload"}
 
 
 def test_debugfs_banner_and_chown_are_not_errors():

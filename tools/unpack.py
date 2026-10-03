@@ -96,7 +96,10 @@ def _unzip(data: bytes, pwds: list[bytes]) -> dict[str, bytes]:
                 zf.setpassword(pw)
                 out[info.filename] = zf.read(info)
                 break
-            except (RuntimeError, zipfile.BadZipFile):
+            # ZipCrypto checks a password against ONE byte, so ~1 in 256 wrong
+            # candidates passes it and only fails later: in inflate (zlib.error)
+            # or at the CRC check (BadZipFile). All of these mean "try the next".
+            except (RuntimeError, zipfile.BadZipFile, zlib.error, EOFError):
                 continue
         else:
             raise SystemExit(
@@ -180,7 +183,7 @@ def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
     if tag == "zip":
         try:
             children = _unzip(data, pwds)
-        except (zipfile.BadZipFile, EOFError, ValueError):
+        except (zipfile.BadZipFile, zlib.error, EOFError, ValueError):
             rows[-1]["type"] = "zip/unreadable"
             return
         for child, blob in children.items():
