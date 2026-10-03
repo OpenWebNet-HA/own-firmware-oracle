@@ -75,7 +75,7 @@ branch = true
 
 [tool.coverage.report]
 # Ratchet: raise it when coverage goes up, never lower it to get a PR green.
-fail_under = 97
+fail_under = 100
 show_missing = true
 skip_covered = true
 exclude_also = ['if __name__ == "__main__":']

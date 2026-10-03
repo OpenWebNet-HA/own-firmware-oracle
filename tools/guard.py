@@ -102,8 +102,6 @@ def main() -> int:
     bad: list[str] = []
     files = repo_files()
     for path in files:
-        if path.parts and path.parts[0] in {".git"}:
-            continue
         size, limit = path.stat().st_size, max_bytes(path)
         if size > limit:
             bad.append(f"{path}: {size} bytes > {limit}")
