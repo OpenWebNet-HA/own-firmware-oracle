@@ -1,6 +1,9 @@
-# Install as .github/workflows/oracle.yml in the own-firmware-oracle repo.
-# Shipped as a template (not an active workflow). This one touches firmware,
-# so read the R2 / environment notes below before enabling it.
+# Rebuilds the manifests of stale catalog entries and opens a PR with them.
+# This one touches firmware, so mind the R2 / environment notes below.
+#
+# Runners are pinned to ubuntu-24.04, not ubuntu-latest: debugfs (e2fsprogs)
+# lists the ext filesystems, and a runner image bump must not silently change
+# a manifest that is supposed to re-run to a zero diff.
 #
 # Secrets live ONLY in a protected `firmware` environment limited to `main`.
 # Fork PRs never see them. No pull_request_target. Firmware is fetched to a
@@ -29,9 +32,13 @@ on:
     - cron: "0 4 * * 1"   # weekly
 permissions:
   contents: read
+# One run at a time: two overlapping runs would both push oracle/update-results.
+concurrency:
+  group: oracle
+  cancel-in-progress: false
 jobs:
   plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
@@ -48,7 +55,7 @@ jobs:
   oracle:
     needs: plan
     if: ${{ needs.plan.outputs.matrix != '[]' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: firmware        # protected; only main can read the secrets
     strategy:
       max-parallel: 4
@@ -90,12 +97,15 @@ jobs:
   publish:
     needs: [plan, oracle]
     if: ${{ needs.plan.outputs.matrix != '[]' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       pull-requests: write
     steps:
+      # create-pull-request authenticates with its own token input, so the
+      # checkout does not need to leave credentials in .git/config.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           pattern: manifest-*

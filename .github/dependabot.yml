@@ -1,0 +1,15 @@
+# Keeps the SHA-pinned actions current: Dependabot bumps the SHA and its
+# "# vX.Y.Z" comment together, one grouped PR a month.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"

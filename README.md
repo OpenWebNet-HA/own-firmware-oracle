@@ -33,7 +33,8 @@ tools/guard.py                      refuse binaries / oversized files
 oracle/                             emulator + simulated SCS bus  (phase 2)
 results/<product>/<version>/        manifest.tsv, oracle TSVs
 findings/<product>/*.md             conclusions pointing at TSV rows
-ci-templates/*.yml.txt              install into .github/workflows/
+.github/workflows/pr.yml            every PR: ruff, zizmor, guard, unit tests (no firmware)
+.github/workflows/oracle.yml        main / weekly: rebuild stale manifests -> one results PR
 ```
 
 ## Run it locally
