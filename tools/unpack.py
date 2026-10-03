@@ -12,15 +12,21 @@ Layer chain handled (auto-detected by magic, not hard-coded per image):
                             vendor strings, tried in order; no brute force)
   uImage (0x27051956)       64-byte U-Boot header stripped, payload recursed
   gzip  (1f 8b)             decompressed, payload recursed
-  ext2/3/4 (53 ef @ 0x438)  file tree listed via debugfs (read-only)
+  ext2/3/4 (53 ef @ 0x438)  file tree listed via debugfs (read-only);
+                            symlinks are recorded, never followed
 
-Nothing about this script is image-specific: point it at any catalog entry.
+The image on disk must be the catalog's wrapper (size + SHA-256), and the
+catalog's inner image must turn up inside it; anything else is refused, so a
+manifest header always describes the bytes that were actually walked.
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import io
+import os
+import re
 import struct
 import subprocess
 import tempfile
@@ -28,15 +34,23 @@ import zipfile
 import zlib
 from pathlib import Path
 
-import yaml
+import schema
 
 # Manifest key component. Bump when a change to this tool would alter the
 # manifest for an unchanged image; plan.py treats a mismatch as stale.
-TOOL_VERSION = "1"
+# 2: paths rooted at wrapper.filename; symlinks recorded instead of followed.
+TOOL_VERSION = "2"
+
+SAFE_DEBUGFS_PATH = re.compile(r"[A-Za-z0-9_./+-]+")
+# Manifest fields are TSV: a tab or newline in a member name would add a
+# column or a row, so backslash and control characters are escaped as \xNN.
+TSV_UNSAFE = re.compile(r"[\\\x00-\x1f\x7f]")
 
 UIMAGE_MAGIC = 0x27051956
 EXT_MAGIC = 0xEF53
-MAX_DECOMPRESS = 256 * 1024 * 1024  # cap a single gzip layer (bomb guard)
+# Bomb guard: cap on what one gzip layer, or all members of one zip archive
+# together, may expand to.
+MAX_DECOMPRESS = 256 * 1024 * 1024
 
 # ELF e_machine -> human CPU name (enough to answer "is this ARM Linux?")
 ELF_MACHINE = {0x28: "ARM", 0x3E: "x86-64", 0x03: "x86", 0xB7: "AArch64", 0x08: "MIPS"}
@@ -44,6 +58,11 @@ ELF_MACHINE = {0x28: "ARM", 0x3E: "x86-64", 0x03: "x86", 0xB7: "AArch64", 0x08: 
 
 def sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
+
+
+def tsv_field(s: str) -> str:
+    """Escape backslash and control characters so one row stays one TSV line."""
+    return TSV_UNSAFE.sub(lambda m: f"\\x{ord(m.group()):02x}", s)
 
 
 def cpu_of(b: bytes) -> str:
@@ -80,14 +99,24 @@ def passwords(entry: dict) -> list[bytes]:
     return out
 
 
-def _unzip(data: bytes, pwds: list[bytes]) -> dict[str, bytes]:
-    """Return {name: bytes} for a (possibly ZipCrypto) archive."""
+def _unzip(data: bytes, pwds: list[bytes],
+           limit: int = MAX_DECOMPRESS) -> dict[str, bytes]:
+    """Return {name: bytes} for a (possibly ZipCrypto) archive.
+
+    Members are read into memory, so the archive's declared sizes must fit in
+    `limit` together. zipfile never returns more than a member's declared
+    file_size (and fails the CRC if the data disagrees), so checking the
+    declarations up front bounds the real output too.
+    """
     zf = zipfile.ZipFile(io.BytesIO(data))
-    encrypted = any(i.flag_bits & 0x1 for i in zf.infolist())
+    members = [i for i in zf.infolist() if not i.is_dir()]
+    declared = sum(i.file_size for i in members)
+    if declared > limit:
+        raise SystemExit(f"zip members declare {declared} bytes > {limit}; "
+                         "refusing to expand")
+    encrypted = any(i.flag_bits & 0x1 for i in members)
     out: dict[str, bytes] = {}
-    for info in zf.infolist():
-        if info.is_dir():
-            continue
+    for info in members:
         if not encrypted:
             out[info.filename] = zf.read(info)
             continue
@@ -139,30 +168,56 @@ def _debugfs_real_errors(stderr: str) -> list[str]:
     ]
 
 
-def _ext_tree(img: bytes, work: Path) -> list[tuple[str, bytes]]:
-    """List regular files in an ext2/3/4 image via read-only debugfs.
+# (relative path, file bytes, link target): exactly one of the last two is set
+Entry = tuple[str, bytes | None, str | None]
+
+
+def _tree_entries(root: Path) -> list[Entry]:
+    """Regular files and symlinks under `root`, sorted by relative path.
+
+    Symlinks are recorded with their target and never followed: rdump recreates
+    them as real links, and an absolute target (/etc/mtab, /bin/busybox) would
+    otherwise resolve on the HOST and hash a runner file as firmware. os.walk
+    does not descend into symlinked directories either.
+    """
+    out: list[Entry] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        for name in dirnames + filenames:
+            p = Path(dirpath) / name
+            rel = p.relative_to(root).as_posix()
+            if p.is_symlink():
+                out.append((rel, None, os.readlink(p)))
+            elif name in filenames and p.is_file():
+                out.append((rel, p.read_bytes(), None))
+    return sorted(out, key=lambda e: e[0])
+
+
+def _ext_tree(img: bytes, work: Path) -> list[Entry]:
+    """List regular files and symlinks in an ext2/3/4 image via read-only debugfs.
 
     debugfs never mounts the image, so this works unprivileged in CI. One
     `rdump` writes the whole tree to a work dir; we then read it back.
     """
+    root = work / "tree"
+    # `root` is spliced into debugfs's own command language (-R), which splits
+    # on whitespace and runs one request per line; only plain paths may go in.
+    if not SAFE_DEBUGFS_PATH.fullmatch(str(root)):
+        raise SystemExit(f"work dir {str(root)!r} is not a plain path; "
+                         "pass --work without spaces, quotes or control characters")
     tmp = work / "fs.img"
     tmp.write_bytes(img)
-    root = work / "tree"
     root.mkdir(parents=True, exist_ok=True)
     res = subprocess.run(
         ["debugfs", "-R", f"rdump / {root}", str(tmp)],
         capture_output=True, text=True, check=False,
     )
-    files = [p for p in sorted(root.rglob("*")) if p.is_file()]
+    entries = _tree_entries(root)
     real = _debugfs_real_errors(res.stderr)
     # Fail on a real error, or on an empty tree (which means rdump did nothing).
-    if real or not files:
+    if real or not entries:
         detail = "\n  ".join(real or res.stderr.splitlines()[:10] or ["(no output)"])
         raise SystemExit(f"debugfs rdump produced no usable tree:\n  {detail}")
-    return [
-        (str(p.relative_to(root)).replace("\\", "/"), p.read_bytes())
-        for p in files
-    ]
+    return entries
 
 
 def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
@@ -203,8 +258,35 @@ def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
         # dir would make the second rdump collide with -- or mix into -- the first.
         work.mkdir(parents=True, exist_ok=True)
         sub = Path(tempfile.mkdtemp(prefix=f"ext{depth}-", dir=work))
-        for fpath, blob in _ext_tree(data, sub):
-            walk(f"{name}:/{fpath}", blob, pwds, work, rows, depth + 1)
+        for fpath, blob, target in _ext_tree(data, sub):
+            if target is not None:
+                # The target is recorded by hash, like file contents, so the
+                # TSV stays one line per entry whatever the link text holds.
+                link = os.fsencode(target)
+                rows.append({"path": f"{name}:/{fpath}", "type": "symlink",
+                             "size": len(link), "sha256": sha256(link)})
+            else:
+                walk(f"{name}:/{fpath}", blob, pwds, work, rows, depth + 1)
+
+
+def verify_wrapper(entry: dict, data: bytes) -> None:
+    """Refuse to walk anything but the catalog's wrapper."""
+    w = entry["wrapper"]
+    if len(data) != w["size"] or sha256(data) != w["sha256"]:
+        raise SystemExit(
+            f"image is not {w['filename']} from the catalog: got "
+            f"{len(data)} bytes / {sha256(data)}, want {w['size']} / {w['sha256']}"
+        )
+
+
+def require_image(entry: dict, rows: list[dict]) -> None:
+    """The manifest header names image.sha256, so that image must be inside."""
+    want = entry["image"]["sha256"]
+    if not any(r["sha256"] == want for r in rows):
+        raise SystemExit(
+            f"catalog image {entry['image']['filename']} ({want}) "
+            "was not found inside the wrapper"
+        )
 
 
 def main() -> None:
@@ -215,25 +297,38 @@ def main() -> None:
     ap.add_argument("--work", help="work dir for extracted files (temp if unset)")
     args = ap.parse_args()
 
-    entry = yaml.safe_load(Path(args.catalog).read_text())
+    entry = schema.load(args.catalog)
     pwds = passwords(entry)
     data = Path(args.image).read_bytes()
+    verify_wrapper(entry, data)
 
-    work = Path(args.work) if args.work else Path(tempfile.mkdtemp(prefix="own-fw-"))
     rows: list[dict] = []
-    walk(Path(args.image).name, data, pwds, work, rows)
+    with contextlib.ExitStack() as stack:
+        if args.work:
+            work = Path(args.work)  # kept: the caller asked for the files
+        else:
+            # Extracted vendor files must not outlive the run. The tree is gone
+            # before the manifest is written; rows already hold every fact.
+            work = Path(stack.enter_context(tempfile.TemporaryDirectory(
+                prefix="own-fw-", ignore_cleanup_errors=True)))
+        # Root every path at the catalog filename, not the on-disk name: the
+        # fwfetch cache stores files as <sha256>.zip, a local copy keeps its
+        # own name, and both must produce the same manifest.
+        walk(entry["wrapper"]["filename"], data, pwds, work, rows)
+    require_image(entry, rows)
 
     # Deterministic: sorted by path, no timestamps -> zero diff on a clean re-run.
     rows.sort(key=lambda r: r["path"])
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", newline="\n") as fh:
+    with out.open("w", newline="\n", encoding="utf-8") as fh:
         fh.write(f"# product={entry['product']} version={entry['version']}\n")
         fh.write(f"# image_sha256={entry['image']['sha256']}\n")
         fh.write(f"# tool_version={TOOL_VERSION}\n")
         fh.write("path\ttype\tsize\tsha256\n")
         for r in rows:
-            fh.write(f"{r['path']}\t{r['type']}\t{r['size']}\t{r['sha256']}\n")
+            fh.write(f"{tsv_field(r['path'])}\t{tsv_field(r['type'])}"
+                     f"\t{r['size']}\t{r['sha256']}\n")
     print(f"{len(rows)} entries -> {out}")
 
 

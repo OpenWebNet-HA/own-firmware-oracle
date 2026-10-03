@@ -5,7 +5,8 @@ Public artifact: this script and the catalog. The firmware image is NEVER
 committed; it is fetched to a cache outside the repo tree.
 
 Sources are tried in catalog order:
-  vendor:  plain HTTPS download (public BTicino / Legrand files)
+  vendor:  HTTPS download from an allow-listed BTicino / Legrand host
+           (schema.py checks the URL, and every redirect is re-checked)
   r2:      S3-compatible object, key = firmware/sha256/<hash>.<ext>
            (needs R2_ENDPOINT / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)
   --from-file: a local copy from your own device (no upload required)
@@ -22,7 +23,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
-import yaml
+import schema
 
 CACHE = Path(os.environ.get("OWN_FW_CACHE", Path.home() / ".cache" / "own-fw"))
 
@@ -48,9 +49,19 @@ def _verify(path: Path, size: int, sha256: str) -> None:
         raise SystemExit(f"sha256 mismatch:\n  got  {actual}\n  want {sha256}")
 
 
+class _VendorRedirects(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only to another https:// allow-listed vendor URL."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        schema.check_vendor_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def _fetch_vendor(url: str, dest: Path) -> None:
+    schema.check_vendor_url(url)
+    opener = urllib.request.build_opener(_VendorRedirects)
     req = urllib.request.Request(url, headers={"User-Agent": "own-firmware-oracle/1"})
-    with urllib.request.urlopen(req, timeout=120) as resp, dest.open("wb") as out:
+    with opener.open(req, timeout=120) as resp, dest.open("wb") as out:
         while chunk := resp.read(1 << 20):
             out.write(chunk)
 
@@ -115,7 +126,7 @@ def main() -> None:
     ap.add_argument("--from-file", help="use a local image instead of fetching")
     args = ap.parse_args()
 
-    entry = yaml.safe_load(Path(args.catalog).read_text())
+    entry = schema.load(args.catalog)
     path = fetch(entry, args.from_file)
     print(path)
 

@@ -5,7 +5,9 @@ Runs in CI (pr.yml) and as a pre-commit hook. It is the automated backstop for
 the ground rule "never commit binaries, disassembly or decompiled code": even
 if someone points a result at the wrong path, this fails the build.
 
-Checks every tracked/staged file outside allow-listed text areas:
+Checks every file git would commit -- tracked files AND untracked files that
+are not gitignored. The untracked half matters: in oracle.yml a freshly written
+manifest is untracked when guard runs, and create-pull-request commits it next.
   * no known binary magic (ELF / zip / gzip / squashfs / ext / uImage);
   * nothing larger than MAX_BYTES (results are TSV/markdown, never images).
 """
@@ -32,23 +34,26 @@ def is_binary(path: Path) -> str | None:
     for magic in BIN_MAGIC:
         if head.startswith(magic):
             return f"binary magic {magic.hex()}"
-    if len(head) > 0x43A - 1 and struct.unpack_from(">I", head, 0)[0] == 0x27051956:
+    if len(head) >= 4 and struct.unpack_from(">I", head, 0)[0] == 0x27051956:
         return "uImage header"
     if len(head) > 0x439 and struct.unpack_from("<H", head, 0x438)[0] == 0xEF53:
         return "ext filesystem"
     return None
 
 
-def tracked_files() -> list[Path]:
+def repo_files() -> list[Path]:
+    """Tracked files plus untracked, non-ignored ones: everything `git add -A` takes."""
     out = subprocess.run(
-        ["git", "ls-files"], capture_output=True, text=True, check=True
-    ).stdout.split("\n")
-    return [Path(p) for p in out if p and Path(p).is_file()]
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        capture_output=True, text=True, check=True,
+    ).stdout.split("\0")
+    return [Path(p) for p in sorted(set(out)) if p and Path(p).is_file()]
 
 
 def main() -> int:
     bad: list[str] = []
-    for path in tracked_files():
+    files = repo_files()
+    for path in files:
         if path.parts and path.parts[0] in {".git"}:
             continue
         size = path.stat().st_size
@@ -62,7 +67,7 @@ def main() -> int:
         for b in bad:
             print("  " + b, file=sys.stderr)
         return 1
-    print(f"guard: ok ({len(tracked_files())} files clean)")
+    print(f"guard: ok ({len(files)} files clean)")
     return 0
 
 

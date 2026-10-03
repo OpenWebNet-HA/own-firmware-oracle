@@ -5,18 +5,25 @@ image. They prove the layer logic and the guard without touching anything
 proprietary.
 """
 import gzip
+import hashlib
 import io
+import os
 import struct
+import subprocess
 import sys
 import zipfile
 import zlib
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
+import fwfetch
 import guard
 import plan
+import schema
 import unpack
 
 
@@ -153,11 +160,21 @@ def test_debugfs_real_error_is_kept():
     ]
 
 
-def _catalog(tmp_path):
+SHA_A = "a" * 64
+SHA_B = "b" * 64
+
+
+def _catalog(tmp_path, image_sha=SHA_A, wrapper=None, sources=""):
+    """Write a minimal valid catalog entry; `sources` is spliced under wrapper."""
+    wrapper = wrapper or {"filename": "FW.zip", "size": 1, "sha256": SHA_B}
     cat = tmp_path / "catalog" / "MH200N" / "010108.yaml"
-    cat.parent.mkdir(parents=True)
+    cat.parent.mkdir(parents=True, exist_ok=True)
     cat.write_text(
-        "product: MH200N\nversion: '010108'\nimage:\n  sha256: 'abc123'\n"
+        "product: MH200N\nversion: '010108'\n"
+        f"wrapper:\n  filename: {wrapper['filename']}\n"
+        f"  size: {wrapper['size']}\n  sha256: '{wrapper['sha256']}'\n"
+        + sources
+        + f"image:\n  filename: fw.fwz\n  size: 1\n  sha256: '{image_sha}'\n"
     )
     return cat
 
@@ -172,11 +189,212 @@ def test_is_stale_on_missing_and_mismatched_keys(tmp_path):
     man.parent.mkdir(parents=True)
 
     # right image, wrong (old) tool version -> still stale
-    man.write_text("# image_sha256=abc123\n# tool_version=0\npath\n")
+    man.write_text(f"# image_sha256={SHA_A}\n# tool_version=0\npath\n")
     assert plan.is_stale(cat, results) is True
 
     # both keys current -> fresh
     man.write_text(
-        f"# image_sha256=abc123\n# tool_version={unpack.TOOL_VERSION}\npath\n"
+        f"# image_sha256={SHA_A}\n# tool_version={unpack.TOOL_VERSION}\npath\n"
     )
     assert plan.is_stale(cat, results) is False
+
+
+# --- catalog validation -------------------------------------------------------
+
+def test_catalog_accepts_the_real_mh200n_entry():
+    entry = schema.load(ROOT / "catalog" / "MH200N" / "010108.yaml")
+    assert entry["wrapper"]["filename"] == "FW_MH200N_vers_010108.zip"
+
+
+@pytest.mark.parametrize("source", [
+    "vendor: 'http://www.bticino.be/fw.zip'",
+    "vendor: 'https://evil.example/fw.zip'",
+    "vendor: 'file:///etc/passwd'",
+    "r2: 'firmware/../../other'",
+    "ftp: 'x'",
+])
+def test_catalog_rejects_bad_sources(tmp_path, source):
+    cat = _catalog(tmp_path, sources=f"  sources:\n    - {source}\n")
+    with pytest.raises(SystemExit):
+        schema.load(cat)
+
+
+@pytest.mark.parametrize("filename", [
+    '"x.zip\\nBASH_ENV=/tmp/x"',  # newline -> $GITHUB_ENV injection
+    "'$(id).zip'",
+    "../x.zip",
+])
+def test_catalog_rejects_unsafe_filenames(tmp_path, filename):
+    cat = _catalog(tmp_path, wrapper={"filename": filename, "size": 1,
+                                      "sha256": SHA_B})
+    with pytest.raises(SystemExit):
+        schema.load(cat)
+
+
+def test_catalog_rejects_mismatched_path_and_bad_hash(tmp_path):
+    cat = _catalog(tmp_path)
+    schema.load(cat)  # the fixture itself is valid
+    moved = tmp_path / "catalog" / "OTHER" / "010108.yaml"
+    moved.parent.mkdir()
+    moved.write_text(cat.read_text())
+    with pytest.raises(SystemExit):
+        schema.load(moved)
+    with pytest.raises(SystemExit):
+        schema.load(_catalog(tmp_path / "x", image_sha="abc123"))
+
+
+def test_fwfetch_refuses_redirect_off_https_or_allowlist():
+    handler = fwfetch._VendorRedirects()
+    for url in ("http://www.bticino.be/fw.zip", "https://evil.example/fw.zip"):
+        with pytest.raises(ValueError):
+            handler.redirect_request(None, None, 302, "", {}, url)
+
+
+# --- unpack: the image must be the catalog image -----------------------------
+
+def _sha(b: bytes) -> str:
+    return hashlib.sha256(b).hexdigest()
+
+
+def test_unpack_refuses_an_image_that_is_not_the_catalog_wrapper():
+    good = _zip({"fw.fwz": b"inner"})
+    entry = {"wrapper": {"filename": "FW.zip", "size": len(good),
+                         "sha256": _sha(good)}}
+    unpack.verify_wrapper(entry, good)
+    with pytest.raises(SystemExit):
+        unpack.verify_wrapper(entry, good + b"x")
+
+
+def test_unpack_requires_the_catalog_image_inside():
+    entry = {"image": {"filename": "fw.fwz", "sha256": SHA_A}}
+    unpack.require_image(entry, [{"sha256": SHA_A}])
+    with pytest.raises(SystemExit):
+        unpack.require_image(entry, [{"sha256": SHA_B}])
+
+
+def test_unpack_roots_paths_at_wrapper_filename(tmp_path, monkeypatch):
+    inner = b"not a container"
+    wrapper = _zip({"fw.fwz": inner})
+    cat = _catalog(tmp_path, image_sha=_sha(inner), wrapper={
+        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    # The fwfetch cache names files <sha256>.zip; the manifest must not care.
+    on_disk = tmp_path / f"{_sha(wrapper)}.zip"
+    on_disk.write_bytes(wrapper)
+    out = tmp_path / "manifest.tsv"
+    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(on_disk), "-o",
+                                      str(out), "--work", str(tmp_path / "w")])
+    unpack.main()
+    rows = [ln.split("\t")[0] for ln in out.read_text().splitlines()[4:]]
+    assert rows == ["FW.zip", "FW.zip!fw.fwz"]
+
+
+def test_unpack_deletes_its_temp_work_dir(tmp_path, monkeypatch):
+    # An ext layer makes walk() create work dirs; without --work they must go.
+    fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
+    wrapper = _zip({"rootfs.img": fs})
+    cat = _catalog(tmp_path, image_sha=_sha(fs), wrapper={
+        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    img = tmp_path / "FW.zip"
+    img.write_bytes(wrapper)
+    temp_root = tmp_path / "tmp"
+    temp_root.mkdir()
+    monkeypatch.setattr(unpack.tempfile, "tempdir", str(temp_root))
+    seen: list[Path] = []
+    monkeypatch.setattr(unpack, "_ext_tree", lambda img, sub: seen.append(sub) or [])
+    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(img), "-o",
+                                      str(tmp_path / "m.tsv")])
+    unpack.main()
+    assert seen and seen[0].is_relative_to(temp_root)
+    assert list(temp_root.iterdir()) == []
+
+
+# --- unpack: bounded, injection-free, one row per line -----------------------
+
+def test_unzip_refuses_archives_declaring_more_than_the_cap():
+    raw = _zip({"a": b"x" * 600, "b": b"y" * 600})
+    with pytest.raises(SystemExit):
+        unpack._unzip(raw, [], limit=1000)
+    assert unpack._unzip(raw, [], limit=1200) == {"a": b"x" * 600, "b": b"y" * 600}
+
+
+@pytest.mark.parametrize("work", ["/tmp/with space", "/tmp/line\nbreak", '/tmp/"q"'])
+def test_ext_tree_refuses_work_dirs_that_are_not_plain_paths(work):
+    with pytest.raises(SystemExit):
+        unpack._ext_tree(b"", Path(work))
+
+
+def test_tsv_field_escapes_tabs_newlines_and_backslashes():
+    assert unpack.tsv_field("bin/ls") == "bin/ls"
+    assert unpack.tsv_field("a\tb\nc\\d\x7f") == "a\\x09b\\x0ac\\x5cd\\x7f"
+
+
+def test_manifest_rows_stay_one_line_for_hostile_member_names(tmp_path, monkeypatch):
+    inner = b"payload"
+    wrapper = _zip({"evil\tname\nFAKE\tROW": inner})
+    cat = _catalog(tmp_path, image_sha=_sha(inner), wrapper={
+        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    img = tmp_path / "FW.zip"
+    img.write_bytes(wrapper)
+    out = tmp_path / "m.tsv"
+    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(img), "-o", str(out)])
+    unpack.main()
+    body = out.read_text().splitlines()[4:]
+    assert len(body) == 2
+    assert all(len(ln.split("\t")) == 4 for ln in body)
+
+
+# --- unpack: symlinks are recorded, never followed ---------------------------
+
+def test_tree_entries_records_symlinks_without_following(tmp_path):
+    host = tmp_path / "host-secret"
+    host.write_bytes(b"runner file")
+    (tmp_path / "host-dir").mkdir()
+    (tmp_path / "host-dir" / "f").write_bytes(b"x")
+
+    root = tmp_path / "tree"
+    (root / "bin").mkdir(parents=True)
+    (root / "bin" / "busybox").write_bytes(b"\x7fELF")
+    os.symlink("busybox", root / "bin" / "ls")          # relative, in-tree
+    os.symlink(str(host), root / "bin" / "abs")         # absolute -> host file
+    os.symlink(str(tmp_path / "host-dir"), root / "d")  # dir link -> host dir
+    os.symlink("/nonexistent", root / "dangling")
+
+    entries = {p: (blob, tgt) for p, blob, tgt in unpack._tree_entries(root)}
+    assert entries["bin/busybox"] == (b"\x7fELF", None)
+    assert entries["bin/ls"] == (None, "busybox")
+    assert entries["bin/abs"] == (None, str(host))
+    assert entries["d"] == (None, str(tmp_path / "host-dir"))
+    assert entries["dangling"] == (None, "/nonexistent")
+    assert "d/f" not in entries  # never descended into the linked directory
+
+
+def test_walk_writes_symlink_rows(tmp_path, monkeypatch):
+    monkeypatch.setattr(unpack, "_ext_tree",
+                        lambda img, sub: [("bin/ls", None, "busybox")])
+    fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
+    rows: list[dict] = []
+    unpack.walk("rootfs", fs, [], tmp_path, rows)
+    assert rows[-1] == {"path": "rootfs:/bin/ls", "type": "symlink",
+                        "size": 7, "sha256": _sha(b"busybox")}
+
+
+# --- guard: untracked files count too ----------------------------------------
+
+def test_guard_sees_untracked_but_not_ignored_files(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    subprocess.run(["git", "init", "-q"], check=True)
+    Path(".gitignore").write_text("*.zip\n")
+    Path("results").mkdir()
+    Path("results/manifest.tsv").write_text("path\n")
+    Path("results/bt_luci").write_bytes(b"\x7fELF")  # extensionless ELF
+    Path("fw.zip").write_bytes(b"PK\x03\x04")        # ignored: never committed
+    files = {p.as_posix() for p in guard.repo_files()}
+    assert {"results/manifest.tsv", "results/bt_luci"} <= files
+    assert "fw.zip" not in files
+    assert guard.main() == 1
+
+
+def test_guard_flags_short_uimage(tmp_path):
+    short = tmp_path / "kernel.txt"
+    short.write_bytes(struct.pack(">I", unpack.UIMAGE_MAGIC) + b"\x00" * 60)
+    assert guard.is_binary(short) == "uImage header"

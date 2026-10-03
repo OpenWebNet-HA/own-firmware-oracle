@@ -12,14 +12,15 @@ import json
 import sys
 from pathlib import Path
 
-import yaml
-
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from schema import load
 from unpack import TOOL_VERSION  # single source of truth for the tool version
 
 
 def result_path(catalog: Path) -> str:
-    entry = yaml.safe_load(catalog.read_text())
+    # product / version are validated plain names (schema.py), so this path
+    # is safe to hand to a shell or a workflow matrix.
+    entry = load(catalog)
     return f"{entry['product']}/{entry['version']}/manifest.tsv"
 
 
@@ -27,7 +28,7 @@ def is_stale(catalog: Path, results_root: Path) -> bool:
     """Stale unless the manifest records BOTH the current image hash and tool
     version. A change to unpack.py (new TOOL_VERSION) therefore rebuilds every
     image, which is the key documented in this module's docstring."""
-    entry = yaml.safe_load(catalog.read_text())
+    entry = load(catalog)
     manifest = results_root / result_path(catalog)
     if not manifest.exists():
         return True
@@ -51,8 +52,11 @@ def main() -> None:
         return
 
     if args.emit_matrix:
+        # Every entry is validated by load() first, so a catalog file whose
+        # path or fields are not plain names fails the plan job loudly instead
+        # of reaching the oracle job's shell.
         stale = [
-            str(c.relative_to(root))
+            c.relative_to(root).as_posix()
             for c in sorted((root / "catalog").rglob("*.yaml"))
             if is_stale(c, root / "results")
         ]
