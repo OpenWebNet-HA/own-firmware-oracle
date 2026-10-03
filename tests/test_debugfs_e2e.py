@@ -139,7 +139,9 @@ def test_layered_firmware_unpacks_to_the_same_manifest_twice(tmp_path, monkeypat
     manifests = []
     for run in ("a", "b"):
         out = tmp_path / run / "manifest.tsv"
-        monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(img), "-o", str(out)])
+        monkeypatch.setattr(
+            sys, "argv", ["unpack", str(cat), str(img), "-o", str(out), "--no-sandbox"]
+        )
         unpack.main()
         manifests.append(out.read_bytes())
     assert manifests[0] == manifests[1]
