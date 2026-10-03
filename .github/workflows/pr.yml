@@ -47,7 +47,7 @@ jobs:
       # Enforces what oracle.yml's header promises: SHA-pinned actions, no
       # ${{ }} expansion inside run scripts, no credentials left in .git/config.
       - name: zizmor
-        run: zizmor --offline --format=github .github/workflows
+        run: zizmor --offline --format=github .  # workflows + dependabot.yml
       - name: actionlint (+ shellcheck on every run block)
         env:
           ACTIONLINT_VERSION: "1.7.12"
