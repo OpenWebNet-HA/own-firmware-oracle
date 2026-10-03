@@ -287,6 +287,18 @@ def test_run_tool_goes_through_the_jail_unless_disabled(tmp_path, monkeypatch):
     assert calls[0][0] == "bwrap" and calls[1] == ["unsquashfs", "x"]
 
 
+def test_debugfs_chown_noise_inside_the_sandbox_is_not_an_error():
+    # In bwrap's user namespace the image's uids are unmapped, so chown fails
+    # with EINVAL instead of EPERM; observed on the first sandboxed MH200N run.
+    stderr = (
+        "debugfs 1.47.0 (5-Feb-2023)\n"
+        "dump_file: Invalid argument while changing ownership of /w/tree//bin/ls\n"
+        "rdump: Invalid argument while changing ownership of /w/tree/\n"
+    )
+    assert unpack._debugfs_real_errors(stderr) == []
+    assert unpack._debugfs_real_errors("rdump: Invalid argument while reading block 7\n")
+
+
 # --- guard ---------------------------------------------------------------------
 
 def test_guard_allows_big_manifests_but_nothing_else(tmp_path):

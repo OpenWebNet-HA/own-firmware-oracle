@@ -407,7 +407,10 @@ def _debugfs_real_errors(stderr: str) -> list[str]:
 
     Two kinds of noise are expected and harmless:
       * the version banner debugfs prints on every run ("debugfs 1.47.0 ...");
-      * "Operation not permitted" while chown/chmod/utimes-ing as non-root.
+      * failing to give a dumped file its owner, mode or times as non-root:
+        "Operation not permitted" outside a sandbox, "Invalid argument while
+        changing ownership" inside bubblewrap's user namespace (the image's
+        uids are not mapped there). Ownership is not part of the manifest.
     Anything else (bad image, I/O error) is a real failure that would otherwise
     leave a silent empty tree.
     """
@@ -416,6 +419,7 @@ def _debugfs_real_errors(stderr: str) -> list[str]:
         if ln.strip()
         and not ln.startswith("debugfs ")
         and "Operation not permitted" not in ln
+        and "while changing ownership of" not in ln
     ]
 
 
