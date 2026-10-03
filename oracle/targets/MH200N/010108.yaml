@@ -1,0 +1,31 @@
+# Oracle target: MH200N firmware 1.1.8. Every program is pinned by path and
+# sha256 to results/MH200N/010108/manifest.tsv (oracle/target.py checks it).
+product: MH200N
+version: "010108"
+
+# Manifest prefixes overlaid in order (later wins): the rootfs, then the
+# application zip that the device unpacks over it.
+sysroot:
+  - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/ubtweb_only.gz~payload~gunzip:"
+  - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/btweb_app.zip!"
+
+programs:
+  # hypothesis: owns the bus device node; translators reach the bus through it
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "c6a699f8b99c94db1b28da951169d8f5065c20d59ac20f28de2b14f833488104"
+  # lights, scenarios, CEN -- first question: WHAT 19
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "1ef8de9e64b7a261664554f01a04d3739aa3bb3b4f8846e532e40adbca12179e"
+  # diagnostics, clock -- WHO 1001 DIM 11
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "c54e00cd5dcb67975a741c784896bd429313483adf0f2f54acf77ed3bd3f3621"
+
+# Filled from discovery (docs/oracle-architecture.md section 5):
+#   status: discovered
+#   bus: pty | socket       B1 hardware cut / B2 socket cut
+#   own: full | unit        O1 full stack / O2 one translator
+boundary:
+  status: pending
