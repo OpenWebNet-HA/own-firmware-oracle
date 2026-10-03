@@ -170,6 +170,41 @@ def test_filesystem_readers_failures_become_unreadable(tmp_path, monkeypatch):
     assert rows[-1]["type"] == "squashfs/unreadable"
 
 
+def test_ext_failure_becomes_unreadable_not_an_aborted_run(tmp_path, monkeypatch):
+    def broken(img, work):
+        raise ValueError("debugfs rdump failed")
+    monkeypatch.setattr(unpack, "_ext_tree", broken)
+    fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
+    rows = _walk("rootfs.img", fs, tmp_path)
+    assert rows[-1]["type"] == "ext-fs/unreadable"
+    assert unpack.undecoded(rows) == rows[-1:]
+
+
+def test_empty_filesystem_is_valid_not_unreadable(tmp_path, monkeypatch):
+    monkeypatch.setattr(unpack, "_ext_tree", lambda img, work: [])
+    fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
+    assert [r["type"] for r in _walk("rootfs.img", fs, tmp_path)] == ["ext-fs"]
+
+
+def test_depth_cutoff_marks_unopened_containers_unreadable(tmp_path):
+    blob = _tar({"leaf": b"x" * 10})
+    for _ in range(unpack.MAX_DEPTH + 1):
+        blob = _tar({"inner.tar": blob})
+    rows = _walk("outer.tar", blob, tmp_path)
+    cut = [r for r in rows if r["type"] == "tar/unreadable"]
+    assert len(cut) == 1
+    assert cut[0]["path"].count("!") == unpack.MAX_DEPTH + 1
+    assert unpack.undecoded(rows) == cut
+
+
+def test_depth_cutoff_leaves_leaves_alone(tmp_path):
+    blob = b"plain data"
+    for _ in range(unpack.MAX_DEPTH):
+        blob = _tar({"inner.tar": blob})
+    rows = _walk("outer.tar", blob, tmp_path)
+    assert unpack.undecoded(rows) == []
+
+
 def test_filesystem_trees_are_recorded_under_colon_slash(tmp_path, monkeypatch):
     monkeypatch.setattr(
         unpack,
