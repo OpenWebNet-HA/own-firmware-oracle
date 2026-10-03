@@ -45,8 +45,9 @@ pip install pyyaml            # + boto3 only if you fetch from R2
 # A) public image — fetch + verify from the vendor:
 IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml)
 
-# B) your own device dump — no upload:
-IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml --from-file ./scheduler_010108.fwz)
+# B) a local copy — no upload. Pass the WRAPPER (the file whose size + sha256
+#    the catalog records), not the inner .fwz:
+IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml --from-file ./FW_MH200N_vers_010108.zip)
 
 python tools/unpack.py catalog/MH200N/010108.yaml "$IMG" \
     -o results/MH200N/010108/manifest.tsv

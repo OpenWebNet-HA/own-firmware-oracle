@@ -19,19 +19,24 @@ Nothing about this script is image-specific: point it at any catalog entry.
 from __future__ import annotations
 
 import argparse
-import gzip
 import hashlib
 import io
 import struct
 import subprocess
 import tempfile
 import zipfile
+import zlib
 from pathlib import Path
 
 import yaml
 
+# Manifest key component. Bump when a change to this tool would alter the
+# manifest for an unchanged image; plan.py treats a mismatch as stale.
+TOOL_VERSION = "1"
+
 UIMAGE_MAGIC = 0x27051956
 EXT_MAGIC = 0xEF53
+MAX_DECOMPRESS = 256 * 1024 * 1024  # cap a single gzip layer (bomb guard)
 
 # ELF e_machine -> human CPU name (enough to answer "is this ARM Linux?")
 ELF_MACHINE = {0x28: "ARM", 0x3E: "x86-64", 0x03: "x86", 0xB7: "AArch64", 0x08: "MIPS"}
@@ -97,6 +102,15 @@ def _strip_uimage(data: bytes) -> bytes:
     return data[64:]  # 64-byte legacy U-Boot header, then the payload
 
 
+def _gunzip(data: bytes, limit: int = MAX_DECOMPRESS) -> bytes:
+    """Decompress one gzip member, refusing to expand past `limit` (bomb guard)."""
+    dec = zlib.decompressobj(wbits=16 + zlib.MAX_WBITS)
+    out = dec.decompress(data, limit + 1)
+    if len(out) > limit or dec.unconsumed_tail:
+        raise SystemExit(f"gzip payload exceeds {limit} bytes; refusing to expand")
+    return out + dec.flush()
+
+
 def _ext_tree(img: bytes, work: Path) -> list[tuple[str, bytes]]:
     """List regular files in an ext2/3/4 image via read-only debugfs.
 
@@ -109,10 +123,19 @@ def _ext_tree(img: bytes, work: Path) -> list[tuple[str, bytes]]:
     tmp.write_bytes(img)
     root = work / "tree"
     root.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
+    res = subprocess.run(
         ["debugfs", "-R", f"rdump / {root}", str(tmp)],
-        capture_output=True, text=True,
+        capture_output=True, text=True, check=False,
     )
+    # rdump exits non-zero purely because it can't chown/chmod as non-root;
+    # those lines are expected. Any OTHER stderr line is a real failure
+    # (bad image, I/O error) that would otherwise yield a silent empty tree.
+    real = [
+        ln for ln in res.stderr.splitlines()
+        if ln.strip() and "Operation not permitted" not in ln
+    ]
+    if real:
+        raise SystemExit("debugfs rdump failed:\n  " + "\n  ".join(real[:10]))
     return [
         (str(p.relative_to(root)).replace("\\", "/"), p.read_bytes())
         for p in sorted(root.rglob("*"))
@@ -138,7 +161,7 @@ def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
     elif tag == "uImage":
         walk(f"{name}~payload", _strip_uimage(data), pwds, work, rows, depth + 1)
     elif tag == "gzip":
-        walk(f"{name}~gunzip", gzip.decompress(data), pwds, work, rows, depth + 1)
+        walk(f"{name}~gunzip", _gunzip(data), pwds, work, rows, depth + 1)
     elif tag == "ext-fs":
         sub = work / f"ext{depth}"
         sub.mkdir(parents=True, exist_ok=True)
@@ -169,6 +192,7 @@ def main() -> None:
     with out.open("w", newline="\n") as fh:
         fh.write(f"# product={entry['product']} version={entry['version']}\n")
         fh.write(f"# image_sha256={entry['image']['sha256']}\n")
+        fh.write(f"# tool_version={TOOL_VERSION}\n")
         fh.write("path\ttype\tsize\tsha256\n")
         for r in rows:
             fh.write(f"{r['path']}\t{r['type']}\t{r['size']}\t{r['sha256']}\n")

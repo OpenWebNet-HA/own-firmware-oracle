@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import yaml
 
-TOOL_VERSION = "1"  # bump to force a rebuild of every image
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from unpack import TOOL_VERSION  # single source of truth for the tool version
 
 
 def result_path(catalog: Path) -> str:
@@ -22,13 +24,17 @@ def result_path(catalog: Path) -> str:
 
 
 def is_stale(catalog: Path, results_root: Path) -> bool:
+    """Stale unless the manifest records BOTH the current image hash and tool
+    version. A change to unpack.py (new TOOL_VERSION) therefore rebuilds every
+    image, which is the key documented in this module's docstring."""
     entry = yaml.safe_load(catalog.read_text())
     manifest = results_root / result_path(catalog)
     if not manifest.exists():
         return True
-    head = manifest.read_text().splitlines()[:3]
-    want = f"# image_sha256={entry['image']['sha256']}"
-    return want not in head
+    head = [ln for ln in manifest.read_text().splitlines() if ln.startswith("#")]
+    want_image = f"# image_sha256={entry['image']['sha256']}"
+    want_tool = f"# tool_version={TOOL_VERSION}"
+    return want_image not in head or want_tool not in head
 
 
 def main() -> None:

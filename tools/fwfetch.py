@@ -64,8 +64,10 @@ def _fetch_r2(key: str, dest: Path) -> None:
         aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
     )
-    bucket, _, obj = key.partition("/")
-    s3.download_file(bucket, obj, str(dest))
+    # The bucket is configured out of band (R2_BUCKET); the catalog's r2 source
+    # is the full object key within it, e.g. "firmware/sha256/<hash>.zip".
+    # Do NOT derive the bucket from the key -- "firmware" there is a prefix.
+    s3.download_file(os.environ["R2_BUCKET"], key, str(dest))
 
 
 def fetch(entry: dict, from_file: str | None) -> Path:

@@ -7,7 +7,6 @@ proprietary.
 import gzip
 import io
 import struct
-import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -15,8 +14,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
-import guard  # noqa: E402
-import unpack  # noqa: E402
+import guard
+import plan
+import unpack
 
 
 def _zip(members: dict[str, bytes], password: bytes | None = None) -> bytes:
@@ -73,3 +73,46 @@ def test_guard_passes_tsv(tmp_path):
     good = tmp_path / "manifest.tsv"
     good.write_text("path\ttype\tsize\tsha256\n")
     assert guard.is_binary(good) is None
+
+
+def test_gunzip_rejects_bomb():
+    # 2 MiB of zeros compresses tiny; a 1 KiB limit must refuse to expand it.
+    bomb = gzip.compress(b"\x00" * (2 * 1024 * 1024))
+    try:
+        unpack._gunzip(bomb, limit=1024)
+    except SystemExit:
+        return
+    raise AssertionError("gunzip did not enforce the limit")
+
+
+def test_gunzip_roundtrip_under_limit():
+    assert unpack._gunzip(gzip.compress(b"hello"), limit=1024) == b"hello"
+
+
+def _catalog(tmp_path):
+    cat = tmp_path / "catalog" / "MH200N" / "010108.yaml"
+    cat.parent.mkdir(parents=True)
+    cat.write_text(
+        "product: MH200N\nversion: '010108'\nimage:\n  sha256: 'abc123'\n"
+    )
+    return cat
+
+
+def test_is_stale_on_missing_and_mismatched_keys(tmp_path):
+    cat = _catalog(tmp_path)
+    results = tmp_path / "results"
+    # no manifest yet -> stale
+    assert plan.is_stale(cat, results) is True
+
+    man = results / "MH200N" / "010108" / "manifest.tsv"
+    man.parent.mkdir(parents=True)
+
+    # right image, wrong (old) tool version -> still stale
+    man.write_text("# image_sha256=abc123\n# tool_version=0\npath\n")
+    assert plan.is_stale(cat, results) is True
+
+    # both keys current -> fresh
+    man.write_text(
+        f"# image_sha256=abc123\n# tool_version={unpack.TOOL_VERSION}\npath\n"
+    )
+    assert plan.is_stale(cat, results) is False
