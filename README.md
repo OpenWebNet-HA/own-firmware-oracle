@@ -95,3 +95,8 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 - **Phase 2:** the SCS-bus emulator (`oracle/`) and the first question — which
   bus frames make `bt_luci` / `bt_device` emit WHAT 19, and what each WHO 1001
   DIM 11 mask bit means — cross-checked live on an MH200.
+
+## License
+
+[Apache License 2.0](LICENSE). Covers this repo's own tooling, results and
+findings only — never any vendor firmware, which is not redistributed here.
