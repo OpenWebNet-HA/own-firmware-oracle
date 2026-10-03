@@ -43,7 +43,7 @@ def _zip(members: dict[str, bytes], password: bytes | None = None) -> bytes:
 def test_cpu_of_detects_elf_arm():
     elf = b"\x7fELF" + b"\x01\x01\x01" + b"\x00" * 9
     elf += struct.pack("<HH", 2, 0x28)  # e_type=exec, e_machine=ARM
-    assert unpack.cpu_of(elf) == "ELF/ARM/exec"
+    assert unpack.cpu_of(elf) == "ELF/ARM/exec/32le"  # too short for e_flags
 
 
 def test_cpu_of_detects_containers():

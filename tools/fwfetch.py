@@ -7,7 +7,8 @@ committed; it is fetched to a cache outside the repo tree.
 Sources are tried in catalog order:
   vendor:  HTTPS download from an allow-listed BTicino / Legrand host
            (schema.py checks the URL, and every redirect is re-checked)
-  r2:      S3-compatible object, key = firmware/sha256/<hash>.<ext>
+  r2:      S3-compatible object; the catalog holds the full key (the shared
+           archive uses sha256/<aa>/<bb>/<hash>)
            (needs R2_ENDPOINT / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)
   --from-file: a local copy from your own device (no upload required)
 
@@ -76,8 +77,8 @@ def _fetch_r2(key: str, dest: Path) -> None:
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
     )
     # The bucket is configured out of band (R2_BUCKET); the catalog's r2 source
-    # is the full object key within it, e.g. "firmware/sha256/<hash>.zip".
-    # Do NOT derive the bucket from the key -- "firmware" there is a prefix.
+    # is the full object key within it, e.g. "sha256/9e/62/<hash>".
+    # Do NOT derive the bucket from the key: its first segment is a prefix.
     s3.download_file(os.environ["R2_BUCKET"], key, str(dest))
 
 
