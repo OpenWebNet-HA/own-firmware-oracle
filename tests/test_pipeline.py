@@ -104,6 +104,16 @@ def test_walk_records_fake_containers_without_crashing():
     assert [r["type"] for r in rows] == ["zip/unreadable", "gzip/unreadable"]
 
 
+def test_sibling_ext_layers_get_separate_work_dirs(tmp_path, monkeypatch):
+    # Two filesystems at the same depth must not share an rdump target.
+    seen: list[Path] = []
+    monkeypatch.setattr(unpack, "_ext_tree", lambda img, sub: seen.append(sub) or [])
+    fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
+    outer = _zip({"rootfs.img": fs, "recovery.img": fs + b"\x01"})
+    unpack.walk("fw.zip", outer, [], tmp_path, [])
+    assert len(seen) == 2 and seen[0] != seen[1]
+
+
 def test_debugfs_banner_and_chown_are_not_errors():
     # The version banner and unprivileged chown lines must NOT count as errors.
     noise = (

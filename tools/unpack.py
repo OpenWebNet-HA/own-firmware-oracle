@@ -195,8 +195,11 @@ def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
             return
         walk(f"{name}~gunzip", payload, pwds, work, rows, depth + 1)
     elif tag == "ext-fs":
-        sub = work / f"ext{depth}"
-        sub.mkdir(parents=True, exist_ok=True)
+        # One fresh dir per filesystem: an image can hold several ext layers
+        # at the same depth (MH200N: rootfs + recovery rootfs), and sharing a
+        # dir would make the second rdump collide with -- or mix into -- the first.
+        work.mkdir(parents=True, exist_ok=True)
+        sub = Path(tempfile.mkdtemp(prefix=f"ext{depth}-", dir=work))
         for fpath, blob in _ext_tree(data, sub):
             walk(f"{name}:/{fpath}", blob, pwds, work, rows, depth + 1)
 
