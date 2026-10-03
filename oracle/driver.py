@@ -8,6 +8,7 @@ the bus and what the gateway said on its event side:
     bus:a8 31 00 12 01 22 a3
     own:*1*0*31##
 """
+
 from __future__ import annotations
 
 from typing import Protocol

@@ -8,6 +8,7 @@ fields is a separate layer, so a wrong framing guess loses no data.
 Time comes from an injected Clock, so the settle logic is tested without
 sleeping.
 """
+
 from __future__ import annotations
 
 import time
@@ -16,8 +17,8 @@ from typing import Protocol
 
 # Who put a frame on the bus.
 GATEWAY = "gateway"  # the firmware under test
-DRIVER = "driver"    # a step injected it
-DEVICE = "device"    # a Responder answered
+DRIVER = "driver"  # a step injected it
+DEVICE = "device"  # a Responder answered
 
 
 class Port(Protocol):
@@ -83,6 +84,36 @@ class DelimitedFramer:
         self._buf.clear()
         self._in_frame = False
         return [frame]
+
+
+class LineFramer:
+    """A frame ends at CR or LF; NUL padding before a frame is dropped.
+
+    The MH200N's scsserver talks to its bus interface (a PIC) in short ASCII
+    commands -- `$24` CR, NUL-padded to 8 bytes -- so CR is the frame end, and
+    unlike an idle gap it does not depend on scheduling: the same bytes give
+    the same frames however the reads were chunked."""
+
+    name = "line"
+    ENDS = b"\r\n"
+
+    def __init__(self) -> None:
+        self._buf = bytearray()
+
+    def feed(self, data: bytes, now_ms: float) -> list[bytes]:
+        out: list[bytes] = []
+        for b in data:
+            if b == 0 and not self._buf:
+                continue  # padding between frames
+            self._buf.append(b)
+            if b in self.ENDS:
+                out.append(bytes(self._buf))
+                self._buf.clear()
+        return out
+
+    def flush(self, now_ms: float) -> list[bytes]:
+        frame, self._buf = bytes(self._buf), bytearray()
+        return [frame] if frame else []
 
 
 class IdleGapFramer:

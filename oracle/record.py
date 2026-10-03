@@ -9,6 +9,7 @@ Rows of a `.cases` suite are sorted by (direction, input); a `.seq` keeps its
 order. Within a row, outputs keep emission order, joined with OUTPUT_SEP.
 No timestamps, PIDs or ports: a re-run must give a byte-identical file.
 """
+
 from __future__ import annotations
 
 import re
@@ -25,13 +26,21 @@ EMPTY = "-"
 # Header keys, in the order they are written. A record missing one is invalid:
 # each can change an answer, so each is part of the staleness key.
 HEADER_KEYS = (
-    "product", "version", "image_sha256",
-    "harness", "target_sha256",
+    "product",
+    "version",
+    "image_sha256",
+    "harness",
+    "target_sha256",
     # adapter = <name>-<version>: a pty result is never silently compared
     # with a shim or system-emulation one
-    "adapter", "reset",
-    "bus", "framer", "responder", "settle_ms",
-    "suite", "suite_sha256",
+    "adapter",
+    "reset",
+    "bus",
+    "framer",
+    "responder",
+    "settle_ms",
+    "suite",
+    "suite_sha256",
     "oracle_version",
 )
 HEADER_VALUE = re.compile(r"[\x21-\x7e]+")
@@ -74,9 +83,10 @@ class Row:
 
     def cells(self) -> list[str]:
         # '|' escaped inside an output so OUTPUT_SEP stays unambiguous
-        output = OUTPUT_SEP.join(
-            tsv_field(o).replace("|", "\\x7c") for o in self.outputs
-        ) or EMPTY
+        output = (
+            OUTPUT_SEP.join(tsv_field(o).replace("|", "\\x7c") for o in self.outputs)
+            or EMPTY
+        )
         return [self.direction, tsv_field(self.input), self.reply, self.verdict, output]
 
 
@@ -110,9 +120,13 @@ def render(header: dict[str, str], rows: list[Row], *, ordered: bool) -> str:
     return "\n".join(lines) + "\n"
 
 
-def write(path: Path, header: dict[str, str], rows: list[Row], *, ordered: bool) -> None:
+def write(
+    path: Path, header: dict[str, str], rows: list[Row], *, ordered: bool
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render(header, rows, ordered=ordered), encoding="ascii", newline="\n")
+    path.write_text(
+        render(header, rows, ordered=ordered), encoding="ascii", newline="\n"
+    )
 
 
 def read_header(path: Path) -> dict[str, str]:

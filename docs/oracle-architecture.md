@@ -88,13 +88,13 @@ flowchart LR
 |---|---|---|---|
 | Target spec | `oracle/target.py`, `oracle/targets/` | no (checks hashes against the manifest) | 2a |
 | Case files | `oracle/cases.py`, `oracle/cases/` | no | 2a |
-| Sandbox + qemu command lines | `oracle/sandbox.py` | no (builds argv only) | 2a |
-| Boundary discovery | `oracle/discover.py` | yes, to produce the trace; parser is not | 2a |
+| Sandbox + jail command lines | `oracle/sandbox.py` | no (builds argv only) | 2a |
+| Boundary discovery | `oracle/discover.py`, `oracle/run.py discover` | yes, to produce the trace; parser is not | 2a |
 | Simulated bus, framers, responders | `oracle/bus.py` | no | 2a |
 | Driver loop | `oracle/driver.py` | no (talks to a `Target` protocol) | 2a |
 | Recorder | `oracle/record.py` | no | 2a |
-| Stage (sysroot) | `oracle/stage.py` | yes | 2b |
-| `QemuTarget` (real adapters) | `oracle/qemu_target.py` | yes | 2b, after discovery |
+| Stage (sysroot) | `oracle/stage.py` | yes (unit-tested on synthetic archives) | 2a |
+| `QemuTarget` (real adapters) | `oracle/qemu_target.py` | yes | 2b |
 | Live cross-check | `tools/live_probe.py` | no (needs a real gateway) | 2c |
 
 Everything marked "no" is unit-tested in `pr.yml` on synthetic fixtures, like
@@ -117,10 +117,11 @@ From `results/MH200N/010108/manifest.tsv` (file names and types only):
   configuration, likely the wiring between those processes;
 * kernel `2.4.19-rmk7-pxa2-btweb`: ARM, XScale PXA2xx, no hardware FPU.
 
-The working hypothesis is: translators link `libopenscs` and talk to
+The working hypothesis was: translators link `libopenscs` and talk to
 `scsserver`; `scsserver` owns the device node that reaches the bus
-transceiver. **2a's first job is to confirm or refute this by observation**
-(section 5), not by reading code.
+transceiver. Discovery (section 5) confirmed it by observation: `scsserver`
+opens `/dev/ttyPIC` and serves TCP 20001, and `bt_luci` / `bt_device` connect
+to 127.0.0.1:20001.
 
 ### 4.2 Bus side
 
@@ -132,10 +133,14 @@ transceiver. **2a's first job is to confirm or refute this by observation**
 | B4 vendor-library cut | shim replacing `libopenscs` functions | — | needs the library's function signatures, i.e. reading the binary | **rejected** (ground rules) |
 | B5 system emulation | `qemu-system-arm` booting the 2.4.19 PXA kernel with a modelled bus device | highest | a PXA board model plus a device model for the bus hardware | not v1 |
 
-The pty trick works because `qemu-arm -L <sysroot>` resolves an absolute path
-inside the sysroot first: `/dev/ttyS1` opened by the guest becomes
-`<sysroot>/dev/ttyS1`, which we point at our pty slave. If `scsserver` issues
-termios ioctls, a pty answers them like a UART.
+The pty trick: the firmware jail makes the staged sysroot the root directory
+and bind-mounts the slave of a pty we hold at the device path the target spec
+names, so `/dev/ttyPIC` opened by the guest is our pty. (`qemu-arm -L` was
+the first plan, but it falls back to the HOST path when a file is missing in
+the prefix: the first trace read the host's `ld.so.cache` that way.) The
+foreign binary runs through the kernel's binfmt_misc entry for its CPU,
+registered with the `F` flag so it works inside the new root. If the program
+issues termios ioctls, a pty answers them like a UART.
 
 Every option runs the ARM binary under `qemu-arm` on an x86 host, a shim
 included: an `LD_PRELOAD` library is guest code too. So the order is pty
@@ -156,39 +161,79 @@ The harness used is part of every record's header (`harness=full` or
 `harness=unit:<binary>`), because the answers can differ: a frame `openserver`
 rejects never reaches a translator.
 
-## 5. Boundary discovery (phase 2a, first step)
+## 5. Boundary discovery (phase 2a, done for MH200N 1.1.8)
 
-Run the target under `qemu-arm -strace` inside the sandbox with an empty bus
-and capture the syscall trace. `oracle/discover.py` reduces it to
-`results/<product>/<version>/oracle/boundary.tsv` (the rows below are
-illustrative; nothing has been traced yet):
+```bash
+IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml)
+python -m oracle.run discover oracle/targets/MH200N/010108.yaml \
+    --image "$IMG" --program scsserver          # --seconds 10 by default
+```
+
+`discover` stages the target's sysroot (`oracle/stage.py`, section 6.1), runs
+one program in the firmware jail for a fixed window with qemu's syscall trace
+on (one file per process, so concurrent programs never interleave), holds the
+master side of a pty for every device the target declares, and writes
+`results/<product>/<version>/oracle/boundary/<program>.tsv`: the trace reduced
+by `oracle/discover.py`, every distinct burst written to a device (split at
+CR by `LineFramer`, independent of scheduling), and how the run ended.
+Nothing is sent to the program; discovery only listens. A real row:
 
 ```
-# product=MH200N version=010108 target=scsserver target_sha256=c6a6…
+# product=MH200N
+# version=010108
+# image_sha256=e32d…
+# program=scsserver
+# target_sha256=c6a6…
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
 # oracle_version=1
 kind	detail	result
-open	/dev/ttyS1 O_RDWR|O_NOCTTY	ok
-ioctl	fd=/dev/ttyS1 req=0x5401	ok
-bind	unix:/tmp/scs.sock	ok
-connect	inet:127.0.0.1:20000	ECONNREFUSED
+bind	inet:0.0.0.0:20001	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+write	/dev/ttyPIC	$24\x0d
 ```
 
-These are observations of behaviour (which files, sockets and ioctl request
-numbers a program uses), not code. They decide B1 vs B2 and O1 vs O2 per
-target and fill the `boundary:` block of `oracle/targets/<product>/<version>.yaml`.
-Until that block is filled, a target cannot run cases (`target.py` refuses).
+fd numbers, PIDs and pointers are dropped, results become `ok` or an errno
+name, facts are de-duplicated and sorted: two passes over all five MH200N
+programs gave byte-identical files. These are observations of behaviour
+(which files, sockets and ioctls a program uses), not code. They decide B1
+vs B2 and O1 vs O2 and fill the `boundary:` block of
+`oracle/targets/<product>/<version>.yaml`; until it is filled, a target cannot
+run cases (`target.py` refuses).
 
-Discovery is also where emulation risks surface early:
+### 5.1 What the MH200N 1.1.8 records show
 
-* **OABI.** Linux 2.4 ARM binaries use the old syscall ABI. `qemu-arm`
-  supports it (non-EABI ELF header → OABI path); confirm on the first run.
-* **FPA floats.** No FPU on the PXA; the binaries may use FPA instructions the
-  kernel emulated (NWFPE). `qemu-arm` linux-user carries the same emulator.
-* **Kernel version checks.** `-r 2.4.19` makes `uname` report the original
-  release.
-* **Hardware the bus does not cover**: watchdog, MTD flash, RTC ioctls. Each
-  gets a file, a pty or `/dev/null` in the staged sysroot, recorded in the
-  target spec. A program that needs more than that is a B2 / O2 case.
+| Program | Observed |
+|---|---|
+| `scsserver` | opens `/dev/ttyPIC`; the pty answers `TCGETS` / `TCSETS` (38400 8N1, `IXON|IXOFF`) / `TCFLSH`; listens on TCP 20001; writes five short ASCII commands to the PIC (`$24` CR, `$020000` CR, …) |
+| `bt_luci` | listens on 30001 and 40001; connects to 127.0.0.1:20001 |
+| `bt_device` | listens on 30013 and 40013; connects to 127.0.0.1:20001 |
+| `openserver` | connects to 127.0.0.1:40001 (`bt_luci`) — alone, refused |
+| `bt_processi` | starts `cfg/stack_open.xml`'s p0..p2 (`openserver`, `scsserver`, `bt_device`): `openserver` then **listens on TCP 20000**, connects to `bt_device` on 40013, `bt_device` reaches `scsserver` |
+
+So the target is `bus: pty` (B1) and `own: full` (O1). Two loose ends for 2b:
+`bt_processi` does not start `bt_luci` (the harness has to), and under the
+full stack one `TIOCMGET` on `/dev/ttyPIC` fails with `ENOTTY` — a pty has no
+modem lines, and `stack_open.xml` sets `<rts_alim>1`. If the PIC handshake
+depends on it, the libc shim (B3) is the fallback.
+
+Emulation risks, as they turned out:
+
+* **OABI.** The binaries are `ELF/ARM/…/oabi`; `qemu-arm` 8.2.2 runs them
+  through its OABI path. Confirmed: every program ran its window.
+* **FPA floats.** No `SIGILL` in any window, but nothing shows an FPA code path
+  ran either; still open.
+* **Kernel version checks.** `QEMU_UNAME=2.4.19` makes `uname` report the
+  original release.
+* **Libraries.** The image has no `ld.so.cache`; the app's libraries live only
+  in `/home/bticino/lib`, so the target sets `LD_LIBRARY_PATH` (runtime block,
+  each value cited from the image).
+* **Hardware the bus does not cover**: `/dev/nvram`, `/dev/wd`,
+  `/proc/sys/dev/btweb/*` are missing (`ENOENT`) and no program died of it in
+  the window. Each can get a file, a pty or `/dev/null` in the runtime block
+  once a record shows it matters. A program that needs more is a B2 / O2 case.
 
 ## 6. Components
 
@@ -208,37 +253,60 @@ sysroot:                         # layers overlaid in order, by manifest prefix
 programs:
   bt_luci:   { path: home/bticino/bin/bt_luci,   sha256: 1ef8… }
   scsserver: { path: home/bticino/bin/scsserver, sha256: c6a6… }
-boundary:
-  status: pending                # discovery not run yet
+runtime:                         # what the device's boot sets up, cited
+  cwd: /home/bticino
+  env: { LD_LIBRARY_PATH: /home/bticino/lib }
+  devices: { /dev/ttyPIC: pty }
+boundary: { status: discovered, bus: pty, own: full }
 ```
+
+The emulator is not configured: it follows from the programs' ELF tags in the
+manifest (`ELF/ARM/…` → `qemu-arm`), and all programs of a target must agree.
+
+**Staging** (`oracle/stage.py`) rebuilds the sysroot from the image with phase
+1's own walker (`unpack.walk(..., sink=)`), so there is no second extractor.
+Every member must match its manifest row and every row under a sysroot layer
+must turn up; a mismatch means the manifest is stale. Member names are
+untrusted: `..`, empty components and NULs are refused, nothing is written
+through a symlink, and link targets are re-rooted inside the sysroot, so an
+absolute `/lib/libc.so.6` never resolves on the host. Empty directories
+(`/var/run`, …) are manifest `dir` rows since tool version 4, so the staged
+tree has them.
 
 ### 6.2 Sandbox (`oracle/sandbox.py`)
 
-One `bwrap` around the **whole run** (driver + firmware), not around each
-process, so the driver can reach the firmware's loopback sockets:
+The **firmware jail** (`jail`, used by discovery):
 
-* `--unshare-all` (no network beyond a private loopback, no IPC, own PID
-  namespace), `--die-with-parent`, `--clearenv` with `TZ=UTC`;
-* host `/usr`, `/lib*` read-only (Python and `qemu-arm`), the per-run work
-  dir read-write, nothing else of the host;
-* the staged sysroot is mounted **read-only**, with a tmpfs over each
-  directory discovery shows the program writes to (`/tmp`, `/var`, ...); it is
-  deleted after the run like `unpack.py` does;
-* each firmware process gets a CPU-time and an address-space limit
-  (`prlimit`), so a runaway program becomes a `crash` or `timeout` row, not a
-  stuck job.
+* `bwrap --unshare-all --die-with-parent --new-session --clearenv`: no
+  network beyond a private loopback, no IPC, own PID namespace;
+* the staged sysroot is `/`: nothing of the host is visible, so every guest
+  path resolves inside the firmware tree. It is a throwaway copy under the
+  run's work dir, mounted writable (programs write `/var/name`, logs, ...),
+  and deleted after the run like `unpack.py` does;
+* device nodes the target names are bind-mounted from ptys the driver holds;
+* the CPU comes from binfmt_misc (`qemu-<arch>` with the `F` flag, checked
+  before a run); `QEMU_UNAME` and `QEMU_STRACE` are passed in the environment
+  so children of a supervisor are traced too.
 
-Inside, each firmware process is `qemu-arm -L <sysroot> -r 2.4.19 <binary>`.
+The **driver jail** (`wrap`, 2b) puts one `bwrap` around the whole suite run
+(driver + firmware), so the driver can reach the firmware's loopback sockets:
+host `/usr`, `/lib*` read-only, the work dir read-write, nothing else. Still
+to do in 2b: a fresh sysroot copy per `reset=each` step, and a CPU-time and
+address-space limit per firmware process (`prlimit`), so a runaway program
+becomes a `crash` or `timeout` row, not a stuck job.
 
 ### 6.3 Simulated bus (`oracle/bus.py`)
 
 * **`Port`**: bytes in and out of the bus adapter (a pty master in production,
   a queue in tests).
 * **`Framer`**: splits the byte stream into frames. `IdleGapFramer` (a frame
-  is a burst followed by silence) is the default: it assumes nothing about
-  SCS. `DelimitedFramer` (start/end bytes; the community `A8 … A3` framing)
-  is a hypothesis a finding has to earn, like any checksum; the core has no
-  SCS parser. A pty loses the boundaries between the firmware's `write()`
+  is a burst followed by silence) assumes nothing about SCS. `DelimitedFramer`
+  (start/end bytes; the community `A8 … A3` framing) is a hypothesis a finding
+  has to earn, like any checksum; the core has no SCS parser. `LineFramer`
+  (CR / LF ends a frame, NUL padding dropped) fits what discovery saw on the
+  MH200N: `scsserver` talks to a PIC in short ASCII commands, so the bytes on
+  `/dev/ttyPIC` are not raw SCS frames. Unlike an idle gap it does not depend
+  on scheduling. A pty loses the boundaries between the firmware's `write()`
   calls, which is one reason to fall back to the libc shim.
 * **`Responder`**: the simulated devices on the bus. `Silent` (no device),
   `AckAll` (every frame acknowledged), and scripted responders that answer
@@ -369,19 +437,29 @@ network namespace.
 
 ## 8. Build order
 
-| Step | Delivers | Done when |
-|---|---|---|
-| **2a scaffold** | everything marked "no firmware" in section 3, with tests | `pr.yml` green |
-| **2a discovery** | `boundary.tsv` for `scsserver`, `bt_luci`, `bt_device`; filled `boundary:` blocks | a trace per program, OABI / FPA confirmed or ruled out |
-| **2b first light** | `stage.py`, `QemuTarget`, one down suite (`lights-level`) on MH200N | zero diff on re-run; `*1*1*31##` gives a bus frame |
-| **2c WHAT 19** | up suite over the bus frames that could carry the fault, through `bt_luci` then `bt_device`; `check.py` against `EVID-MH200-WHAT19-FAULT` | finding in `findings/MH200N/`: which bus input gives `*1*19*74##` and which mask positions toggle, or that neither program emits it (MyHOME#593, #611) |
-| **2d replay OWNd#77** | gdluck's frame lists as suites, run on MH200N | per fix: holds / differs on MH200N |
-| **2e second image** | F454 2.0.51 or MH202 1.0.24 in the catalog; same suites | a cross-image TSV diff |
+| Step | Delivers | Done when | Status |
+|---|---|---|---|
+| **2a scaffold** | everything marked "no firmware" in section 3, with tests | `pr.yml` green | done |
+| **2a discovery** | `stage.py`, `oracle.run discover`, `boundary/<program>.tsv` for `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`; filled `boundary:` block | a trace per program, OABI / FPA confirmed or ruled out | done for MH200N (OABI confirmed, FPA open; section 5.1) |
+| **2b first light** | `QemuTarget` (full stack: `bt_processi` + `bt_luci`, OWN on TCP 20000, PIC on the pty), one down suite (`lights-level`) on MH200N | zero diff on re-run; `*1*1*31##` gives a PIC write | next |
+| **2c WHAT 19** | up suite over the bus frames that could carry the fault, through `bt_luci` then `bt_device`; `check.py` against `EVID-MH200-WHAT19-FAULT` | finding in `findings/MH200N/`: which bus input gives `*1*19*74##` and which mask positions toggle, or that neither program emits it (MyHOME#593, #611) | |
+| **2d replay OWNd#77** | gdluck's frame lists as suites, run on MH200N | per fix: holds / differs on MH200N | |
+| **2e second image** | F454 2.0.51 or MH202 1.0.24 in the catalog; same suites | a cross-image TSV diff | |
 
 ## 9. Open risks
 
 * **Full stack may not boot** under user-mode emulation (init expects
   hardware). O2 per translator is the fallback; the header says which ran.
+  Discovery saw `openserver` listen on 20000 under `bt_processi`, so O1 looks
+  viable on the MH200N.
+* **The bus side is a PIC, not raw SCS.** `scsserver` writes short ASCII
+  commands (`$24` CR, ...) to `/dev/ttyPIC` and presumably waits for answers.
+  A `Silent` responder may stall it; 2b needs a responder that answers the
+  PIC's init sequence, learnt from what `scsserver` sends and how it reacts,
+  and every such answer is a hypothesis in the record header. "Up" steps
+  become PIC-side input, not SCS bytes.
+* **Modem lines.** `TIOCMGET` on the pty fails under the full stack
+  (`<rts_alim>1`); if the PIC power-up depends on it, use the libc shim (B3).
 * **Clock-dependent output** (`bt_device` time frames). Guest time is host
   time under qemu-user; such rows are normalised by the recorder and marked,
   rather than faked with a guest-side library we would have to write.

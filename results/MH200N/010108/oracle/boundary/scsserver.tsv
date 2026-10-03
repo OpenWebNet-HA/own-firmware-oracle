@@ -1,0 +1,27 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# program=scsserver
+# target_sha256=c6a699f8b99c94db1b28da951169d8f5065c20d59ac20f28de2b14f833488104
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:20001	ok
+exit	running	timeout
+ioctl	/dev/ttyPIC TCFLSH	ok
+ioctl	/dev/ttyPIC TCGETS	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+listen	inet:0.0.0.0:20001	ok
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/var/Pic_Rel.txt O_RDWR	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/scsserver O_WRONLY|O_CREAT|O_TRUNC	ok
+write	/dev/ttyPIC	$020000\x0d
+write	/dev/ttyPIC	$24\x0d
+write	/dev/ttyPIC	$2603\x0d
+write	/dev/ttyPIC	$2702\x0d
+write	/dev/ttyPIC	$270200\x0d

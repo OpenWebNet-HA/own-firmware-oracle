@@ -3,6 +3,7 @@
 The driver runs against a fake Target, the bus against a queue Port and a
 fake clock, the target spec against the committed MH200N manifest.
 """
+
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from oracle import bus, cases, discover, driver, record, sandbox, target
+from oracle import bus, cases, driver, record, target
 
 # --- cases -------------------------------------------------------------------
 
@@ -23,10 +24,14 @@ def _suite(tmp_path, name, text):
 
 
 def test_cases_sort_independent_steps_and_skip_comments(tmp_path):
-    s = _suite(tmp_path, "s.cases", "; c\ndown *1*1*31##\n\nup A8 31  a3\ndown *1*0*31##\n")
+    s = _suite(
+        tmp_path, "s.cases", "; c\ndown *1*1*31##\n\nup A8 31  a3\ndown *1*0*31##\n"
+    )
     assert not s.ordered
     assert [(st.direction, st.input) for st in s.steps] == [
-        ("down", "*1*0*31##"), ("down", "*1*1*31##"), ("up", "a8 31 a3"),
+        ("down", "*1*0*31##"),
+        ("down", "*1*1*31##"),
+        ("up", "a8 31 a3"),
     ]
 
 
@@ -42,13 +47,16 @@ def test_cases_keep_sequence_order_and_allow_repeats(tmp_path):
     assert [st.input for st in s.steps] == ["*1*1*31##", "*#1*31##", "*1*1*31##"]
 
 
-@pytest.mark.parametrize("text", [
-    "down *1*1*31##\ndown *1*1*31##\n",   # duplicate in an unordered suite
-    "sideways *1*1*31##\n",                # unknown direction
-    "up a8 3\n",                           # not hex bytes
-    "down *1*1 *31##\n",                   # space inside OpenWebNet text
-    "; only a comment\n",                  # no steps
-])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "down *1*1*31##\ndown *1*1*31##\n",  # duplicate in an unordered suite
+        "sideways *1*1*31##\n",  # unknown direction
+        "up a8 3\n",  # not hex bytes
+        "down *1*1 *31##\n",  # space inside OpenWebNet text
+        "; only a comment\n",  # no steps
+    ],
+)
 def test_cases_reject_bad_suites(tmp_path, text):
     with pytest.raises(cases.CaseError):
         _suite(tmp_path, "s.cases", text)
@@ -71,11 +79,20 @@ def test_committed_suites_load():
 # --- record ------------------------------------------------------------------
 
 HEADER = {
-    "product": "MH200N", "version": "010108", "image_sha256": "e" * 64,
-    "harness": "unit:bt_luci", "target_sha256": "1" * 64,
-    "adapter": "pty-1", "reset": "each",
-    "bus": "pty", "framer": "idle:20", "responder": "silent", "settle_ms": "300",
-    "suite": "lights", "suite_sha256": "5" * 64, "oracle_version": "1",
+    "product": "MH200N",
+    "version": "010108",
+    "image_sha256": "e" * 64,
+    "harness": "unit:bt_luci",
+    "target_sha256": "1" * 64,
+    "adapter": "pty-1",
+    "reset": "each",
+    "bus": "pty",
+    "framer": "idle:20",
+    "responder": "silent",
+    "settle_ms": "300",
+    "suite": "lights",
+    "suite_sha256": "5" * 64,
+    "oracle_version": "1",
 }
 
 
@@ -87,7 +104,7 @@ def test_record_sorts_rows_and_is_stable():
     ]
     text = record.render(HEADER, rows, ordered=False)
     assert text == record.render(HEADER, list(reversed(rows)), ordered=False)
-    body = text.splitlines()[len(record.HEADER_KEYS):]
+    body = text.splitlines()[len(record.HEADER_KEYS) :]
     assert body == [
         "direction\tinput\treply\tverdict\toutput",
         "down\t*1*0*31##\tnack\tsilent\t-",
@@ -99,20 +116,42 @@ def test_record_sorts_rows_and_is_stable():
 def test_record_escapes_hostile_firmware_output():
     row = record.Row("up", "a8", "-", "out", ("own:*1\t9\n|é##",))
     cell = row.cells()[-1]
-    assert "\t" not in cell and "\n" not in cell and "|" not in cell
+    assert "\t" not in cell
+    assert "\n" not in cell
+    assert "|" not in cell
     assert cell.isascii()
 
 
 def test_record_rejects_incomplete_headers_and_bad_rows():
-    with pytest.raises(ValueError):
-        record.render({k: v for k, v in HEADER.items() if k != "suite_sha256"}, [], ordered=False)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="missing"):
+        record.render(
+            {k: v for k, v in HEADER.items() if k != "suite_sha256"}, [], ordered=False
+        )
+    with pytest.raises(ValueError, match="harness"):
         record.render({**HEADER, "harness": "unit:../x"}, [], ordered=False)
-    with pytest.raises(ValueError):
-        record.Row("down", "x", "ack", "out")             # out without outputs
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="plain token"):
+        record.render({**HEADER, "suite": "two words"}, [], ordered=False)
+    row = record.Row("down", "x", "ack", "silent")
+    with pytest.raises(ValueError, match="duplicate"):
+        record.render(HEADER, [row, row], ordered=False)
+    with pytest.raises(ValueError, match="needs at least one output"):
+        record.Row("down", "x", "ack", "out")
+    with pytest.raises(ValueError, match="cannot have outputs"):
         record.Row("down", "x", "ack", "silent", ("bus:a8",))
-    record.Row("down", "x", "-", "crash", ("bus:a8",))     # crash keeps partial output
+    for bad in (("sideways", "-", "out"), ("down", "maybe", "out"), ("up", "-", "?")):
+        with pytest.raises(ValueError, match=r"direction|reply|verdict"):
+            record.Row(bad[0], "x", bad[1], bad[2], ("bus:a8",))
+    record.Row("down", "x", "-", "crash", ("bus:a8",))  # crash keeps partial output
+    # a sequence keeps its order and may repeat a step
+    seq = [
+        record.Row("down", "b", "ack", "silent"),
+        record.Row("down", "a", "-", "silent"),
+    ]
+    assert record.render(HEADER, [*seq, seq[0]], ordered=True).splitlines()[-3:] == [
+        "down\tb\tack\tsilent\t-",
+        "down\ta\t-\tsilent\t-",
+        "down\tb\tack\tsilent\t-",
+    ]
 
 
 def test_record_roundtrips_header_and_result_path(tmp_path):
@@ -152,7 +191,8 @@ def test_delimited_framer_splits_and_keeps_strays():
     f = bus.DelimitedFramer()
     assert f.feed(bytes.fromhex("00 a8 31"), 0) == [b"\x00"]
     assert f.feed(bytes.fromhex("12 a3 a8 01 a3"), 0) == [
-        bytes.fromhex("a8 31 12 a3"), bytes.fromhex("a8 01 a3"),
+        bytes.fromhex("a8 31 12 a3"),
+        bytes.fromhex("a8 01 a3"),
     ]
     assert f.feed(bytes.fromhex("a8 99"), 0) == []
     assert f.flush(0) == [bytes.fromhex("a8 99")]
@@ -174,8 +214,17 @@ def test_bus_settles_logs_and_answers_with_responder():
     b.inject(b"\xa8\x00\xa3")
     mark = 1
     assert b.settle(quiet_ms=50, max_ms=1000) is True
-    assert b.gateway_frames(mark) == [bytes.fromhex("a8 31 a3"), bytes.fromhex("a8 32 a3")]
-    assert [f.source for f in b.log] == [bus.DRIVER, bus.GATEWAY, bus.DEVICE, bus.GATEWAY, bus.DEVICE]
+    assert b.gateway_frames(mark) == [
+        bytes.fromhex("a8 31 a3"),
+        bytes.fromhex("a8 32 a3"),
+    ]
+    assert [f.source for f in b.log] == [
+        bus.DRIVER,
+        bus.GATEWAY,
+        bus.DEVICE,
+        bus.GATEWAY,
+        bus.DEVICE,
+    ]
     assert port.written == [b"\xa8\x00\xa3", b"\xa5", b"\xa5"]
 
 
@@ -236,14 +285,22 @@ class FakeTarget:
 
 
 def test_driver_classifies_and_restarts_after_a_crash(tmp_path):
-    s = _suite(tmp_path, "s.cases", "down *1*1*31##\ndown *2*1*31##\ndown *9*1##\nup a8 31 a3\n")
+    s = _suite(
+        tmp_path,
+        "s.cases",
+        "down *1*1*31##\ndown *2*1*31##\ndown *9*1##\nup a8 31 a3\n",
+    )
     t = FakeTarget()
     rows = {(r.direction, r.input): r for r in driver.run_suite(t, s, restart_every=0)}
-    assert rows[("down", "*1*1*31##")] == record.Row("down", "*1*1*31##", "ack", "out", ("bus:a8 31 a3",))
+    assert rows[("down", "*1*1*31##")] == record.Row(
+        "down", "*1*1*31##", "ack", "out", ("bus:a8 31 a3",)
+    )
     assert rows[("down", "*2*1*31##")].verdict == "silent"
     assert rows[("down", "*2*1*31##")].reply == "nack"
     assert rows[("down", "*9*1##")].verdict == "crash"
-    assert rows[("up", "a8 31 a3")] == record.Row("up", "a8 31 a3", "-", "out", ("own:*1*1*31##",))
+    assert rows[("up", "a8 31 a3")] == record.Row(
+        "up", "a8 31 a3", "-", "out", ("own:*1*1*31##",)
+    )
     assert t.restarts == 2  # initial + after the crash
 
 
@@ -266,41 +323,67 @@ def test_driver_skips_the_rest_of_a_sequence_after_a_crash(tmp_path):
 
 def test_committed_mh200n_target_matches_the_manifest():
     spec = target.load(ROOT / "oracle/targets/MH200N/010108.yaml", ROOT / "results")
-    assert set(spec.programs) == {"scsserver", "bt_luci", "bt_device"}
+    assert set(spec.programs) == {
+        "bt_processi",
+        "openserver",
+        "scsserver",
+        "bt_luci",
+        "bt_device",
+    }
     assert spec.programs["bt_luci"].layer.endswith("btweb_app.zip!")
-    assert not spec.ready
-    with pytest.raises(target.TargetError):
-        spec.require_ready()
+    assert spec.arch == "arm"
+    assert spec.runtime.devices == {"/dev/ttyPIC": "pty"}
+    assert spec.ready
+    spec.require_ready()
+    # every program has its discovery record, pinned to the same binary
+    for name, prog in spec.programs.items():
+        tsv = ROOT / f"results/MH200N/010108/oracle/boundary/{name}.tsv"
+        header = dict(
+            line[2:].split("=", 1)
+            for line in tsv.read_text().splitlines()
+            if line.startswith("# ")
+        )
+        assert header["target_sha256"] == prog.sha256
+        assert header["image_sha256"] == spec.image_sha256
 
 
-def _write_target(tmp_path, programs, boundary="status: pending"):
+def _write_target(tmp_path, programs, boundary="status: pending", extra=""):
     results = tmp_path / "results"
     (results / "P" / "1").mkdir(parents=True)
     (results / "P" / "1" / "manifest.tsv").write_text(
-        "# product=P version=1\npath\ttype\tsize\tsha256\n"
-        f"w.zip!fs:/bin/a\tELF/ARM/exec\t1\t{'a' * 64}\n"
-        f"w.zip!app.zip!bin/a\tELF/ARM/exec\t1\t{'b' * 64}\n"
+        f"# product=P version=1\n# image_sha256={'e' * 64}\n"
+        "path\ttype\tsize\tsha256\n"
+        f"w.zip!fs:/bin/a\tELF/ARM/exec/32le/oabi\t1\t{'a' * 64}\n"
+        f"w.zip!fs:/bin/f\tELF/ARM/exec/32le/oabi\t1\t{'f' * 64}\n"
+        f"w.zip!app.zip!bin/a\tELF/ARM/exec/32le/oabi\t1\t{'b' * 64}\n"
+        f"w.zip!app.zip!bin/m\tELF/MIPS/exec/32be\t1\t{'c' * 64}\n"
+        f"w.zip!app.zip!bin/z\tELF/SPARC/exec/32be\t1\t{'d' * 64}\n"
     )
     spec = tmp_path / "targets" / "P" / "1.yaml"
     spec.parent.mkdir(parents=True)
     spec.write_text(
         'product: P\nversion: "1"\nsysroot: ["w.zip!fs:", "w.zip!app.zip!"]\n'
-        f"programs:\n{programs}\nboundary:\n  {boundary}\n"
+        f"programs:\n{programs}\nboundary:\n  {boundary}\n{extra}"
     )
     return spec, results
 
 
 def test_target_overlay_takes_the_last_layer(tmp_path):
-    spec, results = _write_target(tmp_path, f'  a: {{path: bin/a, sha256: "{"b" * 64}"}}')
+    spec, results = _write_target(
+        tmp_path, f'  a: {{path: bin/a, sha256: "{"b" * 64}"}}'
+    )
     assert target.load(spec, results).programs["a"].layer == "w.zip!app.zip!"
 
 
-@pytest.mark.parametrize("programs", [
-    f'  a: {{path: bin/a, sha256: "{"a" * 64}"}}',      # hash of the overridden layer
-    f'  a: {{path: ../bin/a, sha256: "{"b" * 64}"}}',   # escapes the sysroot
-    f'  a: {{path: bin/missing, sha256: "{"b" * 64}"}}',
-    '  a: {path: bin/a, sha256: "nothex"}',
-])
+@pytest.mark.parametrize(
+    "programs",
+    [
+        f'  a: {{path: bin/a, sha256: "{"a" * 64}"}}',  # hash of the overridden layer
+        f'  a: {{path: ../bin/a, sha256: "{"b" * 64}"}}',  # escapes the sysroot
+        f'  a: {{path: bin/missing, sha256: "{"b" * 64}"}}',
+        '  a: {path: bin/a, sha256: "nothex"}',
+    ],
+)
 def test_target_rejects_unpinned_programs(tmp_path, programs):
     spec, results = _write_target(tmp_path, programs)
     with pytest.raises(target.TargetError):
@@ -309,60 +392,15 @@ def test_target_rejects_unpinned_programs(tmp_path, programs):
 
 def test_target_validates_the_boundary_block(tmp_path):
     ok = f'  a: {{path: bin/a, sha256: "{"b" * 64}"}}'
-    spec, results = _write_target(tmp_path, ok, "status: discovered\n  bus: pty\n  own: unit")
+    spec, results = _write_target(
+        tmp_path, ok, "status: discovered\n  bus: pty\n  own: unit"
+    )
     assert target.load(spec, results).ready
-    spec, results = _write_target(tmp_path / "x", ok, "status: discovered\n  bus: preload\n  own: unit")
+    spec, results = _write_target(
+        tmp_path / "x", ok, "status: discovered\n  bus: preload\n  own: unit"
+    )
     with pytest.raises(target.TargetError):
         target.load(spec, results)
 
 
-# --- sandbox -----------------------------------------------------------------
-
-
-def test_sandbox_wraps_without_network_or_host_writes(tmp_path):
-    argv = sandbox.wrap(["python3", "-m", "oracle.run"], tmp_path.resolve())
-    assert argv[0] == "bwrap" and "--unshare-all" in argv and "--clearenv" in argv
-    binds = [argv[i + 1] for i, a in enumerate(argv) if a == "--bind"]
-    assert binds == [str(tmp_path.resolve())]  # the work dir is the only writable host path
-    assert argv[argv.index("--") + 1:] == ["python3", "-m", "oracle.run"]
-    with pytest.raises(ValueError):
-        sandbox.wrap(["x"], Path("relative"))
-
-
-def test_sandbox_qemu_pins_release_and_refuses_escapes(tmp_path):
-    argv = sandbox.qemu(tmp_path, "home/bticino/bin/bt_luci", strace=True)
-    assert argv[:5] == ["qemu-arm", "-L", str(tmp_path), "-r", "2.4.19"]
-    assert "-strace" in argv
-    with pytest.raises(target.TargetError):
-        sandbox.qemu(tmp_path, "../../usr/bin/id")
-
-
-# --- discover ----------------------------------------------------------------
-
-TRACE = """\
-101 open("/dev/ttyS1",O_RDWR|O_NOCTTY) = 3
-101 ioctl(3,21505,0x7fff0000) = 0
-101 close(3) = 0
-101 ioctl(3,21505,0x7fff0000) = -1 errno=9 (Bad file descriptor)
-101 open("/lib/libc.so.6",O_RDONLY) = 4
-101 open("/home/bticino/cfg/stack_open.xml",O_RDONLY) = 5
-101 bind(6,{sun_family=AF_UNIX,sun_path=/tmp/scs},110) = 0
-101 connect(7,{sin_family=AF_INET,sin_port=htons(20000),sin_addr=inet_addr("127.0.0.1")},16) = -1 errno=111 (Connection refused)
-102 open("/dev/ttyS1",O_RDWR|O_NOCTTY) = 8
-garbage line
-"""
-
-
-def test_discover_reduces_a_trace_to_sorted_facts():
-    facts = discover.parse(TRACE)
-    assert facts == sorted(set(facts))
-    assert [(f.kind, f.detail, f.result) for f in facts] == [
-        ("bind", "unix:/tmp/scs", "ok"),
-        ("connect", "inet:127.0.0.1:20000", "ECONNREFUSED"),
-        ("ioctl", "/dev/ttyS1 req=0x5401", "ok"),
-        ("ioctl", "fd req=0x5401", "EBADF"),
-        ("open", "/dev/ttyS1 O_RDWR|O_NOCTTY", "ok"),
-        ("open", "/home/bticino/cfg/stack_open.xml O_RDONLY", "ok"),
-    ]
-    text = discover.render({"product": "MH200N"}, facts)
-    assert text.startswith("# product=MH200N\nkind\tdetail\tresult\n")
+# Sandbox, discovery, staging and the command line: test_oracle_discovery.py

@@ -10,6 +10,7 @@ ordered sequence recorded as one unit; there order is the point.
 Malformed OpenWebNet text is allowed on purpose -- what the firmware does with
 it is a fact too -- but every value must be printable, TSV-safe ASCII.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -30,7 +31,7 @@ class CaseError(ValueError):
 @dataclass(frozen=True, order=True)
 class Step:
     direction: str  # "down" | "up"
-    input: str      # OpenWebNet text, or normalised lower-case hex bytes
+    input: str  # OpenWebNet text, or normalised lower-case hex bytes
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,9 @@ def parse_line(line: str) -> Step | None:
     direction, value = parts[0], parts[1].strip()
     if direction == "down":
         if not OWN_TEXT.fullmatch(value):
-            raise CaseError(f"OpenWebNet input must be printable ASCII without spaces: {value!r}")
+            raise CaseError(
+                f"OpenWebNet input must be printable ASCII without spaces: {value!r}"
+            )
         return Step("down", value)
     if direction == "up":
         return Step("up", normalise_hex(value))
@@ -90,7 +93,9 @@ def load(path: Path) -> Suite:
         seen: set[Step] = set()
         for step in steps:
             if step in seen:
-                raise CaseError(f"{path.name}: duplicate step {step.direction} {step.input}")
+                raise CaseError(
+                    f"{path.name}: duplicate step {step.direction} {step.input}"
+                )
             seen.add(step)
         steps.sort()
     return Suite(

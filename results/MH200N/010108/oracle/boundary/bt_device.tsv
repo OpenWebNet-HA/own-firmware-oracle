@@ -1,0 +1,26 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# program=bt_device
+# target_sha256=c54e00cd5dcb67975a741c784896bd429313483adf0f2f54acf77ed3bd3f3621
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:30013	ok
+bind	inet:0.0.0.0:40013	ok
+connect	inet:127.0.0.1:20001	ECONNREFUSED
+execve	/bin/sh	ok
+exit	running	timeout
+listen	inet:0.0.0.0:30013	ok
+listen	inet:0.0.0.0:40013	ok
+open	/dev/nvram O_RDWR|O_DSYNC	ENOENT
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/proc/sys/dev/btweb/hw_version O_RDONLY	ENOENT
+open	/proc/sys/dev/btweb/rtc_invalid O_RDONLY	ENOENT
+open	/var/name O_RDONLY	ok
+open	/var/name O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/bt_device O_WRONLY|O_CREAT|O_TRUNC	ok

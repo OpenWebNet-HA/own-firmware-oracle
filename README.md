@@ -161,9 +161,13 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   bus frames make `bt_luci` / `bt_device` emit WHAT 19, and what each WHO 1001
   DIM 11 mask bit means — cross-checked live on an MH200. Design:
   [docs/oracle-architecture.md](docs/oracle-architecture.md). The firmware-free
-  parts (cases, recorder, simulated bus, driver, target spec, sandbox command
-  lines, strace reducer) are in place and unit-tested; next is boundary
-  discovery on the MH200N, which needs `qemu-user` and `bubblewrap`.
+  parts are in place and unit-tested, and **boundary discovery is done for the
+  MH200N**: `python -m oracle.run discover` stages the sysroot from the image,
+  runs each program jailed under `qemu-arm` and writes
+  `results/MH200N/010108/oracle/boundary/*.tsv`. `scsserver` drives a PIC on
+  `/dev/ttyPIC` (a pty stands in), `openserver` serves OpenWebNet on TCP 20000
+  under the full stack. Next is 2b: the first suite through that stack. Needs
+  `qemu-user-static` (binfmt_misc with the `F` flag) and `bubblewrap`.
 
 ## License
 
