@@ -27,6 +27,9 @@ EMPTY = "-"
 HEADER_KEYS = (
     "product", "version", "image_sha256",
     "harness", "target_sha256",
+    # adapter = <name>-<version>: a pty result is never silently compared
+    # with a shim or system-emulation one
+    "adapter", "reset",
     "bus", "framer", "responder", "settle_ms",
     "suite", "suite_sha256",
     "oracle_version",

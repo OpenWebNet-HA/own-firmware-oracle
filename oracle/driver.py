@@ -61,11 +61,13 @@ def run_step(target: Target, step: Step) -> Row:
     return Row(step.direction, step.input, reply, verdict, outputs)
 
 
-def run_suite(target: Target, suite: Suite, *, restart_every: int = 0) -> list[Row]:
-    """Independent steps share a process (restarted after a crash, and every
-    restart_every steps if set). A sequence starts from a fresh process and stops
-    at the first crash: later steps are recorded as 'skipped', since their answer
-    would come from a different process state."""
+def run_suite(target: Target, suite: Suite, *, restart_every: int = 1) -> list[Row]:
+    """Independent steps get a fresh process each by default (reset=each: no
+    step can see state left by another). restart_every=N shares a process across
+    N steps (reset=batch-N) and is only for when the reset-each TSV is stable
+    and identical; 0 never restarts except after a crash. A sequence starts from
+    a fresh process and stops at the first crash: later steps are recorded as
+    'skipped', since their answer would come from a different process state."""
     target.restart()
     _drain(target)  # boot noise belongs to no step
     rows: list[Row] = []

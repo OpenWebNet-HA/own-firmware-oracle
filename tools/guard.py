@@ -10,6 +10,7 @@ are not gitignored. The untracked half matters: in oracle.yml a freshly written
 manifest is untracked when guard runs, and create-pull-request commits it next.
   * no known binary magic (ELF / zip / gzip / xz / 7z / squashfs / cramfs /
     UBI / ext / uImage);
+  * no NUL byte anywhere (a renamed blob without known magic);
   * nothing larger than MAX_BYTES (results are TSV/markdown, never images),
     except a results/<product>/<version>/manifest.tsv, which may reach
     MANIFEST_MAX_BYTES: a modern rootfs has tens of thousands of files and
@@ -77,6 +78,10 @@ def is_binary(path: Path) -> str | None:
         return "uImage header"
     if len(head) > 0x439 and struct.unpack_from("<H", head, 0x438)[0] == 0xEF53:
         return "ext filesystem"
+    # Everything we commit is text; a NUL anywhere means a blob, e.g. one
+    # renamed to .tsv or .md that no magic above recognises.
+    if b"\x00" in path.read_bytes():
+        return "NUL byte (binary content)"
     return None
 
 

@@ -20,11 +20,34 @@ firmware does, not what the plant does. gdluck's caveat holds here too: a
 silent bus can mean "no device answered", so a missing reply proves nothing
 on its own; an emitted frame does.
 
+What the oracle **cannot** answer: what a WHO 1001 DIM 11 mask bit *means*.
+The actuator sets those bits; the gateway only translates them. The oracle
+can show which injected bus bits come out at which mask position. A finding
+may say "position N is set iff stimulus S" only when a row shows that toggle;
+positions that never flip stay unresolved. Positions are numbered 1-based
+from the left, the convention `EVID-MH200-WHAT19-FAULT` uses ("bits 6 and 21
+cleared" in `111110111111111111110111`).
+
+### 1.1 Which evidence wins
+
+Live evidence outranks the oracle, and the oracle outranks OWNd, **for the
+product and firmware the evidence was captured on**. A disagreement is written
+down as a `diverge`; it never rewrites a capture. The first live anchor,
+`EVID-MH200-WHAT19-FAULT`, was captured on an **MH200 running firmware
+2.1.0**, while the first image here is **MH200N 1.1.8**: a different product
+and firmware. Rows checked against it are cross-product until an MH200 2.1.0
+image is in the catalog, and the check says so.
+
+Suites only use addresses that are already public (`74` from that capture);
+other installation-specific WHEREs stay out of the repo.
+
 ## 2. Constraints
 
 1. **Ground rules (README).** Black-box first: we run the programs and watch
    their inputs and outputs. No disassembly, no decompiled code, no vendor
-   bytes in the repo or in CI artifacts. `tools/guard.py` stays the backstop.
+   bytes in the repo or in CI artifacts. `tools/guard.py` stays the backstop,
+   and also refuses any file containing a NUL byte, so a blob renamed to
+   `.tsv` cannot slip through.
 2. **Reproducible.** The same image, target, harness and case file give a
    byte-identical TSV. No timestamps, no PIDs, no ports in a record.
 3. **Runs where the firmware may run.** Locally, or in the protected
@@ -105,12 +128,22 @@ transceiver. **2a's first job is to confirm or refute this by observation**
 |---|---|---|---|---|
 | **B1 hardware cut** | run the vendor `scsserver` too; the device node it opens is a symlink in the staged sysroot to a pty we own | highest: the vendor `scsserver` stays in the loop | learn the transceiver byte stream from what `scsserver` writes | **default** |
 | B2 socket cut | replace `scsserver` with our own server speaking the client protocol of `libopenscs` | loses `scsserver` behaviour | re-implement a vendor IPC protocol | fallback if B1 needs hardware we cannot fake (ioctls with no file equivalent) |
-| B3 library cut | `LD_PRELOAD` shim replacing `libopenscs` functions | — | needs function signatures, which means reading the binary | **rejected** (ground rules) |
+| B3 libc shim | `LD_PRELOAD` shim wrapping libc `open` / `ioctl` / `read` / `write` for the bus device only | high; also keeps the boundaries of each `write()` | an ARM **OABI** cross-toolchain for a 2002-era libc; still runs inside `qemu-arm` | fallback when discovery shows ioctls a pty cannot answer |
+| B4 vendor-library cut | shim replacing `libopenscs` functions | — | needs the library's function signatures, i.e. reading the binary | **rejected** (ground rules) |
+| B5 system emulation | `qemu-system-arm` booting the 2.4.19 PXA kernel with a modelled bus device | highest | a PXA board model plus a device model for the bus hardware | not v1 |
 
 The pty trick works because `qemu-arm -L <sysroot>` resolves an absolute path
 inside the sysroot first: `/dev/ttyS1` opened by the guest becomes
 `<sysroot>/dev/ttyS1`, which we point at our pty slave. If `scsserver` issues
 termios ioctls, a pty answers them like a UART.
+
+Every option runs the ARM binary under `qemu-arm` on an x86 host, a shim
+included: an `LD_PRELOAD` library is guest code too. So the order is pty
+first (no guest code of ours), libc shim second, never "shim instead of
+qemu". The adapter that produced a row is in its header, so a pty result is
+never silently compared with a shim or system-emulation one. gdluck's
+`oracle2/`, if published, fits as one more adapter behind the same `Target`
+protocol.
 
 ### 4.3 OpenWebNet side
 
@@ -188,8 +221,12 @@ process, so the driver can reach the firmware's loopback sockets:
   namespace), `--die-with-parent`, `--clearenv` with `TZ=UTC`;
 * host `/usr`, `/lib*` read-only (Python and `qemu-arm`), the per-run work
   dir read-write, nothing else of the host;
-* the staged sysroot is a throwaway copy inside the work dir, deleted after
-  the run like `unpack.py` does.
+* the staged sysroot is mounted **read-only**, with a tmpfs over each
+  directory discovery shows the program writes to (`/tmp`, `/var`, ...); it is
+  deleted after the run like `unpack.py` does;
+* each firmware process gets a CPU-time and an address-space limit
+  (`prlimit`), so a runaway program becomes a `crash` or `timeout` row, not a
+  stuck job.
 
 Inside, each firmware process is `qemu-arm -L <sysroot> -r 2.4.19 <binary>`.
 
@@ -197,10 +234,12 @@ Inside, each firmware process is `qemu-arm -L <sysroot> -r 2.4.19 <binary>`.
 
 * **`Port`**: bytes in and out of the bus adapter (a pty master in production,
   a queue in tests).
-* **`Framer`**: splits the byte stream into frames. Two strategies, chosen per
-  target after discovery: `DelimitedFramer` (start/end bytes; the community
-  SCS framing `A8 … A3` is the first hypothesis) and `IdleGapFramer` (a frame
-  is a burst followed by silence; for discovery when the framing is unknown).
+* **`Framer`**: splits the byte stream into frames. `IdleGapFramer` (a frame
+  is a burst followed by silence) is the default: it assumes nothing about
+  SCS. `DelimitedFramer` (start/end bytes; the community `A8 … A3` framing)
+  is a hypothesis a finding has to earn, like any checksum; the core has no
+  SCS parser. A pty loses the boundaries between the firmware's `write()`
+  calls, which is one reason to fall back to the libc shim.
 * **`Responder`**: the simulated devices on the bus. `Silent` (no device),
   `AckAll` (every frame acknowledged), and scripted responders that answer
   status requests for a given address. The responder is part of the record
@@ -252,9 +291,11 @@ Runs a suite against anything implementing the `Target` protocol
 Output produced while a program boots belongs to no step and is drained
 before the first one.
 
-Restarting after every step is the clean option but slow under qemu; the
-driver keeps the process between steps and restarts only on a crash or every
-`restart_every` steps. A suite that is order-sensitive must be a `.seq`.
+Each independent step gets a fresh process (`reset=each`, the default), so
+no step can see state another left behind. Sharing a process across N steps
+(`reset=batch-N`) is faster under qemu but is allowed only once the
+reset-each TSV for that suite is stable and the batch TSV is identical to it.
+A suite that is order-sensitive must be a `.seq`.
 
 ### 6.6 Recorder (`oracle/record.py`)
 
@@ -266,7 +307,8 @@ placeholders):
 # product=MH200N version=010108
 # image_sha256=e32d…
 # harness=unit:bt_luci target_sha256=1ef8…
-# bus=pty framer=delimited:a8:a3 responder=silent settle_ms=300
+# adapter=pty-1 reset=each
+# bus=pty framer=idle:20 responder=silent settle_ms=300
 # suite=lights-level suite_sha256=…
 # oracle_version=1
 direction	input	reply	verdict	output
@@ -284,7 +326,20 @@ up	a8 31 00 12 01 22 a3	-	out	own:*1*0*31##
   stays one ASCII line whatever the firmware emits; a zero diff on re-run is
   the reproducibility check.
 
-### 6.7 Evidence labels and the live cross-check
+Time never enters a row, but it is not virtual either: under `qemu-user` the
+firmware's own timeouts run on the host clock. `settle_ms` is generous, and a
+suite counts as stable only after two runs give a zero diff.
+
+### 6.7 Checker (derived, not part of the record)
+
+`tools/check.py` (2c) reads an oracle TSV and writes
+`results/<product>/<version>/checks/<suite>.tsv` with two extra columns per
+row: `ownd` (the pinned OWNd version's parse of each `own:` output, or the
+parse error; a failure is a value, never a dropped row) and `live`
+(`agree` / `diverge` / `unchecked`, with the evidence id). It is a separate
+file so an OWNd bump or a new capture never makes an oracle TSV stale.
+
+### 6.8 Evidence labels and the live cross-check
 
 Findings use gdluck's labels, so OWNd#77 and this repo read the same way:
 
@@ -319,7 +374,7 @@ network namespace.
 | **2a scaffold** | everything marked "no firmware" in section 3, with tests | `pr.yml` green |
 | **2a discovery** | `boundary.tsv` for `scsserver`, `bt_luci`, `bt_device`; filled `boundary:` blocks | a trace per program, OABI / FPA confirmed or ruled out |
 | **2b first light** | `stage.py`, `QemuTarget`, one down suite (`lights-level`) on MH200N | zero diff on re-run; `*1*1*31##` gives a bus frame |
-| **2c WHAT 19** | up suite over the bus frames that could carry the fault; DIM 11 mask bits | finding in `findings/MH200N/` with **Firmware** + **Gateway** rows (MyHOME#593, #611) |
+| **2c WHAT 19** | up suite over the bus frames that could carry the fault, through `bt_luci` then `bt_device`; `check.py` against `EVID-MH200-WHAT19-FAULT` | finding in `findings/MH200N/`: which bus input gives `*1*19*74##` and which mask positions toggle, or that neither program emits it (MyHOME#593, #611) |
 | **2d replay OWNd#77** | gdluck's frame lists as suites, run on MH200N | per fix: holds / differs on MH200N |
 | **2e second image** | F454 2.0.51 or MH202 1.0.24 in the catalog; same suites | a cross-image TSV diff |
 

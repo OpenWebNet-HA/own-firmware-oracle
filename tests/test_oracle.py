@@ -73,7 +73,8 @@ def test_committed_suites_load():
 HEADER = {
     "product": "MH200N", "version": "010108", "image_sha256": "e" * 64,
     "harness": "unit:bt_luci", "target_sha256": "1" * 64,
-    "bus": "pty", "framer": "delimited:a8:a3", "responder": "silent", "settle_ms": "300",
+    "adapter": "pty-1", "reset": "each",
+    "bus": "pty", "framer": "idle:20", "responder": "silent", "settle_ms": "300",
     "suite": "lights", "suite_sha256": "5" * 64, "oracle_version": "1",
 }
 
@@ -237,13 +238,21 @@ class FakeTarget:
 def test_driver_classifies_and_restarts_after_a_crash(tmp_path):
     s = _suite(tmp_path, "s.cases", "down *1*1*31##\ndown *2*1*31##\ndown *9*1##\nup a8 31 a3\n")
     t = FakeTarget()
-    rows = {(r.direction, r.input): r for r in driver.run_suite(t, s)}
+    rows = {(r.direction, r.input): r for r in driver.run_suite(t, s, restart_every=0)}
     assert rows[("down", "*1*1*31##")] == record.Row("down", "*1*1*31##", "ack", "out", ("bus:a8 31 a3",))
     assert rows[("down", "*2*1*31##")].verdict == "silent"
     assert rows[("down", "*2*1*31##")].reply == "nack"
     assert rows[("down", "*9*1##")].verdict == "crash"
     assert rows[("up", "a8 31 a3")] == record.Row("up", "a8 31 a3", "-", "out", ("own:*1*1*31##",))
     assert t.restarts == 2  # initial + after the crash
+
+
+def test_driver_resets_before_every_step_by_default(tmp_path):
+    s = _suite(tmp_path, "s.cases", "down *1*1*31##\ndown *2*1*31##\ndown *1*0*31##\n")
+    t = FakeTarget()
+    rows = driver.run_suite(t, s)
+    assert t.restarts == 3
+    assert all("own:*#*boot##" not in r.outputs for r in rows)
 
 
 def test_driver_skips_the_rest_of_a_sequence_after_a_crash(tmp_path):
