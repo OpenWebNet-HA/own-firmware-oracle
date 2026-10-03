@@ -40,7 +40,8 @@ ci-templates/*.yml.txt              install into .github/workflows/
 
 ```bash
 pip install pyyaml            # + boto3 only if you fetch from R2
-# e2fsprogs (debugfs) is needed to list ext filesystems; preinstalled on Linux
+# Filesystem tools, run inside bubblewrap (no network, one writable dir):
+sudo apt install bubblewrap e2fsprogs squashfs-tools util-linux
 
 # A) public image — fetch + verify from the vendor:
 IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml)
@@ -64,6 +65,34 @@ TSV. Symlinks inside a filesystem are recorded as `symlink` rows (target
 hashed), never followed. Every catalog file is validated by `tools/schema.py`:
 plain-name product / version / filenames at `catalog/<product>/<version>.yaml`,
 and `https://` vendor URLs on an allow-listed BTicino / Legrand host.
+
+### Layers and the coverage gate
+
+`unpack.py` detects layers by magic: zip (ZipCrypto via the catalog's
+password scheme), U-Boot uImage, gzip / bzip2 / xz / lzma, tar, cpio, and the
+ext2/3/4, squashfs and cramfs filesystems. ELF rows say CPU, word size, byte
+order and, for ARM, the ABI (`ELF/ARM/exec/32le/oabi`), which is what the
+oracle needs to pick an emulator.
+
+JFFS2, UBI, FIT and 7z are recognised but not unpacked yet. Those, any
+container its tool could not read, and any opaque `data` blob of 1 MiB or more
+outside a filesystem fail the run. A new image therefore either unpacks
+completely or says exactly which layer is missing. When a layer is genuinely
+not worth unpacking (a bootloader, a sub-MCU blob), acknowledge it in the
+catalog:
+
+```yaml
+undecoded_ok:
+  - path: "<wrapper>!<member>"      # exactly as the gate printed it
+    reason: "sub-MCU firmware, not a Linux image"
+limits:
+  max_expand_mib: 1024     # raise the 256 MiB bomb guard for a big image
+```
+
+An acknowledgement that no longer matches a row also fails, so the list
+cannot go stale. Extraction tools (`debugfs`, `unsquashfs`, `fsck.cramfs`)
+run inside bubblewrap; `--no-sandbox` runs them unconfined and must be asked
+for explicitly.
 
 ## Catalog: MH200N 1.1.8 (first entry)
 

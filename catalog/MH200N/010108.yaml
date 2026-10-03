@@ -15,9 +15,9 @@ wrapper:
   encrypted: false
   sources:
     - vendor: "https://www.bticino.be/sites/default/files/Service-en-support/Software-en-schemas/software-mei-2013/timh200n/FW_MH200N_vers_010108.zip"
-    # r2 value is the full object key inside the $R2_BUCKET bucket (the leading
-    # "firmware" is a prefix, not the bucket name):
-    # - r2: "firmware/sha256/61f8196d792fa44e9e4cdb67300fca82cebdb8e55f5d27d695694e9827bc7c50.zip"
+    # r2 value is the full object key inside the $R2_BUCKET bucket, in the
+    # shared archive's layout sha256/<aa>/<bb>/<hash> (the wrapper's hash):
+    # - r2: "sha256/61/f8/61f8196d792fa44e9e4cdb67300fca82cebdb8e55f5d27d695694e9827bc7c50"
 
 # The firmware package inside the wrapper.
 image:

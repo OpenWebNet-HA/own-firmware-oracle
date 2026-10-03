@@ -8,7 +8,10 @@ fixed schema here instead of being trusted as free text:
   * the file must live at catalog/<product>/<version>.yaml;
   * sha256 values are 64 lower-case hex digits, sizes are positive integers;
   * vendor sources are https:// on an allow-listed vendor host;
-  * r2 sources are plain object keys (no "..", no control characters).
+  * r2 sources are plain object keys (no "..", no control characters);
+  * optional limits.max_expand_mib raises unpack's bomb guard (1..8192 MiB);
+  * optional undecoded_ok: [{path, reason}] acknowledges layers unpack.py's
+    coverage gate would otherwise refuse.
 """
 from __future__ import annotations
 
@@ -94,7 +97,47 @@ def validate(entry: object, path: Path) -> dict:
     cands = scheme.get("candidates", []) if isinstance(scheme, dict) else None
     if not isinstance(cands, list) or not all(isinstance(c, str) for c in cands):
         raise ValueError("password_scheme.candidates must be a list of strings")
+    _limits(entry.get("limits", {}))
+    _undecoded_ok(entry.get("undecoded_ok", []))
     return entry
+
+
+MAX_EXPAND_MIB_CEILING = 8192  # 8 GiB: beyond this a runner runs out of memory anyway
+
+
+def _limits(limits: object) -> None:
+    """Optional per-image unpack bounds: the bomb guard can be raised for a big
+    image, never switched off."""
+    if not isinstance(limits, dict):
+        raise TypeError("limits must be a mapping")
+    unknown = set(limits) - {"max_expand_mib"}
+    if unknown:
+        raise ValueError(f"unknown limits keys: {sorted(unknown)}")
+    mib = limits.get("max_expand_mib")
+    if mib is not None and (
+        isinstance(mib, bool) or not isinstance(mib, int)
+        or not 1 <= mib <= MAX_EXPAND_MIB_CEILING
+    ):
+        raise ValueError(
+            f"limits.max_expand_mib must be 1..{MAX_EXPAND_MIB_CEILING}, got {mib!r}")
+
+
+def _undecoded_ok(acks: object) -> None:
+    """Manifest paths the coverage gate may let through, each with a reason."""
+    if not isinstance(acks, list):
+        raise TypeError("undecoded_ok must be a list")
+    seen: set[str] = set()
+    for ack in acks:
+        if not isinstance(ack, dict) or set(ack) != {"path", "reason"}:
+            raise ValueError(f"undecoded_ok entries are {{path, reason}}, got {ack!r}")
+        path, reason = ack["path"], ack["reason"]
+        if not isinstance(path, str) or not path or any(ord(c) < 0x20 for c in path):
+            raise ValueError(f"undecoded_ok path must be a plain manifest path, got {path!r}")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"undecoded_ok {path!r} needs a reason")
+        if path in seen:
+            raise ValueError(f"undecoded_ok lists {path!r} twice")
+        seen.add(path)
 
 
 def load(path: str | Path) -> dict:
