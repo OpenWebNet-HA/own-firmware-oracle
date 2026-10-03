@@ -1,0 +1,17 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# program=openserver
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+connect	inet:127.0.0.1:40001	ECONNREFUSED
+exit	running	timeout
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/home/bticino/sp/dbfiles_ws.xml O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/openserver O_WRONLY|O_CREAT|O_TRUNC	ok

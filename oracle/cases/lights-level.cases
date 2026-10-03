@@ -1,0 +1,20 @@
+; Lights: level 0 vs switch-off, point and general address.
+; Frames from gdluck's MyHOMEServer1 audit (OWNd#77, fix 7), re-run here to
+; see whether the MH200N firmware agrees. On MyHOMEServer1 the level writes
+; with 100 were refused and the 101 write and the switch-offs were accepted.
+
+; level 100 (OWNd's encoding of brightness 0)
+down *#1*31*#1*100*0##
+down *#1*31*#1*100*5##
+down *#1*31*#1*100*255##
+down *#1*0*#1*100*0##
+
+; lowest accepted level on MyHOMEServer1
+down *#1*31*#1*101*0##
+
+; switch-off with and without speed
+down *1*0*31##
+down *1*0#0*31##
+down *1*0#1*31##
+down *1*0#5*31##
+down *1*0#255*31##

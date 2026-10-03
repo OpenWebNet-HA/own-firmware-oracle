@@ -30,7 +30,10 @@ tools/fwfetch.py                    materialize image by sha256 (vendor / R2 / -
 tools/unpack.py                     layer-aware extractor  -> results/.../manifest.tsv
 tools/plan.py                       which images are stale; result paths
 tools/guard.py                      refuse binaries / oversized files
-oracle/                             emulator + simulated SCS bus  (phase 2)
+oracle/                             emulator + simulated SCS bus  (phase 2,
+                                    see docs/oracle-architecture.md)
+  targets/<product>/<version>.yaml  programs to run, pinned to manifest rows
+  cases/*.cases|*.seq               input steps: down = OWN text, up = bus hex
 results/<product>/<version>/        manifest.tsv, oracle TSVs
 findings/<product>/*.md             conclusions pointing at TSV rows
 .github/workflows/                  CI, see below
@@ -156,7 +159,15 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 - **Phase 1 (this repo): fetch → verify → unpack → manifest.** Done for MH200N.
 - **Phase 2:** the SCS-bus emulator (`oracle/`) and the first question — which
   bus frames make `bt_luci` / `bt_device` emit WHAT 19, and what each WHO 1001
-  DIM 11 mask bit means — cross-checked live on an MH200.
+  DIM 11 mask bit means — cross-checked live on an MH200. Design:
+  [docs/oracle-architecture.md](docs/oracle-architecture.md). The firmware-free
+  parts are in place and unit-tested, and **boundary discovery is done for the
+  MH200N**: `python -m oracle.run discover` stages the sysroot from the image,
+  runs each program jailed under `qemu-arm` and writes
+  `results/MH200N/010108/oracle/boundary/*.tsv`. `scsserver` drives a PIC on
+  `/dev/ttyPIC` (a pty stands in), `openserver` serves OpenWebNet on TCP 20000
+  under the full stack. Next is 2b: the first suite through that stack. Needs
+  `qemu-user-static` (binfmt_misc with the `F` flag) and `bubblewrap`.
 
 ## License
 

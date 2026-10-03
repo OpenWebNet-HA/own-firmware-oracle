@@ -5,7 +5,7 @@
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-src = ["tools", "tests"]
+src = ["tools", "tests", "."]
 
 [tool.ruff.lint]
 select = [
@@ -38,6 +38,7 @@ ignore = [
 "tools/unpack.py" = ["S603", "S607", "PLR0912", "PLW0603"]
 # The jail's sandbox tmpfs is a bwrap mount point, not a host temp file.
 "tools/jail.py" = ["S108"]
+"oracle/sandbox.py" = ["S108"]
 # urlopen: check_vendor_url() and _VendorRedirects pin every hop to https://
 # on an allow-listed vendor host, so file:// and friends cannot get through.
 "tools/fwfetch.py" = ["S310"]
@@ -50,13 +51,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fwfetch", "guard", "plan", "schema", "unpack"]
+known-first-party = ["fwfetch", "guard", "jail", "oracle", "plan", "schema", "unpack"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 mypy_path = "tools"
-files = ["tools"]
+files = ["tools", "oracle"]
 
 [[tool.mypy.overrides]]
 module = ["boto3"]  # optional, R2 only; imported lazily
@@ -70,7 +71,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["tools"]
+source = ["tools", "oracle"]
 branch = true
 
 [tool.coverage.report]

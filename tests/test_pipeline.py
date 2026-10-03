@@ -79,6 +79,12 @@ def test_guard_flags_binary(tmp_path, monkeypatch):
     assert guard.is_binary(bad) is not None
 
 
+def test_guard_flags_a_blob_renamed_to_tsv(tmp_path):
+    bad = tmp_path / "rows.tsv"
+    bad.write_bytes(b"path\ttype\n" + b"\x00\x01\x02 opaque")
+    assert guard.is_binary(bad) == "NUL byte (binary content)"
+
+
 def test_guard_passes_tsv(tmp_path):
     good = tmp_path / "manifest.tsv"
     good.write_text("path\ttype\tsize\tsha256\n")

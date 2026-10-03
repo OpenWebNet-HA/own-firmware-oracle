@@ -1,0 +1,67 @@
+# Oracle target: MH200N firmware 1.1.8. Every program is pinned by path and
+# sha256 to results/MH200N/010108/manifest.tsv (oracle/target.py checks it).
+product: MH200N
+version: "010108"
+
+# Manifest prefixes overlaid in order (later wins): the rootfs, then the
+# application zip that the device unpacks over it.
+sysroot:
+  - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/ubtweb_only.gz~payload~gunzip:"
+  - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/btweb_app.zip!"
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_processi>
+  bt_processi:
+    path: home/bticino/bin/bt_processi
+    sha256: "fdcc1fa3567024c6cef2ad1fe61f2cc2d111ca5d25e98aeba315a0325f67315a"
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301"
+  # p1: owns /dev/ttyPIC (stack_open.xml) and serves the translators on
+  # TCP 20001 (<scsserver><port>; the translators' <port_scs>)
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "c6a699f8b99c94db1b28da951169d8f5065c20d59ac20f28de2b14f833488104"
+  # lights, scenarios, CEN -- first question: WHAT 19
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "1ef8de9e64b7a261664554f01a04d3739aa3bb3b4f8846e532e40adbca12179e"
+  # diagnostics, clock -- WHO 1001 DIM 11
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "c54e00cd5dcb67975a741c784896bd429313483adf0f2f54acf77ed3bd3f3621"
+
+# What the device's boot sets up before bt_processi starts the programs. Each
+# value cites the image (paths inside the staged sysroot); nothing is guessed
+# about hardware the image does not describe.
+runtime:
+  # cfg/stack_open.xml lists the programs as bin/<name>, relative to this dir;
+  # etc/init.d/scripts/S10tmpfs mounts /home as tmpfs and the app zip is
+  # copied into it -- the overlay the stage step reproduces.
+  cwd: /home/bticino
+  env:
+    # The image has no ld.so.conf / ld.so.cache; the programs' libraries
+    # (libcommon, libopenscs, ...) are only in /home/bticino/lib.
+    LD_LIBRARY_PATH: /home/bticino/lib
+  devices:
+    # cfg/stack_open.xml <scsserver><serialchannel><device>
+    /dev/ttyPIC: pty
+
+# Filled from discovery (docs/oracle-architecture.md section 5); the rows are
+# in results/MH200N/010108/oracle/boundary/<program>.tsv.
+#   bus: pty -- scsserver opens /dev/ttyPIC and the pty answers TCGETS /
+#     TCSETS / TCFLSH (38400 8N1, IXON|IXOFF); scsserver then writes its PIC
+#     commands ($24 CR, ...) to it. Only TIOCMGET fails (ENOTTY), and only
+#     under the full stack: <scsserver><serialchannel><rts_alim>1 suggests the
+#     modem lines power the PIC. Watch it in 2b; a libc shim (B3) is the
+#     fallback if it matters.
+#   own: full -- under bt_processi, openserver binds and listens on TCP 20000
+#     (<openserver><port_open>), scsserver on 20001 and bt_device on 40013,
+#     and openserver connects to bt_device. bt_processi starts p0..p2 only
+#     (openserver, scsserver, bt_device); bt_luci listens on 30001 / 40001
+#     when run on its own and has to be started next to them.
+boundary:
+  status: discovered
+  bus: pty
+  own: full
