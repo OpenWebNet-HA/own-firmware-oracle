@@ -56,6 +56,9 @@ ARM_ELF += b"\x00" * 44
 
 @pytest.fixture(autouse=True)
 def _debugfs_on_path(monkeypatch):
+    # These tests are about the readers, not the jail (test_unpack_formats covers
+    # that), and hosted runners ship no bubblewrap: run the tools directly.
+    monkeypatch.setattr(unpack, "SANDBOX", False)
     if DEBUGFS:
         path = os.environ.get("PATH", "")
         monkeypatch.setenv("PATH", f"{Path(DEBUGFS).parent}{os.pathsep}{path}")

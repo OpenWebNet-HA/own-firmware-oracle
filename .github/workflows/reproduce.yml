@@ -64,6 +64,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
       - run: pip install --require-hashes -r requirements/oracle.txt
+      - uses: ./.github/actions/extraction-tools  # zizmor: ignore[self-repository] actionlint rejects the $/ form
       - name: fetch from the vendor, re-run unpack, compare byte for byte
         env:
           ENTRY: ${{ matrix.entry }}
