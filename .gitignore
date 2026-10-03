@@ -1,0 +1,16 @@
+# Firmware never lives in the repo. The cache is outside the tree anyway
+# (~/.cache/own-fw), but belt and braces:
+*.fwz
+*.zip
+*.gz
+*.img
+*.bin
+*.squashfs
+*.elf
+*.o
+*.so*
+# local work dirs from unpack.py
+work/
+/tmp-*
+__pycache__/
+*.pyc

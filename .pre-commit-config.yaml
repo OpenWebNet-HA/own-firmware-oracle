@@ -1,0 +1,10 @@
+# Same guard as CI, run before every commit:  pip install pre-commit && pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: oracle-guard
+        name: no binaries / oversized files
+        entry: python tools/guard.py
+        language: system
+        pass_filenames: false
+        always_run: true

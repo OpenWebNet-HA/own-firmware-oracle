@@ -1,0 +1,49 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: MH200N
+article: "003565"          # [ARTICOLO2] from the vendor Info.txt
+version: "010108"          # firmware 1.1.8 (scenarios scheduler)
+name: "scenarios scheduler"
+
+# The lawfully-downloadable wrapper. fwfetch verifies size + sha256 of every
+# layer it touches and fails on any mismatch.
+wrapper:
+  filename: FW_MH200N_vers_010108.zip
+  size: 10065770
+  sha256: "61f8196d792fa44e9e4cdb67300fca82cebdb8e55f5d27d695694e9827bc7c50"
+  encrypted: false
+  sources:
+    - vendor: "http://www.bticino.be/sites/default/files/Service-en-support/Software-en-schemas/software-mei-2013/timh200n/FW_MH200N_vers_010108.zip"
+    # - r2: "firmware/sha256/61f8196d792fa44e9e4cdb67300fca82cebdb8e55f5d27d695694e9827bc7c50.zip"
+
+# The firmware package inside the wrapper.
+image:
+  filename: scheduler_010108.fwz
+  size: 10064107
+  sha256: "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3"
+
+# Vendor packaging scheme. These are published, well-known strings used as the
+# archive password by BTicino's own TiMH200N updater -- a packaging convention,
+# not a secret. unpack.py resolves candidates from this list; it does not guess
+# or brute-force. See README "Ground rules".
+password_scheme:
+  # tried in order against each encrypted layer
+  candidates:
+    - "SCHEDULER"      # opens scheduler_010108.fwz  (upper-case product line)
+    - "bticino"        # opens the inner release zip and btweb_app.zip
+    - "MH200N"         # generic model-name fallback (gdluck: "password is the model")
+    - "$PRODUCT"       # substituted with catalog .product at runtime
+
+# Flash map, lifted verbatim from the image's own Info_Rel.txt (facts, not code).
+flash:
+  machine: MH200N
+  size_mb: 16
+  layout:
+    conf:        { offset: "0x40000",  size: "0x60000" }
+    kernel:      { offset: "0x100000", size: "0x100000" }
+    btweb_only:  { offset: "0x200000", size: "0x420000" }   # rootfs
+    btweb_appl:  { offset: "0x620000", size: "0x2a0000" }   # application
+    kernel1:     { offset: "0x8e0000", size: "0x100000" }   # recovery kernel
+
+status: unpackable   # vendor password scheme is known; layers open cleanly
