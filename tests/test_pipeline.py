@@ -89,6 +89,21 @@ def test_gunzip_roundtrip_under_limit():
     assert unpack._gunzip(gzip.compress(b"hello"), limit=1024) == b"hello"
 
 
+def test_cpu_of_handles_empty_and_tiny_files():
+    # Real rootfs trees contain empty and very short files; none may crash.
+    assert unpack.cpu_of(b"") == "empty"
+    assert unpack.cpu_of(b"x") == "data"
+    assert unpack.cpu_of(b"\x27\x05") == "data"
+    assert unpack.cpu_of(b"\x7fELF\x01") == "ELF/truncated"
+
+
+def test_walk_records_fake_containers_without_crashing():
+    rows: list[dict] = []
+    unpack.walk("notzip", b"PK but not a zip archive", [], Path("."), rows)
+    unpack.walk("notgz", b"\x1f\x8b garbage", [], Path("."), rows)
+    assert [r["type"] for r in rows] == ["zip/unreadable", "gzip/unreadable"]
+
+
 def test_debugfs_banner_and_chown_are_not_errors():
     # The version banner and unprivileged chown lines must NOT count as errors.
     noise = (

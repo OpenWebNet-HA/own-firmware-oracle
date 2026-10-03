@@ -47,8 +47,16 @@ def sha256(b: bytes) -> str:
 
 
 def cpu_of(b: bytes) -> str:
-    """Return a short type/CPU tag for a blob (facts for the manifest)."""
+    """Return a short type/CPU tag for a blob (facts for the manifest).
+
+    Every header read is length-checked: real filesystems contain empty and
+    tiny files, and a truncated header must classify, not crash.
+    """
+    if not b:
+        return "empty"
     if b[:4] == b"\x7fELF":
+        if len(b) < 20:
+            return "ELF/truncated"
         machine = struct.unpack_from("<H", b, 18)[0]
         kind = {1: "reloc", 2: "exec", 3: "dyn", 4: "core"}.get(b[16], "elf")
         return f"ELF/{ELF_MACHINE.get(machine, hex(machine))}/{kind}"
@@ -58,8 +66,8 @@ def cpu_of(b: bytes) -> str:
         return "gzip"
     if len(b) > 0x43A and struct.unpack_from("<H", b, 0x438)[0] == EXT_MAGIC:
         return "ext-fs"
-    if struct.unpack_from(">I", b, 0)[0] == UIMAGE_MAGIC:
-        return "uImage"
+    if len(b) >= 64 and struct.unpack_from(">I", b, 0)[0] == UIMAGE_MAGIC:
+        return "uImage"  # a uImage needs its full 64-byte header
     return "data"
 
 
@@ -166,13 +174,26 @@ def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
     })
     if depth > 8:
         return
+    # A file can carry container magic without being a valid container (e.g. a
+    # data file starting with "PK"). Record it as unreadable instead of aborting
+    # the whole run; the row stays, it just isn't descended into.
     if tag == "zip":
-        for child, blob in _unzip(data, pwds).items():
+        try:
+            children = _unzip(data, pwds)
+        except (zipfile.BadZipFile, EOFError, ValueError):
+            rows[-1]["type"] = "zip/unreadable"
+            return
+        for child, blob in children.items():
             walk(f"{name}!{child}", blob, pwds, work, rows, depth + 1)
     elif tag == "uImage":
         walk(f"{name}~payload", _strip_uimage(data), pwds, work, rows, depth + 1)
     elif tag == "gzip":
-        walk(f"{name}~gunzip", _gunzip(data), pwds, work, rows, depth + 1)
+        try:
+            payload = _gunzip(data)
+        except (zlib.error, EOFError):
+            rows[-1]["type"] = "gzip/unreadable"
+            return
+        walk(f"{name}~gunzip", payload, pwds, work, rows, depth + 1)
     elif tag == "ext-fs":
         sub = work / f"ext{depth}"
         sub.mkdir(parents=True, exist_ok=True)
