@@ -39,7 +39,9 @@ ELF_MAGIC = b"\x7fELF"
 # How unpack names what it found inside a member: <member>~gunzip, <member>!x,
 # <member>:/etc/x. Rows past such a separator are derived, not members.
 DERIVED_AT = re.compile(r"~|!|:/")
-EXEC_MODE, FILE_MODE, DIR_MODE = 0o755, 0o644, 0o755
+# Owner-only: the staged sysroot is a throwaway copy of vendor files, read
+# only by the jail, which runs as the same user. Nobody else needs to see it.
+EXEC_MODE, FILE_MODE, DIR_MODE = 0o700, 0o600, 0o700
 
 
 class StageError(ValueError):

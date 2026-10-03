@@ -423,9 +423,9 @@ def test_stage_writes_layers_in_order_and_contains_links(tmp_path, members):
     assert (
         root / "usr/up"
     ).readlink().as_posix() == "../etc/conf"  # '..' stops at the root
-    assert stat.S_IMODE((root / "bin/sh").stat().st_mode) == 0o755
-    assert stat.S_IMODE((root / "run.sh").stat().st_mode) == 0o755
-    assert stat.S_IMODE((root / "etc/conf").stat().st_mode) == 0o644
+    assert stat.S_IMODE((root / "bin/sh").stat().st_mode) == 0o700
+    assert stat.S_IMODE((root / "run.sh").stat().st_mode) == 0o700
+    assert stat.S_IMODE((root / "etc/conf").stat().st_mode) == 0o600
 
 
 def test_stage_contained_link_edge_cases():
