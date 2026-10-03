@@ -111,13 +111,28 @@ def _gunzip(data: bytes, limit: int = MAX_DECOMPRESS) -> bytes:
     return out + dec.flush()
 
 
+def _debugfs_real_errors(stderr: str) -> list[str]:
+    """Keep only genuine rdump failures from debugfs stderr.
+
+    Two kinds of noise are expected and harmless:
+      * the version banner debugfs prints on every run ("debugfs 1.47.0 ...");
+      * "Operation not permitted" while chown/chmod/utimes-ing as non-root.
+    Anything else (bad image, I/O error) is a real failure that would otherwise
+    leave a silent empty tree.
+    """
+    return [
+        ln for ln in stderr.splitlines()
+        if ln.strip()
+        and not ln.startswith("debugfs ")
+        and "Operation not permitted" not in ln
+    ]
+
+
 def _ext_tree(img: bytes, work: Path) -> list[tuple[str, bytes]]:
     """List regular files in an ext2/3/4 image via read-only debugfs.
 
     debugfs never mounts the image, so this works unprivileged in CI. One
-    `rdump` writes the whole tree to a work dir; we then read it back. Chown
-    lines on rdump are expected (we are not root) and harmless -- contents and
-    paths are intact, which is all the manifest needs.
+    `rdump` writes the whole tree to a work dir; we then read it back.
     """
     tmp = work / "fs.img"
     tmp.write_bytes(img)
@@ -127,19 +142,15 @@ def _ext_tree(img: bytes, work: Path) -> list[tuple[str, bytes]]:
         ["debugfs", "-R", f"rdump / {root}", str(tmp)],
         capture_output=True, text=True, check=False,
     )
-    # rdump exits non-zero purely because it can't chown/chmod as non-root;
-    # those lines are expected. Any OTHER stderr line is a real failure
-    # (bad image, I/O error) that would otherwise yield a silent empty tree.
-    real = [
-        ln for ln in res.stderr.splitlines()
-        if ln.strip() and "Operation not permitted" not in ln
-    ]
-    if real:
-        raise SystemExit("debugfs rdump failed:\n  " + "\n  ".join(real[:10]))
+    files = [p for p in sorted(root.rglob("*")) if p.is_file()]
+    real = _debugfs_real_errors(res.stderr)
+    # Fail on a real error, or on an empty tree (which means rdump did nothing).
+    if real or not files:
+        detail = "\n  ".join(real or res.stderr.splitlines()[:10] or ["(no output)"])
+        raise SystemExit(f"debugfs rdump produced no usable tree:\n  {detail}")
     return [
         (str(p.relative_to(root)).replace("\\", "/"), p.read_bytes())
-        for p in sorted(root.rglob("*"))
-        if p.is_file()
+        for p in files
     ]
 
 

@@ -89,6 +89,22 @@ def test_gunzip_roundtrip_under_limit():
     assert unpack._gunzip(gzip.compress(b"hello"), limit=1024) == b"hello"
 
 
+def test_debugfs_banner_and_chown_are_not_errors():
+    # The version banner and unprivileged chown lines must NOT count as errors.
+    noise = (
+        "debugfs 1.47.0 (5-Feb-2023)\n"
+        "rdump: Operation not permitted while changing ownership of /tree/etc\n"
+    )
+    assert unpack._debugfs_real_errors(noise) == []
+
+
+def test_debugfs_real_error_is_kept():
+    bad = "debugfs 1.47.0 (5-Feb-2023)\nrdump: Bad magic number in super-block\n"
+    assert unpack._debugfs_real_errors(bad) == [
+        "rdump: Bad magic number in super-block"
+    ]
+
+
 def _catalog(tmp_path):
     cat = tmp_path / "catalog" / "MH200N" / "010108.yaml"
     cat.parent.mkdir(parents=True)
