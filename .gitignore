@@ -14,3 +14,9 @@ work/
 /tmp-*
 __pycache__/
 *.pyc
+# tool caches (pyproject.toml config)
+.coverage
+coverage.xml
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
