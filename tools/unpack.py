@@ -28,6 +28,7 @@ The image on disk must be the catalog's wrapper (size + SHA-256), and the
 catalog's inner image must turn up inside it; anything else is refused, so a
 manifest header always describes the bytes that were actually walked.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,9 +47,11 @@ import zipfile
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TypedDict
 
 import jail
 import schema
+from schema import CatalogEntry
 
 # Manifest key component. Bump when a change to this tool would alter the
 # manifest for an unchanged image; plan.py treats a mismatch as stale.
@@ -65,7 +68,7 @@ TSV_UNSAFE = re.compile(r"[\\\x00-\x1f\x7f]")
 UIMAGE_MAGIC = 0x27051956
 EXT_MAGIC = 0xEF53
 CRAMFS_MAGIC = 0x28CD3D45
-ZIMAGE_MAGIC = 0x016F2818   # ARM zImage, little-endian u32 at 0x24
+ZIMAGE_MAGIC = 0x016F2818  # ARM zImage, little-endian u32 at 0x24
 # Bomb guard: default cap on what one decompressed layer, all members of one
 # archive together, or one extracted filesystem tree may expand to. A catalog
 # entry can raise it with limits.max_expand_mib.
@@ -78,9 +81,19 @@ UNSUPPORTED = {"jffs2", "ubi", "fit", "7z"}
 
 # ELF e_machine -> CPU name (enough to pick an emulator)
 ELF_MACHINE = {
-    0x02: "SPARC", 0x03: "x86", 0x04: "m68k", 0x08: "MIPS", 0x14: "PowerPC",
-    0x15: "PowerPC64", 0x28: "ARM", 0x2A: "SuperH", 0x3E: "x86-64",
-    0x5E: "Xtensa", 0x71: "NiosII", 0xB7: "AArch64", 0xBD: "MicroBlaze",
+    0x02: "SPARC",
+    0x03: "x86",
+    0x04: "m68k",
+    0x08: "MIPS",
+    0x14: "PowerPC",
+    0x15: "PowerPC64",
+    0x28: "ARM",
+    0x2A: "SuperH",
+    0x3E: "x86-64",
+    0x5E: "Xtensa",
+    0x71: "NiosII",
+    0xB7: "AArch64",
+    0xBD: "MicroBlaze",
     0xF3: "RISC-V",
 }
 EF_ARM_ABI_FLOAT_HARD = 0x400
@@ -89,6 +102,15 @@ TAR_MAGIC_OFFSET = 257
 CPIO_NEWC = (b"070701", b"070702")
 CPIO_ODC = b"070707"
 S_IFMT, S_IFREG, S_IFLNK = 0o170000, 0o100000, 0o120000
+
+
+class Row(TypedDict):
+    """One manifest line."""
+
+    path: str
+    type: str
+    size: int
+    sha256: str
 
 
 def sha256(b: bytes) -> str:
@@ -113,8 +135,10 @@ def _elf_tag(b: bytes) -> str:
         return "ELF/bad-ident"
     etype, machine = struct.unpack_from(order + "HH", b, 16)
     kind = {1: "reloc", 2: "exec", 3: "dyn", 4: "core"}.get(etype, "elf")
-    tag = (f"ELF/{ELF_MACHINE.get(machine, hex(machine))}/{kind}/"
-           f"{bits}{'le' if order == '<' else 'be'}")
+    tag = (
+        f"ELF/{ELF_MACHINE.get(machine, hex(machine))}/{kind}/"
+        f"{bits}{'le' if order == '<' else 'be'}"
+    )
     if machine == 0x28:
         # e_flags: EABI version in the top byte; 0 = the legacy (OABI) ABI
         off = 36 if bits == 32 else 48
@@ -135,7 +159,7 @@ def _is_lzma_alone(b: bytes) -> bool:
     dict_size, out_size = struct.unpack_from("<IQ", b, 1)
     if dict_size & (dict_size - 1) or not (1 << 16) <= dict_size <= (1 << 26):
         return False
-    return out_size == 0xFFFFFFFFFFFFFFFF or out_size < (1 << 32)
+    return bool(out_size == 0xFFFFFFFFFFFFFFFF or out_size < (1 << 32))
 
 
 # jffs2 node types (dirent, inode, cleanmarker, padding, summary, xattr, xref)
@@ -188,7 +212,9 @@ def cpu_of(b: bytes) -> str:
         return "7z"
     if b[:4] in (b"hsqs", b"sqsh"):
         return "squashfs"
-    if len(b) >= 4 and CRAMFS_MAGIC in struct.unpack_from("<I", b) + struct.unpack_from(">I", b):
+    if len(b) >= 4 and CRAMFS_MAGIC in struct.unpack_from("<I", b) + struct.unpack_from(
+        ">I", b
+    ):
         return "cramfs"
     if b[:4] == b"UBI#":
         return "ubi"
@@ -200,7 +226,7 @@ def cpu_of(b: bytes) -> str:
         return "fit" if len(b) >= LARGE_DATA else "dtb"
     if _is_cpio(b):
         return "cpio"
-    if b[TAR_MAGIC_OFFSET:TAR_MAGIC_OFFSET + 5] == b"ustar":
+    if b[TAR_MAGIC_OFFSET : TAR_MAGIC_OFFSET + 5] == b"ustar":
         return "tar"
     if len(b) > 0x43A and struct.unpack_from("<H", b, 0x438)[0] == EXT_MAGIC:
         return "ext-fs"
@@ -213,17 +239,18 @@ def cpu_of(b: bytes) -> str:
     return "data"
 
 
-def passwords(entry: dict) -> list[bytes]:
+def passwords(entry: CatalogEntry) -> list[bytes]:
     out: list[bytes] = []
     for cand in entry.get("password_scheme", {}).get("candidates", []):
-        cand = cand.replace("$PRODUCT", str(entry.get("product", "")))
-        if cand:
-            out.append(cand.encode())
+        pw = cand.replace("$PRODUCT", str(entry.get("product", "")))
+        if pw:
+            out.append(pw.encode())
     return out
 
 
-def _unzip(data: bytes, pwds: list[bytes],
-           limit: int = MAX_DECOMPRESS) -> dict[str, bytes]:
+def _unzip(
+    data: bytes, pwds: list[bytes], limit: int = MAX_DECOMPRESS
+) -> dict[str, bytes]:
     """Return {name: bytes} for a (possibly ZipCrypto) archive.
 
     Members are read into memory, so the archive's declared sizes must fit in
@@ -235,9 +262,11 @@ def _unzip(data: bytes, pwds: list[bytes],
     members = [i for i in zf.infolist() if not i.is_dir()]
     declared = sum(i.file_size for i in members)
     if declared > limit:
-        raise SystemExit(f"zip members declare {declared} bytes > {limit}; "
-                         "refusing to expand (raise limits.max_expand_mib "
-                         "in the catalog if this image really is that large)")
+        raise SystemExit(
+            f"zip members declare {declared} bytes > {limit}; "
+            "refusing to expand (raise limits.max_expand_mib "
+            "in the catalog if this image really is that large)"
+        )
     encrypted = any(i.flag_bits & 0x1 for i in members)
     out: dict[str, bytes] = {}
     for info in members:
@@ -267,8 +296,10 @@ def _strip_uimage(data: bytes) -> bytes:
 
 
 def _too_big(kind: str, limit: int) -> SystemExit:
-    return SystemExit(f"{kind} payload exceeds {limit} bytes; refusing to expand "
-                      "(raise limits.max_expand_mib in the catalog if needed)")
+    return SystemExit(
+        f"{kind} payload exceeds {limit} bytes; refusing to expand "
+        "(raise limits.max_expand_mib in the catalog if needed)"
+    )
 
 
 def _gunzip(data: bytes, limit: int = MAX_DECOMPRESS) -> bytes:
@@ -333,18 +364,18 @@ def _cpio_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
     out: list[Entry] = []
     pos, total = 0, 0
     while pos < len(data):
-        magic = data[pos:pos + 6]
+        magic = data[pos : pos + 6]
         if magic in CPIO_NEWC:
-            hdr = data[pos + 6:pos + 110]
+            hdr = data[pos + 6 : pos + 110]
             if len(hdr) < 104:
                 raise ValueError("truncated cpio header")
-            fields = [int(hdr[i:i + 8], 16) for i in range(0, 104, 8)]
+            fields = [int(hdr[i : i + 8], 16) for i in range(0, 104, 8)]
             mode, filesize, namesize = fields[1], fields[6], fields[11]
             name_at = pos + 110
             data_at = (name_at + namesize + 3) & ~3
             next_at = (data_at + filesize + 3) & ~3
         elif magic == CPIO_ODC:
-            hdr = data[pos:pos + 76]
+            hdr = data[pos : pos + 76]
             if len(hdr) < 76:
                 raise ValueError("truncated cpio header")
             mode = int(hdr[18:24], 8)
@@ -354,10 +385,12 @@ def _cpio_entries(data: bytes, limit: int = MAX_DECOMPRESS) -> list[Entry]:
             next_at = data_at + filesize
         else:
             raise ValueError(f"bad cpio magic at {pos}")
-        name = data[name_at:name_at + namesize].rstrip(b"\0").decode("utf-8", "replace")
+        name = (
+            data[name_at : name_at + namesize].rstrip(b"\0").decode("utf-8", "replace")
+        )
         if name == "TRAILER!!!":
             break
-        body = data[data_at:data_at + filesize]
+        body = data[data_at : data_at + filesize]
         if len(body) != filesize:
             raise ValueError("truncated cpio member")
         total += filesize
@@ -386,7 +419,9 @@ def _tree_entries(root: Path) -> list[Entry]:
             p = Path(dirpath) / name
             rel = p.relative_to(root).as_posix()
             if p.is_symlink():
-                out.append((rel, None, os.readlink(p)))
+                # Not Path.readlink(): a Path normalises the target text
+                # ("a//b/" -> "a/b"), and the manifest hashes it verbatim.
+                out.append((rel, None, os.readlink(p)))  # noqa: PTH115
             elif name in filenames and p.is_file():
                 out.append((rel, p.read_bytes(), None))
     return sorted(out, key=lambda e: e[0])
@@ -415,7 +450,8 @@ def _debugfs_real_errors(stderr: str) -> list[str]:
     leave a silent empty tree.
     """
     return [
-        ln for ln in stderr.splitlines()
+        ln
+        for ln in stderr.splitlines()
         if ln.strip()
         and not ln.startswith("debugfs ")
         and "Operation not permitted" not in ln
@@ -428,7 +464,8 @@ def _unsquashfs_real_errors(stderr: str) -> list[str]:
     says so per node (exit code 2, 'non-fatal'). Those nodes are not files, so
     the manifest loses nothing; every other line is a real error."""
     return [
-        ln for ln in stderr.splitlines()
+        ln
+        for ln in stderr.splitlines()
         if ln.strip() and "because you're not superuser" not in ln
     ]
 
@@ -436,8 +473,10 @@ def _unsquashfs_real_errors(stderr: str) -> list[str]:
 def _fs_dirs(img: bytes, work: Path) -> tuple[Path, Path]:
     root = work / "tree"
     if not SAFE_DEBUGFS_PATH.fullmatch(str(root)):
-        raise SystemExit(f"work dir {str(root)!r} is not a plain path; "
-                         "pass --work without spaces, quotes or control characters")
+        raise SystemExit(
+            f"work dir {str(root)!r} is not a plain path; "
+            "pass --work without spaces, quotes or control characters"
+        )
     tmp = work / "fs.img"
     tmp.write_bytes(img)
     return root, tmp
@@ -498,17 +537,25 @@ class Walk:
     pwds: list[bytes]
     work: Path
     limit: int = MAX_DECOMPRESS
-    rows: list[dict] = field(default_factory=list)
+    rows: list[Row] = field(default_factory=list)
 
 
-def _record_tree(w: Walk, name: str, entries: list[Entry], depth: int, sep: str) -> None:
+def _record_tree(
+    w: Walk, name: str, entries: list[Entry], depth: int, sep: str
+) -> None:
     for fpath, blob, target in entries:
         if target is not None:
             # The target is recorded by hash, like file contents, so the
             # TSV stays one line per entry whatever the link text holds.
             link = os.fsencode(target)
-            w.rows.append({"path": f"{name}{sep}{fpath}", "type": "symlink",
-                           "size": len(link), "sha256": sha256(link)})
+            w.rows.append(
+                {
+                    "path": f"{name}{sep}{fpath}",
+                    "type": "symlink",
+                    "size": len(link),
+                    "sha256": sha256(link),
+                }
+            )
         else:
             _walk(w, f"{name}{sep}{fpath}", blob or b"", depth + 1)
 
@@ -523,7 +570,9 @@ def _fresh_dir(w: Walk, depth: int) -> Path:
 
 def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
     tag = cpu_of(data)
-    w.rows.append({"path": name, "type": tag, "size": len(data), "sha256": sha256(data)})
+    w.rows.append(
+        {"path": name, "type": tag, "size": len(data), "sha256": sha256(data)}
+    )
     if depth > 8:
         return
     row = w.rows[-1]
@@ -554,11 +603,17 @@ def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
             # legacy lzma is a header heuristic: a miss is plain data, not a fault
             row["type"] = "data" if tag == "lzma" else f"{tag}/unreadable"
             return
-        suffix = {"gzip": "gunzip", "bzip2": "bunzip2", "xz": "unxz", "lzma": "unlzma"}[tag]
+        suffix = {"gzip": "gunzip", "bzip2": "bunzip2", "xz": "unxz", "lzma": "unlzma"}[
+            tag
+        ]
         _walk(w, f"{name}~{suffix}", payload, depth + 1)
     elif tag in ("tar", "cpio"):
         try:
-            entries = _tar_entries(data, w.limit) if tag == "tar" else _cpio_entries(data, w.limit)
+            entries = (
+                _tar_entries(data, w.limit)
+                if tag == "tar"
+                else _cpio_entries(data, w.limit)
+            )
         except (tarfile.TarError, ValueError, EOFError):
             row["type"] = f"{tag}/unreadable"
             return
@@ -576,27 +631,36 @@ def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
         _record_tree(w, name, _check_total(tag, entries, w.limit), depth, ":/")
 
 
-def walk(name: str, data: bytes, pwds: list[bytes], work: Path,
-         rows: list[dict], depth: int = 0, *, limit: int = MAX_DECOMPRESS) -> None:
+def walk(
+    name: str,
+    data: bytes,
+    pwds: list[bytes],
+    work: Path,
+    rows: list[Row],
+    depth: int = 0,
+    *,
+    limit: int = MAX_DECOMPRESS,
+) -> None:
     """Recurse through container layers, recording a manifest row per file."""
     w = Walk(pwds, work, limit, rows)
     _walk(w, name, data, depth)
 
 
-def undecoded(rows: list[dict]) -> list[dict]:
+def undecoded(rows: list[Row]) -> list[Row]:
     """Rows that may hide an unread layer: unsupported or unreadable containers
     anywhere, and large opaque blobs outside a filesystem tree. Inside a
     filesystem (':/' in the path) a big data file is a leaf -- a web bundle, a
     database -- not a packaging layer, so size alone does not flag it there."""
     return [
-        r for r in rows
+        r
+        for r in rows
         if r["type"] in UNSUPPORTED
         or r["type"].endswith("/unreadable")
         or (r["type"] == "data" and r["size"] >= LARGE_DATA and ":/" not in r["path"])
     ]
 
 
-def coverage_gate(entry: dict, rows: list[dict]) -> None:
+def coverage_gate(entry: CatalogEntry, rows: list[Row]) -> None:
     """Fail unless every undecoded row is acknowledged in the catalog, and every
     acknowledgement still matches a row (a stale one hides the next surprise)."""
     acked = {a["path"]: a for a in entry.get("undecoded_ok", [])}
@@ -605,15 +669,18 @@ def coverage_gate(entry: dict, rows: list[dict]) -> None:
     stale = sorted(set(acked) - set(found))
     if new or stale:
         lines = [f"  {found[p]['type']}\t{found[p]['size']}\t{p}" for p in new]
-        lines += [f"  stale undecoded_ok entry (no such undecoded row): {p}" for p in stale]
+        lines += [
+            f"  stale undecoded_ok entry (no such undecoded row): {p}" for p in stale
+        ]
         raise SystemExit(
-            "coverage gate: layers that were not unpacked:\n" + "\n".join(lines) +
-            "\nadd a handler to unpack.py, or acknowledge each path under "
+            "coverage gate: layers that were not unpacked:\n"
+            + "\n".join(lines)
+            + "\nadd a handler to unpack.py, or acknowledge each path under "
             "undecoded_ok in the catalog with a reason"
         )
 
 
-def verify_wrapper(entry: dict, data: bytes) -> None:
+def verify_wrapper(entry: CatalogEntry, data: bytes) -> None:
     """Refuse to walk anything but the catalog's wrapper."""
     w = entry["wrapper"]
     if len(data) != w["size"] or sha256(data) != w["sha256"]:
@@ -623,7 +690,7 @@ def verify_wrapper(entry: dict, data: bytes) -> None:
         )
 
 
-def require_image(entry: dict, rows: list[dict]) -> None:
+def require_image(entry: CatalogEntry, rows: list[Row]) -> None:
     """The manifest header names image.sha256, so that image must be inside."""
     want = entry["image"]["sha256"]
     if not any(r["sha256"] == want for r in rows):
@@ -633,7 +700,7 @@ def require_image(entry: dict, rows: list[dict]) -> None:
         )
 
 
-def expand_limit(entry: dict) -> int:
+def expand_limit(entry: CatalogEntry) -> int:
     mib = entry.get("limits", {}).get("max_expand_mib")
     return MAX_DECOMPRESS if mib is None else mib * 1024 * 1024
 
@@ -645,8 +712,11 @@ def main() -> None:
     ap.add_argument("image", help="path from fwfetch (the wrapper on disk)")
     ap.add_argument("-o", "--out", required=True, help="manifest.tsv to write")
     ap.add_argument("--work", help="work dir for extracted files (temp if unset)")
-    ap.add_argument("--no-sandbox", action="store_true",
-                    help="run debugfs / unsquashfs / fsck.cramfs without bubblewrap")
+    ap.add_argument(
+        "--no-sandbox",
+        action="store_true",
+        help="run debugfs / unsquashfs / fsck.cramfs without bubblewrap",
+    )
     args = ap.parse_args()
     SANDBOX = not args.no_sandbox
 
@@ -655,20 +725,31 @@ def main() -> None:
     data = Path(args.image).read_bytes()
     verify_wrapper(entry, data)
 
-    rows: list[dict] = []
+    rows: list[Row] = []
     with contextlib.ExitStack() as stack:
         if args.work:
             work = Path(args.work)  # kept: the caller asked for the files
         else:
             # Extracted vendor files must not outlive the run. The tree is gone
             # before the manifest is written; rows already hold every fact.
-            work = Path(stack.enter_context(tempfile.TemporaryDirectory(
-                prefix="own-fw-", ignore_cleanup_errors=True)))
+            work = Path(
+                stack.enter_context(
+                    tempfile.TemporaryDirectory(
+                        prefix="own-fw-", ignore_cleanup_errors=True
+                    )
+                )
+            )
         # Root every path at the catalog filename, not the on-disk name: the
         # fwfetch cache stores files as <sha256>.zip, a local copy keeps its
         # own name, and both must produce the same manifest.
-        walk(entry["wrapper"]["filename"], data, pwds, work, rows,
-             limit=expand_limit(entry))
+        walk(
+            entry["wrapper"]["filename"],
+            data,
+            pwds,
+            work,
+            rows,
+            limit=expand_limit(entry),
+        )
     require_image(entry, rows)
     coverage_gate(entry, rows)
 
@@ -682,8 +763,10 @@ def main() -> None:
         fh.write(f"# tool_version={TOOL_VERSION}\n")
         fh.write("path\ttype\tsize\tsha256\n")
         for r in rows:
-            fh.write(f"{tsv_field(r['path'])}\t{tsv_field(r['type'])}"
-                     f"\t{r['size']}\t{r['sha256']}\n")
+            fh.write(
+                f"{tsv_field(r['path'])}\t{tsv_field(r['type'])}"
+                f"\t{r['size']}\t{r['sha256']}\n"
+            )
     print(f"{len(rows)} entries -> {out}")
 
 

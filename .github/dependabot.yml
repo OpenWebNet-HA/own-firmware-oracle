@@ -1,0 +1,36 @@
+# Keeps the supply-chain pins current, one grouped PR per ecosystem a month:
+#   github-actions  bumps each SHA and its "# vX.Y.Z" comment together
+#   pip             re-locks requirements/*.txt from the .in files, hashes
+#                   included (Dependabot understands pip-compile output)
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      # Let a release age a week before proposing it: most compromised
+      # releases are caught and yanked within days.
+      default-days: 7
+    commit-message:
+      prefix: "ci"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/requirements"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      # Let a release age a week before proposing it: most compromised
+      # releases are caught and yanked within days.
+      default-days: 7
+    commit-message:
+      prefix: "deps"
+    open-pull-requests-limit: 3
+    groups:
+      python:
+        patterns:
+          - "*"

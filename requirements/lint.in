@@ -1,0 +1,6 @@
+# Lint job (pr.yml). Compile: see requirements/README.md
+ruff
+mypy
+types-PyYAML
+pyyaml
+zizmor

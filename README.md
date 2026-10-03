@@ -33,7 +33,31 @@ tools/guard.py                      refuse binaries / oversized files
 oracle/                             emulator + simulated SCS bus  (phase 2)
 results/<product>/<version>/        manifest.tsv, oracle TSVs
 findings/<product>/*.md             conclusions pointing at TSV rows
-ci-templates/*.yml.txt              install into .github/workflows/
+.github/workflows/                  CI, see below
+requirements/                       hash-locked CI dependencies
+```
+
+## CI
+
+| Workflow | When | What |
+|---|---|---|
+| `pr` | every PR, `main` | ruff, ruff format, mypy `--strict`, zizmor, actionlint + shellcheck; guard; pytest on Python 3.12–3.14 incl. a real-debugfs end-to-end test, coverage ratchet; dependency review. `ci-ok` is the one check to require. |
+| `reproduce` | PRs touching `tools/`, `catalog/`, `results/`; weekly | re-fetches every fresh, publicly downloadable image, re-runs `unpack`, fails on any byte of difference from `results/` |
+| `oracle` | `main`, weekly | rebuilds stale manifests (new image or `TOOL_VERSION`) and opens one results PR |
+| `codeql` | every PR, `main`, weekly | CodeQL `security-extended` on the tools and on the workflows |
+| `scorecard` | `main`, weekly | OpenSSF Scorecard, published + in code scanning |
+
+None of them gives a fork PR a secret or a write token. Firmware only lands in
+`$RUNNER_TEMP` and is deleted after the job; it is never cached and never uploaded
+as an artifact. Actions are pinned to commit SHAs, and Python deps are installed
+with `--require-hashes`. Dependabot bumps both every month.
+
+Contributing: `pip install pre-commit && pre-commit install` runs ruff and the guard
+before each commit. To run everything the lint job runs:
+
+```bash
+pip install --require-hashes -r requirements/lint.txt -r requirements/test.txt
+ruff check . && ruff format --check . && mypy && pytest --cov
 ```
 
 ## Run it locally
@@ -55,8 +79,9 @@ python tools/unpack.py catalog/MH200N/010108.yaml "$IMG" \
 python tools/guard.py
 ```
 
-A clean re-run must produce a **zero diff** (sorted TSV, no timestamps) — that's
-the reproducibility check.
+A clean re-run must produce a **zero diff** (sorted TSV, no timestamps). That's
+the reproducibility check, and the `reproduce` workflow runs it weekly against
+the real vendor image.
 
 `unpack.py` refuses any file that is not the catalog's wrapper (size + SHA-256)
 or that does not contain the catalog's inner image, and roots every manifest

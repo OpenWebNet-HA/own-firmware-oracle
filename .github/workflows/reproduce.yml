@@ -1,0 +1,91 @@
+# The reproducibility check behind every manifest in results/.
+#
+# Re-fetches each FRESH catalog entry whose wrapper is a public vendor
+# download (no secrets, no environment), re-runs unpack, and fails on ANY
+# byte of difference from the committed manifest. Catches three things:
+#   * an unpack.py change that alters output without a TOOL_VERSION bump
+#     (on the PR that makes it -- this workflow runs when tools/ changes);
+#   * nondeterminism (ordering, timestamps, runner tools) creeping in;
+#   * vendor link rot or a silently replaced vendor file (weekly; the sha256
+#     check in fwfetch fails first). Add an r2 mirror to the catalog entry if
+#     the vendor drops a file.
+#
+# Stale entries are oracle.yml's job: their manifest is SUPPOSED to change.
+# The firmware lives in $RUNNER_TEMP for one job and is deleted after it;
+# never cached, never an artifact.
+name: reproduce
+on:
+  pull_request:
+    paths:
+      - "tools/**"
+      - "catalog/**"
+      - "results/**"
+      - "requirements/oracle.txt"
+      - ".github/workflows/reproduce.yml"
+  schedule:
+    - cron: "30 4 * * 1"  # weekly, after oracle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reproduce-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r requirements/oracle.txt
+      - id: plan
+        run: python tools/plan.py --emit-reproduce-matrix >> "$GITHUB_OUTPUT"
+
+  reproduce:
+    needs: plan
+    if: ${{ needs.plan.outputs.matrix != '[]' }}
+    # Same image as oracle.yml, so "reproduces here" means "reproduces there".
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r requirements/oracle.txt
+      - uses: ./.github/actions/extraction-tools  # zizmor: ignore[self-repository] actionlint rejects the $/ form
+      - name: fetch from the vendor, re-run unpack, compare byte for byte
+        env:
+          ENTRY: ${{ matrix.entry }}
+          OWN_FW_CACHE: ${{ runner.temp }}/own-fw
+        run: |
+          img="$(python tools/fwfetch.py "$ENTRY")"
+          rel="$(python tools/plan.py --result-path "$ENTRY")"
+          out="$RUNNER_TEMP/out/$rel"
+          python tools/unpack.py "$ENTRY" "$img" -o "$out"
+          if ! diff -u "results/$rel" "$out" > "$RUNNER_TEMP/manifest.diff"; then
+            {
+              echo "### \`results/$rel\` does not reproduce"
+              echo "If unpack.py changed on purpose, bump TOOL_VERSION: oracle.yml then rebuilds the manifest."
+              echo '```diff'
+              head -n 200 "$RUNNER_TEMP/manifest.diff"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error file=results/$rel::re-running unpack does not reproduce this manifest (diff in the job summary)"
+            exit 1
+          fi
+          echo "\`results/$rel\`: reproduced byte for byte" >> "$GITHUB_STEP_SUMMARY"
+      - name: delete firmware from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/own-fw" "$RUNNER_TEMP/out"

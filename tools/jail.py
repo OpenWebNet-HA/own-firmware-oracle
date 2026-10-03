@@ -10,6 +10,7 @@ rewriting.
 `--no-sandbox` on unpack.py turns this off explicitly (e.g. a machine without
 bubblewrap); it is never the silent default.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -17,7 +18,15 @@ from pathlib import Path
 
 # Read-only host paths the tools and their libraries live in; --ro-bind-try
 # skips the ones a distro does not have.
-HOST_RO = ("/usr", "/bin", "/sbin", "/lib", "/lib64", "/etc/alternatives", "/etc/ld.so.cache")
+HOST_RO = (
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/lib",
+    "/lib64",
+    "/etc/alternatives",
+    "/etc/ld.so.cache",
+)
 
 
 def command(argv: list[str], rw: Path) -> list[str]:
@@ -34,16 +43,28 @@ def command(argv: list[str], rw: Path) -> list[str]:
         ro += ["--ro-bind-try", p, p]
     return [
         "bwrap",
-        "--unshare-all", "--die-with-parent", "--new-session",
+        "--unshare-all",
+        "--die-with-parent",
+        "--new-session",
         "--clearenv",
-        "--setenv", "PATH", "/usr/sbin:/usr/bin:/sbin:/bin",
-        "--setenv", "LANG", "C",
-        "--proc", "/proc",
-        "--dev", "/dev",
-        "--tmpfs", "/tmp",
+        "--setenv",
+        "PATH",
+        "/usr/sbin:/usr/bin:/sbin:/bin",
+        "--setenv",
+        "LANG",
+        "C",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--tmpfs",
+        "/tmp",
         *ro,
-        "--bind", str(rw), str(rw),
-        "--chdir", str(rw),
+        "--bind",
+        str(rw),
+        str(rw),
+        "--chdir",
+        str(rw),
         "--",
         *argv,
     ]

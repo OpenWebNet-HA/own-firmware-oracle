@@ -15,6 +15,7 @@ manifest is untracked when guard runs, and create-pull-request commits it next.
     MANIFEST_MAX_BYTES: a modern rootfs has tens of thousands of files and
     each row carries the full layer path.
 """
+
 from __future__ import annotations
 
 import struct
@@ -27,16 +28,41 @@ MANIFEST_MAX_BYTES = 50 * 1024 * 1024  # GitHub refuses files over 100 MB
 
 # magic bytes we never want committed
 BIN_MAGIC = [
-    b"\x7fELF", b"PK\x03\x04", b"\x1f\x8b", b"hsqs", b"sqsh",
-    b"\xfd7zXZ\x00", b"7z\xbc\xaf\x27\x1c", b"UBI#",
-    b"\x45\x3d\xcd\x28", b"\x28\xcd\x3d\x45",  # cramfs, both byte orders
+    b"\x7fELF",
+    b"PK\x03\x04",
+    b"\x1f\x8b",
+    b"hsqs",
+    b"sqsh",
+    b"\xfd7zXZ\x00",
+    b"7z\xbc\xaf\x27\x1c",
+    b"UBI#",
+    b"\x45\x3d\xcd\x28",
+    b"\x28\xcd\x3d\x45",  # cramfs, both byte orders
 ]
 
 # extensions that are binary by definition
 BIN_EXT = {
-    ".fwz", ".zip", ".gz", ".img", ".bin", ".squashfs", ".elf", ".so", ".o",
-    ".xz", ".bz2", ".lzma", ".7z", ".tar", ".cpio", ".cramfs", ".jffs2", ".ubi", ".ubifs",
-    ".dtb", ".itb",
+    ".fwz",
+    ".zip",
+    ".gz",
+    ".img",
+    ".bin",
+    ".squashfs",
+    ".elf",
+    ".so",
+    ".o",
+    ".xz",
+    ".bz2",
+    ".lzma",
+    ".7z",
+    ".tar",
+    ".cpio",
+    ".cramfs",
+    ".jffs2",
+    ".ubi",
+    ".ubifs",
+    ".dtb",
+    ".itb",
 }
 
 
@@ -65,7 +91,9 @@ def repo_files() -> list[Path]:
     """Tracked files plus untracked, non-ignored ones: everything `git add -A` takes."""
     out = subprocess.run(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.split("\0")
     return [Path(p) for p in sorted(set(out)) if p and Path(p).is_file()]
 
@@ -74,8 +102,6 @@ def main() -> int:
     bad: list[str] = []
     files = repo_files()
     for path in files:
-        if path.parts and path.parts[0] in {".git"}:
-            continue
         size, limit = path.stat().st_size, max_bytes(path)
         if size > limit:
             bad.append(f"{path}: {size} bytes > {limit}")

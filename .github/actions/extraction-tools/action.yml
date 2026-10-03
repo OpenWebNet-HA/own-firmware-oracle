@@ -1,0 +1,21 @@
+name: extraction tools
+description: >
+  Install what tools/unpack.py shells out to: debugfs (e2fsprogs), unsquashfs
+  (squashfs-tools) and bubblewrap, which jails every one of them. cramfs's
+  fsck.cramfs ships with util-linux, already on the runner.
+runs:
+  using: composite
+  steps:
+    - name: apt install
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends e2fsprogs squashfs-tools bubblewrap
+    # ubuntu-24.04 lets AppArmor deny unprivileged user namespaces, which is
+    # all bwrap needs. Lifting that on a throwaway runner is the documented fix.
+    - name: allow bubblewrap's user namespace
+      shell: bash
+      run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+    - name: bubblewrap smoke test
+      shell: bash
+      run: bwrap --unshare-all --ro-bind / / --dev /dev true

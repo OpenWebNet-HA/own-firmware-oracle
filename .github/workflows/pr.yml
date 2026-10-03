@@ -1,5 +1,13 @@
-# Runs on every PR, forks included: no secrets, no firmware -- lint + guard +
-# unit tests on synthetic fixtures. Actions are pinned to full commit SHAs.
+# Every PR, forks included: no secrets, no firmware. Lint, type-check, audit
+# the workflows, then unit + debugfs tests on every supported Python.
+#
+# Branch protection should require ONE check: `ci-ok`. It fails unless every
+# job above it passed (or was legitimately skipped), so adding or renaming a
+# job never means editing the protection rule.
+#
+# Supply chain: actions pinned to full commit SHAs, Python deps installed from
+# hash-locked requirements/*.txt (--require-hashes), actionlint verified by
+# SHA-256. Dependabot keeps the actions and the lock files current.
 name: pr
 on:
   pull_request:
@@ -7,20 +15,106 @@ on:
     branches: [main]
 permissions:
   contents: read
+# A new push to a PR supersedes the run on its previous commit; main always
+# finishes.
+concurrency:
+  group: pr-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+defaults:
+  run:
+    shell: bash  # -eo pipefail: a failing command in a pipe fails the step
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  lint:
+    name: lint (ruff, mypy, zizmor, actionlint)
+    # Pinned, not ubuntu-latest: see the note at the top of oracle.yml.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: { persist-credentials: false }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.12"
-      # ruff pinned: a new release can switch on rules and fail CI unprompted
-      - run: pip install pyyaml ruff==0.16.7 pytest
-      - name: lint
-        run: ruff check tools tests
+          cache: pip
+          cache-dependency-path: requirements/lint.txt
+      - run: pip install --require-hashes -r requirements/lint.txt
+      - name: ruff check
+        run: ruff check --output-format=github .
+      - name: ruff format
+        run: ruff format --check .
+      - name: mypy --strict
+        run: mypy
+      # Enforces what oracle.yml's header promises: SHA-pinned actions, no
+      # ${{ }} expansion inside run scripts, no credentials left in .git/config.
+      - name: zizmor
+        run: zizmor --offline --format=github .  # workflows + dependabot.yml
+      - name: actionlint (+ shellcheck on every run block)
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          tgz="$RUNNER_TEMP/actionlint.tar.gz"
+          curl -fsSLo "$tgz" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+
+  test:
+    name: test (py${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    env:
+      # The debugfs tests skip without e2fsprogs; in CI that is a failure.
+      ORACLE_REQUIRE_DEBUGFS: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements/test.txt
+      - run: pip install --require-hashes -r requirements/test.txt
       - name: guard (no binaries committed)
         run: python tools/guard.py
-      - name: unit tests (synthetic fixtures only)
-        run: pytest -q tests
+      # fail_under in pyproject.toml is the coverage ratchet.
+      - name: pytest (synthetic fixtures + real debugfs; no vendor firmware)
+        run: pytest --cov
+      - name: coverage summary
+        if: always() && matrix.python == '3.12'
+        run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+  dependency-review:
+    # New or bumped Python deps / actions with known advisories fail the PR.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  ci-ok:
+    # The one required check. `always()` so a failed dependency still reports
+    # here as a failure instead of leaving the check pending forever.
+    if: always()
+    needs: [lint, test, dependency-review]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a required job ended '$r'"; exit 1 ;;
+            esac
+          done
+          echo "all jobs passed: $RESULTS"

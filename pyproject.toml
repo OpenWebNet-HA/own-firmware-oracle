@@ -1,0 +1,81 @@
+# Tool configuration only -- this repo is a set of scripts, not a package.
+# CI (pr.yml) and the pre-commit hook read everything from here, so a local run
+# and a CI run check exactly the same things.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["tools", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F",   # pycodestyle / pyflakes
+    "I",             # import order
+    "B",             # bugbear
+    "BLE",           # blind except (the one in fwfetch is deliberate and marked)
+    "C4",            # comprehensions
+    "PL",            # pylint
+    "PT",            # pytest style
+    "PTH",           # pathlib
+    "RUF",
+    "S",             # bandit: this code handles untrusted archives
+    "SIM",
+    "UP",
+]
+ignore = [
+    "PLR2004",  # magic values: byte offsets and magics are the point of this code
+    "PLR0911",  # cpu_of returns one tag per format
+    "PLR0913",  # walk() threads its recursion state through arguments
+    "PLR0917",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Fixed argv lists, never a shell; git / debugfs come from PATH like any dev
+# tool. unpack.py checks the one variable argument (the work dir) first.
+"tools/guard.py" = ["S603", "S607"]
+# PLR0912/PLW0603: unpack's format sniffing and layer dispatch are flat
+# if/elif chains over magic numbers; SANDBOX is a CLI-set module switch.
+"tools/unpack.py" = ["S603", "S607", "PLR0912", "PLW0603"]
+# The jail's sandbox tmpfs is a bwrap mount point, not a host temp file.
+"tools/jail.py" = ["S108"]
+# urlopen: check_vendor_url() and _VendorRedirects pin every hop to https://
+# on an allow-listed vendor host, so file:// and friends cannot get through.
+"tools/fwfetch.py" = ["S310"]
+"tests/*" = [
+    "E402",   # tools/ goes on sys.path before the imports
+    "S101",   # assert is how pytest tests
+    "S108",   # /tmp paths are inputs to a validator, never opened
+    "S603", "S607",  # `git init` / mke2fs in a temp dir
+    "S105", "S106",  # password_scheme fixtures are published vendor strings
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fwfetch", "guard", "plan", "schema", "unpack"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "tools"
+files = ["tools"]
+
+[[tool.mypy.overrides]]
+module = ["boto3"]  # optional, R2 only; imported lazily
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+markers = [
+    "debugfs: needs e2fsprogs (mke2fs + debugfs); skipped when they are missing",
+]
+
+[tool.coverage.run]
+source = ["tools"]
+branch = true
+
+[tool.coverage.report]
+# Ratchet: raise it when coverage goes up, never lower it to get a PR green.
+fail_under = 100
+show_missing = true
+skip_covered = true
+exclude_also = ['if __name__ == "__main__":']

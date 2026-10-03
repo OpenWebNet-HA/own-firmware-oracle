@@ -1,5 +1,6 @@
 """Tool version 3: more layer formats, precise ELF tags, the coverage gate,
 per-image limits and the extraction sandbox. Synthetic fixtures only."""
+
 import bz2
 import io
 import lzma
@@ -22,30 +23,35 @@ import schema
 import unpack
 
 
-def _elf(machine: int, *, bits: int = 32, order: str = "<", etype: int = 2,
-         flags: int = 0) -> bytes:
+def _elf(
+    machine: int, *, bits: int = 32, order: str = "<", etype: int = 2, flags: int = 0
+) -> bytes:
     ident = b"\x7fELF" + bytes([1 if bits == 32 else 2, 1 if order == "<" else 2, 1])
     ident += b"\x00" * 9
     head = ident + struct.pack(order + "HHI", etype, machine, 1)
-    if bits == 32:   # e_entry, e_phoff, e_shoff, then e_flags at 36
+    if bits == 32:  # e_entry, e_phoff, e_shoff, then e_flags at 36
         head += struct.pack(order + "IIII", 0, 0, 0, flags)
-    else:            # 8-byte e_entry, e_phoff, e_shoff, then e_flags at 48
+    else:  # 8-byte e_entry, e_phoff, e_shoff, then e_flags at 48
         head += struct.pack(order + "QQQI", 0, 0, 0, flags)
     return head + b"\x00" * 16
 
 
 # --- ELF tags ------------------------------------------------------------------
 
-@pytest.mark.parametrize(("blob", "tag"), [
-    (_elf(0x28), "ELF/ARM/exec/32le/oabi"),
-    (_elf(0x28, flags=0x05000000), "ELF/ARM/exec/32le/eabi5"),
-    (_elf(0x28, flags=0x05000400, etype=3), "ELF/ARM/dyn/32le/eabi5-hf"),
-    (_elf(0x28, order=">", flags=0x04000000), "ELF/ARM/exec/32be/eabi4"),
-    (_elf(0x08, order=">"), "ELF/MIPS/exec/32be"),
-    (_elf(0x14, order=">"), "ELF/PowerPC/exec/32be"),
-    (_elf(0xB7, bits=64), "ELF/AArch64/exec/64le"),
-    (b"\x7fELF\x03\x01" + b"\x00" * 30, "ELF/bad-ident"),
-])
+
+@pytest.mark.parametrize(
+    ("blob", "tag"),
+    [
+        (_elf(0x28), "ELF/ARM/exec/32le/oabi"),
+        (_elf(0x28, flags=0x05000000), "ELF/ARM/exec/32le/eabi5"),
+        (_elf(0x28, flags=0x05000400, etype=3), "ELF/ARM/dyn/32le/eabi5-hf"),
+        (_elf(0x28, order=">", flags=0x04000000), "ELF/ARM/exec/32be/eabi4"),
+        (_elf(0x08, order=">"), "ELF/MIPS/exec/32be"),
+        (_elf(0x14, order=">"), "ELF/PowerPC/exec/32be"),
+        (_elf(0xB7, bits=64), "ELF/AArch64/exec/64le"),
+        (b"\x7fELF\x03\x01" + b"\x00" * 30, "ELF/bad-ident"),
+    ],
+)
 def test_elf_tags_carry_word_size_byte_order_and_arm_abi(blob, tag):
     assert unpack.cpu_of(blob) == tag
 
@@ -56,6 +62,7 @@ def test_big_endian_machine_is_not_misread():
 
 
 # --- detection: new magics, and look-alikes that must stay data ---------------
+
 
 def _tar(members: dict[str, bytes], links: dict[str, str] | None = None) -> bytes:
     buf = io.BytesIO()
@@ -87,9 +94,13 @@ def test_detects_new_container_magics():
     assert unpack.cpu_of(lzma.compress(b"x")) == "xz"
     assert unpack.cpu_of(lzma.compress(b"x", format=lzma.FORMAT_ALONE)) == "lzma"
     assert unpack.cpu_of(b"hsqs" + b"\x00" * 60) == "squashfs"
-    assert unpack.cpu_of(struct.pack("<I", unpack.CRAMFS_MAGIC) + b"\x00" * 60) == "cramfs"
+    assert (
+        unpack.cpu_of(struct.pack("<I", unpack.CRAMFS_MAGIC) + b"\x00" * 60) == "cramfs"
+    )
     assert unpack.cpu_of(b"UBI#" + b"\x00" * 60) == "ubi"
-    assert unpack.cpu_of(struct.pack("<HHI", 0x1985, 0xE001, 0) + b"\x00" * 8) == "jffs2"
+    assert (
+        unpack.cpu_of(struct.pack("<HHI", 0x1985, 0xE001, 0) + b"\x00" * 8) == "jffs2"
+    )
     assert unpack.cpu_of(_tar({"a": b"1"})) == "tar"
     assert unpack.cpu_of(_newc([("a", 0o100644, b"1")])) == "cpio"
     zimage = b"\x00" * 0x24 + struct.pack("<I", unpack.ZIMAGE_MAGIC) + b"\x00" * 8
@@ -99,16 +110,20 @@ def test_detects_new_container_magics():
     assert unpack.cpu_of(dtb + b"\x00" * unpack.LARGE_DATA) == "fit"
 
 
-@pytest.mark.parametrize("blob", [
-    b"\x85\x19" + b"\x00" * 30,         # jffs2 magic, but no real node type
-    b"070701 is how this text starts" + b" " * 100,
-    b"]" + b"\x00" * 40,                # 0x5d but not an lzma header
-])
+@pytest.mark.parametrize(
+    "blob",
+    [
+        b"\x85\x19" + b"\x00" * 30,  # jffs2 magic, but no real node type
+        b"070701 is how this text starts" + b" " * 100,
+        b"]" + b"\x00" * 40,  # 0x5d but not an lzma header
+    ],
+)
 def test_look_alikes_stay_data(blob):
     assert unpack.cpu_of(blob) == "data"
 
 
 # --- walking the new layers ---------------------------------------------------
+
 
 def _walk(name: str, blob: bytes, tmp_path: Path, **kw) -> list[dict]:
     rows: list[dict] = []
@@ -148,29 +163,53 @@ def test_decompression_respects_the_limit(tmp_path):
 def test_filesystem_readers_failures_become_unreadable(tmp_path, monkeypatch):
     def broken(img, work):
         raise ValueError("unsquashfs failed")
+
     monkeypatch.setattr(unpack, "_squashfs_tree", broken)
     rows = _walk("rootfs.sqsh", b"hsqs" + b"\x00" * 60, tmp_path)
     assert rows[-1]["type"] == "squashfs/unreadable"
 
 
 def test_filesystem_trees_are_recorded_under_colon_slash(tmp_path, monkeypatch):
-    monkeypatch.setattr(unpack, "_cramfs_tree", lambda img, work: [
-        ("bin/prog", _elf(0x28, flags=0x05000000), None), ("bin/ls", None, "prog")])
-    rows = {r["path"]: r["type"] for r in _walk("fs.cram",
-            struct.pack("<I", unpack.CRAMFS_MAGIC) + b"\x00" * 60, tmp_path)}
+    monkeypatch.setattr(
+        unpack,
+        "_cramfs_tree",
+        lambda img, work: [
+            ("bin/prog", _elf(0x28, flags=0x05000000), None),
+            ("bin/ls", None, "prog"),
+        ],
+    )
+    rows = {
+        r["path"]: r["type"]
+        for r in _walk(
+            "fs.cram", struct.pack("<I", unpack.CRAMFS_MAGIC) + b"\x00" * 60, tmp_path
+        )
+    }
     assert rows["fs.cram:/bin/prog"] == "ELF/ARM/exec/32le/eabi5"
     assert rows["fs.cram:/bin/ls"] == "symlink"
 
 
-@pytest.mark.skipif(shutil.which("mksquashfs") is None, reason="squashfs-tools not installed")
+@pytest.mark.skipif(
+    shutil.which("mksquashfs") is None, reason="squashfs-tools not installed"
+)
 def test_squashfs_tree_reads_a_real_image_without_sandbox(tmp_path, monkeypatch):
     src = tmp_path / "src"
     (src / "bin").mkdir(parents=True)
     (src / "bin" / "a").write_bytes(b"hello")
     (src / "bin" / "l").symlink_to("/bin/a")
     img = tmp_path / "fs.sqsh"
-    subprocess.run(["mksquashfs", str(src), str(img), "-quiet", "-noappend",
-                    "-p", "dev/null c 666 0 0 1 3"], check=True, capture_output=True)
+    subprocess.run(
+        [
+            "mksquashfs",
+            str(src),
+            str(img),
+            "-quiet",
+            "-noappend",
+            "-p",
+            "dev/null c 666 0 0 1 3",
+        ],
+        check=True,
+        capture_output=True,
+    )
     monkeypatch.setattr(unpack, "SANDBOX", False)
     work = tmp_path / "work"
     work.mkdir()
@@ -180,6 +219,7 @@ def test_squashfs_tree_reads_a_real_image_without_sandbox(tmp_path, monkeypatch)
 
 
 # --- coverage gate ------------------------------------------------------------
+
 
 def _rows(*rows):
     return [{"path": p, "type": t, "size": s, "sha256": "0" * 64} for p, t, s in rows]
@@ -194,8 +234,11 @@ def test_gate_flags_unsupported_unreadable_and_big_opaque_blobs():
         ("fw!fs:/usr/share/big.db", "data", 5 * unpack.LARGE_DATA),  # leaf in a fs
     )
     assert [r["path"] for r in unpack.undecoded(rows)] == [
-        "fw!rootfs.ubi", "fw!x.gz", "fw!blob.bin"]
-    with pytest.raises(SystemExit, match="fw!rootfs.ubi"):
+        "fw!rootfs.ubi",
+        "fw!x.gz",
+        "fw!blob.bin",
+    ]
+    with pytest.raises(SystemExit, match=r"fw!rootfs\.ubi"):
         unpack.coverage_gate({}, rows)
 
 
@@ -223,9 +266,11 @@ def test_mh200n_manifest_would_pass_the_gate():
 
 # --- catalog: limits and acknowledgements -------------------------------------
 
+
 def _entry(**extra):
     base = {
-        "product": "P", "version": "1",
+        "product": "P",
+        "version": "1",
         "wrapper": {"filename": "w.zip", "size": 1, "sha256": "a" * 64},
         "image": {"filename": "i.fwz", "size": 1, "sha256": "b" * 64},
     }
@@ -236,23 +281,28 @@ CAT = Path("catalog/P/1.yaml")
 
 
 def test_schema_accepts_limits_and_acks():
-    e = _entry(limits={"max_expand_mib": 1024},
-               undecoded_ok=[{"path": "w.zip!x", "reason": "bootloader"}])
+    e = _entry(
+        limits={"max_expand_mib": 1024},
+        undecoded_ok=[{"path": "w.zip!x", "reason": "bootloader"}],
+    )
     assert schema.validate(e, CAT) is e
     assert unpack.expand_limit(e) == 1024 * 1024 * 1024
     assert unpack.expand_limit(_entry()) == unpack.MAX_DECOMPRESS
 
 
-@pytest.mark.parametrize("extra", [
-    {"limits": {"max_expand_mib": 0}},
-    {"limits": {"max_expand_mib": 10**6}},
-    {"limits": {"max_expand_mib": True}},
-    {"limits": {"off": 1}},
-    {"undecoded_ok": [{"path": "w.zip!x"}]},                      # no reason
-    {"undecoded_ok": [{"path": "w.zip!x", "reason": " "}]},
-    {"undecoded_ok": [{"path": "a\nb", "reason": "r"}]},
-    {"undecoded_ok": [{"path": "p", "reason": "r"}, {"path": "p", "reason": "r"}]},
-])
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"limits": {"max_expand_mib": 0}},
+        {"limits": {"max_expand_mib": 10**6}},
+        {"limits": {"max_expand_mib": True}},
+        {"limits": {"off": 1}},
+        {"undecoded_ok": [{"path": "w.zip!x"}]},  # no reason
+        {"undecoded_ok": [{"path": "w.zip!x", "reason": " "}]},
+        {"undecoded_ok": [{"path": "a\nb", "reason": "r"}]},
+        {"undecoded_ok": [{"path": "p", "reason": "r"}, {"path": "p", "reason": "r"}]},
+    ],
+)
 def test_schema_rejects_bad_limits_and_acks(extra):
     with pytest.raises((ValueError, TypeError)):
         schema.validate(_entry(**extra), CAT)
@@ -260,13 +310,16 @@ def test_schema_rejects_bad_limits_and_acks(extra):
 
 # --- sandbox -------------------------------------------------------------------
 
+
 def test_jail_binds_only_the_work_dir_writable(tmp_path, monkeypatch):
     monkeypatch.setattr(jail.shutil, "which", lambda name: "/usr/bin/bwrap")
     argv = jail.command(["debugfs", "-R", "rdump / x", "img"], tmp_path.resolve())
-    assert argv[0] == "bwrap" and "--unshare-all" in argv and "--clearenv" in argv
+    assert argv[0] == "bwrap"
+    assert "--unshare-all" in argv
+    assert "--clearenv" in argv
     binds = [argv[i + 1] for i, a in enumerate(argv) if a == "--bind"]
     assert binds == [str(tmp_path.resolve())]
-    assert argv[argv.index("--") + 1:] == ["debugfs", "-R", "rdump / x", "img"]
+    assert argv[argv.index("--") + 1 :] == ["debugfs", "-R", "rdump / x", "img"]
 
 
 def test_jail_fails_closed_without_bwrap(tmp_path, monkeypatch):
@@ -277,14 +330,20 @@ def test_jail_fails_closed_without_bwrap(tmp_path, monkeypatch):
 
 def test_run_tool_goes_through_the_jail_unless_disabled(tmp_path, monkeypatch):
     calls = []
-    monkeypatch.setattr(unpack.subprocess, "run",
-                        lambda argv, **kw: calls.append(argv) or subprocess.CompletedProcess(argv, 0, "", ""))
+    monkeypatch.setattr(
+        unpack.subprocess,
+        "run",
+        lambda argv, **kw: (
+            calls.append(argv) or subprocess.CompletedProcess(argv, 0, "", "")
+        ),
+    )
     monkeypatch.setattr(jail.shutil, "which", lambda name: "/usr/bin/bwrap")
     monkeypatch.setattr(unpack, "SANDBOX", True)
     unpack._run_tool(["unsquashfs", "x"], tmp_path)
     monkeypatch.setattr(unpack, "SANDBOX", False)
     unpack._run_tool(["unsquashfs", "x"], tmp_path)
-    assert calls[0][0] == "bwrap" and calls[1] == ["unsquashfs", "x"]
+    assert calls[0][0] == "bwrap"
+    assert calls[1] == ["unsquashfs", "x"]
 
 
 def test_debugfs_chown_noise_inside_the_sandbox_is_not_an_error():
@@ -296,19 +355,27 @@ def test_debugfs_chown_noise_inside_the_sandbox_is_not_an_error():
         "rdump: Invalid argument while changing ownership of /w/tree/\n"
     )
     assert unpack._debugfs_real_errors(stderr) == []
-    assert unpack._debugfs_real_errors("rdump: Invalid argument while reading block 7\n")
+    assert unpack._debugfs_real_errors(
+        "rdump: Invalid argument while reading block 7\n"
+    )
 
 
 # --- guard ---------------------------------------------------------------------
 
+
 def test_guard_allows_big_manifests_but_nothing_else(tmp_path):
-    assert guard.max_bytes(Path("results/F460/020012/manifest.tsv")) == guard.MANIFEST_MAX_BYTES
+    assert (
+        guard.max_bytes(Path("results/F460/020012/manifest.tsv"))
+        == guard.MANIFEST_MAX_BYTES
+    )
     assert guard.max_bytes(Path("results/F460/020012/notes.tsv")) == guard.MAX_BYTES
     assert guard.max_bytes(Path("findings/manifest.tsv")) == guard.MAX_BYTES
 
 
 def test_guard_knows_the_new_container_magics(tmp_path):
-    for i, head in enumerate([b"\xfd7zXZ\x00", b"UBI#", struct.pack("<I", unpack.CRAMFS_MAGIC)]):
+    for i, head in enumerate(
+        [b"\xfd7zXZ\x00", b"UBI#", struct.pack("<I", unpack.CRAMFS_MAGIC)]
+    ):
         p = tmp_path / f"f{i}.txt"
         p.write_bytes(head + b"\x00" * 16)
         assert guard.is_binary(p) is not None

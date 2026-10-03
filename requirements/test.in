@@ -1,0 +1,4 @@
+# Test job (pr.yml), every supported Python. Compile: see requirements/README.md
+pytest
+pytest-cov
+pyyaml

@@ -15,6 +15,7 @@ Sources are tried in catalog order:
 Every fetched blob is checked against the catalog size and sha256; any
 mismatch is a hard failure. Output: the cache path on stdout.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,9 +23,12 @@ import hashlib
 import os
 import sys
 import urllib.request
+from http.client import HTTPMessage
 from pathlib import Path
+from typing import IO
 
 import schema
+from schema import CatalogEntry
 
 CACHE = Path(os.environ.get("OWN_FW_CACHE", Path.home() / ".cache" / "own-fw"))
 
@@ -41,19 +45,34 @@ def cache_path(sha256: str, ext: str) -> Path:
     return CACHE / "sha256" / f"{sha256}.{ext.lstrip('.')}"
 
 
+class Mismatch(Exception):
+    """A blob that is not the catalog's bytes."""
+
+
 def _verify(path: Path, size: int, sha256: str) -> None:
+    # Mismatch, not SystemExit: a tampered or truncated download must fall
+    # through to the next source like any other failure, and SystemExit is a
+    # BaseException that the source loop's `except Exception` does not catch.
     actual_size = path.stat().st_size
     if actual_size != size:
-        raise SystemExit(f"size mismatch: got {actual_size}, want {size}")
+        raise Mismatch(f"size mismatch: got {actual_size}, want {size}")
     actual = sha256_file(path)
     if actual != sha256:
-        raise SystemExit(f"sha256 mismatch:\n  got  {actual}\n  want {sha256}")
+        raise Mismatch(f"sha256 mismatch:\n  got  {actual}\n  want {sha256}")
 
 
 class _VendorRedirects(urllib.request.HTTPRedirectHandler):
     """Follow a redirect only to another https:// allow-listed vendor URL."""
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: IO[bytes],
+        code: int,
+        msg: str,
+        headers: HTTPMessage,
+        newurl: str,
+    ) -> urllib.request.Request | None:
         schema.check_vendor_url(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
@@ -68,7 +87,7 @@ def _fetch_vendor(url: str, dest: Path) -> None:
 
 
 def _fetch_r2(key: str, dest: Path) -> None:
-    import boto3  # imported lazily so the vendor path needs no deps
+    import boto3  # noqa: PLC0415 -- lazy, so the vendor path needs no deps
 
     s3 = boto3.client(
         "s3",
@@ -82,7 +101,7 @@ def _fetch_r2(key: str, dest: Path) -> None:
     s3.download_file(os.environ["R2_BUCKET"], key, str(dest))
 
 
-def fetch(entry: dict, from_file: str | None) -> Path:
+def fetch(entry: CatalogEntry, from_file: str | None) -> Path:
     w = entry["wrapper"]
     sha256, size = w["sha256"], w["size"]
     ext = Path(w["filename"]).suffix or ".bin"
@@ -95,7 +114,10 @@ def fetch(entry: dict, from_file: str | None) -> Path:
 
     if from_file:
         src = Path(from_file)
-        _verify(src, size, sha256)  # verify in place; do not copy a bad file
+        try:
+            _verify(src, size, sha256)  # verify in place; do not copy a bad file
+        except Mismatch as err:
+            raise SystemExit(f"{src}: {err}") from None
         tmp.write_bytes(src.read_bytes())
     else:
         last_err: Exception | None = None

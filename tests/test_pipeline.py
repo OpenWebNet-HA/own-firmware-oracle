@@ -4,10 +4,10 @@ These run in pr.yml on every PR (forks included), with no secrets and no
 image. They prove the layer logic and the guard without touching anything
 proprietary.
 """
+
 import gzip
 import hashlib
 import io
-import os
 import struct
 import subprocess
 import sys
@@ -58,15 +58,17 @@ def test_walk_recurses_zip_and_gzip():
     inner = _zip({"prog": payload})
     outer = _zip({"inner.zip": inner, "readme": gzip.compress(b"notes")})
     rows: list[dict] = []
-    unpack.walk("top.zip", outer, [], Path("."), rows)
+    unpack.walk("top.zip", outer, [], Path(), rows)
     paths = {r["path"] for r in rows}
     assert "top.zip!inner.zip!prog" in paths
     assert any(p.endswith("~gunzip") for p in paths)
 
 
 def test_password_scheme_substitutes_product():
-    entry = {"product": "MH200N",
-             "password_scheme": {"candidates": ["SCHEDULER", "$PRODUCT"]}}
+    entry = {
+        "product": "MH200N",
+        "password_scheme": {"candidates": ["SCHEDULER", "$PRODUCT"]},
+    }
     assert unpack.passwords(entry) == [b"SCHEDULER", b"MH200N"]
 
 
@@ -107,8 +109,8 @@ def test_cpu_of_handles_empty_and_tiny_files():
 
 def test_walk_records_fake_containers_without_crashing():
     rows: list[dict] = []
-    unpack.walk("notzip", b"PK but not a zip archive", [], Path("."), rows)
-    unpack.walk("notgz", b"\x1f\x8b garbage", [], Path("."), rows)
+    unpack.walk("notzip", b"PK but not a zip archive", [], Path(), rows)
+    unpack.walk("notgz", b"\x1f\x8b garbage", [], Path(), rows)
     assert [r["type"] for r in rows] == ["zip/unreadable", "gzip/unreadable"]
 
 
@@ -119,7 +121,8 @@ def test_sibling_ext_layers_get_separate_work_dirs(tmp_path, monkeypatch):
     fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
     outer = _zip({"rootfs.img": fs, "recovery.img": fs + b"\x01"})
     unpack.walk("fw.zip", outer, [], tmp_path, [])
-    assert len(seen) == 2 and seen[0] != seen[1]
+    assert len(seen) == 2
+    assert seen[0] != seen[1]
 
 
 def test_unzip_moves_on_when_wrong_password_passes_check_byte(monkeypatch):
@@ -201,32 +204,38 @@ def test_is_stale_on_missing_and_mismatched_keys(tmp_path):
 
 # --- catalog validation -------------------------------------------------------
 
+
 def test_catalog_accepts_the_real_mh200n_entry():
     entry = schema.load(ROOT / "catalog" / "MH200N" / "010108.yaml")
     assert entry["wrapper"]["filename"] == "FW_MH200N_vers_010108.zip"
 
 
-@pytest.mark.parametrize("source", [
-    "vendor: 'http://www.bticino.be/fw.zip'",
-    "vendor: 'https://evil.example/fw.zip'",
-    "vendor: 'file:///etc/passwd'",
-    "r2: 'firmware/../../other'",
-    "ftp: 'x'",
-])
+@pytest.mark.parametrize(
+    "source",
+    [
+        "vendor: 'http://www.bticino.be/fw.zip'",
+        "vendor: 'https://evil.example/fw.zip'",
+        "vendor: 'file:///etc/passwd'",
+        "r2: 'firmware/../../other'",
+        "ftp: 'x'",
+    ],
+)
 def test_catalog_rejects_bad_sources(tmp_path, source):
     cat = _catalog(tmp_path, sources=f"  sources:\n    - {source}\n")
     with pytest.raises(SystemExit):
         schema.load(cat)
 
 
-@pytest.mark.parametrize("filename", [
-    '"x.zip\\nBASH_ENV=/tmp/x"',  # newline -> $GITHUB_ENV injection
-    "'$(id).zip'",
-    "../x.zip",
-])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        '"x.zip\\nBASH_ENV=/tmp/x"',  # newline -> $GITHUB_ENV injection
+        "'$(id).zip'",
+        "../x.zip",
+    ],
+)
 def test_catalog_rejects_unsafe_filenames(tmp_path, filename):
-    cat = _catalog(tmp_path, wrapper={"filename": filename, "size": 1,
-                                      "sha256": SHA_B})
+    cat = _catalog(tmp_path, wrapper={"filename": filename, "size": 1, "sha256": SHA_B})
     with pytest.raises(SystemExit):
         schema.load(cat)
 
@@ -246,11 +255,12 @@ def test_catalog_rejects_mismatched_path_and_bad_hash(tmp_path):
 def test_fwfetch_refuses_redirect_off_https_or_allowlist():
     handler = fwfetch._VendorRedirects()
     for url in ("http://www.bticino.be/fw.zip", "https://evil.example/fw.zip"):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"https|allow-listed"):
             handler.redirect_request(None, None, 302, "", {}, url)
 
 
 # --- unpack: the image must be the catalog image -----------------------------
+
 
 def _sha(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
@@ -258,8 +268,7 @@ def _sha(b: bytes) -> str:
 
 def test_unpack_refuses_an_image_that_is_not_the_catalog_wrapper():
     good = _zip({"fw.fwz": b"inner"})
-    entry = {"wrapper": {"filename": "FW.zip", "size": len(good),
-                         "sha256": _sha(good)}}
+    entry = {"wrapper": {"filename": "FW.zip", "size": len(good), "sha256": _sha(good)}}
     unpack.verify_wrapper(entry, good)
     with pytest.raises(SystemExit):
         unpack.verify_wrapper(entry, good + b"x")
@@ -275,14 +284,28 @@ def test_unpack_requires_the_catalog_image_inside():
 def test_unpack_roots_paths_at_wrapper_filename(tmp_path, monkeypatch):
     inner = b"not a container"
     wrapper = _zip({"fw.fwz": inner})
-    cat = _catalog(tmp_path, image_sha=_sha(inner), wrapper={
-        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    cat = _catalog(
+        tmp_path,
+        image_sha=_sha(inner),
+        wrapper={"filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)},
+    )
     # The fwfetch cache names files <sha256>.zip; the manifest must not care.
     on_disk = tmp_path / f"{_sha(wrapper)}.zip"
     on_disk.write_bytes(wrapper)
     out = tmp_path / "manifest.tsv"
-    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(on_disk), "-o",
-                                      str(out), "--work", str(tmp_path / "w")])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "unpack",
+            str(cat),
+            str(on_disk),
+            "-o",
+            str(out),
+            "--work",
+            str(tmp_path / "w"),
+        ],
+    )
     unpack.main()
     rows = [ln.split("\t")[0] for ln in out.read_text().splitlines()[4:]]
     assert rows == ["FW.zip", "FW.zip!fw.fwz"]
@@ -292,8 +315,11 @@ def test_unpack_deletes_its_temp_work_dir(tmp_path, monkeypatch):
     # An ext layer makes walk() create work dirs; without --work they must go.
     fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
     wrapper = _zip({"rootfs.img": fs})
-    cat = _catalog(tmp_path, image_sha=_sha(fs), wrapper={
-        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    cat = _catalog(
+        tmp_path,
+        image_sha=_sha(fs),
+        wrapper={"filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)},
+    )
     img = tmp_path / "FW.zip"
     img.write_bytes(wrapper)
     temp_root = tmp_path / "tmp"
@@ -301,14 +327,17 @@ def test_unpack_deletes_its_temp_work_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(unpack.tempfile, "tempdir", str(temp_root))
     seen: list[Path] = []
     monkeypatch.setattr(unpack, "_ext_tree", lambda img, sub: seen.append(sub) or [])
-    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(img), "-o",
-                                      str(tmp_path / "m.tsv")])
+    monkeypatch.setattr(
+        sys, "argv", ["unpack", str(cat), str(img), "-o", str(tmp_path / "m.tsv")]
+    )
     unpack.main()
-    assert seen and seen[0].is_relative_to(temp_root)
+    assert seen
+    assert seen[0].is_relative_to(temp_root)
     assert list(temp_root.iterdir()) == []
 
 
 # --- unpack: bounded, injection-free, one row per line -----------------------
+
 
 def test_unzip_refuses_archives_declaring_more_than_the_cap():
     raw = _zip({"a": b"x" * 600, "b": b"y" * 600})
@@ -331,8 +360,11 @@ def test_tsv_field_escapes_tabs_newlines_and_backslashes():
 def test_manifest_rows_stay_one_line_for_hostile_member_names(tmp_path, monkeypatch):
     inner = b"payload"
     wrapper = _zip({"evil\tname\nFAKE\tROW": inner})
-    cat = _catalog(tmp_path, image_sha=_sha(inner), wrapper={
-        "filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)})
+    cat = _catalog(
+        tmp_path,
+        image_sha=_sha(inner),
+        wrapper={"filename": "FW.zip", "size": len(wrapper), "sha256": _sha(wrapper)},
+    )
     img = tmp_path / "FW.zip"
     img.write_bytes(wrapper)
     out = tmp_path / "m.tsv"
@@ -345,6 +377,7 @@ def test_manifest_rows_stay_one_line_for_hostile_member_names(tmp_path, monkeypa
 
 # --- unpack: symlinks are recorded, never followed ---------------------------
 
+
 def test_tree_entries_records_symlinks_without_following(tmp_path):
     host = tmp_path / "host-secret"
     host.write_bytes(b"runner file")
@@ -354,10 +387,10 @@ def test_tree_entries_records_symlinks_without_following(tmp_path):
     root = tmp_path / "tree"
     (root / "bin").mkdir(parents=True)
     (root / "bin" / "busybox").write_bytes(b"\x7fELF")
-    os.symlink("busybox", root / "bin" / "ls")          # relative, in-tree
-    os.symlink(str(host), root / "bin" / "abs")         # absolute -> host file
-    os.symlink(str(tmp_path / "host-dir"), root / "d")  # dir link -> host dir
-    os.symlink("/nonexistent", root / "dangling")
+    (root / "bin" / "ls").symlink_to("busybox")  # relative, in-tree
+    (root / "bin" / "abs").symlink_to(host)  # absolute -> host file
+    (root / "d").symlink_to(tmp_path / "host-dir")  # dir link -> host dir
+    (root / "dangling").symlink_to("/nonexistent")
 
     entries = {p: (blob, tgt) for p, blob, tgt in unpack._tree_entries(root)}
     assert entries["bin/busybox"] == (b"\x7fELF", None)
@@ -369,16 +402,22 @@ def test_tree_entries_records_symlinks_without_following(tmp_path):
 
 
 def test_walk_writes_symlink_rows(tmp_path, monkeypatch):
-    monkeypatch.setattr(unpack, "_ext_tree",
-                        lambda img, sub: [("bin/ls", None, "busybox")])
+    monkeypatch.setattr(
+        unpack, "_ext_tree", lambda img, sub: [("bin/ls", None, "busybox")]
+    )
     fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
     rows: list[dict] = []
     unpack.walk("rootfs", fs, [], tmp_path, rows)
-    assert rows[-1] == {"path": "rootfs:/bin/ls", "type": "symlink",
-                        "size": 7, "sha256": _sha(b"busybox")}
+    assert rows[-1] == {
+        "path": "rootfs:/bin/ls",
+        "type": "symlink",
+        "size": 7,
+        "sha256": _sha(b"busybox"),
+    }
 
 
 # --- guard: untracked files count too ----------------------------------------
+
 
 def test_guard_sees_untracked_but_not_ignored_files(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
@@ -387,7 +426,7 @@ def test_guard_sees_untracked_but_not_ignored_files(tmp_path, monkeypatch):
     Path("results").mkdir()
     Path("results/manifest.tsv").write_text("path\n")
     Path("results/bt_luci").write_bytes(b"\x7fELF")  # extensionless ELF
-    Path("fw.zip").write_bytes(b"PK\x03\x04")        # ignored: never committed
+    Path("fw.zip").write_bytes(b"PK\x03\x04")  # ignored: never committed
     files = {p.as_posix() for p in guard.repo_files()}
     assert {"results/manifest.tsv", "results/bt_luci"} <= files
     assert "fw.zip" not in files

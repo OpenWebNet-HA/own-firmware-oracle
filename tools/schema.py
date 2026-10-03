@@ -13,10 +13,12 @@ fixed schema here instead of being trusted as free text:
   * optional undecoded_ok: [{path, reason}] acknowledges layers unpack.py's
     coverage gate would otherwise refuse.
 """
+
 from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit
 
 import yaml
@@ -24,6 +26,10 @@ import yaml
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 R2_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
+
+# A catalog entry after validate(): the checked fields have the shapes above;
+# the rest (flash map, notes) is free-form YAML.
+CatalogEntry = dict[str, Any]
 
 # Hosts the vendor firmware is actually published on (BTicino / Legrand).
 VENDOR_HOSTS = {
@@ -80,14 +86,16 @@ def _sources(sources: object) -> None:
             raise ValueError(f"unknown source kind {kind!r}")
 
 
-def validate(entry: object, path: Path) -> dict:
+def validate(entry: object, path: Path) -> CatalogEntry:
     """Return `entry` if it satisfies the schema, else raise ValueError or TypeError."""
     if not isinstance(entry, dict):
         raise TypeError("catalog entry must be a mapping")
     product = _name(entry.get("product"), "product")
     version = _name(entry.get("version"), "version")
     if (path.parent.parent.name, path.parent.name, path.name) != (
-        "catalog", product, f"{version}.yaml"
+        "catalog",
+        product,
+        f"{version}.yaml",
     ):
         raise ValueError(f"must live at catalog/{product}/{version}.yaml")
     _blob(entry.get("wrapper"), "wrapper")
@@ -115,11 +123,13 @@ def _limits(limits: object) -> None:
         raise ValueError(f"unknown limits keys: {sorted(unknown)}")
     mib = limits.get("max_expand_mib")
     if mib is not None and (
-        isinstance(mib, bool) or not isinstance(mib, int)
+        isinstance(mib, bool)
+        or not isinstance(mib, int)
         or not 1 <= mib <= MAX_EXPAND_MIB_CEILING
     ):
         raise ValueError(
-            f"limits.max_expand_mib must be 1..{MAX_EXPAND_MIB_CEILING}, got {mib!r}")
+            f"limits.max_expand_mib must be 1..{MAX_EXPAND_MIB_CEILING}, got {mib!r}"
+        )
 
 
 def _undecoded_ok(acks: object) -> None:
@@ -132,7 +142,9 @@ def _undecoded_ok(acks: object) -> None:
             raise ValueError(f"undecoded_ok entries are {{path, reason}}, got {ack!r}")
         path, reason = ack["path"], ack["reason"]
         if not isinstance(path, str) or not path or any(ord(c) < 0x20 for c in path):
-            raise ValueError(f"undecoded_ok path must be a plain manifest path, got {path!r}")
+            raise ValueError(
+                f"undecoded_ok path must be a plain manifest path, got {path!r}"
+            )
         if not isinstance(reason, str) or not reason.strip():
             raise ValueError(f"undecoded_ok {path!r} needs a reason")
         if path in seen:
@@ -140,7 +152,7 @@ def _undecoded_ok(acks: object) -> None:
         seen.add(path)
 
 
-def load(path: str | Path) -> dict:
+def load(path: str | Path) -> CatalogEntry:
     """Load and validate a catalog file; exit with a clear message if invalid."""
     path = Path(path)
     try:
