@@ -24,6 +24,7 @@ from pathlib import Path
 
 import yaml
 
+from oracle import bus
 from oracle.sandbox import ENV_NAME, SandboxError, guest_path
 
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
@@ -32,6 +33,8 @@ REL_PATH = re.compile(r"[A-Za-z0-9_.+-]+(?:/[A-Za-z0-9_.+-]+)*")
 BUS_CUTS = {"pty", "socket"}  # B1 hardware cut, B2 socket cut
 OWN_CUTS = {"full", "unit"}  # O1 full stack, O2 one translator
 DEVICE_KINDS = {"pty"}  # what a device node in runtime.devices can be
+ROLES = {"supervisor", "own_server", "bus_server", "translator"}
+AUTH_SCHEMES = {"none", "openwebnet", "hmac_sha1", "hmac_sha2"}
 # ELF/<cpu>/<kind>/<bits><order>[/abi] -> qemu-user / binfmt_misc CPU name
 QEMU_ARCH = {
     ("ARM", "32le"): "arm",
@@ -45,6 +48,16 @@ QEMU_ARCH = {
 }
 
 
+def default_role(name: str) -> str:
+    if name == "openserver" or name.endswith("/openserver"):
+        return "own_server"
+    if name == "scsserver" or name.endswith("/scsserver"):
+        return "bus_server"
+    if name == "bt_processi":
+        return "supervisor"
+    return "translator"
+
+
 class TargetError(ValueError):
     pass
 
@@ -56,6 +69,26 @@ class Program:
     sha256: str
     layer: str  # the manifest prefix it resolved in
     args: tuple[str, ...] = ()  # argv[1:], when the program wants any
+    role: str = ""
+    port: int | None = None
+
+    def __post_init__(self) -> None:
+        if not self.role:
+            object.__setattr__(self, "role", default_role(self.name))
+        elif self.role not in ROLES:
+            roles = sorted(ROLES)
+            raise TargetError(
+                f"{self.name}: invalid role {self.role!r}, expected one of {roles}"
+            )
+        if self.port is not None and (
+            not isinstance(self.port, int)
+            or isinstance(self.port, bool)
+            or not (1 <= self.port <= 65535)
+        ):
+            raise TargetError(
+                f"{self.name}: port must be an integer between 1 and 65535, "
+                f"got {self.port!r}"
+            )
 
 
 @dataclass(frozen=True)
@@ -65,6 +98,8 @@ class Runtime:
     tmpfs: tuple[str, ...] = ()
     dirs: tuple[str, ...] = ()
     devices: dict[str, str] = field(default_factory=dict)  # guest path -> kind
+    stack_config: str = "home/bticino/cfg/stack_open.xml"
+    kernel_release: str = ""
 
 
 @dataclass(frozen=True)
@@ -77,6 +112,10 @@ class TargetSpec:
     image_sha256: str = ""  # from the manifest header
     arch: str = ""  # qemu CPU name, from the programs' ELF tags
     runtime: Runtime = field(default_factory=Runtime)
+    bus_device: str = "/dev/ttyPIC"
+    bus_framer: str = "line"
+    bus_responder: str = "pic"
+    own_auth: str = "none"
 
     @property
     def ready(self) -> bool:
@@ -184,7 +223,15 @@ def _str_list(raw: object, label: str) -> tuple[str, ...]:
 def _runtime(raw: object) -> Runtime:
     if not isinstance(raw, dict):
         raise TargetError("runtime must be a mapping")
-    unknown = set(raw) - {"cwd", "env", "tmpfs", "dirs", "devices"}
+    unknown = set(raw) - {
+        "cwd",
+        "env",
+        "tmpfs",
+        "dirs",
+        "devices",
+        "stack_config",
+        "kernel_release",
+    }
     if unknown:
         raise TargetError(f"runtime: unknown keys {sorted(unknown)}")
     env = raw.get("env", {})
@@ -208,12 +255,25 @@ def _runtime(raw: object) -> Runtime:
             raise TargetError(f"runtime.env: bad entry {key!r}")
         if str(key).startswith("QEMU_"):
             raise TargetError(f"runtime.env: {key} is the emulator's, not the guest's")
+
+    raw_stack = raw.get("stack_config", "home/bticino/cfg/stack_open.xml")
+    if not isinstance(raw_stack, str):
+        raise TargetError("runtime.stack_config must be a string")
+    stack_config = check_rel_path(raw_stack)
+
+    raw_rel = raw.get("kernel_release", "")
+    if not isinstance(raw_rel, str):
+        raise TargetError("runtime.kernel_release must be a string")
+    kernel_release = raw_rel
+
     return Runtime(
         cwd=cwd,
         env={str(k): v for k, v in env.items()},
         tmpfs=tmpfs,
         dirs=dirs,
         devices={str(k): str(v) for k, v in devices.items()},
+        stack_config=stack_config,
+        kernel_release=kernel_release,
     )
 
 
@@ -249,7 +309,23 @@ def _program(
         isinstance(a, str) and a and "\0" not in a for a in args
     ):
         raise TargetError(f"{path}: {name}: args must be a list of strings")
-    program = Program(str(name), rel, want, layer, tuple(args))
+
+    raw_role = spec.get("role")
+    role = str(raw_role) if raw_role is not None else ""
+    raw_port = spec.get("port")
+
+    try:
+        program = Program(
+            name=str(name),
+            path=rel,
+            sha256=want,
+            layer=layer,
+            args=tuple(args),
+            role=role,
+            port=raw_port,
+        )
+    except TargetError as exc:
+        raise TargetError(f"{path}: {exc}") from None
     return program, qemu_arch(rows[key][0])
 
 
@@ -284,6 +360,30 @@ def load(path: Path, results_root: Path) -> TargetSpec:
     if len(arches) != 1:
         raise TargetError(f"{path}: programs need different emulators {sorted(arches)}")
 
+    bus_device = str(data.get("bus_device", "/dev/ttyPIC"))
+    try:
+        guest_path(bus_device)
+    except SandboxError as exc:
+        raise TargetError(f"{path}: bus_device {exc}") from None
+
+    bus_framer = str(data.get("bus_framer", "line"))
+    try:
+        bus.get_framer(bus_framer)
+    except ValueError as exc:
+        raise TargetError(f"{path}: bus_framer: {exc}") from None
+
+    bus_responder = str(data.get("bus_responder", "pic"))
+    try:
+        bus.get_responder(bus_responder, version=version)
+    except ValueError as exc:
+        raise TargetError(f"{path}: bus_responder: {exc}") from None
+
+    own_auth = str(data.get("own_auth", "none"))
+    if own_auth not in AUTH_SCHEMES:
+        raise TargetError(
+            f"{path}: own_auth must be one of {sorted(AUTH_SCHEMES)}, got {own_auth!r}"
+        )
+
     return TargetSpec(
         product=product,
         version=version,
@@ -293,4 +393,8 @@ def load(path: Path, results_root: Path) -> TargetSpec:
         image_sha256=manifest_image(manifest_path),
         arch=arches.pop(),
         runtime=_runtime(data.get("runtime", {})),
+        bus_device=bus_device,
+        bus_framer=bus_framer,
+        bus_responder=bus_responder,
+        own_auth=own_auth,
     )
