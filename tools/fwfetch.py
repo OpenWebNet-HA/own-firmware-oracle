@@ -77,12 +77,19 @@ class _VendorRedirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _fetch_vendor(url: str, dest: Path) -> None:
+def _fetch_vendor(url: str, dest: Path, limit: int | None = None) -> None:
+    """Download `url` to `dest`, stopping as soon as more than `limit` bytes
+    arrive. Some vendor checkout links send no Content-Length, so the catalog
+    size is the only bound on a wrong or endless body."""
     schema.check_vendor_url(url)
     opener = urllib.request.build_opener(_VendorRedirects)
     req = urllib.request.Request(url, headers={"User-Agent": "own-firmware-oracle/1"})
+    written = 0
     with opener.open(req, timeout=120) as resp, dest.open("wb") as out:
         while chunk := resp.read(1 << 20):
+            written += len(chunk)
+            if limit is not None and written > limit:
+                raise Mismatch(f"size mismatch: more than {limit} bytes")
             out.write(chunk)
 
 
@@ -125,7 +132,7 @@ def fetch(entry: CatalogEntry, from_file: str | None) -> Path:
             kind, loc = next(iter(source.items()))
             try:
                 if kind == "vendor":
-                    _fetch_vendor(loc, tmp)
+                    _fetch_vendor(loc, tmp, size)
                 elif kind == "r2":
                     _fetch_r2(loc, tmp)
                 else:

@@ -139,6 +139,31 @@ FW_MH200N_vers_010108.zip      wrapper (not encrypted)
        └ btweb_app.zip         the application (bt_* translators)
 ```
 
+## Catalog: MyHomeServer1 2.82.06 (second entry)
+
+The image @gdluck used for OWNd#77 (#613). The vendor serves the `.fwz`
+itself, so `wrapper` and `image` are the same file. The checkout link sends no
+`Content-Length`, so `fwfetch` stops reading at the catalog size and the
+SHA-256 is the proof.
+
+Per the vendor packaging convention ("the password is the model", #613 comment
+18720022), the outer archive opens with `MyHomeServer1` (matching `<name>` in
+`fwz.xml`).
+
+```
+SMARTGW_028206.fwz                                zip (ZipCrypto: MyHomeServer1)
+ ├ fwz.xml                                        metadata (5.0.67, v2.82.6)
+ ├ uImage.zip                                     kernel 5.10.35 + DTBs
+ ├ btweb_only.ext4.gz.sha256.sig.zip              application rootfs
+ │  └ btweb_only.ext4.gz                          ext4 (~1 GiB uncompressed)
+ │     ├ home/bticino/bin/                        bt_luci, bt_device, coso, ...
+ │     └ home/bticino/libcoso/                    translator plugins
+ └ btweb_only_recovery.ext4.gz (+ .sig.zip)       recovery rootfs
+```
+
+56,602 rows in `results/MyHomeServer1/028206/manifest.tsv`. A second run gives
+a **zero diff**.
+
 ## Ground rules
 
 Based on the framework in #613 (EU Software Directive 2009/24/EC Art. 5(3) /
