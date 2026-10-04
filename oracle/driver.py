@@ -1,9 +1,9 @@
 """driver -- run a suite against a Target and turn each step into a record Row.
 
-Target is a protocol so the loop is tested with a fake; the qemu-backed
-implementation arrives after boundary discovery (docs/oracle-architecture.md
-section 8). Outputs are tagged by side so one row can show both what reached
-the bus and what the gateway said on its event side:
+Target is a protocol so the loop is tested with a fake; QemuTarget implements
+it in Phase 2b. Outputs are tagged by side so one row can show both what reached
+the bus and what the gateway emitted to the OpenWebNet client (on its event side
+or as status response frames on the command side before ACK):
 
     bus:a8 31 00 12 01 22 a3
     own:*1*0*31##

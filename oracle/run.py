@@ -21,6 +21,7 @@ import argparse
 import contextlib
 import os
 import select
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,7 +31,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import IO
 
-from oracle import ORACLE_VERSION, discover, sandbox, stage, target
+from oracle import (
+    ORACLE_VERSION,
+    cases,
+    discover,
+    driver,
+    qemu_target,
+    record,
+    sandbox,
+    stage,
+    target,
+)
 from oracle.bus import LineFramer
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -227,6 +238,207 @@ def cmd_discover(args: argparse.Namespace) -> int:
     return 0
 
 
+def parse_reset(reset: str) -> int:
+    if reset == "each":
+        return 1
+    if reset.startswith("batch-"):
+        num = reset[len("batch-") :]
+        if num.isdigit() and int(num) > 0:
+            return int(num)
+    if reset.isdigit():
+        return int(reset)
+    raise SystemExit(
+        f"invalid reset policy {reset!r}: must be 'each', 'batch-N', or integer"
+    )
+
+
+def validate_harness(spec: target.TargetSpec, harness: str) -> str:
+    if not record.HARNESS.fullmatch(harness):
+        raise SystemExit(
+            f"invalid harness {harness!r}: must be 'full' or 'unit:<program>'"
+        )
+    if harness == "full":
+        if "openserver" not in spec.programs:
+            raise SystemExit("harness 'full' requires 'openserver' in target programs")
+        return "openserver"
+    prog = harness[len("unit:") :]
+    if prog not in spec.programs:
+        raise SystemExit(
+            f"program {prog!r} for harness {harness!r} not in target programs: "
+            f"{sorted(spec.programs)}"
+        )
+    return prog
+
+
+def reexec_suite_in_sandbox(
+    args: argparse.Namespace, spec: target.TargetSpec, suite: cases.Suite
+) -> int:
+    if shutil.which("bwrap") is None:
+        raise SystemExit(
+            "bwrap not found: install bubblewrap (apt install bubblewrap), "
+            "or pass --no-sandbox to run unconfined"
+        )
+    out_target = (
+        Path(args.out).resolve()
+        if args.out
+        else suite_path(spec, args.harness, suite.name).resolve()
+    )
+    out_target.parent.mkdir(parents=True, exist_ok=True)
+
+    with contextlib.ExitStack() as stack:
+        if args.keep:
+            work = Path(args.keep).resolve()
+            work.mkdir(parents=True, exist_ok=False)
+        else:
+            work = Path(
+                stack.enter_context(
+                    tempfile.TemporaryDirectory(
+                        prefix="own-oracle-", ignore_cleanup_errors=True
+                    )
+                )
+            ).resolve()
+
+        py_bin = Path(sys.executable).resolve()
+        ro_binds = (
+            ROOT,
+            py_bin.parent,
+            py_bin.parent.parent,
+            Path(sys.prefix).resolve(),
+            Path(sys.base_prefix).resolve(),
+            Path("/home"),
+            Path(args.image).resolve().parent,
+            Path(args.target).resolve().parent,
+            Path(args.suite).resolve().parent,
+        )
+        rw_binds = (out_target.parent,)
+        sub_cmd = [
+            sys.executable,
+            "-m",
+            "oracle.run",
+            "suite",
+            str(Path(args.target).resolve()),
+            str(Path(args.suite).resolve()),
+            "--image",
+            str(Path(args.image).resolve()),
+            "--harness",
+            args.harness,
+            "--reset",
+            args.reset,
+            "-o",
+            str(out_target),
+            "--keep",
+            str(work),
+        ]
+        extra_env = {
+            "PATH": f"{py_bin.parent}:/usr/bin:/bin",
+            "PYTHONPATH": str(ROOT),
+            "ORACLE_IN_SANDBOX": "1",
+        }
+        bwrap_argv = sandbox.wrap(
+            sub_cmd,
+            work,
+            ro_binds=ro_binds,
+            rw_binds=rw_binds,
+            env=extra_env,
+        )
+        res = subprocess.run(bwrap_argv, check=False)  # noqa: S603
+        return res.returncode
+
+
+def suite_header(
+    spec: target.TargetSpec,
+    harness: str,
+    target_sha256: str,
+    reset: str,
+    framer: str,
+    responder: str,
+    settle_ms: float,
+    suite: cases.Suite,
+) -> dict[str, str]:
+    return {
+        "product": spec.product,
+        "version": spec.version,
+        "image_sha256": spec.image_sha256,
+        "harness": harness,
+        "target_sha256": target_sha256,
+        "adapter": "pty-1",
+        "reset": reset,
+        "bus": spec.boundary["bus"],
+        "framer": framer,
+        "responder": responder,
+        "settle_ms": f"{int(settle_ms)}",
+        "suite": suite.name,
+        "suite_sha256": suite.sha256,
+        "oracle_version": ORACLE_VERSION,
+    }
+
+
+def suite_path(spec: target.TargetSpec, harness: str, suite_name: str) -> Path:
+    return (
+        ROOT
+        / "results"
+        / record.result_path(spec.product, spec.version, harness, suite_name)
+    )
+
+
+def cmd_suite(args: argparse.Namespace) -> int:
+    spec = target.load(Path(args.target), ROOT / "results")
+    spec.require_ready()
+    suite = cases.load(Path(args.suite))
+    main_prog = validate_harness(spec, args.harness)
+    restart_every = parse_reset(args.reset)
+
+    if not args.no_sandbox and not (
+        sandbox.is_net_isolated() or os.environ.get("ORACLE_IN_SANDBOX")
+    ):
+        return reexec_suite_in_sandbox(args, spec, suite)
+
+    with contextlib.ExitStack() as stack:
+        if args.keep:
+            work = Path(args.keep).resolve()
+            work.mkdir(parents=True, exist_ok=True)
+        else:
+            work = Path(
+                stack.enter_context(
+                    tempfile.TemporaryDirectory(
+                        prefix="own-oracle-", ignore_cleanup_errors=True
+                    )
+                )
+            ).resolve()
+        stage_work = work / "stage"
+        staged = stage_target(
+            spec, Path(args.image), stage_work, sandboxed=not args.no_sandbox
+        )
+        print(
+            f"staged {staged.files} files, {staged.links} links, "
+            f"{staged.dirs} empty dirs",
+            file=sys.stderr,
+        )
+        with qemu_target.QemuTarget(
+            spec,
+            Path(args.image),
+            work,
+            harness=args.harness,
+            staged_sysroot=staged.root,
+            sandboxed=not args.no_sandbox,
+        ) as tgt:
+            rows = driver.run_suite(tgt, suite, restart_every=restart_every)
+            header = suite_header(
+                spec,
+                args.harness,
+                spec.programs[main_prog].sha256,
+                args.reset,
+                tgt.bus.framer.name,
+                tgt.bus.responder.name,
+                tgt.settle_ms,
+                suite,
+            )
+    out = Path(args.out) if args.out else suite_path(spec, args.harness, suite.name)
+    record.write(out, header, rows, ordered=suite.ordered)
+    print(f"{len(rows)} rows -> {out}", file=sys.stderr)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m oracle.run", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -243,8 +455,31 @@ def main(argv: list[str] | None = None) -> int:
         help="phase 1 extraction tools without bubblewrap (the firmware "
         "itself always runs in the jail)",
     )
+
+    s = sub.add_parser("suite", help="run a test suite against a target")
+    s.add_argument("target", help="oracle/targets/<product>/<version>.yaml")
+    s.add_argument("suite", help="oracle/cases/<suite>.cases or .seq")
+    s.add_argument("--image", required=True, help="the catalog wrapper on disk")
+    s.add_argument(
+        "-o", "--out", help="default: results/.../oracle/<harness>/<suite>.tsv"
+    )
+    s.add_argument("--harness", default="full", help="default: full")
+    s.add_argument(
+        "--reset",
+        default="each",
+        help="reset policy: each (default), batch-N, or 0 (never)",
+    )
+    s.add_argument("--keep", help="stage into this NEW dir; keep it")
+    s.add_argument(
+        "--no-sandbox",
+        action="store_true",
+        help="phase 1 extraction tools without bubblewrap",
+    )
+
     args = ap.parse_args(argv)
-    return cmd_discover(args)
+    if args.cmd == "discover":
+        return cmd_discover(args)
+    return cmd_suite(args)
 
 
 if __name__ == "__main__":
