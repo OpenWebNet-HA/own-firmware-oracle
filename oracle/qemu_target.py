@@ -67,6 +67,11 @@ def read_ports_from_stack_open(cfg_path: Path) -> dict[str, int]:
     root = tree.getroot()
     for p in root.findall("sw/*"):
         tag = p.tag
+        if tag == "openserver":
+            open_p = p.find("port_open")
+            if open_p is not None and open_p.text and open_p.text.isdigit():
+                ports[tag] = int(open_p.text)
+                continue
         mon = p.find("port_monitor")
         port = p.find("port")
         open_p = p.find("port_open")
@@ -77,6 +82,16 @@ def read_ports_from_stack_open(cfg_path: Path) -> dict[str, int]:
         elif open_p is not None and open_p.text and open_p.text.isdigit():
             ports[tag] = int(open_p.text)
     return ports
+
+
+def port_is_free(port: int, host: str = "127.0.0.1") -> bool:
+    """Verify that a local TCP port is not already bound."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.connect((host, port))
+            return False
+        except OSError:
+            return True
 
 
 def wait_tcp_port(
@@ -91,10 +106,10 @@ def wait_tcp_port(
         if on_poll is not None:
             on_poll()
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(("127.0.0.1", port))
-            s.close()
-            return True
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(poll_interval)
+                s.connect(("127.0.0.1", port))
+                return True
         except OSError:
             time.sleep(poll_interval)
     return False
@@ -148,6 +163,15 @@ class QemuTarget:
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
 
+        if self.sandboxed and not (
+            sandbox.is_net_isolated() or os.environ.get("ORACLE_IN_SANDBOX")
+        ):
+            raise sandbox.SandboxError(
+                "QemuTarget requires network isolation (run via oracle.run suite "
+                "or under sandbox.wrap); pass sandboxed=False to run unconfined"
+            )
+
+        self._console_files: dict[str, IO[bytes]] = {}
         self._custom_bus = bus_instance
         self._framer = framer or bus.LineFramer()
         self._responder = responder or bus.PicResponder(version=spec.version)
@@ -216,13 +240,18 @@ class QemuTarget:
             trace_dir=trace_dir,
             share_net=True,
         )
-        stdout_dest = console if console is not None else subprocess.DEVNULL
-        stderr_dest = console if console is not None else subprocess.DEVNULL
+        if console is None:
+            self.work_dir.mkdir(parents=True, exist_ok=True)
+            log_path = self.work_dir / f"console.{name}.log"
+            f = log_path.open("wb")
+            self._console_files[name] = f
+            console = f
+
         return subprocess.Popen(  # noqa: S603 - argv built by sandbox.jail
             argv,
             stdin=subprocess.DEVNULL,
-            stdout=stdout_dest,
-            stderr=stderr_dest,
+            stdout=console,
+            stderr=console,
         )
 
     def _connect_sessions(self, port: int) -> None:
@@ -281,6 +310,31 @@ class QemuTarget:
                 os.close(d.slave)
         self._devices.clear()
 
+        for f in self._console_files.values():
+            with contextlib.suppress(OSError):
+                f.close()
+        self._console_files.clear()
+
+    def _launch_daemon(
+        self,
+        name: str,
+        port: int | None,
+        dev_map: dict[str, str],
+        trace_dir: Path | None,
+    ) -> None:
+        if port is not None and not port_is_free(port):
+            self._stop()
+            raise RuntimeError(f"port {port} is already in use before starting {name}")
+        self._procs[name] = self._start_program(name, dev_map, trace_dir)
+        if port is not None and not wait_tcp_port(
+            port, timeout=10.0, on_poll=self.bus.pump
+        ):
+            self._stop()
+            raise RuntimeError(
+                f"{name} did not listen on port {port} "
+                f"(see console log at {self.work_dir / f'console.{name}.log'})"
+            )
+
     def restart(self) -> None:
         self._stop()
         self._copy_sysroot()
@@ -305,35 +359,22 @@ class QemuTarget:
             trace_dir.mkdir(parents=True, exist_ok=True)
 
         if "scsserver" in self.spec.programs:
-            self._procs["scsserver"] = self._start_program(
-                "scsserver", dev_map, trace_dir
+            self._launch_daemon(
+                "scsserver", ports.get("scsserver", 20001), dev_map, trace_dir
             )
-            scs_port = ports.get("scsserver", 20001)
-            if not wait_tcp_port(scs_port, timeout=10.0, on_poll=self.bus.pump):
-                self._stop()
-                raise RuntimeError(f"scsserver did not listen on port {scs_port}")
 
         for name in sorted(active):
             if name in self.spec.programs:
-                self._procs[name] = self._start_program(name, dev_map, trace_dir)
-                p_port = ports.get(name)
-                if p_port is not None and not wait_tcp_port(
-                    p_port, timeout=10.0, on_poll=self.bus.pump
-                ):
-                    self._stop()
-                    raise RuntimeError(
-                        f"{name} did not listen on expected port {p_port}"
-                    )
+                self._launch_daemon(name, ports.get(name), dev_map, trace_dir)
 
         if self.harness == "full" and "openserver" in self.spec.programs:
-            self._procs["openserver"] = self._start_program(
-                "openserver", dev_map, trace_dir
-            )
             open_port = ports.get("openserver", 20000)
-            if not wait_tcp_port(open_port, timeout=10.0, on_poll=self.bus.pump):
+            self._launch_daemon("openserver", open_port, dev_map, trace_dir)
+            try:
+                self._connect_sessions(open_port)
+            except Exception:
                 self._stop()
-                raise RuntimeError(f"openserver did not listen on port {open_port}")
-            self._connect_sessions(open_port)
+                raise
 
         self._running = True
         self.settle()
@@ -342,7 +383,14 @@ class QemuTarget:
 
     def send_own(self, frame: str) -> None:
         self._reply = "-"
-        if not self._running or self._cmd_sock is None or self._cmd_sock.fileno() < 0:
+        if not self._running:
+            return
+        if self._cmd_sock is None or self._cmd_sock.fileno() < 0:
+            if self.harness.startswith("unit:"):
+                raise RuntimeError(
+                    f"harness {self.harness!r} has no OpenWebNet command session; "
+                    "cannot execute 'down' step"
+                )
             return
         try:
             self._cmd_sock.sendall(frame.encode("ascii"))
@@ -362,11 +410,12 @@ class QemuTarget:
                 for f in frames:
                     if f == BANNER:
                         self._reply = "ack"
-                        return
-                    if f == NACK:
+                    elif f == NACK:
                         self._reply = "nack"
-                        return
-                    self._own_events.append(f)
+                    else:
+                        self._own_events.append(f)
+                if self._reply != "-":
+                    return
         except (TimeoutError, OSError):
             self._reply = "-"
 
@@ -374,9 +423,10 @@ class QemuTarget:
         r, self._reply = self._reply, "-"
         return r
 
-    def _pump_own(self) -> None:
+    def _pump_own(self) -> bool:
         if self._ev_sock is None or self._ev_sock.fileno() < 0:
-            return
+            return False
+        had_data = False
         try:
             while True:
                 r, _, _ = select.select([self._ev_sock], [], [], 0)
@@ -385,10 +435,12 @@ class QemuTarget:
                 chunk = self._ev_sock.recv(4096)
                 if not chunk:
                     break
+                had_data = True
                 self._ev_buf.extend(chunk)
                 self._own_events.extend(split_own(self._ev_buf))
         except (OSError, ValueError):
             pass
+        return had_data
 
     def take_own(self) -> list[str]:
         self._pump_own()
@@ -404,10 +456,9 @@ class QemuTarget:
         self.bus.inject(data)
 
     def settle(self) -> bool:
-        self._pump_own()
-        settled = self.bus.settle(quiet_ms=self.quiet_ms, max_ms=self.max_ms)
-        self._pump_own()
-        return settled
+        return self.bus.settle(
+            quiet_ms=self.quiet_ms, max_ms=self.max_ms, on_poll=self._pump_own
+        )
 
     def alive(self) -> bool:
         if not self._running or not self._procs:

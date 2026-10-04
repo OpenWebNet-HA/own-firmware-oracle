@@ -21,6 +21,7 @@ import argparse
 import contextlib
 import os
 import select
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -251,6 +252,99 @@ def parse_reset(reset: str) -> int:
     )
 
 
+def validate_harness(spec: target.TargetSpec, harness: str) -> str:
+    if not record.HARNESS.fullmatch(harness):
+        raise SystemExit(
+            f"invalid harness {harness!r}: must be 'full' or 'unit:<program>'"
+        )
+    if harness == "full":
+        if "openserver" not in spec.programs:
+            raise SystemExit("harness 'full' requires 'openserver' in target programs")
+        return "openserver"
+    prog = harness[len("unit:") :]
+    if prog not in spec.programs:
+        raise SystemExit(
+            f"program {prog!r} for harness {harness!r} not in target programs: "
+            f"{sorted(spec.programs)}"
+        )
+    return prog
+
+
+def reexec_suite_in_sandbox(
+    args: argparse.Namespace, spec: target.TargetSpec, suite: cases.Suite
+) -> int:
+    if shutil.which("bwrap") is None:
+        raise SystemExit(
+            "bwrap not found: install bubblewrap (apt install bubblewrap), "
+            "or pass --no-sandbox to run unconfined"
+        )
+    out_target = (
+        Path(args.out).resolve()
+        if args.out
+        else suite_path(spec, args.harness, suite.name).resolve()
+    )
+    out_target.parent.mkdir(parents=True, exist_ok=True)
+
+    with contextlib.ExitStack() as stack:
+        if args.keep:
+            work = Path(args.keep).resolve()
+            work.mkdir(parents=True, exist_ok=False)
+        else:
+            work = Path(
+                stack.enter_context(
+                    tempfile.TemporaryDirectory(
+                        prefix="own-oracle-", ignore_cleanup_errors=True
+                    )
+                )
+            ).resolve()
+
+        py_bin = Path(sys.executable).resolve()
+        ro_binds = (
+            ROOT,
+            py_bin.parent,
+            py_bin.parent.parent,
+            Path(sys.prefix).resolve(),
+            Path(sys.base_prefix).resolve(),
+            Path("/home"),
+            Path(args.image).resolve().parent,
+            Path(args.target).resolve().parent,
+            Path(args.suite).resolve().parent,
+        )
+        rw_binds = (out_target.parent,)
+        sub_cmd = [
+            sys.executable,
+            "-m",
+            "oracle.run",
+            "suite",
+            str(Path(args.target).resolve()),
+            str(Path(args.suite).resolve()),
+            "--image",
+            str(Path(args.image).resolve()),
+            "--harness",
+            args.harness,
+            "--reset",
+            args.reset,
+            "-o",
+            str(out_target),
+            "--keep",
+            str(work),
+        ]
+        extra_env = {
+            "PATH": f"{py_bin.parent}:/usr/bin:/bin",
+            "PYTHONPATH": str(ROOT),
+            "ORACLE_IN_SANDBOX": "1",
+        }
+        bwrap_argv = sandbox.wrap(
+            sub_cmd,
+            work,
+            ro_binds=ro_binds,
+            rw_binds=rw_binds,
+            env=extra_env,
+        )
+        res = subprocess.run(bwrap_argv, check=False)  # noqa: S603
+        return res.returncode
+
+
 def suite_header(
     spec: target.TargetSpec,
     harness: str,
@@ -291,11 +385,18 @@ def cmd_suite(args: argparse.Namespace) -> int:
     spec = target.load(Path(args.target), ROOT / "results")
     spec.require_ready()
     suite = cases.load(Path(args.suite))
+    main_prog = validate_harness(spec, args.harness)
     restart_every = parse_reset(args.reset)
+
+    if not args.no_sandbox and not (
+        sandbox.is_net_isolated() or os.environ.get("ORACLE_IN_SANDBOX")
+    ):
+        return reexec_suite_in_sandbox(args, spec, suite)
+
     with contextlib.ExitStack() as stack:
         if args.keep:
             work = Path(args.keep).resolve()
-            work.mkdir(parents=True, exist_ok=False)
+            work.mkdir(parents=True, exist_ok=True)
         else:
             work = Path(
                 stack.enter_context(
@@ -322,11 +423,6 @@ def cmd_suite(args: argparse.Namespace) -> int:
             sandboxed=not args.no_sandbox,
         ) as tgt:
             rows = driver.run_suite(tgt, suite, restart_every=restart_every)
-            main_prog = (
-                "openserver"
-                if args.harness == "full" and "openserver" in spec.programs
-                else args.harness.split(":", 1)[-1]
-            )
             header = suite_header(
                 spec,
                 args.harness,

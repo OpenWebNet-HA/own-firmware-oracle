@@ -289,11 +289,13 @@ The **firmware jail** (`jail`, used by discovery):
   so children of a supervisor are traced too.
 
 The **driver jail** (`wrap`, 2b) puts one `bwrap` around the whole suite run
-(driver + firmware), so the driver can reach the firmware's loopback sockets:
-host `/usr`, `/lib*` read-only, the work dir read-write, nothing else. Still
-to do in 2b: a fresh sysroot copy per `reset=each` step, and a CPU-time and
-address-space limit per firmware process (`prlimit`), so a runaway program
-becomes a `crash` or `timeout` row, not a stuck job.
+(driver + firmware) with an unshared network namespace (`--unshare-all`), so the
+driver can reach the firmware's loopback sockets without exposing host network
+interfaces or allowing egress traffic: host `/usr`, `/lib*` read-only, the work
+dir read-write, nothing else. The firmware daemons run inside the driver jail
+sharing its private loopback (`--share-net`). Each `reset=each` step gets a fresh
+sysroot copy restored from the staged baseline.
+
 
 ### 6.3 Simulated bus (`oracle/bus.py`)
 

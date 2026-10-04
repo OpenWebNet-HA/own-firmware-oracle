@@ -24,7 +24,13 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from oracle import bus, driver, qemu_target, record, run, sandbox, target
+from oracle import bus, cases, driver, qemu_target, record, run, sandbox, target
+
+
+@pytest.fixture(autouse=True)
+def mock_sandbox_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORACLE_IN_SANDBOX", "1")
+
 
 # --- bus extensions: PtyPort and PicResponder --------------------------------
 
@@ -604,7 +610,9 @@ def test_qemu_target_start_program_and_sandbox(monkeypatch, tmp_path):
     mock_popen = MagicMock()
     monkeypatch.setattr(subprocess, "Popen", mock_popen)
     tgt._start_program("bt_luci", {"/dev/ttyPIC": "/dev/null"})
-    assert mock_popen.call_args[1]["stdout"] == subprocess.DEVNULL
+    assert mock_popen.call_args[1]["stdout"] is not None
+    assert mock_popen.call_args[1]["stdout"] != subprocess.DEVNULL
+    assert (tgt.work_dir / "console.bt_luci.log").exists()
 
     buf = io.BytesIO()
     tgt._start_program("bt_luci", {"/dev/ttyPIC": "/dev/null"}, console=buf)
@@ -765,3 +773,356 @@ def test_qemu_target_send_own_and_pump_branches():
     tgt._ev_sock.fileno.return_value = 42
     with patch("select.select", side_effect=ValueError("bad fd")):
         tgt._pump_own()
+
+
+def test_pty_port_negative_fd():
+    port = bus.PtyPort(-1)
+    assert port.read() == b""
+    port.write(b"something")
+
+
+def test_bus_settle_with_on_poll():
+    fake_port = MagicMock()
+    fake_port.read.return_value = b""
+    clock = bus.MonotonicClock()
+    b = bus.Bus(fake_port, bus.LineFramer(), bus.Silent(), clock=clock)
+    called = []
+
+    def on_poll() -> bool:
+        called.append(True)
+        return False
+
+    assert b.settle(quiet_ms=10.0, max_ms=50.0, on_poll=on_poll) is True
+    assert called
+
+
+def test_port_is_free():
+    # Free port
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    assert qemu_target.port_is_free(port) is True
+
+    # Busy port
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2.bind(("127.0.0.1", 0))
+    s2.listen(1)
+    busy_port = s2.getsockname()[1]
+    try:
+        assert qemu_target.port_is_free(busy_port) is False
+    finally:
+        s2.close()
+
+
+def test_wait_tcp_port_with_on_poll():
+    poll_calls = []
+
+    def on_poll() -> None:
+        poll_calls.append(1)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    s.listen(1)
+    port = s.getsockname()[1]
+    try:
+        assert qemu_target.wait_tcp_port(port, timeout=1.0, on_poll=on_poll) is True
+        assert poll_calls == [1]
+    finally:
+        s.close()
+
+
+def test_read_ports_openserver_fallback(tmp_path):
+    cfg = tmp_path / "stack.xml"
+    cfg.write_text(
+        "<cfg_stack><sw>"
+        "<openserver><port>20005</port></openserver>"
+        "<other><port_open>20010</port_open></other>"
+        "</sw></cfg_stack>",
+        encoding="ascii",
+    )
+    assert qemu_target.read_ports_from_stack_open(cfg) == {
+        "openserver": 20005,
+        "other": 20010,
+    }
+
+
+def test_qemu_target_requires_sandbox_isolation(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    monkeypatch.delenv("ORACLE_IN_SANDBOX", raising=False)
+    monkeypatch.setattr(sandbox, "is_net_isolated", lambda: False)
+
+    with pytest.raises(sandbox.SandboxError, match="requires network isolation"):
+        qemu_target.QemuTarget(spec, tmp_path / "img.zip", tmp_path / "w")
+
+    # sandboxed=False bypasses check
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", sandboxed=False
+    )
+    assert tgt.sandboxed is False
+
+
+def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(tgt, "_active_clients", lambda: {"bt_luci"})
+    monkeypatch.setattr(
+        qemu_target,
+        "read_ports_from_stack_open",
+        lambda p: {"scsserver": 20001, "bt_luci": 30001, "openserver": 20000},
+    )
+
+    # 1. scsserver port conflict
+    monkeypatch.setattr(
+        qemu_target,
+        "port_is_free",
+        lambda p: p != 20001,
+    )
+    with pytest.raises(RuntimeError, match="port 20001 is already in use"):
+        tgt.restart()
+
+    # 2. client port conflict
+    monkeypatch.setattr(
+        qemu_target,
+        "port_is_free",
+        lambda p: p != 30001,
+    )
+    monkeypatch.setattr(
+        tgt,
+        "_start_program",
+        lambda name, dev, trace: MagicMock(poll=lambda: None),
+    )
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", lambda p, **kw: True)
+    with pytest.raises(RuntimeError, match="port 30001 is already in use"):
+        tgt.restart()
+
+    # 3. openserver port conflict
+    monkeypatch.setattr(
+        qemu_target,
+        "port_is_free",
+        lambda p: p != 20000,
+    )
+    with pytest.raises(RuntimeError, match="port 20000 is already in use"):
+        tgt.restart()
+
+
+def test_qemu_target_stop_closes_console_files(tmp_path):
+    spec = _dummy_spec()
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    f_mock = MagicMock()
+    f_mock.close.side_effect = OSError("disk error")
+    tgt._console_files["prog"] = f_mock
+    tgt._stop()
+    assert tgt._console_files == {}
+    f_mock.close.assert_called_once()
+
+
+def test_qemu_target_send_own_unit_harness_and_early_exit():
+    spec = _dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        Path("/tmp/img.zip"),
+        Path("/tmp/w"),
+        harness="unit:bt_luci",
+        staged_sysroot=Path("/tmp"),
+        bus_instance=fake_bus,
+    )
+    tgt._running = True
+    tgt._cmd_sock = None
+    with pytest.raises(RuntimeError, match="has no OpenWebNet command session"):
+        tgt.send_own("*1*1*31##")
+
+    # Early exit when ACK received before loop ends
+    mock_cmd = MagicMock()
+    mock_cmd.fileno.return_value = 42
+    mock_cmd.recv.return_value = b"*#*1##"
+    tgt._cmd_sock = mock_cmd
+    with patch("select.select", return_value=([mock_cmd], [], [])):
+        tgt.send_own("*1*1*31##")
+    assert tgt.take_reply() == "ack"
+
+
+def test_is_net_isolated_branches(tmp_path, monkeypatch):
+    # 1. /proc/net/route does not exist
+    monkeypatch.setattr(Path, "exists", lambda self: False)
+    assert sandbox.is_net_isolated() is False
+
+    # 2. OSError reading route
+    monkeypatch.setattr(Path, "exists", lambda self: True)
+    monkeypatch.setattr(Path, "read_text", MagicMock(side_effect=OSError("denied")))
+    assert sandbox.is_net_isolated() is False
+
+    # 3. Empty or only header -> True
+    monkeypatch.setattr(
+        Path, "read_text", MagicMock(return_value="Iface Destination Gateway\n")
+    )
+    assert sandbox.is_net_isolated() is True
+
+    # 4. Multiple lines -> False
+    monkeypatch.setattr(
+        Path,
+        "read_text",
+        MagicMock(return_value="Iface Destination Gateway\neth0 0000 0000\n"),
+    )
+    assert sandbox.is_net_isolated() is False
+
+
+def test_sandbox_wrap_with_binds_and_env(tmp_path):
+    w = tmp_path / "work"
+    cmd = sandbox.wrap(
+        ["/bin/ls"],
+        w.resolve(),
+        ro_binds=(Path("/extra/ro"),),
+        rw_binds=(Path("/extra/rw"),),
+        env={"FOO": "BAR"},
+    )
+    assert "--ro-bind-try" in cmd
+    assert "/extra/ro" in cmd
+    assert "--bind" in cmd
+    assert "/extra/rw" in cmd
+    assert "--setenv" in cmd
+    idx = cmd.index("FOO")
+    assert cmd[idx + 1] == "BAR"
+
+
+def test_validate_harness():
+    spec = _dummy_spec()
+    assert run.validate_harness(spec, "full") == "openserver"
+    assert run.validate_harness(spec, "unit:bt_luci") == "bt_luci"
+
+    with pytest.raises(SystemExit, match="invalid harness"):
+        run.validate_harness(spec, "bad-harness")
+
+    spec_no_open = target.TargetSpec(
+        product="MH200N",
+        version="010108",
+        sysroot=("fs:", "app.zip!"),
+        programs={"bt_luci": spec.programs["bt_luci"]},
+        boundary={"status": "discovered"},
+        runtime=spec.runtime,
+    )
+    with pytest.raises(SystemExit, match="requires 'openserver'"):
+        run.validate_harness(spec_no_open, "full")
+
+    with pytest.raises(SystemExit, match="not in target programs"):
+        run.validate_harness(spec, "unit:missing_daemon")
+
+
+def test_reexec_suite_in_sandbox(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    suite = cases.Suite(name="test", sha256="0" * 64, ordered=False, steps=())
+    args = run.argparse.Namespace(
+        target=str(tmp_path / "target.yaml"),
+        suite=str(tmp_path / "test.cases"),
+        image=str(tmp_path / "img.zip"),
+        out=str(tmp_path / "out.tsv"),
+        harness="full",
+        reset="each",
+        keep=str(tmp_path / "keep"),
+        no_sandbox=False,
+    )
+
+    # Missing bwrap raises SystemExit
+    monkeypatch.setattr(run.shutil, "which", lambda cmd: None)
+    with pytest.raises(SystemExit, match="bwrap not found"):
+        run.reexec_suite_in_sandbox(args, spec, suite)
+
+    # Present bwrap calls subprocess.run
+    monkeypatch.setattr(run.shutil, "which", lambda cmd: "/usr/bin/bwrap")
+    mock_run = MagicMock(return_value=MagicMock(returncode=0))
+    monkeypatch.setattr(run.subprocess, "run", mock_run)
+    code = run.reexec_suite_in_sandbox(args, spec, suite)
+    assert code == 0
+    assert mock_run.called
+
+    # When keep is None, tempdir is used
+    args.keep = None
+    args.out = None
+    code2 = run.reexec_suite_in_sandbox(args, spec, suite)
+    assert code2 == 0
+
+
+def test_qemu_target_connect_sessions_failure(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(tgt, "_active_clients", lambda: {"bt_luci"})
+    monkeypatch.setattr(
+        qemu_target,
+        "read_ports_from_stack_open",
+        lambda p: {"scsserver": 20001, "bt_luci": 30001, "openserver": 20000},
+    )
+    monkeypatch.setattr(qemu_target, "port_is_free", lambda port: True)
+    monkeypatch.setattr(
+        tgt,
+        "_start_program",
+        lambda name, dev_map, trace_dir: MagicMock(poll=lambda: None),
+    )
+    monkeypatch.setattr(
+        qemu_target, "wait_tcp_port", lambda port, timeout, on_poll: True
+    )
+    monkeypatch.setattr(
+        tgt,
+        "_connect_sessions",
+        MagicMock(side_effect=ConnectionRefusedError("fail")),
+    )
+    stop_called = []
+    orig_stop = tgt._stop
+    monkeypatch.setattr(tgt, "_stop", lambda: stop_called.append(True) or orig_stop())
+
+    with pytest.raises(ConnectionRefusedError, match="fail"):
+        tgt.restart()
+    assert len(stop_called) == 2
+
+
+def test_cmd_suite_reexecs_when_not_sandboxed(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    cases_file = tmp_path / "lights.cases"
+    cases_file.write_text("down *1*1*31##\n", encoding="ascii")
+    args = run.argparse.Namespace(
+        target=str(tmp_path / "target.yaml"),
+        suite=str(cases_file),
+        image=str(tmp_path / "img.zip"),
+        out=str(tmp_path / "out.tsv"),
+        harness="full",
+        reset="each",
+        keep=None,
+        no_sandbox=False,
+    )
+    monkeypatch.delenv("ORACLE_IN_SANDBOX", raising=False)
+    monkeypatch.setattr(sandbox, "is_net_isolated", lambda: False)
+    monkeypatch.setattr(target, "load", lambda p, r: spec)
+    reexec_called = []
+    monkeypatch.setattr(
+        run,
+        "reexec_suite_in_sandbox",
+        lambda a, s, su: reexec_called.append(True) or 42,
+    )
+
+    code = run.cmd_suite(args)
+    assert code == 42
+    assert reexec_called == [True]

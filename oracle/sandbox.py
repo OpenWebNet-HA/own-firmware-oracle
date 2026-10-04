@@ -141,24 +141,70 @@ def jail(
     return out
 
 
-def wrap(cmd: list[str], workdir: Path) -> list[str]:
+def is_net_isolated() -> bool:
+    """Check whether the process runs in an isolated network namespace.
+
+    Returns True if /proc/net/route has no active routes (loopback only).
+    """
+    route_file = Path("/proc/net/route")
+    if not route_file.exists():
+        return False
+    try:
+        lines = [
+            line.strip()
+            for line in route_file.read_text(encoding="ascii").splitlines()
+            if line.strip()
+        ]
+        return len(lines) <= 1
+    except OSError:
+        return False
+
+
+def wrap(
+    cmd: list[str],
+    workdir: Path,
+    *,
+    ro_binds: tuple[Path, ...] = (),
+    rw_binds: tuple[Path, ...] = (),
+    env: dict[str, str] | None = None,
+) -> list[str]:
     """The driver jail: host read-only, work dir writable, private network."""
     if not workdir.is_absolute():
         raise SandboxError(f"workdir must be absolute: {workdir}")
     ro: list[str] = []
     for p in HOST_RO:
         ro += ["--ro-bind-try", p, p]
+    for p_ro in ro_binds:
+        ro += ["--ro-bind-try", str(p_ro), str(p_ro)]
+    extra_rw: list[str] = []
+    for p_rw in rw_binds:
+        extra_rw += ["--bind", str(p_rw), str(p_rw)]
+    env_args: list[str] = [
+        "--setenv",
+        "TZ",
+        "UTC",
+        "--setenv",
+        "LANG",
+        "C",
+        "--setenv",
+        "PATH",
+        "/usr/bin:/bin",
+    ]
+    if env:
+        for k, v in sorted(env.items()):
+            env_args += ["--setenv", k, v]
     return [
         "bwrap",
         "--unshare-all",
         "--die-with-parent",
         "--new-session",
         "--clearenv",
-        *("--setenv", "TZ", "UTC", "--setenv", "LANG", "C"),
-        *("--setenv", "PATH", "/usr/bin:/bin"),
+        *env_args,
         *("--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp"),
         *ro,
-        *("--bind", str(workdir), str(workdir), "--chdir", str(workdir)),
+        *("--bind", str(workdir), str(workdir)),
+        *extra_rw,
+        *("--chdir", str(workdir)),
         "--",
         *cmd,
     ]

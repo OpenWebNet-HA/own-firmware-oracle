@@ -15,6 +15,7 @@ import contextlib
 import os
 import select
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -38,18 +39,20 @@ class PtyPort:
         self.master = master
 
     def read(self) -> bytes:
+        if self.master < 0:
+            return b""
         try:
             r, _, _ = select.select([self.master], [], [], 0)
             if not r:
                 return b""
             return os.read(self.master, 4096)
-        except OSError:
+        except (OSError, ValueError):
             return b""
 
     def write(self, data: bytes) -> None:
-        if not data:
+        if not data or self.master < 0:
             return
-        with contextlib.suppress(OSError):
+        with contextlib.suppress(OSError, ValueError):
             os.write(self.master, data)
 
 
@@ -210,8 +213,17 @@ class PicResponder:
     """Simulated PIC microcontroller answering firmware UART protocol commands.
 
     Answers status requests ($24), configurators ($26), configuration echo
-    ($27, $02), and frame write acknowledgements ($03 -> $19). Other frames
-    are passed to the inner responder.
+    ($27, $02), and frame write acknowledgements ($03 -> $19 for standard SCS,
+    $06 -> $00 for extended SCS). Other frames are passed to the inner responder.
+
+    Protocol opcodes reverse-engineered from MH200N scsserver binary:
+    - $24: requests PIC status and firmware version string;
+      answered with $25<version>\\r.
+    - $26: requests hardware configurators;
+      answered with $26000\\r (virtual configuration).
+    - $27 / $02: configuration echo and handshake frames during bus init.
+    - $03: write standard SCS frame to bus; acknowledged by PIC with $19\\r.
+    - $06: write extended SCS frame to bus; acknowledged by PIC with $00\\r.
     """
 
     def __init__(
@@ -285,12 +297,20 @@ class Bus:
         self._accept(self.framer.feed(data, self.clock.now_ms()))
         return bool(data)
 
-    def settle(self, quiet_ms: float, max_ms: float) -> bool:
+    def settle(
+        self,
+        quiet_ms: float,
+        max_ms: float,
+        on_poll: Callable[[], bool] | None = None,
+    ) -> bool:
         """Pump until the firmware has been silent for quiet_ms (True) or max_ms
-        has passed (False: the step timed out)."""
+        has passed (False: the step timed out). on_poll may poll additional channels
+        (e.g. OpenWebNet event socket) and return True if activity occurred."""
         start = last = self.clock.now_ms()
         while True:
-            if self.pump():
+            bus_active = self.pump()
+            extra_active = on_poll() if on_poll is not None else False
+            if bus_active or extra_active:
                 last = self.clock.now_ms()
             now = self.clock.now_ms()
             if now - last >= quiet_ms:
