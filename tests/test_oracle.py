@@ -403,4 +403,165 @@ def test_target_validates_the_boundary_block(tmp_path):
         target.load(spec, results)
 
 
+def test_bus_get_framer():
+    assert isinstance(bus.get_framer("line"), bus.LineFramer)
+    f_idle = bus.get_framer("idle:25")
+    assert isinstance(f_idle, bus.IdleGapFramer)
+    assert f_idle.gap_ms == 25
+    f_delim = bus.get_framer("delimited:a8:a3")
+    assert isinstance(f_delim, bus.DelimitedFramer)
+    assert f_delim.start == 0xA8
+    assert f_delim.end == 0xA3
+
+    # Error cases exercising all branch conditions
+    for bad in (
+        "unknown",
+        "idle:xyz",  # ValueError
+        "idle:1:2",  # len != 2
+        "delimited:a8",  # len != 3
+        "delimited:zz:a3",  # ValueError
+        "delimited:a8:a3:extra",  # len != 3
+    ):
+        with pytest.raises(ValueError, match="unknown framer"):
+            bus.get_framer(bad)
+
+
+def test_bus_get_responder():
+    assert isinstance(bus.get_responder("silent"), bus.Silent)
+    r_ack = bus.get_responder("ack:a5")
+    assert isinstance(r_ack, bus.AckAll)
+    assert r_ack.ack == b"\xa5"
+    r_pic = bus.get_responder("pic", version="010108")
+    assert isinstance(r_pic, bus.PicResponder)
+    assert r_pic.version == "010108"
+    assert isinstance(bus.get_responder("pic-mh200n"), bus.PicResponder)
+
+    # Error cases exercising all branch conditions
+    for bad in (
+        "unknown",
+        "ack:xyz",  # ValueError
+        "ack:a5",  # valid, not bad (just checking bad list)
+        "ack:a5:extra",  # len != 2
+    ):
+        if bad == "ack:a5":
+            continue
+        with pytest.raises(ValueError, match="unknown responder"):
+            bus.get_responder(bad)
+
+
+def test_target_roles_and_ports():
+    assert target.default_role("openserver") == "own_server"
+    assert target.default_role("bin/openserver") == "own_server"
+    assert target.default_role("scsserver") == "bus_server"
+    assert target.default_role("bin/scsserver") == "bus_server"
+    assert target.default_role("bt_processi") == "supervisor"
+    assert target.default_role("bt_luci") == "translator"
+
+    p = target.Program("bt_luci", "bin/bt_luci", "a" * 64, "fs:")
+    assert p.role == "translator"
+
+    p_sup = target.Program("bt_processi", "bin/bt_processi", "a" * 64, "fs:")
+    assert p_sup.role == "supervisor"
+
+    with pytest.raises(target.TargetError, match="invalid role 'bogus'"):
+        target.Program("p", "bin/p", "a" * 64, "fs:", role="bogus")
+
+    with pytest.raises(
+        target.TargetError, match="port must be an integer between 1 and 65535"
+    ):
+        target.Program("p", "bin/p", "a" * 64, "fs:", port=0)
+
+    with pytest.raises(
+        target.TargetError, match="port must be an integer between 1 and 65535"
+    ):
+        target.Program("p", "bin/p", "a" * 64, "fs:", port=True)
+
+    with pytest.raises(
+        target.TargetError, match="port must be an integer between 1 and 65535"
+    ):
+        target.Program("p", "bin/p", "a" * 64, "fs:", port="80")  # type: ignore[arg-type]
+
+
+def test_target_spec_bus_and_auth_validation(tmp_path):
+    ok_prog = (
+        f'  a: {{path: bin/a, sha256: "{"b" * 64}", role: translator, port: 8080}}'
+    )
+
+    # Valid extra fields
+    spec, results = _write_target(
+        tmp_path,
+        ok_prog,
+        extra=(
+            "bus_device: /dev/ttyS0\n"
+            "bus_framer: 'idle:30'\n"
+            "bus_responder: 'ack:a5'\n"
+            "own_auth: none\n"
+            "runtime:\n"
+            "  stack_config: cfg/stack.xml\n"
+            "  kernel_release: '5.10.35'\n"
+        ),
+    )
+    loaded = target.load(spec, results)
+    assert loaded.bus_device == "/dev/ttyS0"
+    assert loaded.bus_framer == "idle:30"
+    assert loaded.bus_responder == "ack:a5"
+    assert loaded.own_auth == "none"
+    assert loaded.runtime.stack_config == "cfg/stack.xml"
+    assert loaded.runtime.kernel_release == "5.10.35"
+    assert loaded.programs["a"].role == "translator"
+    assert loaded.programs["a"].port == 8080
+
+    # Invalid program role in yaml
+    bad_role = f'  a: {{path: bin/a, sha256: "{"b" * 64}", role: badrole}}'
+    spec, results = _write_target(tmp_path / "t1", bad_role)
+    with pytest.raises(target.TargetError, match="invalid role"):
+        target.load(spec, results)
+
+    # Invalid bus_device
+    spec, results = _write_target(
+        tmp_path / "t2", ok_prog, extra="bus_device: rel/path\n"
+    )
+    with pytest.raises(target.TargetError, match="bus_device"):
+        target.load(spec, results)
+
+    # Invalid bus_framer
+    spec, results = _write_target(
+        tmp_path / "t3", ok_prog, extra="bus_framer: unknown\n"
+    )
+    with pytest.raises(target.TargetError, match="bus_framer"):
+        target.load(spec, results)
+
+    # Invalid bus_responder
+    spec, results = _write_target(
+        tmp_path / "t4", ok_prog, extra="bus_responder: unknown\n"
+    )
+    with pytest.raises(target.TargetError, match="bus_responder"):
+        target.load(spec, results)
+
+    # Invalid own_auth
+    spec, results = _write_target(
+        tmp_path / "t5", ok_prog, extra="own_auth: unsupported\n"
+    )
+    with pytest.raises(target.TargetError, match="own_auth"):
+        target.load(spec, results)
+
+    # Invalid runtime stack_config
+    spec, results = _write_target(
+        tmp_path / "t6", ok_prog, extra="runtime:\n  stack_config: 123\n"
+    )
+    with pytest.raises(
+        target.TargetError, match=r"runtime\.stack_config must be a string"
+    ):
+        target.load(spec, results)
+
+    # Invalid runtime kernel_release
+    spec, results = _write_target(
+        tmp_path / "t7", ok_prog, extra="runtime:\n  kernel_release: 123\n"
+    )
+    with pytest.raises(
+        target.TargetError, match=r"runtime\.kernel_release must be a string"
+    ):
+        target.load(spec, results)
+
+
 # Sandbox, discovery, staging and the command line: test_oracle_discovery.py

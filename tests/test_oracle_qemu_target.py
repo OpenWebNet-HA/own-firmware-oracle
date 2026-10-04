@@ -1126,3 +1126,24 @@ def test_cmd_suite_reexecs_when_not_sandboxed(monkeypatch, tmp_path):
     code = run.cmd_suite(args)
     assert code == 42
     assert reexec_called == [True]
+
+
+def test_qemu_target_connect_sessions_auth_not_implemented(tmp_path):
+    spec = _dummy_spec()
+    spec = target.TargetSpec(
+        product=spec.product,
+        version=spec.version,
+        sysroot=spec.sysroot,
+        programs=spec.programs,
+        boundary=spec.boundary,
+        image_sha256=spec.image_sha256,
+        runtime=spec.runtime,
+        own_auth="openwebnet",
+    )
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    with pytest.raises(
+        NotImplementedError, match="authentication scheme 'openwebnet' not implemented"
+    ):
+        tgt._connect_sessions(20000)

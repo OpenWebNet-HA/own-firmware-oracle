@@ -258,9 +258,10 @@ def validate_harness(spec: target.TargetSpec, harness: str) -> str:
             f"invalid harness {harness!r}: must be 'full' or 'unit:<program>'"
         )
     if harness == "full":
-        if "openserver" not in spec.programs:
+        own_servers = [p for p in spec.programs.values() if p.role == "own_server"]
+        if not own_servers and "openserver" not in spec.programs:
             raise SystemExit("harness 'full' requires 'openserver' in target programs")
-        return "openserver"
+        return own_servers[0].name if own_servers else "openserver"
     prog = harness[len("unit:") :]
     if prog not in spec.programs:
         raise SystemExit(

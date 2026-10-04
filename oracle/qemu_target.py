@@ -173,8 +173,10 @@ class QemuTarget:
 
         self._console_files: dict[str, IO[bytes]] = {}
         self._custom_bus = bus_instance
-        self._framer = framer or bus.LineFramer()
-        self._responder = responder or bus.PicResponder(version=spec.version)
+        self._framer = framer or bus.get_framer(spec.bus_framer)
+        self._responder = responder or bus.get_responder(
+            spec.bus_responder, version=spec.version
+        )
 
         self.sysroot_base = staged_sysroot or (work_dir / "stage" / "sysroot")
         self.sysroot = work_dir / "sysroot"
@@ -217,8 +219,8 @@ class QemuTarget:
             return {self.harness[len("unit:") :]}
         return {
             name
-            for name in self.spec.programs
-            if name not in ("bt_processi", "openserver", "scsserver")
+            for name, prog in self.spec.programs.items()
+            if prog.role == "translator"
         }
 
     def _start_program(
@@ -229,6 +231,7 @@ class QemuTarget:
         console: IO[bytes] | None = None,
     ) -> subprocess.Popen[bytes]:
         prog = self.spec.programs[name]
+        release = self.spec.runtime.kernel_release or sandbox.KERNEL_RELEASE
         argv = sandbox.jail(
             self.sysroot,
             ["/" + prog.path, *prog.args],
@@ -238,6 +241,7 @@ class QemuTarget:
             tmpfs=self.spec.runtime.tmpfs,
             dirs=self.spec.runtime.dirs,
             trace_dir=trace_dir,
+            release=release,
             share_net=True,
         )
         if console is None:
@@ -255,6 +259,10 @@ class QemuTarget:
         )
 
     def _connect_sessions(self, port: int) -> None:
+        if self.spec.own_auth != "none":
+            raise NotImplementedError(
+                f"authentication scheme {self.spec.own_auth!r} not implemented yet"
+            )
         s_ev = socket.create_connection(("127.0.0.1", port), timeout=3.0)
         banner = recv_own_frame(s_ev, timeout=2.0)
         if banner != BANNER:
@@ -338,43 +346,60 @@ class QemuTarget:
     def restart(self) -> None:
         self._stop()
         self._copy_sysroot()
-        cfg_path = self.sysroot / "home/bticino/cfg/stack_open.xml"
+        cfg_path = self.sysroot / self.spec.runtime.stack_config
         active = self._active_clients()
         prepare_stack_open(cfg_path, active)
         ports = read_ports_from_stack_open(cfg_path)
 
         self._devices = run.open_devices(self.spec.runtime)
         dev_map = {d.guest: d.slave_path for d in self._devices}
-        pty_dev = self._devices[0] if self._devices else None
+        pty_dev = next(
+            (d for d in self._devices if d.guest == self.spec.bus_device),
+            self._devices[0] if self._devices else None,
+        )
 
         if self._custom_bus is not None:
             self.bus = self._custom_bus
         elif pty_dev is not None:
-            port = bus.PtyPort(pty_dev.master)
-            self.bus = bus.Bus(port, self._framer, self._responder, self.clock)
+            pty_port = bus.PtyPort(pty_dev.master)
+            self.bus = bus.Bus(pty_port, self._framer, self._responder, self.clock)
         self._bus_mark = self.bus.mark()
 
         trace_dir = self.work_dir / "trace" if self.keep_trace else None
         if trace_dir is not None:
             trace_dir.mkdir(parents=True, exist_ok=True)
 
-        if "scsserver" in self.spec.programs:
-            self._launch_daemon(
-                "scsserver", ports.get("scsserver", 20001), dev_map, trace_dir
-            )
+        bus_servers = [
+            name
+            for name, prog in self.spec.programs.items()
+            if prog.role == "bus_server"
+        ]
+        for name in sorted(bus_servers):
+            prog = self.spec.programs[name]
+            server_port = prog.port or ports.get(name, 20001)
+            self._launch_daemon(name, server_port, dev_map, trace_dir)
 
         for name in sorted(active):
             if name in self.spec.programs:
-                self._launch_daemon(name, ports.get(name), dev_map, trace_dir)
+                prog = self.spec.programs[name]
+                client_port = prog.port or ports.get(name)
+                self._launch_daemon(name, client_port, dev_map, trace_dir)
 
-        if self.harness == "full" and "openserver" in self.spec.programs:
-            open_port = ports.get("openserver", 20000)
-            self._launch_daemon("openserver", open_port, dev_map, trace_dir)
-            try:
-                self._connect_sessions(open_port)
-            except Exception:
-                self._stop()
-                raise
+        if self.harness == "full":
+            own_servers = [
+                name
+                for name, prog in self.spec.programs.items()
+                if prog.role == "own_server"
+            ]
+            for name in sorted(own_servers):
+                prog = self.spec.programs[name]
+                open_port = prog.port or ports.get(name, 20000)
+                self._launch_daemon(name, open_port, dev_map, trace_dir)
+                try:
+                    self._connect_sessions(open_port)
+                except Exception:
+                    self._stop()
+                    raise
 
         self._running = True
         self.settle()

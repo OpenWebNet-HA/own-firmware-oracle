@@ -9,28 +9,40 @@ sysroot:
   - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/ubtweb_only.gz~payload~gunzip:"
   - "FW_MH200N_vers_010108.zip!scheduler_010108.fwz!scheduler_rel_1_1_8.zip!scheduler_rel_1_1_8/btweb_app.zip!"
 
+bus_device: /dev/ttyPIC
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
 programs:
   # supervisor: starts p0..pN of cfg/stack_open.xml <bt_processi>
   bt_processi:
     path: home/bticino/bin/bt_processi
     sha256: "fdcc1fa3567024c6cef2ad1fe61f2cc2d111ca5d25e98aeba315a0325f67315a"
+    role: supervisor
   # p0: the OpenWebNet server
   openserver:
     path: home/bticino/bin/openserver
     sha256: "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301"
+    role: own_server
+    port: 20000
   # p1: owns /dev/ttyPIC (stack_open.xml) and serves the translators on
   # TCP 20001 (<scsserver><port>; the translators' <port_scs>)
   scsserver:
     path: home/bticino/bin/scsserver
     sha256: "c6a699f8b99c94db1b28da951169d8f5065c20d59ac20f28de2b14f833488104"
+    role: bus_server
+    port: 20001
   # lights, scenarios, CEN -- first question: WHAT 19
   bt_luci:
     path: home/bticino/bin/bt_luci
     sha256: "1ef8de9e64b7a261664554f01a04d3739aa3bb3b4f8846e532e40adbca12179e"
+    role: translator
   # diagnostics, clock -- WHO 1001 DIM 11
   bt_device:
     path: home/bticino/bin/bt_device
     sha256: "c54e00cd5dcb67975a741c784896bd429313483adf0f2f54acf77ed3bd3f3621"
+    role: translator
 
 # What the device's boot sets up before bt_processi starts the programs. Each
 # value cites the image (paths inside the staged sysroot); nothing is guessed
@@ -47,6 +59,8 @@ runtime:
   devices:
     # cfg/stack_open.xml <scsserver><serialchannel><device>
     /dev/ttyPIC: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.4.19"
 
 # Filled from discovery (docs/oracle-architecture.md section 5); the rows are
 # in results/MH200N/010108/oracle/boundary/<program>.tsv.

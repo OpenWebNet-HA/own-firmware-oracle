@@ -324,3 +324,42 @@ class Bus:
 
     def gateway_frames(self, since: int) -> list[bytes]:
         return [f.data for f in self.log[since:] if f.source == GATEWAY]
+
+
+def get_framer(name: str) -> Framer:
+    """Look up a framer by descriptor, e.g. 'line', 'idle:20', 'delimited:a8:a3'."""
+    if name == "line":
+        return LineFramer()
+    if name.startswith("delimited:"):
+        parts = name.split(":")
+        if len(parts) == 3:
+            try:
+                return DelimitedFramer(int(parts[1], 16), int(parts[2], 16))
+            except ValueError:
+                pass
+    elif name.startswith("idle:"):
+        parts = name.split(":")
+        if len(parts) == 2:
+            try:
+                return IdleGapFramer(int(parts[1]))
+            except ValueError:
+                pass
+    raise ValueError(f"unknown framer: {name!r}")
+
+
+def get_responder(
+    name: str, version: str = "010108", inner: Responder | None = None
+) -> Responder:
+    """Look up a responder by descriptor, e.g. 'pic', 'silent', 'ack:a5'."""
+    if name == "silent":
+        return Silent()
+    if name.startswith("ack:"):
+        parts = name.split(":")
+        if len(parts) == 2:
+            try:
+                return AckAll(int(parts[1], 16))
+            except ValueError:
+                pass
+    elif name in ("pic", "pic-mh200n"):
+        return PicResponder(version=version, inner=inner)
+    raise ValueError(f"unknown responder: {name!r}")
