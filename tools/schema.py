@@ -11,7 +11,10 @@ fixed schema here instead of being trusted as free text:
   * r2 sources are plain object keys (no "..", no control characters);
   * optional limits.max_expand_mib raises unpack's bomb guard (1..8192 MiB);
   * optional undecoded_ok: [{path, reason}] acknowledges layers unpack.py's
-    coverage gate would otherwise refuse.
+    coverage gate would otherwise refuse;
+  * optional status: unpackable (default) | blocked, and blocked needs a
+    blocked_reason. A blocked entry is catalogued (fetch + hash) but kept out
+    of the CI matrices.
 """
 
 from __future__ import annotations
@@ -107,7 +110,32 @@ def validate(entry: object, path: Path) -> CatalogEntry:
         raise ValueError("password_scheme.candidates must be a list of strings")
     _limits(entry.get("limits", {}))
     _undecoded_ok(entry.get("undecoded_ok", []))
+    _status(entry)
     return entry
+
+
+# unpackable: every layer opens; plan.py builds and re-checks the manifest.
+# blocked:    fetch + hash are verified, but a layer cannot be opened yet (for
+#             example its packaging password is not a known vendor string).
+#             plan.py leaves it out of both CI matrices until it is unblocked.
+STATUSES = ("unpackable", "blocked")
+
+
+def _status(entry: CatalogEntry) -> None:
+    status = entry.get("status", "unpackable")
+    if status not in STATUSES:
+        raise ValueError(f"status must be one of {list(STATUSES)}, got {status!r}")
+    reason = entry.get("blocked_reason")
+    if status == "blocked":
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("status: blocked needs a blocked_reason")
+    elif reason is not None:
+        raise ValueError("blocked_reason is only allowed with status: blocked")
+
+
+def is_blocked(entry: CatalogEntry) -> bool:
+    """True if the entry is catalogued but cannot be unpacked yet."""
+    return bool(entry.get("status", "unpackable") == "blocked")
 
 
 MAX_EXPAND_MIB_CEILING = 8192  # 8 GiB: beyond this a runner runs out of memory anyway

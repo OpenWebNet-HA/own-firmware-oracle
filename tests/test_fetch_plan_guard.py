@@ -43,7 +43,9 @@ def _entry(sources: list[dict[str, str]]) -> dict:
     }
 
 
-def _catalog(root: Path, sources: str = f"    - vendor: '{VENDOR}'\n") -> Path:
+def _catalog(
+    root: Path, sources: str = f"    - vendor: '{VENDOR}'\n", extra: str = ""
+) -> Path:
     cat = root / "catalog" / "MH200N" / "010108.yaml"
     cat.parent.mkdir(parents=True, exist_ok=True)
     cat.write_text(
@@ -51,6 +53,7 @@ def _catalog(root: Path, sources: str = f"    - vendor: '{VENDOR}'\n") -> Path:
         f"wrapper:\n  filename: FW.zip\n  size: {len(BLOB)}\n"
         f"  sha256: '{_sha(BLOB)}'\n  sources:\n{sources}"
         f"image:\n  filename: fw.fwz\n  size: 1\n  sha256: '{'a' * 64}'\n"
+        f"{extra}"
     )
     return cat
 
@@ -109,7 +112,9 @@ def test_a_valid_cache_entry_is_reused_without_fetching(cache, monkeypatch):
 
 def test_a_bad_source_falls_through_to_the_next(cache, monkeypatch, capsys):
     monkeypatch.setattr(
-        fwfetch, "_fetch_vendor", lambda _url, dest: dest.write_bytes(b"tampered")
+        fwfetch,
+        "_fetch_vendor",
+        lambda _url, dest, _limit: dest.write_bytes(b"tampered"),
     )
     monkeypatch.setattr(fwfetch, "_fetch_r2", lambda _key, dest: dest.write_bytes(BLOB))
     sources = [{"vendor": VENDOR}, {"r2": "firmware/sha256/x.zip"}]
@@ -120,7 +125,7 @@ def test_a_bad_source_falls_through_to_the_next(cache, monkeypatch, capsys):
 
 
 def test_no_valid_source_is_fatal(cache, monkeypatch):
-    def offline(_url: str, _dest: Path) -> None:
+    def offline(_url: str, _dest: Path, _limit: int) -> None:
         raise OSError("network unreachable")
 
     monkeypatch.setattr(fwfetch, "_fetch_vendor", offline)
@@ -156,6 +161,54 @@ def test_fetch_vendor_refuses_a_non_vendor_url(tmp_path):
     with pytest.raises(ValueError, match="not allow-listed"):
         fwfetch._fetch_vendor("https://evil.example/fw.zip", tmp_path / "out")
     assert not (tmp_path / "out").exists()
+
+
+class _Chunked(io.BytesIO):
+    """A response body with no Content-Length, read in small chunks."""
+
+    def read(self, _size: int | None = -1) -> bytes:
+        return super().read(4)
+
+
+def _chunked_opener(monkeypatch, body: bytes) -> None:
+    class Opener:
+        def open(self, _req, timeout):
+            return _Chunked(body)
+
+    monkeypatch.setattr(
+        fwfetch.urllib.request, "build_opener", lambda *_handlers: Opener()
+    )
+
+
+def test_fetch_vendor_stops_a_body_longer_than_the_catalog_size(tmp_path, monkeypatch):
+    # Legrand checkout links send no Content-Length: the catalog size is the
+    # only bound, and it must stop the download, not just fail the hash after.
+    _chunked_opener(monkeypatch, BLOB * 1000)
+    dest = tmp_path / "out"
+    with pytest.raises(fwfetch.Mismatch, match=f"more than {len(BLOB)} bytes"):
+        fwfetch._fetch_vendor(VENDOR, dest, len(BLOB))
+    assert dest.stat().st_size <= len(BLOB)
+
+
+def test_fetch_vendor_accepts_a_chunked_body_of_exactly_the_catalog_size(
+    tmp_path, monkeypatch
+):
+    _chunked_opener(monkeypatch, BLOB)
+    dest = tmp_path / "out"
+    fwfetch._fetch_vendor(VENDOR, dest, len(BLOB))
+    assert dest.read_bytes() == BLOB
+
+
+def test_fetch_passes_the_catalog_size_as_the_download_cap(cache, monkeypatch):
+    seen: list[int] = []
+
+    def fake(_url: str, dest: Path, limit: int) -> None:
+        seen.append(limit)
+        dest.write_bytes(BLOB)
+
+    monkeypatch.setattr(fwfetch, "_fetch_vendor", fake)
+    fwfetch.fetch(_entry([{"vendor": VENDOR}]), None)
+    assert seen == [len(BLOB)]
 
 
 def test_a_redirect_to_another_vendor_url_is_followed():
@@ -247,6 +300,21 @@ def test_plan_result_path(tmp_path, monkeypatch, capsys):
     assert out == "MH200N/010108/manifest.tsv"
 
 
+def test_plan_keeps_a_blocked_entry_out_of_both_matrices(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(plan, "ROOT", tmp_path)
+    cat = _catalog(tmp_path, extra="status: blocked\nblocked_reason: 'no password'\n")
+    results = tmp_path / "results"
+    # No manifest (would be stale) and a manifest (would be reproducible):
+    # neither may send a blocked image to a CI job that can only fail on it.
+    assert plan.is_stale(cat, results) is False
+    assert plan.is_reproducible(cat, results) is False
+    _write_manifest(tmp_path)
+    assert plan.is_reproducible(cat, results) is False
+    assert _plan(monkeypatch, capsys, "--emit-matrix") == "matrix=[]"
+    assert _plan(monkeypatch, capsys, "--emit-reproduce-matrix") == "matrix=[]"
+    assert _plan(monkeypatch, capsys).startswith("BLOCK ")
+
+
 # --- schema: every rejection path --------------------------------------------
 
 CAT_PATH = Path("catalog/MH200N/010108.yaml")
@@ -286,6 +354,10 @@ def _with(**changes: object) -> dict:
         (_with(password_scheme={"candidates": "bticino"}), "list of strings"),
         (_with(password_scheme={"candidates": [1]}), "list of strings"),
         (_with(password_scheme="bticino"), "list of strings"),
+        (_with(status="encrypted"), "status must be one of"),
+        (_with(status="blocked"), "needs a blocked_reason"),
+        (_with(status="blocked", blocked_reason="  "), "needs a blocked_reason"),
+        (_with(blocked_reason="stray"), "only allowed with status: blocked"),
     ],
 )
 def test_schema_rejects(entry, match):
@@ -295,6 +367,22 @@ def test_schema_rejects(entry, match):
 
 def test_schema_accepts_the_valid_fixture():
     assert schema.validate(_valid(), CAT_PATH)["product"] == "MH200N"
+
+
+def test_schema_accepts_a_blocked_entry_with_a_reason():
+    entry = schema.validate(
+        _with(status="blocked", blocked_reason="password unknown"), CAT_PATH
+    )
+    assert schema.is_blocked(entry) is True
+    assert schema.is_blocked(_valid()) is False
+    assert schema.is_blocked(_with(status="unpackable")) is False
+
+
+def test_schema_accepts_a_bare_image_download():
+    # A vendor download that IS the .fwz: wrapper and image are the same file.
+    entry = _valid()
+    entry["image"] = {k: entry["wrapper"][k] for k in ("filename", "size", "sha256")}
+    assert schema.validate(entry, CAT_PATH)["image"]["filename"] == "FW.zip"
 
 
 # --- guard: whole-tree checks ------------------------------------------------

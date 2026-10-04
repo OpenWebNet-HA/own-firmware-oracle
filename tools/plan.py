@@ -19,7 +19,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from schema import load
+from schema import is_blocked, load
 from unpack import TOOL_VERSION  # single source of truth for the tool version
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,8 +35,13 @@ def result_path(catalog: Path) -> str:
 def is_stale(catalog: Path, results_root: Path) -> bool:
     """Stale unless the manifest records BOTH the current image hash and tool
     version. A change to unpack.py (new TOOL_VERSION) therefore rebuilds every
-    image, which is the key documented in this module's docstring."""
+    image, which is the key documented in this module's docstring.
+
+    A blocked entry is never stale: it cannot be unpacked, so rebuilding it
+    would only fail the oracle job."""
     entry = load(catalog)
+    if is_blocked(entry):
+        return False
     manifest = results_root / result_path(catalog)
     if not manifest.exists():
         return True
@@ -50,10 +55,12 @@ def is_reproducible(catalog: Path, results_root: Path) -> bool:
     """A fresh manifest whose image anyone can fetch: no R2 secrets needed.
 
     Stale entries are left out on purpose; their manifest is SUPPOSED to change
-    and oracle.yml rebuilds it.
+    and oracle.yml rebuilds it. Blocked entries have no manifest to re-check.
     """
-    sources = load(catalog)["wrapper"].get("sources", [])
-    public = any("vendor" in s for s in sources)
+    entry = load(catalog)
+    if is_blocked(entry):
+        return False
+    public = any("vendor" in s for s in entry["wrapper"].get("sources", []))
     return public and not is_stale(catalog, results_root)
 
 
@@ -67,6 +74,12 @@ def _matrix(root: Path, keep: Callable[[Path, Path], bool]) -> str:
         if keep(c, root / "results")
     ]
     return "matrix=" + json.dumps(picked)
+
+
+def _label(catalog: Path, results_root: Path) -> str:
+    if is_blocked(load(catalog)):
+        return "BLOCK"
+    return "STALE" if is_stale(catalog, results_root) else "ok   "
 
 
 def main() -> None:
@@ -98,7 +111,7 @@ def main() -> None:
         return
 
     for c in sorted((root / "catalog").rglob("*.yaml")):
-        print(f"{'STALE' if is_stale(c, root / 'results') else 'ok   '} {c}")
+        print(f"{_label(c, root / 'results')} {c}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,48 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+#
+# MyHOMEServer1 firmware 2.82.06: the image @gdluck ran for OWNd#77
+# (discussion #613, comment 18731980). Cataloguing and unpacking it ties that
+# work to an exact, verifiable image and reproducible manifest.
+product: MyHomeServer1
+version: "028206"          # firmware 2.82.06 (from vendor filename SMARTGW_028206)
+name: "MyHOMEServer1 (SMARTGW)"
+
+# The vendor serves the .fwz directly, with no outer zip, so wrapper and image
+# are the same file. The checkout URL answers 302 to a one-time job ticket on
+# the same host, and the 200 is chunked with no Content-Length: fwfetch caps
+# the stream at `size` and the SHA-256 is the verification proof.
+wrapper:
+  filename: SMARTGW_028206.fwz
+  size: 229511342
+  sha256: "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7"
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=SMARTGW_028206.fwz&fileId=58107.23188.10378.49602"
+
+image:
+  filename: SMARTGW_028206.fwz
+  size: 229511342
+  sha256: "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7"
+
+# Top-level listing:
+#   btweb_only.ext4.gz.sha256.sig.zip           126082310   stored
+#   btweb_only_recovery.ext4.gz                  47893098   deflated
+#   btweb_only_recovery.ext4.gz.sha256.sig.zip   47143781   stored
+#   fwz.xml                                          1611   deflated
+#   uImage.zip                                    4603146   deflated
+#   uImage.zip.sha256.sig.zip                     4570619   stored
+#
+# Vendor packaging scheme: "the password is the model" (#613 comment 18720022).
+# The inner XML declares <name>MyHomeServer1</name>, which opens every encrypted
+# member in the archive.
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to MyHomeServer1
+    - "MyHomeServer1"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096   # uncompressed ext4 rootfs expands to ~1 GiB
+
+status: unpackable

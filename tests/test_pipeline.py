@@ -317,6 +317,28 @@ def test_unpack_roots_paths_at_wrapper_filename(tmp_path, monkeypatch):
     assert rows == ["FW.zip", "FW.zip!fw.fwz"]
 
 
+def test_unpack_accepts_a_download_that_is_the_image_itself(tmp_path, monkeypatch):
+    # MyHOMEServer1: the vendor serves SMARTGW_<ver>.fwz directly, with no
+    # outer zip. wrapper == image, and the root row carries the image hash.
+    fwz = _zip({"fwz.xml": b"<fwz/>"})
+    cat = _catalog(
+        tmp_path,
+        image_sha=_sha(fwz),
+        wrapper={"filename": "SMARTGW.fwz", "size": len(fwz), "sha256": _sha(fwz)},
+    )
+    img = tmp_path / "SMARTGW.fwz"
+    img.write_bytes(fwz)
+    out = tmp_path / "manifest.tsv"
+    monkeypatch.setattr(sys, "argv", ["unpack", str(cat), str(img), "-o", str(out)])
+    unpack.main()
+    lines = out.read_text().splitlines()
+    assert f"# image_sha256={_sha(fwz)}" in lines
+    assert [ln.split("\t")[0] for ln in lines[4:]] == [
+        "SMARTGW.fwz",
+        "SMARTGW.fwz!fwz.xml",
+    ]
+
+
 def test_unpack_deletes_its_temp_work_dir(tmp_path, monkeypatch):
     # An ext layer makes walk() create work dirs; without --work they must go.
     fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
