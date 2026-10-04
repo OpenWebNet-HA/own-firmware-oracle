@@ -92,6 +92,7 @@ def jail(
     dirs: tuple[str, ...] = (),
     trace_dir: Path | None = None,
     release: str = KERNEL_RELEASE,
+    share_net: bool = False,
 ) -> list[str]:
     """bwrap argv running guest `argv` with `sysroot` as '/'.
 
@@ -100,6 +101,7 @@ def jail(
     what the device's boot scripts would have set up.
     trace_dir: turn on qemu's syscall trace, one file per process
     (strace.<pid>), so the calls of concurrent programs never interleave.
+    share_net: keep the parent network namespace (loopback for IPC/OWN).
     """
     if not sysroot.is_absolute():
         raise SandboxError(f"sysroot must be absolute: {sysroot}")
@@ -120,8 +122,10 @@ def jail(
         full_env["QEMU_STRACE"] = "1"
         full_env["QEMU_LOG_FILENAME"] = f"{GUEST_TRACE_DIR}/strace.%d"
         binds = ["--bind", str(trace_dir), GUEST_TRACE_DIR]
-    out = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
-    out += ["--clearenv"]
+    out = ["bwrap", "--unshare-all"]
+    if share_net:
+        out += ["--share-net"]
+    out += ["--die-with-parent", "--new-session", "--clearenv"]
     for key in sorted(full_env):
         if not ENV_NAME.fullmatch(key) or "\0" in full_env[key]:
             raise SandboxError(f"bad environment entry {key!r}")

@@ -11,6 +11,9 @@ sleeping.
 
 from __future__ import annotations
 
+import contextlib
+import os
+import select
 import time
 from dataclasses import dataclass, field
 from typing import Protocol
@@ -26,6 +29,28 @@ class Port(Protocol):
         """Non-blocking: whatever the firmware wrote since the last read, or b''."""
 
     def write(self, data: bytes) -> None: ...
+
+
+class PtyPort:
+    """A Port reading from and writing to a PTY master file descriptor."""
+
+    def __init__(self, master: int) -> None:
+        self.master = master
+
+    def read(self) -> bytes:
+        try:
+            r, _, _ = select.select([self.master], [], [], 0)
+            if not r:
+                return b""
+            return os.read(self.master, 4096)
+        except OSError:
+            return b""
+
+    def write(self, data: bytes) -> None:
+        if not data:
+            return
+        with contextlib.suppress(OSError):
+            os.write(self.master, data)
 
 
 class Clock(Protocol):
@@ -179,6 +204,45 @@ class Scripted:
 
     def respond(self, frame: bytes) -> list[bytes]:
         return list(self.table.get(frame, []))
+
+
+class PicResponder:
+    """Simulated PIC microcontroller answering firmware UART protocol commands.
+
+    Answers status requests ($24), configurators ($26), configuration echo
+    ($27, $02), and frame write acknowledgements ($03 -> $19). Other frames
+    are passed to the inner responder.
+    """
+
+    def __init__(
+        self,
+        version: str = "010108",
+        inner: Responder | None = None,
+    ) -> None:
+        self.version = version
+        self.inner = inner or Silent()
+        self.name = (
+            "pic" if isinstance(self.inner, Silent) else f"pic:{self.inner.name}"
+        )
+
+    def respond(self, frame: bytes) -> list[bytes]:
+        if frame.startswith(b"$24"):
+            return [f"$25{self.version}\r".encode("ascii")]
+        if frame.startswith(b"$26"):
+            return [b"$26000\r"]
+        if frame.startswith(b"$27") or frame.startswith(b"$02"):
+            return [frame]
+        if frame.startswith(b"$03"):
+            answers = [b"$19\r"]
+            if not isinstance(self.inner, Silent):
+                answers.extend(self.inner.respond(frame))
+            return answers
+        if frame.startswith(b"$06"):
+            answers = [b"$00\r"]
+            if not isinstance(self.inner, Silent):
+                answers.extend(self.inner.respond(frame))
+            return answers
+        return self.inner.respond(frame)
 
 
 @dataclass(frozen=True)
