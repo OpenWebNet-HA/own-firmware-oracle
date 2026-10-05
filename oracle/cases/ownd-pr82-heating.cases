@@ -1,0 +1,56 @@
+; OWNd PR #82 builders, master vs PR: heating frames the builders produce, sent to the gateway.
+; Generated from OWNd.message builders (master f7894c4 and PR 6038ceb). Not hand-copied.
+; Comment per frame: builder call, master -> PR. 'None'/ERR = builder returns nothing / raises.
+
+; set_central_mode(#0,off) : master=*4*100*#0##  pr=*4*303*#0##
+down *4*100*#0##
+down *4*303*#0##
+; set_central_mode(#0#2,off) : master=*4*100*#0#2##  pr=*4*303*#0#2##
+down *4*100*#0#2##
+down *4*303*#0#2##
+; set_central_mode(#0,heat) : master=*4*101*#0##  pr=*4*1*#0##
+down *4*101*#0##
+down *4*1*#0##
+; set_central_mode(#0#2,heat) : master=*4*101*#0#2##  pr=*4*1*#0#2##
+down *4*101*#0#2##
+down *4*1*#0#2##
+; set_central_mode(#0,cool) : master=*4*102*#0##  pr=*4*0*#0##
+down *4*102*#0##
+down *4*0*#0##
+; set_central_mode(#0#2,cool) : master=*4*102*#0#2##  pr=*4*0*#0#2##
+down *4*102*#0#2##
+down *4*0*#0#2##
+; set_central_mode(#0,auto) : master=*4*103*#0##  pr=*4*311*#0##
+down *4*103*#0##
+down *4*311*#0##
+; set_central_mode(#0#2,auto) : master=*4*103*#0#2##  pr=*4*311*#0#2##
+down *4*103*#0#2##
+down *4*311*#0#2##
+; set_central_mode(#0,antifreeze) : master=*4*110*#0##  pr=*4*102*#0##
+down *4*110*#0##
+; set_central_mode(#0#2,antifreeze) : master=*4*110*#0#2##  pr=*4*102*#0#2##
+down *4*110*#0#2##
+; set_central_mode(#0,protection) : master=*4*111*#0##  pr=*4*202*#0##
+down *4*111*#0##
+down *4*202*#0##
+; set_central_mode(#0#2,protection) : master=*4*111*#0#2##  pr=*4*202*#0#2##
+down *4*111*#0#2##
+down *4*202*#0#2##
+; set_fan_speed(1,1) : master=*#4*#1*#11*1##  pr=*#4*1*#11*1##
+down *#4*#1*#11*1##
+down *#4*1*#11*1##
+; set_mode(1,auto,standalone) : master=*4*311*1##  pr=None
+down *4*311*1##
+; set_mode(1,auto) : master=*4*311*#1##  pr=*4*311*#1##
+down *4*311*#1##
+; set_mode(1,off,standalone) : master=*4*303*1##  pr=*4*303*1##
+down *4*303*1##
+; set_fan_speed(99,1) : master=*#4*#99*#11*1##  pr=*#4*99*#11*1##
+down *#4*#99*#11*1##
+down *#4*99*#11*1##
+; set_mode(99,auto,standalone) : master=*4*311*99##  pr=None
+down *4*311*99##
+; set_mode(99,auto) : master=*4*311*#99##  pr=*4*311*#99##
+down *4*311*#99##
+; set_mode(99,off,standalone) : master=*4*303*99##  pr=*4*303*99##
+down *4*303*99##
