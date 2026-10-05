@@ -9,6 +9,149 @@ It grew out of [discussion #613](https://github.com/orgs/OpenWebNet-HA/discussio
 and @gdluck's firmware-as-oracle work in
 [OWNd#77](https://github.com/OpenWebNet-HA/OWNd/pull/77).
 
+## Why this exists: three goals
+
+The firmware is the only source that says what a gateway **actually does**
+with a frame. The manuals are sometimes wrong, community captures cover only
+the plants we happen to have, and OWNd / MyHOME have so far been judged against
+both. The oracle adds a third kind of evidence: *this firmware image, given this
+input, answers X and puts Y on the bus*, reproducible by anyone.
+
+The pipeline is a means. These are the ends:
+
+| # | Goal | Consumer |
+|---|---|---|
+| 1 | [Improve the Encyclopedia](#1-improve-the-encyclopedia) | [OpenWebNet-Encyclopedia](https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia) |
+| 2 | [Improve openwebnet-mcp](#2-improve-openwebnet-mcp) | [openwebnet-mcp](https://github.com/OpenWebNet-HA/openwebnet-mcp) and every AI assistant that uses it |
+| 3 | [Test OWNd and MyHOME against real firmware](#3-test-ownd-and-myhome) | [OWNd](https://github.com/OpenWebNet-HA/OWNd), [MyHOME](https://github.com/OpenWebNet-HA/MyHOME) |
+
+### What the oracle can and cannot tell you
+
+Read this before using any result for any of the goals.
+
+| It can answer | It cannot answer |
+|---|---|
+| Does the gateway ACK or NACK this OpenWebNet frame? | What a device does with the bus frame (the bus side is a simulated PIC; the plant is absent) |
+| Which bus frame(s) does it emit, byte for byte? | What a bit in a device-set mask means (WHO 1001 DIM 11: the actuator sets it, the gateway only translates it) |
+| Which OpenWebNet frame comes out for a bus frame I inject (`up`)? | Anything about a gateway whose image we have not catalogued |
+| Does gateway A differ from gateway B for the same input? | Whether a *silent* run means "refused" (a missing reply proves nothing; an emitted frame does) |
+
+Every row is a fact about **one image**. The same frame gave different answers
+on MH200N 1.1.8 and MyHomeServer1 2.82.06 (compare
+`results/*/*/oracle/full/lights-level.tsv`), so a result never transfers to
+another product or firmware without its own row. When evidence disagrees the
+order is **live capture > oracle > OWNd / MyHOME code**, for the product and
+firmware the evidence was taken on ([architecture §1.1](docs/oracle-architecture.md)).
+
+### 1. Improve the Encyclopedia
+
+The Encyclopedia's core values ask for evidence that is labelled, versioned and
+reproducible, and for "not observed" never to turn into "does not exist". The
+oracle supplies a new evidence kind that fits that model:
+
+- **A new provenance class next to `evidence/` field captures.** A firmware
+  record cites image SHA-256, target SHA-256, suite SHA-256 and the TSV row, so
+  another researcher can rerun it and get a zero diff. Version scope is the
+  exact firmware, never "OpenWebNet".
+- **Negative results become citable.** A NACK, or a frame that never reaches
+  the bus, is a firmware fact. Example: `*#1*31*#1*100*0##` (level write with
+  100) is NACKed by both catalogued gateways, while level 101 and the
+  switch-off forms are accepted.
+- **Applicability tables from diffs.** The same case file runs on every
+  gateway, so "which gateways accept X" is a TSV diff, not prose written from
+  memory. Use it to fill the per-gateway columns and the version scope of
+  claims, and to retire "applies to all gateways" wording.
+- **Closing open questions with a suite.** Each entry in the Encyclopedia's
+  `open-questions.md` that is about gateway translation (WHAT 19, DIM 7 / DIM 4
+  handling, general/area scope) should name the suite that would answer it, or
+  say that the oracle cannot (see the table above).
+- **Privacy stays intact.** Suites use public or synthetic WHEREs only, results
+  contain no plant data, and no vendor bytes enter either repo.
+
+How to hand a finding over: write `findings/<product>/<topic>.md`, cite the TSV
+rows and the three hashes, state the epistemic status (`firmware_observed`,
+never `experimentally_confirmed`, which stays reserved for live hardware), and
+open a PR on the Encyclopedia that cites it. Add a `Gateway` row from a live
+read-only probe whenever the claim is about a real product.
+
+### 2. Improve openwebnet-mcp
+
+The MCP is the "judge": it checks grammar, and its own consumers have already
+been bitten by treating that as meaning (the WHO 15 and WHO 25 catalogs were
+wrong and three fixtures followed them; WHO 22 is still a stub). The oracle
+can add a layer the judge lacks: **does a real gateway accept this?**
+
+Proposed, in order of effort:
+
+1. **Ship results as data.** Publish a deterministic, hash-pinned index
+   derived from `results/**/oracle/**/*.tsv` (frame -> product, firmware,
+   reply, emitted frames, row reference). The MCP stays offline and read-only;
+   it just consumes a new generated corpus like it already does for the Machine
+   KB.
+2. **`parse_and_validate_frame` gains a `firmware_verdict` per catalogued
+   gateway** (`ack`, `nack`, `emits <bus frame>`, `not tested`). "Legal grammar,
+   NACKed by MyHomeServer1 2.82.06" is the answer an assistant needs.
+3. **`draft_own_frame` pre-flight.** Refuse, or warn on, frames the target
+   firmware is known to NACK instead of handing the user a frame that fails.
+4. **A `compare_gateways(frame)` tool** that returns the per-firmware table.
+5. **Audit the catalog with the oracle.** Run every frame the MCP can draft
+   through the suites; each disagreement is a catalog bug or a gateway quirk,
+   and either way it is a reviewable issue. This is how stubs like WHO 22
+   get real content with a source behind them.
+6. **Share the live probe.** `myhome-gateway` (live bus) and the oracle's
+   planned read-only `tools/live_probe.py` should use one frame allow-list, so the
+   `Gateway` evidence label means the same thing in both.
+
+### 3. Test OWNd and MyHOME
+
+OWNd and MyHOME are tested against a golden corpus whose only hard facts are
+community plant captures. The oracle makes firmware a second, cheap and
+repeatable test source that needs no plant:
+
+- **Corpus gate.** Feed every `down` frame of the golden corpus to each
+  catalogued firmware. A fixture that the firmware NACKs, or that emits
+  something else, is flagged before it ships. Add `firmware-oracle` as a
+  fixture provenance ranked above spec readings and below a capture.
+- **Parser conformance without hardware.** `up` suites inject bus frames; what
+  the firmware emits on the OpenWebNet side is run through OWNd's parser (the
+  `Emitted` label; `tools/check.py` is planned, step 2c in the architecture). A parse failure on a real firmware's
+  output is an OWNd bug.
+- **Replay known audits.** gdluck's ten MyHOMEServer1 findings (OWNd#77) are
+  suites; run them on every other gateway to see which hold, which differ, and
+  which need a gateway-specific profile.
+- **Derive gateway profiles instead of hand-writing them.** MyHOME's
+  firmware-aware gateway profiles encode which commands a gateway accepts;
+  the oracle's per-firmware TSVs are the evidence those capability flags
+  should cite, and a test can assert profile and TSV agree.
+- **Regression on new firmware.** When a vendor publishes a new image, the
+  weekly `oracle` workflow produces a new manifest and TSV set; the diff to
+  the previous version is the list of behaviour changes to check in MyHOME.
+
+### Lessons learned
+
+1. **One firmware is not all firmware.** The first suite already differs
+   between MH200N and MyHomeServer1, and the first live anchor
+   (`EVID-MH200-WHAT19-FAULT`) came from an MH200 2.1.0 while the first image
+   was an MH200N 1.1.8. Label every row cross-product until the matching image
+   is catalogued.
+2. **Emitted proves, silent does not.** A missing reply can mean no device
+   answered. Only accepted-and-emitted rows are positive evidence.
+3. **The oracle sees the translator, not the device.** It cannot give a
+   device-set bitmask meaning. Say so in the finding instead of guessing.
+4. **Determinism is the product.** Sorted TSV, no timestamps, no PIDs, a zero
+   diff on re-run, hashes in every header. That is what lets a maintainer review
+   a claim without trusting the author.
+5. **Grammar is not behaviour.** A frame being legal says nothing about a
+   gateway accepting it. Keep the judge (grammar), the oracle (firmware) and
+   the capture (plant) as separate, labelled sources.
+6. **Adding a gateway is a recipe, not research.** Eight steps, each with a
+   "done when" ([docs/adding-a-gateway.md](docs/adding-a-gateway.md)); the
+   second image needed a target YAML and a few harness generalizations, not a
+   new design.
+7. **Black box first, facts only.** No binaries, disassembly or decompiled code
+   leave the machine; `tools/guard.py` enforces it. That is what makes the
+   results publishable and the project safe to share.
+
 ## What is and isn't public here
 
 | Stage | Public on GitHub | Stays local |
@@ -181,8 +324,15 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 
 ## Status
 
-- **Phase 1 (this repo): fetch → verify → unpack → manifest.** Done for MH200N.
-- **Phase 2:** the SCS-bus emulator (`oracle/`) and the first question — which
+- **Phase 1: fetch → verify → unpack → manifest.** Done for MH200N 1.1.8 and
+  MyHomeServer1 2.82.06.
+- **Phase 2b: first suite (`lights-level`) runs on both gateways** with a zero
+  diff on re-run; boundary facts are in `results/*/*/oracle/boundary/`.
+  Adding the next gateway follows [docs/adding-a-gateway.md](docs/adding-a-gateway.md).
+- **Not started:** the three goals above as integrations (Encyclopedia
+  evidence kind, MCP firmware verdicts, golden-corpus gate). They are proposals
+  until a PR lands in the consuming repo.
+- **Phase 2 (original plan):** the SCS-bus emulator (`oracle/`) and the first question — which
   bus frames make `bt_luci` / `bt_device` emit WHAT 19, and what each WHO 1001
   DIM 11 mask bit means — cross-checked live on an MH200. Design:
   [docs/oracle-architecture.md](docs/oracle-architecture.md). The firmware-free
