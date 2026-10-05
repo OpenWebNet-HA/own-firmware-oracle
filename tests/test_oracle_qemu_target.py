@@ -651,6 +651,13 @@ def test_qemu_target_start_program_and_sandbox(monkeypatch, tmp_path):
     tgt._start_program("bt_luci", {"/dev/ttyPIC": "/dev/null"}, console=buf)
     assert mock_popen.call_args[1]["stdout"] is buf
 
+    # Test _start_program with trace_dir creates daemon trace directory
+    trace_dir = tmp_path / "custom_traces"
+    tgt._start_program(
+        "bt_luci", {"/dev/ttyPIC": "/dev/null"}, trace_dir=trace_dir, console=buf
+    )
+    assert (trace_dir / "bt_luci").is_dir()
+
 
 def test_qemu_target_connect_sessions_success(monkeypatch, tmp_path):
     spec = _dummy_spec()

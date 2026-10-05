@@ -443,7 +443,7 @@ network namespace.
 |---|---|---|---|
 | **2a scaffold** | everything marked "no firmware" in section 3, with tests | `pr.yml` green | done |
 | **2a discovery** | `stage.py`, `oracle.run discover`, `boundary/<program>.tsv` for `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`; filled `boundary:` block | a trace per program, OABI / FPA confirmed or ruled out | done for MH200N (OABI confirmed, FPA open; section 5.1) |
-| **2b first light** | `QemuTarget` (full stack: `bt_processi` + `bt_luci`, OWN on TCP 20000, PIC on the pty), one down suite (`lights-level`) on MH200N | zero diff on re-run; `*1*1*31##` gives a PIC write | next |
+| **2b first light** | `QemuTarget` (full stack: `bt_processi` + `bt_luci`, OWN on TCP 20000, PIC on the pty), one down suite (`lights-level`) on MH200N | zero diff on re-run; `*1*1*31##` gives a PIC write | done for MH200N and MyHomeServer1 |
 | **2c WHAT 19** | up suite over the bus frames that could carry the fault, through `bt_luci` then `bt_device`; `check.py` against `EVID-MH200-WHAT19-FAULT` | finding in `findings/MH200N/`: which bus input gives `*1*19*74##` and which mask positions toggle, or that neither program emits it (MyHOME#593, #611) | |
 | **2d replay OWNd#77** | gdluck's frame lists as suites, run on MH200N | per fix: holds / differs on MH200N | |
 | **2e second image** | F454 2.0.51 or MH202 1.0.24 in the catalog; same suites | a cross-image TSV diff | |

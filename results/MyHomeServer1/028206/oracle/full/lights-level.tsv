@@ -10,16 +10,17 @@
 # responder=pic
 # settle_ms=300
 # suite=lights-level
-# suite_sha256=1f5839aa967d1624535a2e938980588cfe4a93c560eb35179dbd2a2aa8fa01d8
+# suite_sha256=f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b
 # oracle_version=1
 direction	input	reply	verdict	output
 down	*#1*0*#1*100*0##	nack	silent	-
 down	*#1*31*#1*100*0##	nack	silent	-
 down	*#1*31*#1*100*255##	nack	silent	-
 down	*#1*31*#1*100*5##	nack	silent	-
-down	*#1*31*#1*101*0##	-	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d
-down	*1*0#0*31##	-	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d
-down	*1*0#1*31##	-	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d
-down	*1*0#255*31##	-	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d
-down	*1*0#5*31##	-	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d
-down	*1*0*31##	-	out	bus:24 30 33 33 31 30 30 31 32 30 31 0d
+down	*#1*31*#1*101*0##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d
+down	*1*0#0*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d
+down	*1*0#1*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d
+down	*1*0#255*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d
+down	*1*0#5*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d
+down	*1*0*31##	nack	out	bus:24 30 33 33 31 30 30 31 32 30 31 0d
+down	*1*1*31##	nack	out	bus:24 30 33 33 31 30 30 31 32 30 30 0d

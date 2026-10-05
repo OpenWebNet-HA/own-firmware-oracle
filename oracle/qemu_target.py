@@ -261,6 +261,9 @@ class QemuTarget:
     ) -> subprocess.Popen[bytes]:
         prog = self.spec.programs[name]
         release = self.spec.runtime.kernel_release or sandbox.KERNEL_RELEASE
+        prog_trace = trace_dir / name if trace_dir is not None else None
+        if prog_trace is not None:
+            prog_trace.mkdir(parents=True, exist_ok=True)
         argv = sandbox.jail(
             self.sysroot,
             ["/" + prog.path, *prog.args],
@@ -270,7 +273,7 @@ class QemuTarget:
             tmpfs=self.spec.runtime.tmpfs,
             dirs=self.spec.runtime.dirs,
             links=self.spec.runtime.links,
-            trace_dir=trace_dir,
+            trace_dir=prog_trace,
             release=release,
             share_net=True,
         )
@@ -316,7 +319,7 @@ class QemuTarget:
         if ack != BANNER:
             s_cmd.close()
             raise RuntimeError(f"command session handshake failed: {ack!r}")
-        s_cmd.settimeout(2.0)
+        s_cmd.settimeout(4.0)
         self._cmd_sock = s_cmd
 
     def _stop(self) -> None:
@@ -450,7 +453,7 @@ class QemuTarget:
         try:
             self._cmd_sock.sendall(frame.encode("ascii"))
             buf = bytearray()
-            deadline = time.monotonic() + 2.0
+            deadline = time.monotonic() + 4.0
             while time.monotonic() < deadline:
                 self.bus.pump()
                 self._pump_own()

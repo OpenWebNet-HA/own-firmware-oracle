@@ -328,21 +328,25 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   MyHomeServer1 2.82.06.
 - **Phase 2b: first suite (`lights-level`) runs on both gateways** with a zero
   diff on re-run; boundary facts are in `results/*/*/oracle/boundary/`.
+  The done-when check (`*1*1*31##` yields a PIC write) succeeds on both targets.
+  Architecture divergence observed:
+  - **MH200N**: `openserver` communicates directly with `scsserver`; commands are
+    acknowledged immediately (`*#*1##` ACK within ~13ms) as soon as the frame is
+    queued to the PIC UART.
+  - **MyHomeServer1**: `openserver` delegates lighting to `bt_luci`, which uses a
+    transactional model awaiting an SCS bus state confirmation (type 4 frame) from an
+    actuator. When the bus responder is silent, `bt_luci` times out at 2.0s and returns
+    `*#*0##` (NACK) to `openserver`, though the frame was still transmitted to the PIC UART.
   Adding the next gateway follows [docs/adding-a-gateway.md](docs/adding-a-gateway.md).
-- **Not started:** the three goals above as integrations (Encyclopedia
-  evidence kind, MCP firmware verdicts, golden-corpus gate). They are proposals
-  until a PR lands in the consuming repo.
-- **Phase 2 (original plan):** the SCS-bus emulator (`oracle/`) and the first question — which
-  bus frames make `bt_luci` / `bt_device` emit WHAT 19, and what each WHO 1001
-  DIM 11 mask bit means — cross-checked live on an MH200. Design:
-  [docs/oracle-architecture.md](docs/oracle-architecture.md). The firmware-free
-  parts are in place and unit-tested, and **boundary discovery is done for the
-  MH200N**: `python -m oracle.run discover` stages the sysroot from the image,
-  runs each program jailed under `qemu-arm` and writes
-  `results/MH200N/010108/oracle/boundary/*.tsv`. `scsserver` drives a PIC on
-  `/dev/ttyPIC` (a pty stands in), `openserver` serves OpenWebNet on TCP 20000
-  under the full stack. Next is 2b: the first suite through that stack. Needs
-  `qemu-user-static` (binfmt_misc with the `F` flag) and `bubblewrap`.
+- **Next steps in Phase 2:**
+  - **2c (WHAT 19):** up-suite over bus frames to identify which inputs trigger `*1*19*74##`
+    and determine WHO 1001 DIM 11 autodiagnostic bitmask semantics.
+  - **2d (Replay OWNd#77):** gdluck's audit suites across catalogued gateways.
+  - **`tools/check.py`:** feeds firmware emitted frames through OWNd's parser.
+- **Downstream integrations:**
+  - OpenWebNet-Encyclopedia schema update for `firmware_emulation` / `firmware_observed`.
+  - `openwebnet-mcp` deterministic hash-pinned verdict index.
+  - OWNd & MyHOME golden corpus firmware-oracle validation gate.
 
 ## License
 
