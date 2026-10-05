@@ -581,12 +581,16 @@ def _cramfs_tree(img: bytes, work: Path) -> list[Entry]:
 # Filesystem tag -> tree reader (looked up by name so tests can patch it). A
 # filesystem its tool rejects becomes <tag>/unreadable and is left to the
 # coverage gate; an empty tree from a tool that succeeded is a valid filesystem.
-FS_READERS = {"ext-fs": "_ext_tree", "squashfs": "_squashfs_tree",
-              "cramfs": "_cramfs_tree"}
+FS_READERS = {
+    "ext-fs": "_ext_tree",
+    "squashfs": "_squashfs_tree",
+    "cramfs": "_cramfs_tree",
+}
 
 # Tags _walk opens. Meeting one past MAX_DEPTH means a layer was left unread.
-CONTAINERS = frozenset({"zip", "uImage", "gzip", "bzip2", "xz", "lzma", "tar",
-                        "cpio", *FS_READERS})
+CONTAINERS = frozenset(
+    {"zip", "uImage", "gzip", "bzip2", "xz", "lzma", "tar", "cpio", *FS_READERS}
+)
 MAX_DEPTH = 8
 
 

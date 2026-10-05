@@ -173,6 +173,7 @@ def test_filesystem_readers_failures_become_unreadable(tmp_path, monkeypatch):
 def test_ext_failure_becomes_unreadable_not_an_aborted_run(tmp_path, monkeypatch):
     def broken(img, work):
         raise ValueError("debugfs rdump failed")
+
     monkeypatch.setattr(unpack, "_ext_tree", broken)
     fs = b"\x00" * 0x438 + struct.pack("<H", unpack.EXT_MAGIC) + b"\x00" * 16
     rows = _walk("rootfs.img", fs, tmp_path)
@@ -199,10 +200,12 @@ def test_depth_cutoff_marks_unopened_containers_unreadable(tmp_path):
 
 def test_depth_cutoff_leaves_leaves_alone(tmp_path):
     blob = b"plain data"
-    for _ in range(unpack.MAX_DEPTH):
+    for _ in range(unpack.MAX_DEPTH + 1):
         blob = _tar({"inner.tar": blob})
     rows = _walk("outer.tar", blob, tmp_path)
     assert unpack.undecoded(rows) == []
+    # The plain leaf reaches past MAX_DEPTH and remains typed 'data', not unreadable
+    assert rows[-1]["type"] == "data"
 
 
 def test_filesystem_trees_are_recorded_under_colon_slash(tmp_path, monkeypatch):
