@@ -1,0 +1,5 @@
+; Lighting WHAT 19 / WHO 1001 diagnostic co-occurrence on MH200N.
+; Status query of lighting actuator at WHERE 74 in diagnostic anomaly state
+; (EVID-MH200-WHAT19-FAULT).
+
+down *#1*74##

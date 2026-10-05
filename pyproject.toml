@@ -51,7 +51,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["fwfetch", "guard", "jail", "oracle", "plan", "schema", "unpack"]
+known-first-party = ["check", "fwfetch", "guard", "jail", "oracle", "plan", "schema", "unpack"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -60,7 +60,7 @@ mypy_path = "tools"
 files = ["tools", "oracle"]
 
 [[tool.mypy.overrides]]
-module = ["boto3"]  # optional, R2 only; imported lazily
+module = ["boto3", "OWNd", "OWNd.*"]  # optional; external dependencies
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

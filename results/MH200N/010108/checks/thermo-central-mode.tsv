@@ -1,0 +1,31 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-central-mode
+# suite_sha256=c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7
+# oracle_version=1
+# ownd_version=2.0.0-b9
+direction	input	reply	verdict	output	ownd	live
+down	*4*0*#0##	nack	silent	-	-	unchecked
+down	*4*0*#0#2##	nack	silent	-	-	unchecked
+down	*4*1*#0##	nack	silent	-	-	unchecked
+down	*4*1*#0#2##	nack	silent	-	-	unchecked
+down	*4*100*#0##	nack	silent	-	-	unchecked
+down	*4*101*#0##	nack	silent	-	-	unchecked
+down	*4*102*#0##	nack	silent	-	-	unchecked
+down	*4*102*#0#2##	nack	silent	-	-	unchecked
+down	*4*110*#0##	nack	silent	-	-	unchecked
+down	*4*202*#0##	nack	silent	-	-	unchecked
+down	*4*202*#0#2##	nack	silent	-	-	unchecked
+down	*4*303*#0##	nack	silent	-	-	unchecked
+down	*4*303*#0#2##	nack	silent	-	-	unchecked
+down	*4*311*#0##	nack	silent	-	-	unchecked
+down	*4*311*#0#2##	nack	silent	-	-	unchecked

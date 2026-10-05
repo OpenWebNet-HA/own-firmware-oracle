@@ -1,0 +1,27 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-fan-speed
+# suite_sha256=96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#0#2*#11*1##	nack	silent	-
+down	*#4*#0*#11*1##	nack	silent	-
+down	*#4*#1*#11*1##	nack	silent	-
+down	*#4*1*#11*0##	nack	silent	-
+down	*#4*1*#11*1##	nack	silent	-
+down	*#4*1*#11*2##	nack	silent	-
+down	*#4*1*#11*3##	nack	silent	-
+down	*#4*1*#11*4##	nack	silent	-
+down	*#4*99*#11*0##	nack	silent	-
+down	*#4*99*#11*1##	nack	silent	-
+down	*#4*99*#11*2##	nack	silent	-
+down	*#4*99*#11*3##	nack	silent	-

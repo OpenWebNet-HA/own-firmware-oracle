@@ -1,0 +1,16 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=what19
+# suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*74##	-	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##

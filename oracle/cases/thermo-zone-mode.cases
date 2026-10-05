@@ -1,0 +1,9 @@
+; Thermo: standalone zone modes vs central-managed zone (gdluck fix 3, OWNd#77).
+; AUTO mode on plain zone (refused on MHS1) vs central-managed zone #1.
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *4*311*1##
+down *4*311*#1##
+down *4*303*1##
+down *4*1*1##
+down *4*0*1##
