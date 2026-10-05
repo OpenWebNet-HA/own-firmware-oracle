@@ -1,0 +1,18 @@
+; OWNd PR #82 builders, master vs PR: every frame the builders produce, sent to the gateway.
+; Generated from OWNd.message builders (master f7894c4 and PR 6038ceb). Not hand-copied.
+; Comment per frame: builder call, master -> PR.
+
+; set_brightness(31,0,0) : master=*#1*31*#1*100*0##  pr=*1*0*31##
+down *#1*31*#1*100*0##
+down *1*0*31##
+; set_brightness(31,0,5) : master=*#1*31*#1*100*5##  pr=*1*0#5*31##
+down *#1*31*#1*100*5##
+down *1*0#5*31##
+; set_brightness(31,1,0) : master=*#1*31*#1*101*0##  pr=*#1*31*#1*101*0##
+down *#1*31*#1*101*0##
+; set_brightness(31,50,5) : master=*#1*31*#1*150*5##  pr=*#1*31*#1*150*5##
+down *#1*31*#1*150*5##
+; set_brightness(31,100,0) : master=*#1*31*#1*200*0##  pr=*#1*31*#1*200*0##
+down *#1*31*#1*200*0##
+; set_brightness(31,120,0) : master=*#1*31*#1*220*0##  pr=*#1*31*#1*200*0##
+down *#1*31*#1*220*0##
