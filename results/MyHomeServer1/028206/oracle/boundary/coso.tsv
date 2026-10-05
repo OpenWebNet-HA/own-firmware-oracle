@@ -1,0 +1,23 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# program=coso
+# target_sha256=1691abd176d04b10fda676881234fb9748bb500f0563308139a13f6571bfd34e
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.10.35
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/home/bticino/cfg/coso_plugins/automation_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/automation_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/debug O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/scs_cmd O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/libcoso O_RDONLY|O_DIRECTORY|O_LARGEFILE|O_NONBLOCK|O_CLOEXEC	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/coso.log O_WRONLY|O_APPEND|O_CREAT|O_LARGEFILE	ok

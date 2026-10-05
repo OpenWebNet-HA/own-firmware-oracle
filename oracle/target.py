@@ -53,7 +53,9 @@ def default_role(name: str) -> str:
         return "own_server"
     if name == "scsserver" or name.endswith("/scsserver"):
         return "bus_server"
-    if name == "bt_processi":
+    if name in {"bt_processi", "bt_daemon"} or name.endswith(
+        ("/bt_processi", "/bt_daemon")
+    ):
         return "supervisor"
     return "translator"
 
@@ -97,6 +99,8 @@ class Runtime:
     env: dict[str, str] = field(default_factory=dict)
     tmpfs: tuple[str, ...] = ()
     dirs: tuple[str, ...] = ()
+    links: dict[str, str] = field(default_factory=dict)  # guest dest -> guest target
+    files: dict[str, str] = field(default_factory=dict)  # guest path -> content
     devices: dict[str, str] = field(default_factory=dict)  # guest path -> kind
     stack_config: str = "home/bticino/cfg/stack_open.xml"
     kernel_release: str = ""
@@ -220,6 +224,36 @@ def _str_list(raw: object, label: str) -> tuple[str, ...]:
     return tuple(raw)
 
 
+def _validate_runtime_paths(
+    cwd_raw: object,
+    tmpfs_raw: object,
+    dirs_raw: object,
+    links: dict[object, object],
+    files: dict[object, object],
+    devices: dict[object, object],
+) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+    try:
+        cwd = str(cwd_raw)
+        if cwd != "/":
+            guest_path(cwd)
+        tmpfs = tuple(guest_path(p) for p in _str_list(tmpfs_raw, "tmpfs"))
+        dirs = tuple(guest_path(p) for p in _str_list(dirs_raw, "dirs"))
+        for dest, target_link in links.items():
+            guest_path(str(dest))
+            guest_path(str(target_link))
+        for path, content in files.items():
+            guest_path(str(path))
+            if not isinstance(content, str):
+                raise TargetError(f"runtime.files[{path}]: content must be a string")
+        for path, kind in devices.items():
+            guest_path(str(path))
+            if kind not in DEVICE_KINDS:
+                raise TargetError(f"runtime.devices[{path}]: kind {kind!r}")
+        return cwd, tmpfs, dirs
+    except SandboxError as exc:
+        raise TargetError(f"runtime: {exc}") from None
+
+
 def _runtime(raw: object) -> Runtime:
     if not isinstance(raw, dict):
         raise TargetError("runtime must be a mapping")
@@ -228,6 +262,8 @@ def _runtime(raw: object) -> Runtime:
         "env",
         "tmpfs",
         "dirs",
+        "links",
+        "files",
         "devices",
         "stack_config",
         "kernel_release",
@@ -236,20 +272,26 @@ def _runtime(raw: object) -> Runtime:
         raise TargetError(f"runtime: unknown keys {sorted(unknown)}")
     env = raw.get("env", {})
     devices = raw.get("devices", {})
-    if not isinstance(env, dict) or not isinstance(devices, dict):
-        raise TargetError("runtime.env and runtime.devices must be mappings")
-    try:
-        cwd = str(raw.get("cwd", "/"))
-        if cwd != "/":
-            guest_path(cwd)
-        tmpfs = tuple(guest_path(p) for p in _str_list(raw.get("tmpfs", []), "tmpfs"))
-        dirs = tuple(guest_path(p) for p in _str_list(raw.get("dirs", []), "dirs"))
-        for path, kind in devices.items():
-            guest_path(str(path))
-            if kind not in DEVICE_KINDS:
-                raise TargetError(f"runtime.devices[{path}]: kind {kind!r}")
-    except SandboxError as exc:
-        raise TargetError(f"runtime: {exc}") from None
+    links = raw.get("links", {})
+    files = raw.get("files", {})
+    if (
+        not isinstance(env, dict)
+        or not isinstance(devices, dict)
+        or not isinstance(links, dict)
+        or not isinstance(files, dict)
+    ):
+        raise TargetError(
+            "runtime.env, runtime.devices, runtime.links and runtime.files "
+            "must be mappings"
+        )
+    cwd, tmpfs, dirs = _validate_runtime_paths(
+        raw.get("cwd", "/"),
+        raw.get("tmpfs", []),
+        raw.get("dirs", []),
+        links,
+        files,
+        devices,
+    )
     for key, value in env.items():
         if not ENV_NAME.fullmatch(str(key)) or not isinstance(value, str):
             raise TargetError(f"runtime.env: bad entry {key!r}")
@@ -271,6 +313,8 @@ def _runtime(raw: object) -> Runtime:
         env={str(k): v for k, v in env.items()},
         tmpfs=tmpfs,
         dirs=dirs,
+        links={str(k): str(v) for k, v in links.items()},
+        files={str(k): str(v) for k, v in files.items()},
         devices={str(k): str(v) for k, v in devices.items()},
         stack_config=stack_config,
         kernel_release=kernel_release,

@@ -1,0 +1,93 @@
+# Oracle target: MyHomeServer1 firmware 2.82.06. Every program is pinned by path and
+# sha256 to results/MyHomeServer1/028206/manifest.tsv (oracle/target.py checks it).
+product: MyHomeServer1
+version: "028206"
+
+# Manifest prefix for the root filesystem layer:
+sysroot:
+  - "SMARTGW_028206.fwz!btweb_only.ext4.gz.sha256.sig.zip!btweb_only.ext4.gz~gunzip:"
+
+bus_device: /dev/ttymxc2
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_daemon><stackopen>
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "e5b43ae1ddd0465504d55bf91f0c34d9fa233f07ac1fb5b76c8290e17c1908d4"
+    role: supervisor
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856"
+    role: own_server
+    port: 20000
+  # p1: owns /dev/ttymxc2 (stack_open.xml) and serves the translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "ff06ecc17f0990d700963a2bdef1201d1d6e852c973c973ed5c26af55ef21ae7"
+    role: bus_server
+    port: 20001
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "e68ddbd55c165289d2c3dbf684496ad42c043e94963268c82332dd527a492165"
+    role: translator
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "34b8819237b83f9194302d56d0e98bdce0013e27f83eca6dfb64279cbdd50ed8"
+    role: translator
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "ef2054ede288b166d5c8ea1e8951316b0172691f47f36181c2bb998caa1c45c6"
+    role: translator
+  # multimedia / multi
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "64234f6fbd2be0c18c7567d9dff17fbb0a9c515f9e9241d1cf8129d6a2d25f92"
+    role: translator
+  # coso
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "1691abd176d04b10fda676881234fb9748bb500f0563308139a13f6571bfd34e"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+    - /sys/firmware/devicetree/base
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /sys/firmware/devicetree/base/model: "Ticino LInDa board"
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\topenserver\n"
+  devices:
+    /dev/ttymxc2: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "5.10.35"
+
+# Filled from discovery; the rows are in
+# results/MyHomeServer1/028206/oracle/boundary/<program>.tsv.
+#   bus: pty -- scsserver opens /dev/ttymxc2 and the pty answers TCGETS /
+#     TCSETS / TCFLSH (38400 8N1, IXON|IXOFF); scsserver then writes its PIC
+#     commands ($24\r) to it.
+#   own: full -- openserver binds and listens on TCP 20000 (<Sevices><OwnPort>
+#     in cfg/openserver), scsserver on 20001 and the translators on 30001/31001
+#     (bt_luci), 30004/31004 (bt_termo), 30022/31022 (bt_multi).
+boundary:
+  status: discovered
+  bus: pty
+  own: full

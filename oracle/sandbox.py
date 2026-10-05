@@ -81,6 +81,27 @@ def emulator_version(arch: str, binfmt_dir: Path = BINFMT_DIR) -> str:
     return f"qemu-{arch}-{m.group(1)}"
 
 
+def _build_jail_env(
+    env: dict[str, str] | None,
+    release: str,
+    trace_dir: Path | None,
+) -> tuple[dict[str, str], list[str]]:
+    full_env = {"PATH": "/bin:/usr/bin:/sbin:/usr/sbin", "TZ": "UTC", "LANG": "C"}
+    full_env |= env or {}
+    full_env["QEMU_UNAME"] = release
+    binds: list[str] = []
+    if trace_dir is not None:
+        if not trace_dir.is_absolute():
+            raise SandboxError(f"trace_dir must be absolute: {trace_dir}")
+        full_env["QEMU_STRACE"] = "1"
+        full_env["QEMU_LOG_FILENAME"] = f"{GUEST_TRACE_DIR}/strace.%d"
+        binds = ["--bind", str(trace_dir), GUEST_TRACE_DIR]
+    for key in sorted(full_env):
+        if not ENV_NAME.fullmatch(key) or "\0" in full_env[key]:
+            raise SandboxError(f"bad environment entry {key!r}")
+    return full_env, binds
+
+
 def jail(
     sysroot: Path,
     argv: list[str],
@@ -90,6 +111,7 @@ def jail(
     devices: dict[str, str] | None = None,
     tmpfs: tuple[str, ...] = (),
     dirs: tuple[str, ...] = (),
+    links: dict[str, str] | None = None,
     trace_dir: Path | None = None,
     release: str = KERNEL_RELEASE,
     share_net: bool = False,
@@ -99,6 +121,7 @@ def jail(
     devices: guest path -> host path to bind there (a pty slave, usually).
     tmpfs / dirs: guest dirs to mount empty / to create after the mounts --
     what the device's boot scripts would have set up.
+    links: guest dest -> guest target symlinks to create inside the jail.
     trace_dir: turn on qemu's syscall trace, one file per process
     (strace.<pid>), so the calls of concurrent programs never interleave.
     share_net: keep the parent network namespace (loopback for IPC/OWN).
@@ -112,23 +135,12 @@ def jail(
         guest_path(cwd)
     if any("\0" in a for a in argv):
         raise SandboxError("NUL in a program argument")
-    full_env = {"PATH": "/bin:/usr/bin:/sbin:/usr/sbin", "TZ": "UTC", "LANG": "C"}
-    full_env |= env or {}
-    full_env["QEMU_UNAME"] = release
-    binds: list[str] = []
-    if trace_dir is not None:
-        if not trace_dir.is_absolute():
-            raise SandboxError(f"trace_dir must be absolute: {trace_dir}")
-        full_env["QEMU_STRACE"] = "1"
-        full_env["QEMU_LOG_FILENAME"] = f"{GUEST_TRACE_DIR}/strace.%d"
-        binds = ["--bind", str(trace_dir), GUEST_TRACE_DIR]
+    full_env, binds = _build_jail_env(env, release, trace_dir)
     out = ["bwrap", "--unshare-all"]
     if share_net:
         out += ["--share-net"]
     out += ["--die-with-parent", "--new-session", "--clearenv"]
     for key in sorted(full_env):
-        if not ENV_NAME.fullmatch(key) or "\0" in full_env[key]:
-            raise SandboxError(f"bad environment entry {key!r}")
         out += ["--setenv", key, full_env[key]]
     out += ["--bind", str(sysroot), "/", "--dev", "/dev", "--proc", "/proc"]
     for guest, host in sorted((devices or {}).items()):
@@ -137,6 +149,8 @@ def jail(
         out += ["--tmpfs", guest_path(path)]
     for path in dirs:
         out += ["--dir", guest_path(path)]
+    for dest, target in sorted((links or {}).items()):
+        out += ["--symlink", target, guest_path(dest)]
     out += [*binds, "--chdir", cwd, "--", *argv]
     return out
 
@@ -193,9 +207,9 @@ def wrap(
     if env:
         for k, v in sorted(env.items()):
             env_args += ["--setenv", k, v]
-    return [
+    bwrap_cmd = [
         "bwrap",
-        "--unshare-all",
+        "--share-net",
         "--die-with-parent",
         "--new-session",
         "--clearenv",
@@ -208,3 +222,12 @@ def wrap(
         "--",
         *cmd,
     ]
+    sh_init = (
+        "ip link set lo up && "
+        "(ip link add eth0 type dummy 2>/dev/null || true) && "
+        "(ip addr add 192.168.1.1/24 dev eth0 2>/dev/null || true) && "
+        "(ip link set eth0 up 2>/dev/null || true) && "
+        "(ip route add 224.0.0.0/4 dev lo 2>/dev/null || true); "
+        'exec "$@"'
+    )
+    return ["unshare", "-r", "-n", "sh", "-c", sh_init, "--", *bwrap_cmd]
