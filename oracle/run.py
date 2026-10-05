@@ -143,7 +143,9 @@ def run_discovery(
         devices={d.guest: d.slave_path for d in devices},
         tmpfs=spec.runtime.tmpfs,
         dirs=spec.runtime.dirs,
+        links=spec.runtime.links,
         trace_dir=work / "trace",
+        release=spec.runtime.kernel_release or sandbox.KERNEL_RELEASE,
     )
     proc = subprocess.Popen(  # noqa: S603 - argv built by sandbox.jail
         argv, stdin=subprocess.DEVNULL, stdout=console, stderr=console
@@ -181,7 +183,7 @@ def boundary_header(
         "program": program,
         "target_sha256": prog.sha256,
         "emulator": emulator,
-        "kernel_release": sandbox.KERNEL_RELEASE,
+        "kernel_release": spec.runtime.kernel_release or sandbox.KERNEL_RELEASE,
         "window_s": f"{seconds:g}",
         "oracle_version": ORACLE_VERSION,
     }
@@ -224,6 +226,10 @@ def cmd_discover(args: argparse.Namespace) -> int:
             f"{staged.dirs} empty dirs",
             file=sys.stderr,
         )
+        for f_path, content in spec.runtime.files.items():
+            dest = work / "sysroot" / f_path.lstrip("/")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(content, encoding="latin-1")
         with (work / "console.log").open("wb") as console:
             code, devices = run_discovery(
                 spec, args.program, work, args.seconds, console

@@ -1,0 +1,18 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# program=bt_termo
+# target_sha256=ef2054ede288b166d5c8ea1e8951316b0172691f47f36181c2bb998caa1c45c6
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.10.35
+# window_s=3
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:30004	ok
+bind	inet:127.0.0.1:31004	ok
+exit	running	timeout
+listen	inet:127.0.0.1:30004	ok
+listen	inet:127.0.0.1:31004	ok
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok

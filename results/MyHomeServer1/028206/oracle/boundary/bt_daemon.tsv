@@ -1,0 +1,27 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# program=bt_daemon
+# target_sha256=e5b43ae1ddd0465504d55bf91f0c34d9fa233f07ac1fb5b76c8290e17c1908d4
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.10.35
+# window_s=3
+# oracle_version=1
+kind	detail	result
+execve	/bin/sh	ok
+execve	/usr/bin/env	ok
+exit	status	139
+ioctl	fd TCGETS	ENOTTY
+ioctl	fd TIOCGPGRP	EBADF
+ioctl	fd TIOCGPGRP	ENOTTY
+ioctl	fd TIOCGWINSZ	ENOTTY
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/home/bticino/cfg/bt_daemon O_RDONLY|O_LARGEFILE	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/sys/firmware/devicetree/base/model O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/env.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok

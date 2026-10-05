@@ -5,6 +5,7 @@ No firmware, no qemu, no bwrap. Where a process is needed, the jail is swapped
 for a small Python stand-in that writes to the device pty like a program would.
 """
 
+import dataclasses
 import io
 import os
 import stat
@@ -171,12 +172,14 @@ def test_manifest_rows_skip_header_and_junk(tmp_path):
 
 def test_sandbox_wraps_without_network_or_host_writes(tmp_path):
     argv = sandbox.wrap(["python3", "-m", "oracle.run"], tmp_path.resolve())
-    assert argv[0] == "bwrap"
-    assert "--unshare-all" in argv
+    assert argv[0] == "unshare"
+    assert "-r" in argv
+    assert "-n" in argv
+    assert "bwrap" in argv
     assert "--clearenv" in argv
     binds = [argv[i + 1] for i, a in enumerate(argv) if a == "--bind"]
     assert binds == [str(tmp_path.resolve())]  # the only writable host path
-    assert argv[argv.index("--") + 1 :] == ["python3", "-m", "oracle.run"]
+    assert argv[-3:] == ["python3", "-m", "oracle.run"]
     with pytest.raises(sandbox.SandboxError, match="absolute"):
         sandbox.wrap(["x"], Path("relative"))
 
@@ -190,7 +193,7 @@ def test_sandbox_guest_paths_are_plain_and_absolute(bad):
 
 def _opt(argv, flag):
     """Every value following `flag`, as tuples of its arguments."""
-    width = {"--setenv": 2, "--bind": 2, "--dev-bind": 2}.get(flag, 1)
+    width = {"--setenv": 2, "--bind": 2, "--dev-bind": 2, "--symlink": 2}.get(flag, 1)
     return [tuple(argv[i + 1 : i + 1 + width]) for i, a in enumerate(argv) if a == flag]
 
 
@@ -204,6 +207,7 @@ def test_sandbox_jail_makes_the_sysroot_root(tmp_path):
         devices={"/dev/ttyPIC": "/dev/pts/7"},
         tmpfs=("/tmp",),
         dirs=("/var/run",),
+        links={"/var/link": "/home/target"},
         trace_dir=trace,
     )
     assert argv[:4] == ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
@@ -220,6 +224,7 @@ def test_sandbox_jail_makes_the_sysroot_root(tmp_path):
     assert _opt(argv, "--dev-bind") == [("/dev/pts/7", "/dev/ttyPIC")]
     assert _opt(argv, "--tmpfs") == [("/tmp",)]
     assert _opt(argv, "--dir") == [("/var/run",)]
+    assert _opt(argv, "--symlink") == [("/home/target", "/var/link")]
     assert _opt(argv, "--chdir") == [("/home/bticino",)]
     assert argv[argv.index("--") + 1 :] == ["/home/bticino/bin/scsserver", "-v"]
     # without a trace dir, no trace and no extra bind
@@ -629,8 +634,19 @@ def test_run_cmd_discover_writes_the_boundary_record(tmp_path, monkeypatch, caps
     assert calls["sandboxed"] is True
     assert "staged 3 files, 2 links, 1 empty dirs" in capsys.readouterr().err
     keep = tmp_path / "keep"
+    orig_load = run.target.load
+
+    def fake_load(target_file, results_dir):
+        sp = orig_load(target_file, results_dir)
+        new_rt = dataclasses.replace(
+            sp.runtime, files={"/sys/devicetree/model": "Linda"}
+        )
+        return dataclasses.replace(sp, runtime=new_rt)
+
+    monkeypatch.setattr(run.target, "load", fake_load)
     run.main(["discover", *base, "-o", str(out), "--keep", str(keep), "--no-sandbox"])
     assert (keep / "console.log").exists()
+    assert (keep / "sysroot/sys/devicetree/model").read_text() == "Linda"
     assert calls["sandboxed"] is False
     with pytest.raises(FileExistsError):  # --keep never reuses a directory
         run.main(["discover", *base, "-o", str(out), "--keep", str(keep)])

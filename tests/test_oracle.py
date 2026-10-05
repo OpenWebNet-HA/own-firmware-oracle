@@ -455,6 +455,8 @@ def test_target_roles_and_ports():
     assert target.default_role("scsserver") == "bus_server"
     assert target.default_role("bin/scsserver") == "bus_server"
     assert target.default_role("bt_processi") == "supervisor"
+    assert target.default_role("bt_daemon") == "supervisor"
+    assert target.default_role("bin/bt_daemon") == "supervisor"
     assert target.default_role("bt_luci") == "translator"
 
     p = target.Program("bt_luci", "bin/bt_luci", "a" * 64, "fs:")
@@ -560,6 +562,73 @@ def test_target_spec_bus_and_auth_validation(tmp_path):
     )
     with pytest.raises(
         target.TargetError, match=r"runtime\.kernel_release must be a string"
+    ):
+        target.load(spec, results)
+
+
+def test_target_spec_links_and_files_validation(tmp_path):
+    ok_prog = (
+        f'  a: {{path: bin/a, sha256: "{"b" * 64}", role: translator, port: 8080}}'
+    )
+
+    # 1. Valid links and files
+    spec, results = _write_target(
+        tmp_path / "t1",
+        ok_prog,
+        extra=(
+            "runtime:\n"
+            "  links:\n"
+            "    /var/link: /home/target\n"
+            "  files:\n"
+            "    /sys/model: 'BoardModel'\n"
+        ),
+    )
+    loaded = target.load(spec, results)
+    assert loaded.runtime.links == {"/var/link": "/home/target"}
+    assert loaded.runtime.files == {"/sys/model": "BoardModel"}
+
+    # 2. Non-mapping links
+    spec, results = _write_target(
+        tmp_path / "t2", ok_prog, extra="runtime:\n  links: not_a_dict\n"
+    )
+    with pytest.raises(target.TargetError, match="must be mappings"):
+        target.load(spec, results)
+
+    # 3. Non-mapping files
+    spec, results = _write_target(
+        tmp_path / "t3", ok_prog, extra="runtime:\n  files: not_a_dict\n"
+    )
+    with pytest.raises(target.TargetError, match="must be mappings"):
+        target.load(spec, results)
+
+    # 4. Bad links dest path
+    spec, results = _write_target(
+        tmp_path / "t4", ok_prog, extra="runtime:\n  links:\n    rel/path: /target\n"
+    )
+    with pytest.raises(target.TargetError, match="not a plain absolute guest path"):
+        target.load(spec, results)
+
+    # 5. Bad links target path
+    spec, results = _write_target(
+        tmp_path / "t5", ok_prog, extra="runtime:\n  links:\n    /dest: rel/target\n"
+    )
+    with pytest.raises(target.TargetError, match="not a plain absolute guest path"):
+        target.load(spec, results)
+
+    # 6. Bad files path
+    spec, results = _write_target(
+        tmp_path / "t6", ok_prog, extra="runtime:\n  files:\n    rel/path: content\n"
+    )
+    with pytest.raises(target.TargetError, match="not a plain absolute guest path"):
+        target.load(spec, results)
+
+    # 7. Non-string file content
+    spec, results = _write_target(
+        tmp_path / "t7", ok_prog, extra="runtime:\n  files:\n    /sys/model: 123\n"
+    )
+    with pytest.raises(
+        target.TargetError,
+        match=r"runtime\.files\[/sys/model\]: content must be a string",
     ):
         target.load(spec, results)
 

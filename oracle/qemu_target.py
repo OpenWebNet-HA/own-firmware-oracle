@@ -43,19 +43,44 @@ def split_own(buf: bytearray) -> list[str]:
 
 
 def prepare_stack_open(cfg_path: Path, active_clients: set[str]) -> None:
-    """Trim stack_open.xml so openserver connects only to active clients."""
-    if not cfg_path.exists():
-        return
-    tree = ET.parse(cfg_path)  # noqa: S314 - verified sysroot file
-    openserver_el = tree.find("sw/openserver")
-    if openserver_el is None:
-        return
-    for child in list(openserver_el):
-        if child.tag.startswith("client_"):
-            name_el = child.find("name")
-            if name_el is None or name_el.text not in active_clients:
-                openserver_el.remove(child)
-    tree.write(cfg_path)
+    """Trim stack_open.xml and cfg/openserver to active clients only."""
+    if cfg_path.exists():
+        tree = ET.parse(cfg_path)  # noqa: S314 - verified sysroot file
+        openserver_el = tree.find("sw/openserver")
+        if openserver_el is not None:
+            for child in list(openserver_el):
+                if child.tag.startswith("client_"):
+                    name_el = child.find("name")
+                    if name_el is None or name_el.text not in active_clients:
+                        openserver_el.remove(child)
+            tree.write(cfg_path)
+
+    ops_cfg = cfg_path.parent / "openserver"
+    if ops_cfg.exists():
+        lines = ops_cfg.read_text(encoding="latin-1").splitlines()
+        new_lines: list[str] = []
+        in_stackopen = False
+        client_idx = 1
+        for line in lines:
+            stripped = line.strip()
+            if stripped == "[Stackopen]":
+                in_stackopen = True
+                new_lines.append(line)
+                continue
+            if in_stackopen:
+                if stripped.startswith("["):
+                    in_stackopen = False
+                    new_lines.append(line)
+                    continue
+                if "=" in line:
+                    _, val = line.split("=", 1)
+                    client_name = val.split(";")[0]
+                    if client_name in active_clients:
+                        new_lines.append(f"client_{client_idx:02d}={val}")
+                        client_idx += 1
+                    continue
+            new_lines.append(line)
+        ops_cfg.write_text("\n".join(new_lines) + "\n", encoding="latin-1")
 
 
 def read_ports_from_stack_open(cfg_path: Path) -> dict[str, int]:
@@ -213,6 +238,10 @@ class QemuTarget:
         if self.sysroot.exists():
             shutil.rmtree(self.sysroot)
         shutil.copytree(self.sysroot_base, self.sysroot, symlinks=True)
+        for f_path, content in self.spec.runtime.files.items():
+            dest = self.sysroot / f_path.lstrip("/")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(content, encoding="latin-1")
 
     def _active_clients(self) -> set[str]:
         if self.harness.startswith("unit:"):
@@ -240,6 +269,7 @@ class QemuTarget:
             devices=devices,
             tmpfs=self.spec.runtime.tmpfs,
             dirs=self.spec.runtime.dirs,
+            links=self.spec.runtime.links,
             trace_dir=trace_dir,
             release=release,
             share_net=True,

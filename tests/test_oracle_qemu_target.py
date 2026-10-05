@@ -6,6 +6,7 @@ All tests run without QEMU, root, or firmware binaries using mocks and fakes.
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import io
 import os
 import socket
@@ -121,7 +122,21 @@ def test_prepare_stack_open(tmp_path):
         </openserver></sw></root>""",
         encoding="utf-8",
     )
-    qemu_target.prepare_stack_open(cfg, {"bt_luci"})
+    # INI openserver config trimming
+    ops_cfg = tmp_path / "openserver"
+    ops_cfg.write_text(
+        "[General]\n"
+        "OwnPort=20000\n"
+        "[Stackopen]\n"
+        "# Comment line\n"
+        "client_01=bt_luci;30001\n"
+        "client_02=bt_difson;30002\n"
+        "client_03=bt_device;30003\n"
+        "[OtherSection]\n"
+        "Key=Value\n",
+        encoding="latin-1",
+    )
+    qemu_target.prepare_stack_open(cfg, {"bt_luci", "bt_device"})
     tree = qemu_target.ET.parse(cfg)
     openserver_el = tree.find("sw/openserver")
     assert openserver_el is not None
@@ -129,6 +144,13 @@ def test_prepare_stack_open(tmp_path):
     assert "client_01" in tags
     assert "client_02" not in tags
     assert "other" in tags
+
+    ini_content = ops_cfg.read_text(encoding="latin-1")
+    assert "client_01=bt_luci;30001" in ini_content
+    assert "client_02=bt_device;30003" in ini_content
+    assert "bt_difson" not in ini_content
+    assert "[OtherSection]" in ini_content
+    assert "Key=Value" in ini_content
 
 
 def test_read_ports_from_stack_open(tmp_path):
@@ -247,6 +269,17 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
     tgt.sysroot_base = tgt.sysroot
     tgt._copy_sysroot()
     assert (tgt.sysroot / "test.txt").read_text() == "ok"
+
+    # Runtime files are written into sysroot
+    tgt.sysroot_base = staged
+    tgt.spec = dataclasses.replace(
+        tgt.spec,
+        runtime=dataclasses.replace(
+            tgt.spec.runtime, files={"/sub/dir/custom.txt": "created"}
+        ),
+    )
+    tgt._copy_sysroot()
+    assert (tgt.sysroot / "sub/dir/custom.txt").read_text() == "created"
 
     # Copy when sysroot_base does not exist
     tgt.sysroot_base = tmp_path / "nonexistent"

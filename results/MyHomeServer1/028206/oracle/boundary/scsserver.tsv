@@ -1,0 +1,21 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# program=scsserver
+# target_sha256=ff06ecc17f0990d700963a2bdef1201d1d6e852c973c973ed5c26af55ef21ae7
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.10.35
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+ioctl	/dev/ttymxc2 TCFLSH	ok
+ioctl	/dev/ttymxc2 TCGETS	ok
+ioctl	/dev/ttymxc2 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttymxc2 TIOCMGET	ENOTTY
+open	/dev/ttymxc2 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttymxc2	$24\x0d
