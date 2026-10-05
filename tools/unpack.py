@@ -548,13 +548,12 @@ def _ext_tree(img: bytes, work: Path) -> list[Entry]:
     root, tmp = _fs_dirs(img, work)
     root.mkdir(parents=True, exist_ok=True)
     res = _run_tool(["debugfs", "-R", f"rdump / {root}", str(tmp)], work)
-    entries = _tree_entries(root)
     real = _debugfs_real_errors(res.stderr)
-    # Fail on a real error, or on an empty tree (which means rdump did nothing).
-    if real or not entries:
-        detail = "\n  ".join(real or res.stderr.splitlines()[:10] or ["(no output)"])
-        raise SystemExit(f"debugfs rdump produced no usable tree:\n  {detail}")
-    return entries
+    # A real debugfs error means this is not a readable ext filesystem. An empty
+    # tree without one is valid (e.g. a filesystem of only device nodes).
+    if real:
+        raise ValueError("debugfs rdump failed:\n  " + "\n  ".join(real))
+    return _tree_entries(root)
 
 
 def _squashfs_tree(img: bytes, work: Path) -> list[Entry]:
@@ -563,7 +562,7 @@ def _squashfs_tree(img: bytes, work: Path) -> list[Entry]:
     real = _unsquashfs_real_errors(res.stderr)
     # exit 0 = clean, 2 = non-fatal (device nodes as non-root), 1 = fatal
     entries = _tree_entries(root) if root.exists() else []
-    if res.returncode not in (0, 2) or real or not entries:
+    if res.returncode not in (0, 2) or real:
         detail = "\n  ".join(real or res.stderr.splitlines()[:10] or ["(no output)"])
         raise ValueError(f"unsquashfs failed (exit {res.returncode}):\n  {detail}")
     return entries
@@ -573,16 +572,26 @@ def _cramfs_tree(img: bytes, work: Path) -> list[Entry]:
     root, tmp = _fs_dirs(img, work)
     res = _run_tool(["fsck.cramfs", f"--extract={root}", str(tmp)], work)
     entries = _tree_entries(root) if root.exists() else []
-    if res.returncode != 0 or not entries:
+    if res.returncode != 0:
         detail = "\n  ".join(res.stderr.splitlines()[:10] or ["(no output)"])
         raise ValueError(f"fsck.cramfs failed (exit {res.returncode}):\n  {detail}")
     return entries
 
 
-# Filesystem tag -> tree reader (looked up by name so tests can patch it). ext
-# keeps failing the run outright (phase 1 contract); a squashfs or cramfs that
-# its tool rejects becomes <tag>/unreadable and is left to the coverage gate.
-FS_READERS = {"squashfs": "_squashfs_tree", "cramfs": "_cramfs_tree"}
+# Filesystem tag -> tree reader (looked up by name so tests can patch it). A
+# filesystem its tool rejects becomes <tag>/unreadable and is left to the
+# coverage gate; an empty tree from a tool that succeeded is a valid filesystem.
+FS_READERS = {
+    "ext-fs": "_ext_tree",
+    "squashfs": "_squashfs_tree",
+    "cramfs": "_cramfs_tree",
+}
+
+# Tags _walk opens. Meeting one past MAX_DEPTH means a layer was left unread.
+CONTAINERS = frozenset(
+    {"zip", "uImage", "gzip", "bzip2", "xz", "lzma", "tar", "cpio", *FS_READERS}
+)
+MAX_DEPTH = 8
 
 
 @dataclass
@@ -648,9 +657,12 @@ def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
     w.rows.append(
         {"path": name, "type": tag, "size": len(data), "sha256": sha256(data)}
     )
-    if depth > 8:
-        return
     row = w.rows[-1]
+    if depth > MAX_DEPTH:
+        # Not descended into: say so, or the manifest looks complete when it is not.
+        if tag in CONTAINERS:
+            row["type"] = f"{tag}/unreadable"
+        return
     # A file can carry container magic without being a valid container (e.g. a
     # data file starting with "PK"). Record it as unreadable instead of aborting
     # the whole run; the row stays, it just isn't descended into, and the
@@ -699,9 +711,6 @@ def _walk(w: Walk, name: str, data: bytes, depth: int) -> None:
             row["type"] = f"{tag}/unreadable"
             return
         _record_tree(w, name, entries, depth, "!")
-    elif tag == "ext-fs":
-        entries = _check_total(tag, _ext_tree(data, _fresh_dir(w, depth)), w.limit)
-        _record_tree(w, name, entries, depth, ":/")
     elif tag in FS_READERS:
         reader = globals()[FS_READERS[tag]]
         try:

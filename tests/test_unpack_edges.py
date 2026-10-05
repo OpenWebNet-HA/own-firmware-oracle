@@ -112,7 +112,7 @@ def test_nesting_stops_at_depth_eight(tmp_path):
         blob = gzip.compress(blob)
     types = _walk(blob, tmp_path)
     assert len(types) == 10  # fw plus nine ~gunzip layers, then the cut-off
-    assert set(types.values()) == {"gzip"}
+    assert set(types.values()) == {"gzip", "gzip/unreadable"}
 
 
 def test_tar_symlinks_and_files_are_both_recorded(tmp_path):

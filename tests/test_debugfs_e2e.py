@@ -115,7 +115,7 @@ def test_ext_tree_lists_files_and_records_symlinks(tmp_path, work):
 
 
 def test_ext_tree_fails_loudly_on_a_corrupt_filesystem(work):
-    with pytest.raises(SystemExit, match="no usable tree"):
+    with pytest.raises(ValueError, match="debugfs rdump failed"):
         unpack._ext_tree(b"\x00" * 4096, work)
 
 
