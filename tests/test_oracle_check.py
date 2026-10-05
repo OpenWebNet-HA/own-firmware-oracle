@@ -48,11 +48,9 @@ from check import EvidenceItem
 def test_parse_ownd_frame():
     assert check.parse_ownd_frame("*1*1*31##") == "OWNLightingEvent"
     assert (
-        check.parse_ownd_frame("*#1001*74*11*111110111111111111110111##")
-        == "OWNEvent"
+        check.parse_ownd_frame("*#1001*74*11*111110111111111111110111##") == "OWNEvent"
     )
     assert check.parse_ownd_frame("*999*foo##") == "unparsed"
-
 
     with patch("check.OWNMessage.parse", side_effect=RuntimeError("fail")):
         assert check.parse_ownd_frame("*1*1*31##") == "error:RuntimeError"
@@ -69,10 +67,7 @@ def test_parse_ownd_column():
         )
         == "OWNLightingEvent | OWNEvent"
     )
-    assert (
-        check.parse_ownd_column("bus:24 30 0d | own:*1*1*31##")
-        == "OWNLightingEvent"
-    )
+    assert check.parse_ownd_column("bus:24 30 0d | own:*1*1*31##") == "OWNLightingEvent"
 
 
 def test_extract_own_frames():
@@ -80,9 +75,10 @@ def test_extract_own_frames():
     assert check.extract_own_frames("") == []
     assert check.extract_own_frames("bus:24 30 33 0d") == []
     assert check.extract_own_frames("own:*1*1*31##") == ["*1*1*31##"]
-    assert check.extract_own_frames(
-        "bus:24 | own:*1*1*31## | own:*1*19*74##"
-    ) == ["*1*1*31##", "*1*19*74##"]
+    assert check.extract_own_frames("bus:24 | own:*1*1*31## | own:*1*19*74##") == [
+        "*1*1*31##",
+        "*1*19*74##",
+    ]
 
 
 def test_models_for_gateway():
@@ -240,8 +236,7 @@ def test_check_content_and_process_tsv(tmp_path: Path):
     assert "# ownd_version=" in out_text
     assert lines[4] == "direction\tinput\treply\tverdict\toutput\townd\tlive"
     assert lines[5] == (
-        "down\t*#1*74##\tack\tout\town:*1*19*74##\t"
-        "OWNLightingEvent\tagree EVID-WHAT19"
+        "down\t*#1*74##\tack\tout\town:*1*19*74##\tOWNLightingEvent\tagree EVID-WHAT19"
     )
 
     assert lines[6] == "down\t*1*1*31##\tack\tout\tbus:24 30 33 0d\t-\tunchecked"
@@ -333,4 +328,3 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         check.main()
         captured = capsys.readouterr()
         assert f"wrote {out_outside}" in captured.out
-

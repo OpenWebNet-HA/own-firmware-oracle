@@ -52,7 +52,6 @@ def parse_output_column(output_str: str) -> tuple[list[str], list[str]]:
     if not output_str or output_str == "-":
         return bus_frames, emitted_own
 
-
     for part in output_str.split(" | "):
         stripped_part = part.strip()
         if stripped_part.startswith("bus:"):
@@ -82,9 +81,7 @@ def read_oracle_tsv(
 ) -> list[tuple[str, VerdictEntry]]:
     """Read an oracle TSV file and return (input_frame, VerdictEntry) pairs."""
     try:
-        rel_tsv = str(
-            tsv_path.resolve().relative_to(root.resolve())
-        ).replace("\\", "/")
+        rel_tsv = str(tsv_path.resolve().relative_to(root.resolve())).replace("\\", "/")
     except ValueError:
         rel_tsv = str(tsv_path).replace("\\", "/")
 
@@ -182,7 +179,6 @@ def build_index(results_dir: Path, root: Path = ROOT) -> dict[str, object]:
         for (_prod, _vers), gw in sorted(gateways_map.items())
     ]
 
-
     # Sort verdicts list by input frame
     sorted_verdicts: dict[str, list[dict[str, object]]] = {}
     for frame in sorted(verdicts_map.keys()):
@@ -198,14 +194,10 @@ def build_index(results_dir: Path, root: Path = ROOT) -> dict[str, object]:
         )
         sorted_verdicts[frame] = entries
 
-
     canonical_verdicts_json = json.dumps(
         sorted_verdicts, sort_keys=True, separators=(",", ":")
     )
-    content_sha256 = hashlib.sha256(
-        canonical_verdicts_json.encode("utf-8")
-    ).hexdigest()
-
+    content_sha256 = hashlib.sha256(canonical_verdicts_json.encode("utf-8")).hexdigest()
 
     return {
         "format_version": "1.0.0",
@@ -280,9 +272,7 @@ def main(argv: list[str] | None = None) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(rendered, encoding="utf-8")
     try:
-        rel_out = str(
-            args.out.resolve().relative_to(ROOT.resolve())
-        ).replace("\\", "/")
+        rel_out = str(args.out.resolve().relative_to(ROOT.resolve())).replace("\\", "/")
     except ValueError:
         rel_out = str(args.out).replace("\\", "/")
 
@@ -294,11 +284,8 @@ def main(argv: list[str] | None = None) -> int:
         for gw in gateways_list:
             suites_val = gw["suites"]
             print(
-                f"  - {gw['product']} {gw['version']}: "
-                f"{len(suites_val)} suites"  # type: ignore[arg-type]
+                f"  - {gw['product']} {gw['version']}: {len(suites_val)} suites"  # type: ignore[arg-type]
             )
-
-
 
     return 0
 

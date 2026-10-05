@@ -132,7 +132,6 @@ def test_build_index(tmp_path: Path):
     assert len(index_data["verdicts"]["*1*1*31##"]) == 2
 
 
-
 def test_format_index_json():
     data = {"key": "value"}
     formatted = mcp_index.format_index_json(data)
