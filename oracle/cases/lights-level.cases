@@ -18,3 +18,7 @@ down *1*0#0*31##
 down *1*0#1*31##
 down *1*0#5*31##
 down *1*0#255*31##
+
+; switch-on (Step 2b check)
+down *1*1*31##
+
