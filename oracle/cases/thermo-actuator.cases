@@ -1,0 +1,7 @@
+; Thermo: actuator status dimension 20 (gdluck fix 4, OWNd#77).
+; Dimension 20 queries with and without actuator index.
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *#4*1#1*20##
+down *#4*#0*20##
+down *#4*1*20##

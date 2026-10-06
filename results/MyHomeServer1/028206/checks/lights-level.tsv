@@ -1,0 +1,27 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=lights-level
+# suite_sha256=f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b
+# oracle_version=1
+# ownd_version=2.0.0-b9
+direction	input	reply	verdict	output	ownd	live
+down	*#1*0*#1*100*0##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*0##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*255##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*5##	nack	silent	-	-	unchecked
+down	*#1*31*#1*101*0##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d	-	unchecked
+down	*1*0#0*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d	-	unchecked
+down	*1*0#1*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d	-	unchecked
+down	*1*0#255*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d	-	unchecked
+down	*1*0#5*31##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d	-	unchecked
+down	*1*0*31##	nack	out	bus:24 30 33 33 31 30 30 31 32 30 31 0d	-	unchecked
+down	*1*1*31##	nack	out	bus:24 30 33 33 31 30 30 31 32 30 30 0d	-	unchecked

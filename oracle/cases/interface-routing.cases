@@ -1,0 +1,7 @@
+; Interface routing: private bus routing #4#NN for WHO 0 and WHO 14 (gdluck fix 8, OWNd#77).
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *0*1*31#4#01##
+down *0*1*31#4#02##
+down *14*0*31#4#01##
+down *14*0*31#4#02##

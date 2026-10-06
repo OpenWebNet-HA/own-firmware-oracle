@@ -1,0 +1,20 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=interface-routing
+# suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
+# oracle_version=1
+# ownd_version=2.0.0-b9
+direction	input	reply	verdict	output	ownd	live
+down	*0*1*31#4#01##	-	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked
+down	*0*1*31#4#02##	-	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked
+down	*14*0*31#4#01##	ack	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d	-	unchecked
+down	*14*0*31#4#02##	ack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d	-	unchecked

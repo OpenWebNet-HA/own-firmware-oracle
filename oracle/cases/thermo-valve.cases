@@ -1,0 +1,7 @@
+; Thermo: valve status dimension 19 (gdluck fix 5, OWNd#77).
+; Valve status dimension 19 queries.
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *#4*1*19##
+down *#4*40*19##
+down *#4*41*19##

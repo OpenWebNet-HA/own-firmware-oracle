@@ -1,0 +1,9 @@
+; Energy: dimension requests with parameters (gdluck fix 6, OWNd#77).
+; Hourly (511#M#D) and monthly (52#Y#M) energy consumption queries.
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *#18*51*511#10#1##
+down *#18*51*511#10#2##
+down *#18*51*52#26#9##
+down *#18*51*51##
+down *#18*51*52##

@@ -1,0 +1,24 @@
+; Thermo: central unit modes (gdluck fix 1, OWNd#77).
+; Modes 303 (off), 1 (heat), 0 (cool), 311 (auto), 102 (antifreeze), 202 (protection).
+; Re-run on MH200N to compare against MyHomeServer1.
+
+; modes on central unit #0
+down *4*303*#0##
+down *4*1*#0##
+down *4*0*#0##
+down *4*311*#0##
+down *4*102*#0##
+down *4*202*#0##
+
+; modes on central unit with sub-address #0#2
+down *4*303*#0#2##
+down *4*1*#0#2##
+down *4*0*#0#2##
+down *4*311*#0#2##
+down *4*102*#0#2##
+down *4*202*#0#2##
+
+; old/invalid central modes refused on MyHomeServer1
+down *4*100*#0##
+down *4*101*#0##
+down *4*110*#0##

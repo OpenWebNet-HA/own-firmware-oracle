@@ -1,0 +1,21 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-zone-mode
+# suite_sha256=46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f
+# oracle_version=1
+# ownd_version=2.0.0-b9
+direction	input	reply	verdict	output	ownd	live
+down	*4*0*1##	nack	silent	-	-	unchecked
+down	*4*1*1##	nack	silent	-	-	unchecked
+down	*4*303*1##	nack	silent	-	-	unchecked
+down	*4*311*#1##	nack	silent	-	-	unchecked
+down	*4*311*1##	nack	silent	-	-	unchecked

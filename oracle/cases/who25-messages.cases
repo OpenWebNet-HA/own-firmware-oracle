@@ -1,0 +1,9 @@
+; CEN+ / Dry contact: WHO 25 commands and event stimuli (gdluck fix 9, OWNd#77).
+; Re-run on MH200N to compare against MyHomeServer1.
+
+down *25*11#121*10##
+down *25*12*131##
+down *25*31#1*339##
+down *25*32#1*33##
+down *25*21#1*21##
+down *25*23#8*233##

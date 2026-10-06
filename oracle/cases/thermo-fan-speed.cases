@@ -1,0 +1,23 @@
+; Thermo: fan speed by zone and speed level (gdluck fix 2, OWNd#77).
+; Valid plain zone and speed (0..3) vs central unit or invalid speed.
+; Re-run on MH200N to compare against MyHomeServer1.
+
+; fan speed 0..3 on zone 1
+down *#4*1*#11*0##
+down *#4*1*#11*1##
+down *#4*1*#11*2##
+down *#4*1*#11*3##
+
+; fan speed 0..3 on zone 99
+down *#4*99*#11*0##
+down *#4*99*#11*1##
+down *#4*99*#11*2##
+down *#4*99*#11*3##
+
+; refused central / hash zone addresses
+down *#4*#1*#11*1##
+down *#4*#0*#11*1##
+down *#4*#0#2*#11*1##
+
+; refused speed outside 0..3
+down *#4*1*#11*4##
