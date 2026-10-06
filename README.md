@@ -411,21 +411,17 @@ from pathlib import Path
 # Load the hash-pinned index
 index_path = Path("results/mcp_index.json")
 index = json.loads(index_path.read_text(encoding="utf-8"))
-print(f"Index SHA-256: {index['index_sha256']}")
-print(f"Catalogued targets: {list(index['targets'].keys())}")
+print(f"Verdicts SHA-256: {index['verdicts_sha256']}")
+print(f"Gateways: {[f'{g["product"]} {g["version"]}' for g in index['gateways']]}")
 
 # Lookup verdict for a specific OpenWebNet frame across all gateways:
 target_frame = "*#1*31*#1*100*0##"  # Dimmer level write (100)
 
-for target, target_data in index["targets"].items():
-    suites = target_data.get("suites", {})
-    for suite_name, rows in suites.items():
-        for row in rows:
-            if row["input"] == target_frame:
-                print(f"[{target}] Suite: {suite_name}")
-                print(f"  Reply:   {row['reply']}")  # 'nack'
-                print(f"  Verdict: {row['verdict']}")  # 'silent'
-                print(f"  Output:  {row['output']}")  # '-'
+for entry in index["verdicts"].get(target_frame, []):
+    print(f"[{entry['product']} {entry['version']}] Suite: {entry['suite']}")
+    print(f"  Reply:   {entry['reply']}")  # 'nack'
+    print(f"  Verdict: {entry['verdict']}")  # 'silent'
+    print(f"  Emitted: {entry['emitted_own']}")  # []
 ```
 
 ---
