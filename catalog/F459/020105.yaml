@@ -1,0 +1,29 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F459
+version: "020105"          # firmware 2.1.5
+name: "F459 Web Server"
+
+wrapper:
+  filename: F459_020105.fwz
+  size: 114774253
+  sha256: "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/F459_020105.fwz"
+
+image:
+  filename: F459_020105.fwz
+  size: 114774253
+  sha256: "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F459
+    - "F459"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable

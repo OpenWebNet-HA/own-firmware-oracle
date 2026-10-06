@@ -1,0 +1,29 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: MH202
+version: "010024"          # firmware 1.0.24 (scenarios programmer)
+name: "MH202 Scenarios Programmer"
+
+wrapper:
+  filename: MH202_010024.fwz
+  size: 37111681
+  sha256: "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7"
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=MH202_010024.fwz&fileId=58107.23188.27731.56506"
+
+image:
+  filename: MH202_010024.fwz
+  size: 37111681
+  sha256: "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to MH202
+    - "MH202"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable
