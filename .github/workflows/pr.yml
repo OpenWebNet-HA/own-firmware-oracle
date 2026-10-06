@@ -81,6 +81,8 @@ jobs:
       - run: pip install --require-hashes -r requirements/test.txt
       - name: guard (no binaries committed)
         run: python tools/guard.py
+      - name: mcp index check
+        run: python tools/mcp_index.py --check
       # fail_under in pyproject.toml is the coverage ratchet.
       - name: pytest (synthetic fixtures + real debugfs; no vendor firmware)
         run: pytest --cov
