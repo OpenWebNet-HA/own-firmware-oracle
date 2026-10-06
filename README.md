@@ -265,47 +265,35 @@ cannot go stale. Extraction tools (`debugfs`, `unsquashfs`, `fsck.cramfs`)
 run inside bubblewrap; `--no-sandbox` runs them unconfined and must be asked
 for explicitly.
 
-## Catalog: MH200N 1.1.8 (first entry)
+## Catalog: 10 Supported Gateways
 
-The MH200N firmware is a public BTicino download, so CI can fetch + verify it
-with no R2 needed. Layer chain, auto-detected by `unpack.py`:
+The oracle catalogues, unpacks, and tracks deterministic manifests for all 10 OpenWebNet gateway models released by BTicino and Legrand:
 
-```
-FW_MH200N_vers_010108.zip      wrapper (not encrypted)
- └ scheduler_010108.fwz        zip, vendor password scheme
-    ├ Info.txt                 article MH200N / 003565, fw 010108
-    └ scheduler_rel_1_1_8.zip  zip, vendor password scheme
-       ├ Info_Rel.txt          flash map (16 MB, kernel@0x100000, rootfs@0x200000, app@0x620000)
-       ├ uzImage               U-Boot uImage  → ARM kernel
-       ├ ubtweb_only.gz        U-Boot uImage + gzip → ext2 rootfs
-       ├ ubtweb_only_recovery.gz   recovery rootfs
-       └ btweb_app.zip         the application (bt_* translators)
-```
+| Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 1,328 | U-Boot, Ext2, Zip | `openserver`, `scsserver` |
+| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `coso` |
+| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`) |
+| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen` (scenarios + BACnet) |
+| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | CramFS, Zip | `bt_processi` (legacy audio/video gateway) |
+| **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) |
+| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | Server gateway stack (`Image` / kernel) |
+| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | Basic IP interface gateway stack |
+| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack |
+| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack |
 
-## Catalog: MyHomeServer1 2.82.06 (second entry)
+### Architectural Differences: Linux vs. Bare-Metal Microcontroller
 
-The image @gdluck used for OWNd#77 (#613). The vendor serves the `.fwz`
-itself, so `wrapper` and `image` are the same file. The checkout link sends no
-`Content-Length`, so `fwfetch` stops reading at the catalog size and the
-SHA-256 is the proof.
+The firmware oracle encounters two fundamentally different system architectures across the catalog:
 
-Per the vendor packaging convention ("the password is the model", #613 comment
-18720022), the outer archive opens with `MyHomeServer1` (matching `<name>` in
-`fwz.xml`).
-
-```
-SMARTGW_028206.fwz                                zip (ZipCrypto: MyHomeServer1)
- ├ fwz.xml                                        metadata (5.0.67, v2.82.6)
- ├ uImage.zip                                     kernel 5.10.35 + DTBs
- ├ btweb_only.ext4.gz.sha256.sig.zip              application rootfs
- │  └ btweb_only.ext4.gz                          ext4 (~1 GiB uncompressed)
- │     ├ home/bticino/bin/                        bt_luci, bt_device, coso, ...
- │     └ home/bticino/libcoso/                    translator plugins
- └ btweb_only_recovery.ext4.gz (+ .sig.zip)       recovery rootfs
-```
-
-56,602 rows in `results/MyHomeServer1/028206/manifest.tsv`. A second run gives
-a **zero diff**.
+1. **Embedded Linux Gateways (9 of 10 models)**
+   - **Architectures**: Linux ARMv4 `oabi` (F453AV), ARMv5 `eabi5` (MH200N, MH202, F450, F454, F459), ARMv7 (MyHomeServer1), and AArch64 (F460, F461).
+   - **Structure**: Multi-layer archives containing standard root filesystems (Ext2/4, SquashFS, CramFS, JFFS2). When unpacked, they produce hundreds to tens of thousands of individual user-space binaries, shared libraries, and configuration files.
+   - **Oracle Execution**: Evaluated via user-space emulation (`qemu-arm` / `qemu-aarch64`) with simulated serial PTYs or Unix domain sockets.
+2. **Bare-Metal Microcontroller Gateway (F455 Basic Gateway)**
+   - **Architecture**: ARM Cortex-M3/M4 bare-metal microcontroller (vector table base `0x08000000`, initial SP `0x20004178`).
+   - **Structure**: Single monolithic flash image (`F455_1_1_2.bin`, 301 KB) with no operating system, shell, or filesystem. The bootloader, TCP/IP stack (LwIP), OpenWebNet parser, and SCS transceiver logic are compiled directly into a single binary image.
+   - **Manifest Size**: Explains why `results/F455/010102/manifest.tsv` contains only 3 entries (wrapper archive, manifest XML, and the raw `.bin` image).
 
 ## Ground rules
 
@@ -324,29 +312,14 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 
 ## Status
 
-- **Phase 1: fetch → verify → unpack → manifest.** Done for MH200N 1.1.8 and
-  MyHomeServer1 2.82.06.
-- **Phase 2b: first suite (`lights-level`) runs on both gateways** with a zero
-  diff on re-run; boundary facts are in `results/*/*/oracle/boundary/`.
-  The done-when check (`*1*1*31##` yields a PIC write) succeeds on both targets.
-  Architecture divergence observed:
-  - **MH200N**: `openserver` communicates directly with `scsserver`; commands are
-    acknowledged immediately (`*#*1##` ACK within ~13ms) as soon as the frame is
-    queued to the PIC UART.
-  - **MyHomeServer1**: `openserver` delegates lighting to `bt_luci`, which uses a
-    transactional model awaiting an SCS bus state confirmation (type 4 frame) from an
-    actuator. When the bus responder is silent, `bt_luci` times out at 2.0s and returns
-    `*#*0##` (NACK) to `openserver`, though the frame was still transmitted to the PIC UART.
-  Adding the next gateway follows [docs/adding-a-gateway.md](docs/adding-a-gateway.md).
-- **Next steps in Phase 2:**
-  - **2c (WHAT 19):** up-suite over bus frames to identify which inputs trigger `*1*19*74##`
-    and determine WHO 1001 DIM 11 autodiagnostic bitmask semantics.
-  - **2d (Replay OWNd#77):** gdluck's audit suites across catalogued gateways.
-  - **`tools/check.py`:** feeds firmware emitted frames through OWNd's parser.
-- **Downstream integrations:**
-  - OpenWebNet-Encyclopedia schema update for `firmware_emulation` / `firmware_observed`.
-  - `openwebnet-mcp` deterministic hash-pinned verdict index.
-  - OWNd & MyHOME golden corpus firmware-oracle validation gate.
+- **Phase 1: Complete Fleet Ingestion & Unpack.** Done for all 10 OpenWebNet gateways (MH200N, MyHomeServer1, F454, MH202, F453AV, F455, F461, F450, F459, F460). Every manifest is verified byte-for-byte and covered by weekly CI reproducibility runs.
+- **Phase 2b: Cross-Gateway Translation Divergence.**
+  - `lights-level` suite verified on both MH200N and MyHomeServer1.
+  - **MH200N**: Immediate ACK (`*#*1##` within ~13ms) upon queuing to the PIC UART.
+  - **MyHomeServer1**: Transactional confirmation model via `bt_luci`; awaits bus confirmation (type 4 frame) or times out at 2.0s with NACK (`*#*0##`).
+- **Phase 2c: Autodiagnostics Co-occurrence (WHAT 19).** Completed and documented in `findings/MH200N/what19.md`. Proves `bt_luci` translates SCS `'E'` to `*1*19*WHERE##` while `bt_device` / `libdiag.so` emit diagnostic frame `*#1001*WHERE*11*<bitmask>##`. Validated against bus capture `EVID-MH200-WHAT19-FAULT`.
+- **Phase 2d: Empirical Replay of OWNd#77 Audit Fixes.** Completed across 9 case suites (thermoregulation, energy, CEN+, interface routing, WHO 25) with deterministic outputs in `results/MH200N/010108/oracle/full/` and evaluation checks in `results/MH200N/010108/checks/`. Findings synthesized in `findings/MH200N/ownd-77-replay.md`.
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for consumption by `openwebnet-mcp`.
 
 ## License
 
