@@ -1,0 +1,29 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F450
+version: "020010"          # firmware 2.0.10 (Audio/Video Web Server)
+name: "F450 Audio/Video Web Server"
+
+wrapper:
+  filename: F450_020010.fwz
+  size: 13265378
+  sha256: "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/F450_020010.fwz"
+
+image:
+  filename: F450_020010.fwz
+  size: 13265378
+  sha256: "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F450
+    - "F450"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable

@@ -1,0 +1,7 @@
+# product=F455 version=010102
+# image_sha256=cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9
+# tool_version=4
+path	type	size	sha256
+F455_1_1_2.fwz	zip	180196	cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9
+F455_1_1_2.fwz!F455_1_1_2.bin	data	301016	6d61c308888ccd78f6fb289cf23e672203921a50931b838533a7a315c5d49ccc
+F455_1_1_2.fwz!fwz.xml	data	453	5b93f792b5d9ece0a7d26b75847d91df5ebe9b3c0bfbeea29c617e1557d852ad

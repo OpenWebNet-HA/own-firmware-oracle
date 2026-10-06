@@ -1,0 +1,26 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F455
+version: "010102"          # firmware 1.1.2 (Basic Gateway)
+name: "F455 Basic Gateway"
+
+wrapper:
+  filename: F455_1_1_2.fwz
+  size: 180196
+  sha256: "cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9"
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=F455_1_1_2.fwz&fileId=58107.23188.54160.27595"
+
+image:
+  filename: F455_1_1_2.fwz
+  size: 180196
+  sha256: "cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F455
+    - "F455"
+    - "bticino"
+
+status: unpackable

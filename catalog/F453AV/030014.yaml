@@ -1,0 +1,30 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F453AV
+version: "030014"          # firmware 3.0.14 (audio/video web server)
+name: "F453AV Audio/Video Web Server 10 DIN"
+
+wrapper:
+  filename: WS_10DIN_030014.fwz
+  size: 16243980
+  sha256: "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a"
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=WS_10DIN_030014.fwz&fileId=58107.23188.12526.34836"
+
+image:
+  filename: WS_10DIN_030014.fwz
+  size: 16243980
+  sha256: "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F453AV
+    - "F453AV"
+    - "WS_10DIN"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable

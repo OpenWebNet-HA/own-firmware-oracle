@@ -1,0 +1,33 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F460
+version: "020012"          # firmware 2.0.12 (web server)
+name: "F460 Web Server"
+
+wrapper:
+  filename: F460_020012.fwz
+  size: 158564663
+  sha256: "b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/F460_020012.fwz"
+
+image:
+  filename: F460_020012.fwz
+  size: 158564663
+  sha256: "b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F460
+    - "F460"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+undecoded_ok:
+  - path: "F460_020012.fwz!Image.zip.sha256.sig.zip!Image.zip!Image"
+    reason: "ARM64 Linux kernel uncompressed Image"
+
+status: unpackable

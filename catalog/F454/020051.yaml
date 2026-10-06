@@ -1,0 +1,29 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F454
+version: "020051"          # firmware 2.0.51
+name: "F454 IP Gateway / Audio Video Web Server"
+
+wrapper:
+  filename: F454_020051.fwz
+  size: 74448014
+  sha256: "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3"
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=F454_020051.fwz&fileId=58107.23188.40907.34137"
+
+image:
+  filename: F454_020051.fwz
+  size: 74448014
+  sha256: "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F454
+    - "F454"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable
