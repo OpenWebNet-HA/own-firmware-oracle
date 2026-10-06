@@ -295,6 +295,141 @@ The firmware oracle encounters two fundamentally different system architectures 
    - **Structure**: Single monolithic flash image (`F455_1_1_2.bin`, 301 KB) with no operating system, shell, or filesystem. The bootloader, TCP/IP stack (LwIP), OpenWebNet parser, and SCS transceiver logic are compiled directly into a single binary image.
    - **Manifest Size**: Explains why `results/F455/010102/manifest.tsv` contains only 3 entries (wrapper archive, manifest XML, and the raw `.bin` image).
 
+### Gateway Census: Complete Ingestion vs. Excluded Hardware
+
+The oracle project catalogues **100% of all standalone OpenWebNet IP/SCS gateways** for which BTicino or Legrand publicly released downloadable firmware update packages (10 out of 10).
+
+To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosystem, the table below details the ingested fleet versus hardware that is not part of the firmware oracle:
+
+#### 1. Ingested Fleet (10 of 10 Released Firmware Packages)
+- **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway.
+- **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge.
+- **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway.
+- **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway.
+- **F453AV** (`030014` / 3.0.14): DIN audio/video web server.
+- **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M).
+- **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64).
+- **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet).
+- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway.
+- **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64).
+
+#### 2. Excluded Hardware & Legacy Devices (and Why)
+
+| Product SKU | Description | Exclusion Reason |
+| :--- | :--- | :--- |
+| **F452 / F452V** | First-generation Web Server DIN | Discontinued early 2000s hardware. Firmware was stored in masked ROM / EEPROM; no firmware update packages were ever published for download. |
+| **F453** | Enhanced Web Server DIN | Pre-Audio/Video version, replaced by F453AV. No separate public firmware download package exists. |
+| **F458 / 003599** | IP Server | Specialized telecom/IP server module; no public firmware archive distributed. |
+| **MH200 / 003535** | Legacy Scenes Programmer | Physical RS232 serial hardware predecessor to MH200N (no Ethernet OpenWebNet server daemon). |
+| **MH201** | IP Scenario Module | Early DIN scenario module; no standalone public download archive. |
+| **HOMETOUCH 7" (3488 / 067259)** | Connected Touchscreen | Embedded Android touch display; firmware updates are distributed exclusively as full-device Android OTA updates, not OpenWebNet gateway images. |
+| **Classe 300X (`344642`, `344742`)** | Video Internal Unit with Wi-Fi | 2-wire video internal unit with Netatmo cloud bridging; firmware updates are delivered via encrypted OTA cloud synchronization. |
+| **Classe 300 EOS (`344842`, `344845`)** | Smart Video Internal Unit | Connected video internal unit with Alexa; firmware updated exclusively via Netatmo / Legrand cloud OTA. |
+| **H4684 / L4684 / LN4684A (`067283`, `078474`)** | Colour Touch Screen 3.5" & 10" | Embedded display consoles; firmware flashed via MyHOME_Suite or USB, not released as standalone gateway images. |
+| **HC4690 / HD4690 / HS4690 (`067285`)** | Multimedia Touch Screen | 10-inch multimedia display console; specialized display firmware. |
+| **F422 / 003562** | SCS-to-SCS Interface Router | Pure galvanic bus-to-bus bridge microcontroller; no IP interface or OpenWebNet parser. |
+| **F429 / 002631** | SCS/DALI Gateway | Specialized DALI lighting interface controller; no OpenWebNet TCP server daemon. |
+| **BMNE4000 / 048832** | SCS/ZigBee Gateway | Hardware radio bridge; firmware is embedded radio stack without standalone OpenWebNet daemon. |
+
+---
+
+## How to Use: Concrete Examples
+
+### 1. Materializing & Unpacking a Firmware Image
+
+Download the official vendor archive and unpack it into a deterministic filesystem manifest:
+
+```bash
+# A) Fetch and verify the vendor archive by SHA-256:
+python tools/fwfetch.py catalog/MH200N/010108.yaml
+
+# B) Unpack container layers (Zip, U-Boot, Ext2/4, SquashFS, CramFS) into manifest.tsv:
+python tools/unpack.py catalog/MH200N/010108.yaml -o results/MH200N/010108/manifest.tsv
+
+# C) Verify the workspace remains clean of raw binaries or NUL leaks:
+python tools/guard.py
+```
+
+### 2. Validating Workspace Freshness and Integrity
+
+```bash
+# Check if any catalogued images or unpacked manifests are stale:
+python tools/plan.py
+
+# Enforce quality gates (ruff, mypy, test coverage):
+ruff check .
+ruff format --check .
+mypy --strict tools oracle
+pytest tests --cov=tools --cov=oracle --cov-report=term-missing
+```
+
+### 3. Running Emulated Oracle Test Suites (`oracle.run`)
+
+Run a `.cases` test suite against an emulated gateway daemon under `qemu-arm`:
+
+```bash
+# Run the lights-level suite against the emulated MH200N openserver:
+python -m oracle.run suite \
+  --product MH200N \
+  --version 010108 \
+  --suite oracle/cases/lights-level.cases \
+  -o results/MH200N/010108/oracle/full/lights-level.tsv
+
+# The generated TSV contains deterministic rows:
+# direction    input              reply    verdict    output
+# down         *1*1*21##          ack      out        a8 21 00 12 01 22 a3
+# down         *#1*31*#1*100*0##  nack     silent     -
+```
+
+### 4. Regression & Verification Checks (`tools/check.py`)
+
+Validate that emulated outputs match expected protocol behavior:
+
+```bash
+# Check MH200N against the lights-level evaluation expectations:
+python tools/check.py --product MH200N --version 010108 --suite lights-level
+
+# Check MyHomeServer1 heating audit cases:
+python tools/check.py --product MyHomeServer1 --version 028206 --suite ownd-pr82-heating
+```
+
+### 5. Querying the Cross-Firmware Verdict Index (`results/mcp_index.json`)
+
+The cross-firmware MCP index provides hash-pinned answers for AI assistants and parsers without needing to run emulators:
+
+```bash
+# Check that the index matches all current oracle TSVs:
+python tools/mcp_index.py --check
+```
+
+Query the index directly in Python:
+
+```python
+import json
+from pathlib import Path
+
+# Load the hash-pinned index
+index_path = Path("results/mcp_index.json")
+index = json.loads(index_path.read_text(encoding="utf-8"))
+print(f"Index SHA-256: {index['index_sha256']}")
+print(f"Catalogued targets: {list(index['targets'].keys())}")
+
+# Lookup verdict for a specific OpenWebNet frame across all gateways:
+target_frame = "*#1*31*#1*100*0##"  # Dimmer level write (100)
+
+for target, target_data in index["targets"].items():
+    suites = target_data.get("suites", {})
+    for suite_name, rows in suites.items():
+        for row in rows:
+            if row["input"] == target_frame:
+                print(f"[{target}] Suite: {suite_name}")
+                print(f"  Reply:   {row['reply']}")  # 'nack'
+                print(f"  Verdict: {row['verdict']}")  # 'silent'
+                print(f"  Output:  {row['output']}")  # '-'
+```
+
+---
+
 ## Ground rules
 
 Based on the framework in #613 (EU Software Directive 2009/24/EC Art. 5(3) /
