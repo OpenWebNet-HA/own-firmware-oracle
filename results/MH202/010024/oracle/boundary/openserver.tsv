@@ -1,0 +1,17 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# program=openserver
+# target_sha256=5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/proc/cpuinfo O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/flags/WORKING_MODE O_RDONLY	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok

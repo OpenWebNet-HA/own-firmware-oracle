@@ -1,0 +1,86 @@
+; Energy & Load Management: BTicino 10" Touch Screen (libqtdevices TS10_1_0_23) & Encyclopedia suite.
+; Covers WHO 18 (Energy Management) and WHO 3 (Load Management).
+; Tests instantaneous power, scalar totalizers, parameterized historical series (8/16/32-bit),
+; automatic power reporting (1200), actuator forcing/reset, Stop&Go automatic reset breakers,
+; and priority load-shedding with control unit measurements.
+
+; 1. Instantaneous Power & Scalar Totalizers (Central Unit / Meter WHERE=51)
+down *#18*51*113##
+down *#18*51*1130##
+down *#18*51*1134##
+down *#18*51*51##
+down *#18*51*53##
+down *#18*51*54##
+
+; 2. Parameterized Monthly Totalizer & Historical Queries
+down *#18*51*52#26#9##
+down *#18*51*52##
+down *#18*51*511#10#1##
+down *#18*51*511#10#2##
+down *#18*51*512#10##
+down *#18*51*513#10##
+down *#18*51*514#10##
+
+; 3. Historical Graph Series Requests (libqtdevices TS10 8-bit, 16-bit, 32-bit)
+down *18*52#10#1*51##
+down *18*56#10*51##
+down *18*53#10*51##
+down *18*57#10#1*51##
+down *18*58#10*51##
+down *18*59#10*51##
+down *18*510#10*51##
+
+; 4. Thresholds & Automatic Power Reporting (DIMENSION 1200 / 516 / 517)
+down *#18*51*516##
+down *#18*51*517#1##
+down *#18*51*517#2##
+down *#18*51*#517#1*1234##
+down *#18*51*#1200#1*255##
+down *#18*51*#1200#1*0##
+
+; 5. Energy Management Actuators (WHERE=71#0)
+down *18*71*71#0##
+down *18*73#15*71#0##
+down *18*73*71#0##
+down *18*74*71#0##
+down *18*75#1*71#0##
+down *18*75#2*71#0##
+down *#18*71#0*71##
+down *#18*71#0*72#1##
+down *#18*71#0*72#2##
+down *#18*71#0*73##
+down *#18*71#0*113##
+
+; 6. Stop&Go Automatic Reset Breakers (WHERE=11)
+down *18*26*11##
+down *18*27*11##
+down *18*21*11##
+down *18*22*11##
+down *18*23*11##
+down *18*24*11##
+down *18*28*11##
+down *18*29*11##
+down *#18*11*250##
+down *#18*11*251##
+down *#18*11*258##
+down *#18*11*#212*10##
+down *#18*11*212##
+
+; 7. WHO 3 Load Management: Priority Control & Status
+down *3*0*#1##
+down *3*1*#1##
+down *3*2*#1##
+down *3*3*#1##
+down *3*2*#2##
+down *3*0*0##
+down *3*1*0##
+down *#3*0##
+down *#3*#1##
+down *#3*#2##
+
+; 8. WHO 3 Load Management: Control Unit Measurements (WHERE=10)
+down *#3*10*0##
+down *#3*10*1##
+down *#3*10*2##
+down *#3*10*3##
+down *#3*10*4##

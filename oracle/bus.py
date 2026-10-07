@@ -242,8 +242,14 @@ class PicResponder:
             return [f"$25{self.version}\r".encode("ascii")]
         if frame.startswith(b"$26"):
             return [b"$26000\r"]
-        if frame.startswith(b"$27") or frame.startswith(b"$02"):
+        if (
+            frame.startswith(b"$27")
+            or frame.startswith(b"$02")
+            or frame.startswith(b"$28")
+        ):
             return [frame]
+        if frame.startswith(b"$15") or frame.startswith(b"$16"):
+            return [b"$00\r"]
         if frame.startswith(b"$03"):
             answers = [b"$19\r"]
             if not isinstance(self.inner, Silent):

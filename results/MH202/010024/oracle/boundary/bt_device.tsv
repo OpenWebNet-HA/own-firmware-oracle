@@ -1,0 +1,25 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# program=bt_device
+# target_sha256=65dad019cc15cf5036c04ec7ef23d0f9c2f388324f44692f43af37fd82192f70
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:30013	ok
+bind	inet:0.0.0.0:31013	ok
+execve	/bin/sh	ECHILD
+execve	/bin/uname	ok
+exit	running	timeout
+listen	inet:0.0.0.0:30013	ok
+listen	inet:0.0.0.0:31013	ok
+open	/dev/rtc O_RDONLY	ENOENT
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/proc/cpuinfo O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+open	/var/tmp/version.txt O_RDONLY	ok
+open	/var/tmp/version.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok

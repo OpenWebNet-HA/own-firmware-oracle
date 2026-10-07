@@ -1,0 +1,83 @@
+# Oracle target: MH202 firmware 1.0.24. Every program is pinned by path and
+# sha256 to results/MH202/010024/manifest.tsv (oracle/target.py checks it).
+product: MH202
+version: "010024"
+
+# Manifest prefix for the root filesystem layer:
+sysroot:
+  - "MH202_010024.fwz!btweb_only.ext3.gz~gunzip:"
+
+bus_device: /dev/ttyS1
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_daemon><stackopen>
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "41a8844318d47cf33571b6d74a7de528dea5118d4c2289f4d666de419d91b1b6"
+    role: supervisor
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4"
+    role: own_server
+    port: 20000
+  # p1: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "8bf4e7ff1d92a6c71a82ac10ba7008fb590246a3638e7db509217a54e9ab2be5"
+    role: bus_server
+    port: 20001
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "65dad019cc15cf5036c04ec7ef23d0f9c2f388324f44692f43af37fd82192f70"
+    role: translator
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "9b451a8ea744b21be020b8e2554b1e70687744333f9e63c7e58d94dc10a33b1d"
+    role: translator
+  # supervision / scenarios
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "fe2485cd65500c39d9a8ea414238e8a18ee83fda24268359ca33067fcf2059c7"
+    role: translator
+  # coso
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "6865c2d1d441d25effa31275080ded70ad3538a8a49288e3002ffb196b066175"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\topenserver\n"
+  devices:
+    /dev/ttyS1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.6.32"
+
+# Filled from discovery; the rows are in
+# results/MH202/010024/oracle/boundary/<program>.tsv.
+#   bus: pty -- scsserver opens /dev/ttyS1 and the pty answers TCGETS /
+#     TCSETS / TCFLSH (38400 8N1, IXON|IXOFF); scsserver writes PIC command ($24\r)
+#   own: full -- openserver binds and listens on TCP 20000, scsserver on 20001
+boundary:
+  status: discovered
+  bus: pty
+  own: full

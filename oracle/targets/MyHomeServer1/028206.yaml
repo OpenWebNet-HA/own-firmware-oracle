@@ -50,6 +50,11 @@ programs:
     path: home/bticino/bin/bt_multi
     sha256: "64234f6fbd2be0c18c7567d9dff17fbb0a9c515f9e9241d1cf8129d6a2d25f92"
     role: translator
+  # energy / supervision
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "214323fe8023b80bf886c6313d0aa0a96363bb096b65f0b28b0b4ebff1c27025"
+    role: translator
   # coso
   coso:
     path: home/bticino/bin/coso
@@ -86,7 +91,7 @@ runtime:
 #     commands ($24\r) to it.
 #   own: full -- openserver binds and listens on TCP 20000 (<Sevices><OwnPort>
 #     in cfg/openserver), scsserver on 20001 and the translators on 30001/31001
-#     (bt_luci), 30004/31004 (bt_termo), 30022/31022 (bt_multi).
+#     (bt_luci), 30004/31004 (bt_termo), 30018/31018 (bt_supervisione), 30022/31022 (bt_multi).
 boundary:
   status: discovered
   bus: pty
