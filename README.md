@@ -412,7 +412,7 @@ from pathlib import Path
 index_path = Path("results/mcp_index.json")
 index = json.loads(index_path.read_text(encoding="utf-8"))
 print(f"Verdicts SHA-256: {index['verdicts_sha256']}")
-print(f"Gateways: {[f'{g["product"]} {g["version"]}' for g in index['gateways']]}")
+print(f"Gateways: {[f\"{g['product']} {g['version']} [{g['status']}]\" for g in index['gateways']]}")
 
 # Lookup verdict for a specific OpenWebNet frame across all gateways:
 target_frame = "*#1*31*#1*100*0##"  # Dimmer level write (100)
@@ -450,7 +450,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **MyHomeServer1**: Transactional confirmation model via `bt_luci`; awaits bus confirmation (type 4 frame) or times out at 2.0s with NACK (`*#*0##`).
 - **Phase 2c: Autodiagnostics Co-occurrence (WHAT 19).** Completed and documented in `findings/MH200N/what19.md`. Proves `bt_luci` translates SCS `'E'` to `*1*19*WHERE##` while `bt_device` / `libdiag.so` emit diagnostic frame `*#1001*WHERE*11*<bitmask>##`. Validated against bus capture `EVID-MH200-WHAT19-FAULT`.
 - **Phase 2d: Empirical Replay of OWNd#77 Audit Fixes.** Completed across 9 case suites (thermoregulation, energy, CEN+, interface routing, WHO 25) with deterministic outputs in `results/MH200N/010108/oracle/full/` and evaluation checks in `results/MH200N/010108/checks/`. Findings synthesized in `findings/MH200N/ownd-77-replay.md`.
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for consumption by `openwebnet-mcp`.
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed across all 10 catalogued gateways. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for consumption by `openwebnet-mcp`. The 2 actively emulated gateways (MH200N, MyHomeServer1) provide 89 hash-pinned verdict inputs across 15 suites, while the remaining 8 unpacked gateways (F454, MH202, F453AV, F455, F461, F450, F459, F460) are indexed in the fleet catalog with verified image provenance and queued for Phase 2 emulation suites.
 
 ## License
 

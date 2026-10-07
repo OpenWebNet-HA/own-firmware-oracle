@@ -2,8 +2,65 @@
   "format_version": "1.0.0",
   "gateways": [
     {
+      "image_sha256": "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da",
+      "product": "F450",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020010"
+    },
+    {
+      "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
+      "product": "F453AV",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "030014"
+    },
+    {
+      "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
+      "product": "F454",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020051"
+    },
+    {
+      "image_sha256": "cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9",
+      "product": "F455",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "010102"
+    },
+    {
+      "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
+      "product": "F459",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020105"
+    },
+    {
+      "image_sha256": "b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26",
+      "product": "F460",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020012"
+    },
+    {
+      "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+      "product": "F461",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020011"
+    },
+    {
       "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
       "product": "MH200N",
+      "status": "emulated",
       "suites": [
         "energy-params",
         "interface-routing",
@@ -22,8 +79,17 @@
       "version": "010108"
     },
     {
+      "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
+      "product": "MH202",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "010024"
+    },
+    {
       "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
       "product": "MyHomeServer1",
+      "status": "emulated",
       "suites": [
         "lights-level",
         "ownd-pr82-heating",
