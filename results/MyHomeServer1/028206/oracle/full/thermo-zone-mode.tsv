@@ -1,0 +1,20 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-zone-mode
+# suite_sha256=46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*4*0*1##	ack	out	bus:24 30 34 39 33 30 31 33 30 30 31 0d
+down	*4*1*1##	nack	out	bus:24 30 34 39 33 30 31 33 30 30 30 0d
+down	*4*303*1##	nack	out	bus:24 30 34 39 33 30 31 33 30 30 46 0d
+down	*4*311*#1##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d
+down	*4*311*1##	nack	silent	-

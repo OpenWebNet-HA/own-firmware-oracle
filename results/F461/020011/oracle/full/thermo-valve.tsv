@@ -1,0 +1,18 @@
+# product=F461
+# version=020011
+# image_sha256=cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b
+# harness=full
+# target_sha256=1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-valve
+# suite_sha256=d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*1*19##	nack	out	bus:24 30 30 34 39 39 30 31 33 30 31 33 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*40*19##	nack	out	bus:24 30 30 34 39 39 32 38 33 30 31 33 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*41*19##	nack	out	bus:24 30 30 34 39 39 32 39 33 30 31 33 0d | bus:24 30 30 32 30 30 30 30 0d

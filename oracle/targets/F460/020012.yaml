@@ -1,0 +1,103 @@
+# Oracle target: F460 firmware 2.0.12. Every program is pinned by path and
+# sha256 to results/F460/020012/manifest.tsv (oracle/target.py checks it).
+product: F460
+version: "020012"
+
+sysroot:
+  - "F460_020012.fwz!btweb_only.ext4.gz.sha256.sig.zip!btweb_only.ext4.gz~gunzip:"
+
+bus_device: /dev/ttyRPMSG30
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "e5a3a10d78924c4efd282ef58b5d294340429eefd725c7912a7b4ea629b2c88f"
+    role: supervisor
+
+  # p0: OpenWebNet server (port 20000)
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2"
+    role: own_server
+    port: 20000
+
+  # p1: bus server (port 20001)
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "d8b8d3815974b090a15a7235e4ec91be01b848abd72115d4e90e8a5a848526d8"
+    role: bus_server
+    port: 20001
+
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "37c6c4ce3199549babf236991a097b87ac49b501fc8b4a71e3f1a88fc6a6a747"
+    role: translator
+    port: 31001
+
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "4b4e999d04c4b2b6f28b681586a5b5ef84556640d180d26641237009a4ac4cbf"
+    role: translator
+    port: 31013
+
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "8df7400eb9364f77a23c9ca170b2238586e95ecb12acc32591177cd7b1c7b0d5"
+    role: translator
+    port: 31004
+
+  # multimedia / sound
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "a9926349455ef9c85459b5360163678d18345e3aa73a4299e854e19000263dcb"
+    role: translator
+    port: 31022
+
+  # supervision
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "537b1fc4ea6230715852ab322dc9e226ecd25d4f6bb24de7a6f1f37964611ae9"
+    role: translator
+    port: 31018
+
+  # coso
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "3bbc0e2f7c3a6bc88468faed711a684e092eccc0177563eb8aa7d78cd37edcae"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/tmp/bticino/bt_wd
+    - /var/volatile/log
+    - /run
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\topenserver\n"
+    /home/bticino/cfg/openserver: "[General Parameters]\nLogfile=/var/tmp/openserver.log\nLogLev=0\nIsGateway=1\nIsPermissive=1\nLowMacAsUc=0\nForceHMAC=0\nOldClient=0\n\n[Sevices]\nMaxClient=50\nMaxBufSize=16384\nOwnPort=20000\n\n[Security]\nCertFile=/home/bticino/cfg/ssl_cert.crt\nKeyFile=/home/bticino/cfg/ssl_cert.key\nCertOk=1\nNotAfter=0\nNotBefore=0\n\n[Notification]\nWarnOpen=0\nCertCheck=0\n\n[Range Ip]\nrange_01=192.168.129.2\n\n[Stackopen]\nclient_01=bt_device;1;20;13.1001.1004.1005.1008.1013.1018.1022.1027\nclient_02=bt_luci;0;10;0.1.14.15.25.1000\nclient_03=bt_termo;0;9;4\nclient_04=bt_supervisione;0;10;18\nclient_05=coso;0;10;2.9.29\nclient_06=bt_multi;0;20;22\nBlockWho=0,1,2,9,4,14,15,18,22,29\n"
+  devices:
+    /dev/ttyRPMSG30: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "4.14.78"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full

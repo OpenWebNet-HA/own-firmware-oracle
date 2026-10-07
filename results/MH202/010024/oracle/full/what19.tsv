@@ -1,0 +1,16 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# harness=full
+# target_sha256=5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=what19
+# suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*74##	ack	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d

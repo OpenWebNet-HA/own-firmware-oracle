@@ -1,0 +1,20 @@
+# product=F460
+# version=020012
+# image_sha256=b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26
+# harness=full
+# target_sha256=3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-zone-mode
+# suite_sha256=46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*4*0*1##	nack	out	bus:24 30 30 34 39 33 30 31 33 30 30 31 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*4*1*1##	nack	out	bus:24 30 30 34 39 33 30 31 33 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*4*303*1##	nack	out	bus:24 30 30 34 39 33 30 31 33 30 30 46 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*4*311*#1##	nack	out	bus:24 30 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*4*311*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d

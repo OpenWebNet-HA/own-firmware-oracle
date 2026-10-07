@@ -1,0 +1,19 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# harness=full
+# target_sha256=5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=interface-routing
+# suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*0*1*31#4#01##	ack	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*0*1*31#4#02##	ack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*14*0*31#4#01##	-	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d
+down	*14*0*31#4#02##	-	silent	-

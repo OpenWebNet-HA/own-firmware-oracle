@@ -1,0 +1,112 @@
+# Oracle target: F453AV firmware 3.0.14. Every program is pinned by path and
+# sha256 to results/F453AV/030014/manifest.tsv (oracle/target.py checks it).
+product: F453AV
+version: "030014"
+
+# Manifest prefixes for the root filesystem and application overlay:
+sysroot:
+  - "WS_10DIN_030014.fwz!WS_10DIN_rel_3_0_14.zip!WS_10DIN_rel_3_0_14/ubtweb_only_recovery.gz~payload~gunzip:"
+  - "WS_10DIN_030014.fwz!WS_10DIN_rel_3_0_14.zip!WS_10DIN_rel_3_0_14/btweb_app.zip!"
+
+bus_device: /dev/ttyPIC
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts daemons defined in cfg/stack_open.xml
+  bt_processi:
+    path: home/bticino/bin/bt_processi
+    sha256: "9d293f9eeaae436d2c446439fe1c3f5b9f8fd03231e81219825cb70aecc36bcb"
+    role: supervisor
+
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc"
+    role: own_server
+    port: 20000
+
+  # p1: owns /dev/ttyPIC and serves translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "9ccecdc9374f3edbdfa97771b64375ab235359e41d5e4e6102311f5699a53376"
+    role: bus_server
+    port: 20001
+
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "fca2f1e22a13c96012419423cf649252765cdf759a457205074c9bcbdfc8d3da"
+    role: translator
+    port: 40001
+
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "c61f45abac981f377814b24432c321c82683eb25999d442274e808b201c40d75"
+    role: translator
+    port: 40013
+
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "45d4c4529876dd7e64bac2153382f138005838f186a26955c7c563ec6ec6a3e0"
+    role: translator
+    port: 40004
+
+  # sound diffusion
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "4b386212d29d87ad489d5bc7e5dc6e1e082015a647da25f7b2309d46dbdf1abf"
+    role: translator
+    port: 40016
+
+  # multimedia / sound
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "99078de36b4bcdca80462c55b0e02becdf0292204bf5920f16155338c16d9a29"
+    role: translator
+    port: 40022
+
+  # video door entry / intercom
+  bt_vct:
+    path: home/bticino/bin/bt_vct
+    sha256: "ac9af9f7feccd269126b23bf0341dd945699f665e24278a87254a1c750c7a85c"
+    role: translator
+    port: 40006
+
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "494e04a93b1514a3770860aa42c1a8e31cc21ecc7f16f924f6ccdde0d5967591"
+    role: translator
+    port: 40003
+
+  # supervision
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "ebc659eb8649b171656db2dab383a10e59867e3a5b12931bd4ee235cbc114950"
+    role: translator
+    port: 40018
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /lib:/usr/lib:/home/bticino/lib
+  tmpfs:
+    - /var/tmp
+  dirs:
+    - /var/tmp/bticino/bt_wd
+    - /var/tmp/run/bticino
+    - /var/run
+  devices:
+    /dev/ttyPIC: pty
+    /dev/dsp1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.4.19"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full

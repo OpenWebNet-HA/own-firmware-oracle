@@ -1,0 +1,47 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=ownd-pr82-heating
+# suite_sha256=adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#1*#11*1##	nack	silent	-
+down	*#4*#99*#11*1##	nack	silent	-
+down	*#4*1*#11*1##	nack	silent	-
+down	*#4*99*#11*1##	nack	silent	-
+down	*4*0*#0##	nack	silent	-
+down	*4*0*#0#2##	nack	silent	-
+down	*4*1*#0##	nack	silent	-
+down	*4*1*#0#2##	nack	silent	-
+down	*4*100*#0##	nack	silent	-
+down	*4*100*#0#2##	nack	silent	-
+down	*4*101*#0##	nack	silent	-
+down	*4*101*#0#2##	nack	silent	-
+down	*4*102*#0##	nack	silent	-
+down	*4*102*#0#2##	nack	silent	-
+down	*4*103*#0##	nack	silent	-
+down	*4*103*#0#2##	nack	silent	-
+down	*4*110*#0##	nack	silent	-
+down	*4*110*#0#2##	nack	silent	-
+down	*4*111*#0##	nack	silent	-
+down	*4*111*#0#2##	nack	silent	-
+down	*4*202*#0##	nack	silent	-
+down	*4*202*#0#2##	nack	silent	-
+down	*4*303*#0##	nack	silent	-
+down	*4*303*#0#2##	nack	silent	-
+down	*4*303*1##	nack	silent	-
+down	*4*303*99##	nack	silent	-
+down	*4*311*#0##	nack	silent	-
+down	*4*311*#0#2##	nack	silent	-
+down	*4*311*#1##	nack	silent	-
+down	*4*311*#99##	nack	silent	-
+down	*4*311*1##	nack	silent	-
+down	*4*311*99##	nack	silent	-

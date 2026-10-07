@@ -1,0 +1,30 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# harness=full
+# target_sha256=5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-central-mode
+# suite_sha256=c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*4*0*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*0*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*1*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*1*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*100*#0##	nack	silent	-
+down	*4*101*#0##	nack	silent	-
+down	*4*102*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*102*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*110*#0##	nack	silent	-
+down	*4*202*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*202*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*303*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*303*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*311*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d
+down	*4*311*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d

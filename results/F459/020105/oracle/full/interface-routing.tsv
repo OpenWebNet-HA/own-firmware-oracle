@@ -1,0 +1,19 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# harness=full
+# target_sha256=b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=interface-routing
+# suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*0*1*31#4#01##	-	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*0*1*31#4#02##	nack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*14*0*31#4#01##	nack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d
+down	*14*0*31#4#02##	ack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d
