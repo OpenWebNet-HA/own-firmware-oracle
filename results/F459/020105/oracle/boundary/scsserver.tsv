@@ -1,0 +1,29 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# program=scsserver
+# target_sha256=6c78dccb464391953779d96afa83a91590a1d4a8f9202db631f46cf5b99eda9c
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:20001	ok
+exit	running	timeout
+ioctl	/dev/ttyS1 TCFLSH	ok
+ioctl	/dev/ttyS1 TCGETS	ok
+ioctl	/dev/ttyS1 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttyS1 TIOCMGET	ENOTTY
+listen	inet:127.0.0.1:20001	ok
+open	/dev/ttyS1 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/Pic_Rel.txt O_RDWR	ENOENT
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttyS1	$150500FF\x0d
+write	/dev/ttyS1	$1600\x0d
+write	/dev/ttyS1	$24\x0d
+write	/dev/ttyS1	$2703\x0d
+write	/dev/ttyS1	$270300\x0d
+write	/dev/ttyS1	S$020000\x0d

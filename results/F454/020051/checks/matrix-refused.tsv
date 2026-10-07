@@ -1,0 +1,27 @@
+# product=F454
+# version=020051
+# image_sha256=15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3
+# harness=full
+# target_sha256=73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=matrix-refused
+# suite_sha256=688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40
+# oracle_version=1
+# ownd_version=2.0.0-b9
+direction	input	reply	verdict	output	ownd	live
+down	*#1*1*#1*20##	nack	silent	-	-	unchecked
+down	*#18*51*52##	nack	silent	-	-	unchecked
+down	*#2*1*#1*50##	nack	silent	-	-	unchecked
+down	*15*01#1*0001##	nack	silent	-	-	unchecked
+down	*15*01#2*0001##	nack	silent	-	-	unchecked
+down	*15*01#3*0001##	nack	silent	-	-	unchecked
+down	*15*01*0001##	nack	silent	-	-	unchecked
+down	*2*1*21#4#1##	nack	silent	-	-	unchecked
+down	*25*21*0001##	nack	silent	-	-	unchecked
+down	*25*22*0001##	nack	silent	-	-	unchecked
+down	*25*23*0001##	nack	silent	-	-	unchecked

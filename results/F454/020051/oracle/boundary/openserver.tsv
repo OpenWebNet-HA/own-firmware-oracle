@@ -1,0 +1,16 @@
+# product=F454
+# version=020051
+# image_sha256=15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3
+# program=openserver
+# target_sha256=73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/proc/net/route O_RDONLY|O_LARGEFILE	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/flags/OPS_STATUS.XP6VW3 O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok

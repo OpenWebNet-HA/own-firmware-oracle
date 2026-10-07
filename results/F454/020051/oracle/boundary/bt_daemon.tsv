@@ -1,0 +1,32 @@
+# product=F454
+# version=020051
+# image_sha256=15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3
+# program=bt_daemon
+# target_sha256=de5ac53dd39ed7ecad94457d65d5dbb1ff0ff7d906e854096e3a3f097efb73c6
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+execve	/bin/sh	ok
+execve	/usr/bin/env	ok
+exit	status	139
+ioctl	fd TCGETS	ENOTTY
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/proc/meminfo O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/env.txt O_RDONLY	ok
+open	/var/tmp/env.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
+open	/var/tmp/flags/branddiag O_RDONLY	ENOENT
+open	/var/tmp/flags/code O_RDONLY	ENOENT
+open	/var/tmp/flags/codecfg O_RDONLY	ENOENT
+open	/var/tmp/flags/codediag O_RDONLY	ENOENT
+open	/var/tmp/flags/linediag O_RDONLY	ENOENT
+open	/var/tmp/flags/nconfdiag O_RDONLY	ENOENT
+open	/var/tmp/flags/pid O_RDONLY	ENOENT
+open	/var/tmp/flags/vid O_RDONLY	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok

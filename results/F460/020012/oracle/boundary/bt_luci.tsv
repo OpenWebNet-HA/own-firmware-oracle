@@ -1,0 +1,20 @@
+# product=F460
+# version=020012
+# image_sha256=b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26
+# program=bt_luci
+# target_sha256=37c6c4ce3199549babf236991a097b87ac49b501fc8b4a71e3f1a88fc6a6a747
+# emulator=qemu-aarch64-8.2.2
+# kernel_release=5.10.35
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:30001	ok
+bind	inet:127.0.0.1:31001	ok
+exit	running	timeout
+listen	inet:127.0.0.1:30001	ok
+listen	inet:127.0.0.1:31001	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/bt_luci O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok

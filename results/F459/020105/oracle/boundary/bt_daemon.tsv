@@ -1,0 +1,50 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# program=bt_daemon
+# target_sha256=9b3edb368927115773eabb41be37e875367ab3cb0385c7e675260f124b32d3dd
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=10
+# oracle_version=1
+kind	detail	result
+execve	/bin/sh	ok
+execve	/usr/bin/env	ok
+exit	status	0
+ioctl	fd TCGETS	ENOTTY
+open	/dev/led O_WRONLY|O_DSYNC	ENOENT
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/home/bticino/cfg/bt_daemon O_RDONLY|O_LARGEFILE	ENOENT
+open	/home/bticino/cfg/extra/conf/conf.img O_RDONLY	ENOENT
+open	/home/bticino/cfg/extra/conf/conf.img O_RDWR|O_CREAT	ok
+open	/home/bticino/cfg/extra/conf/conf_copy.img O_RDONLY	ENOENT
+open	/home/bticino/cfg/extra/conf/conf_copy.img O_RDWR|O_CREAT	ok
+open	/home/bticino/cfg/restore/conf.xml.def O_RDONLY	ok
+open	/home/bticino/sp/dbfiles_ws.xml O_RDONLY	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/proc/meminfo O_RDONLY|O_CLOEXEC	ok
+open	/var/local/cfg/dhcp/dhcp-server O_RDWR|O_CREAT|O_TRUNC	ENOENT
+open	/var/local/cfg/dhcp/dhcpd.conf O_RDWR|O_CREAT|O_TRUNC	ENOENT
+open	/var/run/ntpdate O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/run/resolv.conf O_RDWR|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/conf.zip O_RDONLY	ENOENT
+open	/var/tmp/conf.zip O_RDONLY	ok
+open	/var/tmp/conf.zip O_WRONLY|O_CREAT|O_TRUNC	ok
+open	/var/tmp/env.txt O_RDONLY	ok
+open	/var/tmp/env.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
+open	/var/tmp/flags/CONF_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/EXTRAS_STATUS O_RDONLY	ok
+open	/var/tmp/flags/EXTRAS_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/RECOVERY_PARTITION_KNL_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/RUNNING_FW_COPY O_RDONLY	ok
+open	/var/tmp/flags/RUNNING_FW_COPY O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/WORKING_MODE O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/pid O_RDONLY	ENOENT
+open	/var/tmp/flags/vid O_RDONLY	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+open	/var/tmp/ziNjVpzA O_RDWR|O_CREAT|O_EXCL	ok

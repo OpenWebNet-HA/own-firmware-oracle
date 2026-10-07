@@ -1,0 +1,18 @@
+# product=F460
+# version=020012
+# image_sha256=b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26
+# program=openserver
+# target_sha256=3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2
+# emulator=qemu-aarch64-8.2.2
+# kernel_release=5.10.35
+# window_s=10
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+ioctl	fd SIOCGIFHWADDR	ENODEV
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/home/bticino/cfg/openserver O_RDONLY	ok
+open	/proc/net/route O_RDONLY	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/flags/OPS_STATUS.38E1W3 O_RDWR|O_CREAT|O_EXCL	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
