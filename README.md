@@ -83,21 +83,19 @@ can add a layer the judge lacks: **does a real gateway accept this?**
 
 Proposed, in order of effort:
 
-1. **Ship results as data.** Publish a deterministic, hash-pinned index
-   derived from `results/**/oracle/**/*.tsv` (frame -> product, firmware,
-   reply, emitted frames, row reference). The MCP stays offline and read-only;
-   it just consumes a new generated corpus like it already does for the Machine
-   KB.
+1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
+   index at `results/mcp_index.json` (303 unique frames, 815 verdicts across 4
+   active gateway emulators). The MCP stays offline and read-only; it consumes
+   this generated corpus like it does for the Machine KB.
 2. **`parse_and_validate_frame` gains a `firmware_verdict` per catalogued
    gateway** (`ack`, `nack`, `emits <bus frame>`, `not tested`). "Legal grammar,
    NACKed by MyHomeServer1 2.82.06" is the answer an assistant needs.
 3. **`draft_own_frame` pre-flight.** Refuse, or warn on, frames the target
    firmware is known to NACK instead of handing the user a frame that fails.
 4. **A `compare_gateways(frame)` tool** that returns the per-firmware table.
-5. **Audit the catalog with the oracle.** Run every frame the MCP can draft
-   through the suites; each disagreement is a catalog bug or a gateway quirk,
-   and either way it is a reviewable issue. This is how stubs like WHO 22
-   get real content with a source behind them.
+5. **Audit the catalog with the oracle.** (**In Progress**) BTicino TS10 reference
+   suites (WHO 4, WHO 22, WHO 18 & WHO 3, WHO 8) have been audited across the fleet,
+   replacing specification stubs with empirical gateway verdicts and byte-level bus outputs.
 6. **Share the live probe.** `myhome-gateway` (live bus) and the oracle's
    planned read-only `tools/live_probe.py` should use one frame allow-list, so the
    `Gateway` evidence label means the same thing in both.
@@ -269,18 +267,18 @@ for explicitly.
 
 The oracle catalogues, unpacks, and tracks deterministic manifests for all 10 OpenWebNet gateway models released by BTicino and Legrand:
 
-| Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 1,328 | U-Boot, Ext2, Zip | `openserver`, `scsserver` |
-| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `coso` |
-| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`) |
-| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen` (scenarios + BACnet) |
-| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | CramFS, Zip | `bt_processi` (legacy audio/video gateway) |
-| **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) |
-| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | Server gateway stack (`Image` / kernel) |
-| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | Basic IP interface gateway stack |
-| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack |
-| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack |
+| Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact | Emulation Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 1,328 | U-Boot, Ext2, Zip | `openserver`, `scsserver` | **Emulated** (Phase 2 — 16 suites) |
+| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 7 suites) |
+| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`), `bt_vct`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 2 suites) |
+| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 2 suites) |
+| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | CramFS, Zip | `bt_processi` (legacy audio/video gateway) | Pending Emulation |
+| **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) | Pending Emulation |
+| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | Server gateway stack (`Image` / kernel) | Pending Emulation |
+| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | Basic IP interface gateway stack | Pending Emulation |
+| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack | Pending Emulation |
+| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack | Pending Emulation |
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller
 
@@ -302,16 +300,16 @@ The oracle project catalogues **100% of all standalone OpenWebNet IP/SCS gateway
 To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosystem, the table below details the ingested fleet versus hardware that is not part of the firmware oracle:
 
 #### 1. Ingested Fleet (10 of 10 Released Firmware Packages)
-- **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway.
-- **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge.
-- **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway.
-- **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway.
-- **F453AV** (`030014` / 3.0.14): DIN audio/video web server.
-- **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M).
-- **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64).
-- **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet).
-- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway.
-- **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64).
+- **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway. *(Emulated — 16 suites)*
+- **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 7 suites)*
+- **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — Sound & Intercom suites via serial PTY)*
+- **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway. *(Emulated — Energy & Intercom suites via multi-daemon stack)*
+- **F453AV** (`030014` / 3.0.14): DIN audio/video web server. *(Unpacked / Pending Emulation)*
+- **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Catalogued / Pending Emulation)*
+- **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64). *(Unpacked / Pending Emulation)*
+- **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet). *(Unpacked / Pending Emulation)*
+- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway. *(Unpacked / Pending Emulation)*
+- **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64). *(Unpacked / Pending Emulation)*
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
 
@@ -330,6 +328,21 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 | **F422 / 003562** | SCS-to-SCS Interface Router | Pure galvanic bus-to-bus bridge microcontroller; no IP interface or OpenWebNet parser. |
 | **F429 / 002631** | SCS/DALI Gateway | Specialized DALI lighting interface controller; no OpenWebNet TCP server daemon. |
 | **BMNE4000 / 048832** | SCS/ZigBee Gateway | Hardware radio bridge; firmware is embedded radio stack without standalone OpenWebNet daemon. |
+
+---
+
+## Published Findings & Subsystem Audits
+
+Detailed technical findings documents with exact bytecode citations, cryptographic hashes, and architectural explanations are published in [`findings/`](findings/):
+
+| Subsystem / Topic | Affected WHO | Gateways Investigated | Summary & Finding Link |
+| :--- | :--- | :--- | :--- |
+| **Autodiagnostics Co-occurrence** | WHO 1 (Lighting), WHO 1001 (Diag) | MH200N, MyHomeServer1 | [**Lighting WHAT 19 / WHO 1001 Autodiagnostics Co-occurrence**](findings/MH200N/what19.md)<br>Proves `bt_luci` maps SCS fault `'E'` to `*1*19*WHERE##`, while `bt_device` / `libdiag.so` emit diagnostic mask `*#1001*WHERE*11*<bitmask>##`. Validated against capture `EVID-MH200-WHAT19-FAULT`. |
+| **OWNd#77 Empirical Replay** | WHO 1, 4, 18, 15/25, 1004 | MH200N | [**Replay of OWNd#77 Audit Fixes on MH200N**](findings/MH200N/ownd-77-replay.md)<br>Replay of 10 audit findings from OWNd#77 across 9 test suites, determining which behaviors hold across gateways and which depend on gateway-specific daemon pipelines. |
+| **TS10 Thermoregulation Protocol** | WHO 4 (Thermo) | MyHomeServer1, MH200N, MH202 | [**TS10 Thermo Protocol Verification**](findings/MyHomeServer1/thermo-ts10.md)<br>Empirical validation of WHO 4 compound probe addressing (`#probe#central`), timed manual/holiday modes with duration encoding, 16 weekly programs/scenarios, and calendar dimensions (30, 31, 32). |
+| **TS10 Sound Diffusion Protocol** | WHO 22 (Sound) | MyHomeServer1, F454, MH200N | [**TS10 Sound Diffusion Protocol Verification**](findings/MyHomeServer1/sound-who22.md)<br>58 test cases covering volume, tone, sources, amplifier status, and matrix routing. Proves byte-identical SCS output between MHS1 (`bt_multi`) and F454, while MH200N strictly refuses WHO 22 at its subsystem boundary. |
+| **TS10 Energy & Load Management** | WHO 18 (Energy), WHO 3 (Load Shedding) | MyHomeServer1, MH202, MH200N | [**TS10 Energy & Load Management Verification**](findings/MyHomeServer1/energy-ts10.md)<br>65 test cases proving that TS10 WHAT commands (`*18*57..`) and classic dimension queries (`*#18*..*511..`) generate identical extended SCS telegrams. Verified periodic reporting (`DIMENSION 1200`) and Stop&Go breaker controls. |
+| **TS10 Video Door Entry & Intercom** | WHO 8 (Door Entry / Intercom) | MyHomeServer1, MH202, MH200N, F454 | [**TS10 Video Door Entry & Intercom Verification**](findings/MyHomeServer1/intercom-ts10.md)<br>59 test cases demonstrating subsystem boundary isolation: automation gateways (MHS1, MH200N, MH202) reject WHO 8, whereas F454 routes WHO 8 to `bt_vct`. |
 
 ---
 
@@ -368,12 +381,26 @@ pytest tests --cov=tools --cov=oracle --cov-report=term-missing
 Run a `.cases` test suite against an emulated gateway daemon under `qemu-arm`:
 
 ```bash
-# Run the lights-level suite against the emulated MH200N openserver:
+# A) Run the lights-level suite against the emulated MH200N openserver:
 python -m oracle.run suite \
   --product MH200N \
   --version 010108 \
   --suite oracle/cases/lights-level.cases \
   -o results/MH200N/010108/oracle/full/lights-level.tsv
+
+# B) Run the TS10 sound suite on F454 (serial PTY translation to SCS):
+python -m oracle.run suite \
+  --product F454 \
+  --version 020051 \
+  --suite oracle/cases/sound-who22.cases \
+  -o results/F454/020051/oracle/full/sound-who22.tsv
+
+# C) Run the TS10 energy suite on MH202 (multi-daemon stack):
+python -m oracle.run suite \
+  --product MH202 \
+  --version 010024 \
+  --suite oracle/cases/energy-ts10.cases \
+  -o results/MH202/010024/oracle/full/energy-ts10.tsv
 
 # The generated TSV contains deterministic rows:
 # direction    input              reply    verdict    output
@@ -412,16 +439,17 @@ from pathlib import Path
 index_path = Path("results/mcp_index.json")
 index = json.loads(index_path.read_text(encoding="utf-8"))
 print(f"Verdicts SHA-256: {index['verdicts_sha256']}")
+print(f"Indexed frames: {len(index['verdicts'])}")
 print(f"Gateways: {[f\"{g['product']} {g['version']} [{g['status']}]\" for g in index['gateways']]}")
 
-# Lookup verdict for a specific OpenWebNet frame across all gateways:
-target_frame = "*#1*31*#1*100*0##"  # Dimmer level write (100)
+# Lookup cross-gateway verdict for a sound volume command (WHO 22):
+target_frame = "*#22*3#1#1*#1*20##"  # Direct volume 20
 
 for entry in index["verdicts"].get(target_frame, []):
     print(f"[{entry['product']} {entry['version']}] Suite: {entry['suite']}")
-    print(f"  Reply:   {entry['reply']}")  # 'nack'
-    print(f"  Verdict: {entry['verdict']}")  # 'silent'
-    print(f"  Emitted: {entry['emitted_own']}")  # []
+    print(f"  Reply:      {entry['reply']}")  # 'ack' on MHS1 & F454, 'nack' on MH200N
+    print(f"  Verdict:    {entry['verdict']}")  # 'out' on MHS1 & F454, 'silent' on MH200N
+    print(f"  Bus output: {entry['bus_frames']}")  # ['$0493018114\r' on MHS1 and F454]
 ```
 
 ---
@@ -448,9 +476,19 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - `lights-level` suite verified on both MH200N and MyHomeServer1.
   - **MH200N**: Immediate ACK (`*#*1##` within ~13ms) upon queuing to the PIC UART.
   - **MyHomeServer1**: Transactional confirmation model via `bt_luci`; awaits bus confirmation (type 4 frame) or times out at 2.0s with NACK (`*#*0##`).
-- **Phase 2c: Autodiagnostics Co-occurrence (WHAT 19).** Completed and documented in `findings/MH200N/what19.md`. Proves `bt_luci` translates SCS `'E'` to `*1*19*WHERE##` while `bt_device` / `libdiag.so` emit diagnostic frame `*#1001*WHERE*11*<bitmask>##`. Validated against bus capture `EVID-MH200-WHAT19-FAULT`.
-- **Phase 2d: Empirical Replay of OWNd#77 Audit Fixes.** Completed across 9 case suites (thermoregulation, energy, CEN+, interface routing, WHO 25) with deterministic outputs in `results/MH200N/010108/oracle/full/` and evaluation checks in `results/MH200N/010108/checks/`. Findings synthesized in `findings/MH200N/ownd-77-replay.md`.
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed across all 10 catalogued gateways. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for consumption by `openwebnet-mcp`. The 2 actively emulated gateways (MH200N, MyHomeServer1) provide 89 hash-pinned verdict inputs across 15 suites, while the remaining 8 unpacked gateways (F454, MH202, F453AV, F455, F461, F450, F459, F460) are indexed in the fleet catalog with verified image provenance and queued for Phase 2 emulation suites.
+- **Phase 2c: Autodiagnostics Co-occurrence (WHAT 19).** Completed and documented in [`findings/MH200N/what19.md`](findings/MH200N/what19.md). Proves `bt_luci` translates SCS `'E'` to `*1*19*WHERE##` while `bt_device` / `libdiag.so` emit diagnostic frame `*#1001*WHERE*11*<bitmask>##`. Validated against bus capture `EVID-MH200-WHAT19-FAULT`.
+- **Phase 2d: Empirical Replay of OWNd#77 Audit Fixes.** Completed across 9 case suites (thermoregulation, energy, CEN+, interface routing, WHO 25) with deterministic outputs in `results/MH200N/010108/oracle/full/` and evaluation checks in `results/MH200N/010108/checks/`. Findings synthesized in [`findings/MH200N/ownd-77-replay.md`](findings/MH200N/ownd-77-replay.md).
+- **Phase 2e: BTicino TS10 Reference Subsystem Verification.** Completed across 4 suites derived from `libqtdevices TS10_1_0_23` (OWNd#83 protocol parity):
+  - **Thermoregulation (WHO 4)**: `thermo-ts10.cases` verified on MyHomeServer1, MH200N, and MH202 ([`findings/MyHomeServer1/thermo-ts10.md`](findings/MyHomeServer1/thermo-ts10.md)). Validates compound probe addressing (`#probe#central`), timed/holiday modes, weekly programs 1..16, and calendar dimensions 30, 31, 32.
+  - **Sound Diffusion (WHO 22)**: `sound-who22.cases` verified on MyHomeServer1, F454, and MH200N ([`findings/MyHomeServer1/sound-who22.md`](findings/MyHomeServer1/sound-who22.md)). Proves byte-identical SCS output between MHS1 (`bt_multi`) and F454 for volume, while MH200N strictly refuses WHO 22 at its subsystem boundary.
+  - **Energy Management (WHO 18 & WHO 3)**: `energy-ts10.cases` verified on MyHomeServer1, MH202, and MH200N ([`findings/MyHomeServer1/energy-ts10.md`](findings/MyHomeServer1/energy-ts10.md)). Proves exact equivalence between TS10 WHAT commands (`*18*57..`) and classic dimension frames (`*#18*..*511..`), automated reporting (`DIMENSION 1200`), and Stop&Go breaker controls.
+  - **Video Door Entry & Intercom (WHO 8)**: `intercom-ts10.cases` verified on MyHomeServer1, MH202, MH200N, and F454 ([`findings/MyHomeServer1/intercom-ts10.md`](findings/MyHomeServer1/intercom-ts10.md)). Confirms subsystem boundary isolation across automation gateways (MHS1, MH200N, MH202) versus Audio/Video routing on F454.
+- **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 4 active gateways under QEMU user emulation:
+  - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver`).
+  - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018).
+  - **F454** (`020051`): Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial PTY `/dev/ttyS1`, `bt_vct`, `openserver`, `scsserver`).
+  - **MH202** (`010024`): Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver`).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for direct consumption by `openwebnet-mcp`. The index tracks **303 unique OpenWebNet frames** across **17 test suites** and **4 active gateways** (MH200N, MyHomeServer1, F454, MH202), delivering **815 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`test_mcp_index_matches_tsv_sources`). The remaining 6 unpacked gateways (F450, F453AV, F455, F459, F460, F461) are indexed in the fleet catalog with verified image provenance and staged for emulation targets.
 
 ## License
 
