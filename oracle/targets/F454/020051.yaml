@@ -50,6 +50,11 @@ programs:
     path: home/bticino/bin/bt_multi
     sha256: "39cab3b8efd9dd2b91de41b2ff477b75dc6cbafd86894979e7ef869712904bd9"
     role: translator
+  # sound diffusion / WHO 16
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "f911b2f2074cb50c05d60c9e8ac791dad1c3b277aa5feb525bd1a8af29490e5f"
+    role: translator
   # coso
   coso:
     path: home/bticino/bin/coso

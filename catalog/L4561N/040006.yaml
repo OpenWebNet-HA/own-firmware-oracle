@@ -1,0 +1,26 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: L4561N
+version: "040006"          # firmware 4.0.6
+name: "L4561N Stereo Control Interface 4 DIN"
+
+wrapper:
+  filename: STEREO_CONTROL_BUS_v04.00.06.fwz
+  size: 10538
+  sha256: "48b571e320295d01e41316810eafca57720e6a02c4f22ac196b057b0c2ca8a2c"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/STEREO_CONTROL_BUS_v04.00.06.fwz"
+
+image:
+  filename: STEREO_CONTROL_BUS_v04.00.06.fwz
+  size: 10538
+  sha256: "48b571e320295d01e41316810eafca57720e6a02c4f22ac196b057b0c2ca8a2c"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to L4561N
+    - "L4561N"
+    - "bticino"
+
+status: unpackable

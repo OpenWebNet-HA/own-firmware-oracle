@@ -1,0 +1,164 @@
+; ==============================================================================
+; OpenWebNet WHO 16 Sound System: Source Device & Interface Protocol Suite
+; Target Endpoints: Legrand/BTicino L4561N, L4561, 3482, F500 FM Tuner
+; Standard Address Space: 101..109 (Sources 1..9), 100 (Collective / Cycle)
+; ==============================================================================
+
+; ------------------------------------------------------------------------------
+; 1. Source Power Control (Stereo Channel WHAT=3/13 vs Base Band WHAT=0/10)
+; ------------------------------------------------------------------------------
+; Source 1..4 Power ON (Stereo Channel WHAT=3)
+down *16*3*101##
+down *16*3*102##
+down *16*3*103##
+down *16*3*104##
+
+; Source 1..4 Standby / Power OFF (Stereo Channel WHAT=13)
+down *16*13*101##
+down *16*13*102##
+down *16*13*103##
+down *16*13*104##
+
+; Legacy Base Band Control (WHAT=0 ON, WHAT=10 OFF)
+down *16*0*101##
+down *16*0*102##
+down *16*10*101##
+down *16*10*102##
+
+; ------------------------------------------------------------------------------
+; 2. Source Cycling & Busy Signaling
+; ------------------------------------------------------------------------------
+; Cycle to next active source across entire plant (WHERE=100)
+down *16*23*100##
+down *16*20*100##
+
+; Source Busy state broadcast (WHAT=100)
+down *16*100*101##
+down *16*100*102##
+
+; ------------------------------------------------------------------------------
+; 3. Track and Station Navigation (WHAT 6001..6015 / 6101..6115)
+; Triggers L4561N IR emitter pulses to external Hi-Fi / CD / Tuner
+; ------------------------------------------------------------------------------
+; Forward step 1 (Next track / station)
+down *16*6001*101##
+down *16*6001*102##
+
+; Forward multi-step (2, 5, 10, 15)
+down *16*6002*101##
+down *16*6002*102##
+down *16*6005*101##
+down *16*6005*102##
+down *16*6010*102##
+down *16*6015*102##
+
+; Backward step 1 (Previous track / station)
+down *16*6101*101##
+down *16*6101*102##
+
+; Backward multi-step (2, 5, 10, 15)
+down *16*6102*101##
+down *16*6102*102##
+down *16*6105*101##
+down *16*6105*102##
+down *16*6110*102##
+down *16*6115*102##
+
+; Boundary tests: Invalid step values (should be NACKed or rejected)
+down *16*6000*102##
+down *16*6016*102##
+down *16*6100*102##
+down *16*6116*102##
+
+; ------------------------------------------------------------------------------
+; 4. Tuner Frequency Seeking & Stepping (WHAT 5000..5015 / 5100..5115)
+; ------------------------------------------------------------------------------
+; Seek next free station up / down
+down *16*5000*101##
+down *16*5100*101##
+
+; Step frequency up by 0.05 MHz (1 step) .. 0.50 MHz (10 steps)
+down *16*5001*101##
+down *16*5005*101##
+down *16*5010*101##
+
+; Step frequency down by 0.05 MHz (1 step) .. 0.50 MHz (10 steps)
+down *16*5101*101##
+down *16*5105*101##
+down *16*5110*101##
+
+; ------------------------------------------------------------------------------
+; 5. Dimension 5: Status Discovery
+; ------------------------------------------------------------------------------
+; Query status of specific source devices
+down *#16*101*5##
+down *#16*102*5##
+down *#16*103*5##
+down *#16*104*5##
+
+; Query collective source status
+down *#16*100*5##
+
+; Query general plant sound state
+down *#16*0*5##
+
+; ------------------------------------------------------------------------------
+; 6. Dimension 6: Tuner Frequency
+; ------------------------------------------------------------------------------
+; Frequency request
+down *#16*101*6##
+down *#16*102*6##
+
+; Frequency direct write (107.00 MHz = 107000 kHz, 98.50 MHz = 098500 kHz)
+down *#16*101*#6*0*107000##
+down *#16*101*#6*0*98500##
+down *#16*102*#6*0*101500##
+
+; ------------------------------------------------------------------------------
+; 7. Dimension 7 & 10: Stored Station / Track Presets
+; ------------------------------------------------------------------------------
+; Stored station query
+down *#16*101*7##
+down *#16*102*7##
+
+; Recall stored station 1..5 via Dimension 7 write
+down *#16*101*#7*0*1##
+down *#16*101*#7*0*2##
+down *#16*101*#7*0*3##
+down *#16*101*#7*0*4##
+down *#16*101*#7*0*5##
+
+; Memorize current station into preset 1..5 via Dimension 10 write
+down *#16*101*#10*1##
+down *#16*101*#10*3##
+down *#16*101*#10*5##
+
+; ------------------------------------------------------------------------------
+; 8. Dimension 8: RDS Text Feed
+; ------------------------------------------------------------------------------
+; Request RDS text
+down *#16*101*8##
+down *#16*102*8##
+
+; Start / Stop RDS automatic transmission (WHAT 101 / 102)
+down *16*101*101##
+down *16*102*101##
+down *16*101*102##
+down *16*102*102##
+
+; ------------------------------------------------------------------------------
+; 9. Dimension 9: Frequency + Preset Compound Query
+; ------------------------------------------------------------------------------
+down *#16*101*9##
+down *#16*102*9##
+
+; ------------------------------------------------------------------------------
+; 10. Matrix Environment Routing (1ES Syntax: Environment E -> Source S)
+; ------------------------------------------------------------------------------
+; Route Environment 1 to Source 1 and Source 2
+down *16*3*111##
+down *16*3*112##
+
+; Route Environment 2 to Source 2 and Source 3
+down *16*3*122##
+down *16*3*123##

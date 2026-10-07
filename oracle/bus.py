@@ -209,6 +209,61 @@ class Scripted:
         return list(self.table.get(frame, []))
 
 
+class SoundSourceResponder:
+    """Simulated SCS Sound Source endpoint (L4561N / F500 Tuner).
+
+    Answers SCS polling telegrams on the bus:
+    - Status inquiry: answers with source power state
+    - Frequency inquiry: answers with 6-digit frequency payload
+    - Stored preset inquiry: answers with active preset number
+    - RDS inquiry: answers with 8-byte ASCII codes
+    """
+
+    name = "sound_source"
+
+    def __init__(self, source_id: int = 2) -> None:
+        self.source_id = source_id
+        self.power_on = False
+        self.frequency_khz = 107000
+        self.preset = 1
+        self.rds_text = b"RADIO  1"  # 8 ASCII bytes
+
+    def respond(self, frame: bytes) -> list[bytes]:
+        # PicResponder already sends $19\r for $03 and $00\r for $06.
+        # This responder returns ONLY device-generated bus telegrams.
+        if not (frame.startswith(b"$03") or frame.startswith(b"$06")):
+            return []
+
+        payload = frame[3:].strip(b"\r\n")
+        src_byte = bytes(f"{self.source_id:02X}", "ascii")
+
+        # Opcode 90/91: Power control write on SCS bus
+        if payload.startswith(b"0490") and src_byte in payload:
+            self.power_on = True
+            return []
+        if payload.startswith(b"0491") and src_byte in payload:
+            self.power_on = False
+            return []
+
+        # Opcode 95: Status Query (WHO 16 DIM 5 query)
+        if payload.startswith(b"0495") and src_byte in payload:
+            status_byte = b"C1" if self.power_on else b"C0"
+            resp_payload = f"0490018F{self.source_id:02X}".encode("ascii") + status_byte
+            return [b"$" + resp_payload + b"\r"]
+
+        # Tuner Frequency Query (DIM 6)
+        if payload.startswith(b"0496") and src_byte in payload:
+            freq_hex = f"{self.frequency_khz:06X}".encode("ascii")
+            return [b"$06D1" + freq_hex + b"\r"]
+
+        # RDS Query (DIM 8)
+        if payload.startswith(b"0498") and src_byte in payload:
+            rds_hex = self.rds_text.hex().upper().encode("ascii")
+            return [b"$0AD1" + rds_hex + b"\r"]
+
+        return []
+
+
 class PicResponder:
     """Simulated PIC microcontroller answering firmware UART protocol commands.
 
@@ -359,6 +414,10 @@ def get_responder(
     """Look up a responder by descriptor, e.g. 'pic', 'silent', 'ack:a5'."""
     if name == "silent":
         return Silent()
+    if name == "sound_source":
+        return SoundSourceResponder(source_id=2)
+    if name == "pic:sound_source":
+        return PicResponder(version=version, inner=SoundSourceResponder(source_id=2))
     if name.startswith("ack:"):
         parts = name.split(":")
         if len(parts) == 2:
