@@ -19,6 +19,7 @@ import select
 import shutil
 import socket
 import subprocess
+import threading
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
@@ -44,6 +45,57 @@ def split_own(buf: bytearray) -> list[str]:
         del buf[: idx + 2]
         frames.append(frame_bytes.decode("ascii", "replace"))
     return frames
+
+
+def _soap_worker(srv_sock: socket.socket, stop_evt: threading.Event) -> None:
+    """Mock BACnet plant SOAP web service on 127.0.0.1:1234 for F450's bacclient."""
+    srv_sock.settimeout(0.5)
+    while not stop_evt.is_set():
+        try:
+            conn, _ = srv_sock.accept()
+        except TimeoutError:
+            continue
+        except OSError:
+            break
+        try:
+            conn.settimeout(1.0)
+            buf = bytearray()
+            while not stop_evt.is_set():
+                try:
+                    chunk = conn.recv(4096)
+                except (TimeoutError, OSError):
+                    break
+                if not chunk:
+                    break
+                buf.extend(chunk)
+                while b"</SOAP-ENV:Envelope>" in buf:
+                    idx = buf.find(b"</SOAP-ENV:Envelope>") + len(
+                        b"</SOAP-ENV:Envelope>"
+                    )
+                    req = buf[:idx].decode("latin-1", "replace")
+                    del buf[:idx]
+                    tag = "getValue" if "getValue" in req else "setValue"
+                    resp = (
+                        '<?xml version="1.0" encoding="UTF-8"?>\n'
+                        "<SOAP-ENV:Envelope "
+                        'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" '
+                        'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" '
+                        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                        'xmlns:xsd="http://www.w3.org/2001/XMLSchema" '
+                        'xmlns:ns="urn:bacnet_ws">\n'
+                        "<SOAP-ENV:Body>\n"
+                        f"<ns:{tag}Response>\n"
+                        '<result xsi:type="xsd:string">1</result>\n'
+                        f"</ns:{tag}Response>\n"
+                        "</SOAP-ENV:Body>\n"
+                        "</SOAP-ENV:Envelope>\n"
+                    )
+                    conn.sendall(resp.encode("latin-1"))
+        except OSError:
+            pass
+        finally:
+            with contextlib.suppress(OSError):
+                conn.close()
 
 
 def _trim_stack_open_xml(cfg_path: Path, active_clients: set[str]) -> None:
@@ -239,6 +291,9 @@ class QemuTarget:
         self._own_events: list[str] = []
         self._reply: str = "-"
         self._running: bool = False
+        self._soap_server: socket.socket | None = None
+        self._soap_thread: threading.Thread | None = None
+        self._soap_stop: threading.Event | None = None
 
         if not self.sysroot_base.exists() and image.exists():
             run.stage_target(spec, image, self.sysroot_base.parent, sandboxed=sandboxed)
@@ -390,6 +445,17 @@ class QemuTarget:
                 f.close()
         self._console_files.clear()
 
+        if self._soap_stop is not None:
+            self._soap_stop.set()
+        if self._soap_server is not None:
+            with contextlib.suppress(OSError):
+                self._soap_server.close()
+            self._soap_server = None
+        if self._soap_thread is not None:
+            self._soap_thread.join(timeout=2.0)
+            self._soap_thread = None
+        self._soap_stop = None
+
     def _launch_daemon(
         self,
         name: str,
@@ -401,14 +467,30 @@ class QemuTarget:
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)
+        timeout = 25.0 if name == "bacclient" else 10.0
         if port is not None and not wait_tcp_port(
-            port, timeout=10.0, on_poll=self.bus.pump
+            port, timeout=timeout, on_poll=self.bus.pump
         ):
             self._stop()
             raise RuntimeError(
                 f"{name} did not listen on port {port} "
                 f"(see console log at {self.work_dir / f'console.{name}.log'})"
             )
+
+    def _start_soap_server(self) -> None:
+        if "bacclient" in self.spec.programs or self.spec.product == "F450":
+            self._soap_stop = threading.Event()
+            srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            srv.bind(("127.0.0.1", 1234))
+            srv.listen(5)
+            self._soap_server = srv
+            self._soap_thread = threading.Thread(
+                target=_soap_worker,
+                args=(srv, self._soap_stop),
+                daemon=True,
+            )
+            self._soap_thread.start()
 
     def restart(self) -> None:
         self._stop()
@@ -435,6 +517,8 @@ class QemuTarget:
         trace_dir = self.work_dir / "trace" if self.keep_trace else None
         if trace_dir is not None:
             trace_dir.mkdir(parents=True, exist_ok=True)
+
+        self._start_soap_server()
 
         bus_servers = [
             name

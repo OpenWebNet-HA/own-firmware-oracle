@@ -1,0 +1,16 @@
+# product=F450
+# version=020010
+# image_sha256=9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da
+# harness=full
+# target_sha256=e5bd026f22d56f40b697b55d1f0865aed4bbeb2aafbeafc1b1d53e6ca9fe1ec4
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=what19
+# suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*74##	nack	silent	-
