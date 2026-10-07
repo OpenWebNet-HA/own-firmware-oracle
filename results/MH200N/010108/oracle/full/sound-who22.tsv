@@ -1,0 +1,74 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=sound-who22
+# suite_sha256=7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#22*2#1*#6*33##	nack	silent	-
+down	*#22*2#1*#6*7##	nack	silent	-
+down	*#22*2#1*13##	nack	silent	-
+down	*#22*2#1*5##	nack	silent	-
+down	*#22*2#1*6##	nack	silent	-
+down	*#22*3#1#1*#1*20##	nack	silent	-
+down	*#22*3#1#1*#1*5##	nack	silent	-
+down	*#22*3#1#1*#17*32##	nack	silent	-
+down	*#22*3#1#1*#19*11##	nack	silent	-
+down	*#22*3#1#1*#19*16##	nack	silent	-
+down	*#22*3#1#1*#19*2##	nack	silent	-
+down	*#22*3#1#1*#20*0##	nack	silent	-
+down	*#22*3#1#1*#20*1##	nack	silent	-
+down	*#22*3#1#1*1##	nack	silent	-
+down	*#22*3#1#1*12##	nack	silent	-
+down	*#22*3#1#1*17##	nack	silent	-
+down	*#22*3#1#1*19##	nack	silent	-
+down	*#22*3#1#1*2##	nack	silent	-
+down	*#22*3#1#1*20##	nack	silent	-
+down	*#22*3#1#1*4##	nack	silent	-
+down	*#22*3#2#0*1##	nack	silent	-
+down	*#22*5#2#1*5##	nack	silent	-
+down	*#22*5#2#21*11*22*33*7##	nack	silent	-
+down	*#22*5#3#1#1*1*25##	nack	silent	-
+down	*#22*5#3#1#1*12*1*3##	nack	silent	-
+down	*22*0#4#0*3#0#6##	nack	silent	-
+down	*22*0#4#0*5#3#0#0##	nack	silent	-
+down	*22*0#4#1*3#1#1##	nack	silent	-
+down	*22*0#4#2*3#2#0##	nack	silent	-
+down	*22*1#4#0*5#3#0#0##	nack	silent	-
+down	*22*1#4#1*3#1#1##	nack	silent	-
+down	*22*10*2#1##	nack	silent	-
+down	*22*3#1*3#1#1##	nack	silent	-
+down	*22*3#5*3#1#1##	nack	silent	-
+down	*22*31*2#1##	nack	silent	-
+down	*22*32*2#1##	nack	silent	-
+down	*22*33#3*2#1##	nack	silent	-
+down	*22*33#6*2#1##	nack	silent	-
+down	*22*34#4#0*3#0#6##	nack	silent	-
+down	*22*34#4#1*3#1#1##	nack	silent	-
+down	*22*34#4#2*3#2#0##	nack	silent	-
+down	*22*35#4#0#7*3#0#0##	nack	silent	-
+down	*22*35#4#1#1*3#1#1##	nack	silent	-
+down	*22*35#4#1#2*3#1#1##	nack	silent	-
+down	*22*35#4#2#7*3#2#0##	nack	silent	-
+down	*22*36#1*3#1#1##	nack	silent	-
+down	*22*37#1*3#1#1##	nack	silent	-
+down	*22*4#1*3#1#1##	nack	silent	-
+down	*22*40#1*3#1#1##	nack	silent	-
+down	*22*41#1*3#1#1##	nack	silent	-
+down	*22*42#1*3#1#1##	nack	silent	-
+down	*22*43#1*3#1#1##	nack	silent	-
+down	*22*5#1*2#1##	nack	silent	-
+down	*22*5*2#1##	nack	silent	-
+down	*22*55*3#1#1##	nack	silent	-
+down	*22*56*3#1#1##	nack	silent	-
+down	*22*6#1*2#1##	nack	silent	-
+down	*22*6*2#1##	nack	silent	-
+down	*22*9*2#1##	nack	silent	-
