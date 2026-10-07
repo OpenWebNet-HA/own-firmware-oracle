@@ -52,6 +52,8 @@ def _trim_stack_open_xml(cfg_path: Path, active_clients: set[str]) -> None:
     tree = ET.parse(cfg_path)  # noqa: S314 - verified sysroot file
     openserver_el = tree.find("sw/openserver")
     if openserver_el is None:
+        openserver_el = tree.find("sw/bacclient")
+    if openserver_el is None:
         return
     client_idx = 1
     for child in list(openserver_el):

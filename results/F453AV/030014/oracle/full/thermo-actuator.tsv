@@ -1,0 +1,18 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# harness=full
+# target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-actuator
+# suite_sha256=7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#0*20##	nack	out	bus:24 30 34 42 39 30 30 33 30 31 30 0d | bus:24 32 34 0d | bus:24 32 34 0d | own:*#1013**11*111111101111111011111101##
+down	*#4*1#1*20##	nack	out	bus:24 30 34 39 39 38 31 33 31 31 30 0d | bus:24 32 34 0d
+down	*#4*1*20##	nack	silent	-

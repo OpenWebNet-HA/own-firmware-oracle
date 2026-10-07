@@ -1,0 +1,30 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-central-mode
+# suite_sha256=c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*4*0*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*0*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*1*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*1*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*100*#0##	nack	silent	-
+down	*4*101*#0##	nack	silent	-
+down	*4*102*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*102*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*110*#0##	nack	silent	-
+down	*4*202*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*202*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*303*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*303*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*311*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d
+down	*4*311*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d

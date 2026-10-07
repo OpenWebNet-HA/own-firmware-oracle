@@ -1,0 +1,18 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-valve
+# suite_sha256=d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*1*19##	nack	out	bus:24 30 34 39 39 30 31 33 30 31 33 0d
+down	*#4*40*19##	nack	out	bus:24 30 34 39 39 32 38 33 30 31 33 0d
+down	*#4*41*19##	nack	out	bus:24 30 34 39 39 32 39 33 30 31 33 0d

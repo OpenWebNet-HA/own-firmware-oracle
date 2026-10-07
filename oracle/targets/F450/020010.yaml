@@ -1,0 +1,77 @@
+# Oracle target: F450 firmware 2.0.10. Every program is pinned by path and
+# sha256 to results/F450/020010/manifest.tsv (oracle/target.py checks it).
+product: F450
+version: "020010"
+
+sysroot:
+  - "F450_020010.fwz!btweb_only.ext3.gz~gunzip:"
+
+bus_device: /dev/ttyS1
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_daemon><stackopen>
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "85e7ca65b4d1c4e8ab23a93ac532aea568dd06272fefb1b1be928eeba18f3d73"
+    role: supervisor
+
+  # p0: the OpenWebNet server daemon (bacclient binds TCP 20000)
+  bacclient:
+    path: home/bticino/bin/bacclient
+    sha256: "e5bd026f22d56f40b697b55d1f0865aed4bbeb2aafbeafc1b1d53e6ca9fe1ec4"
+    role: own_server
+    port: 20000
+
+  # p1: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "3d928cde18b54800c92e1ec6223db1c26ac31018b0927dcfa0133b0d4173b5af"
+    role: bus_server
+    port: 20001
+
+  # p2: diagnostics, clock, supervision
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "7b5d6ca1b8a2170483172340f40097b7474d9ccd8541449d213cf361b4289f67"
+    role: translator
+    port: 30013
+
+  # p4: thermoregulation
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "963cf11bddd078a8e2ad86c8d98efd0136f1cf83c3c79792064eb834f087cd3d"
+    role: translator
+    port: 30004
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+    - /var/volatile/tmp/bticino/bt_wd
+    - /var/tmp/cfg
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\tbacclient\n127.0.0.1\topenserver\n"
+  devices:
+    /dev/ttyS1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.6.32"
+
+boundary:
+  status: pending
+  # Note: F450 runs bacclient as p0 (OpenWebNet daemon) instead of openserver.
+  # bacclient requires an external BACnet plant SOAP web service on 127.0.0.1:1234
+  # to query configured BACnet points before it will listen on port 20000.
+  # Pending emulation until the BACnet web service is simulated.

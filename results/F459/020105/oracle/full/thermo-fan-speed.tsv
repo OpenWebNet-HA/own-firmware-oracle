@@ -1,0 +1,27 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# harness=full
+# target_sha256=b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-fan-speed
+# suite_sha256=96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#0#2*#11*1##	nack	silent	-
+down	*#4*#0*#11*1##	nack	silent	-
+down	*#4*#1*#11*1##	nack	silent	-
+down	*#4*1*#11*0##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d
+down	*#4*1*#11*1##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*#4*1*#11*2##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d
+down	*#4*1*#11*3##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d
+down	*#4*1*#11*4##	nack	silent	-
+down	*#4*99*#11*0##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d
+down	*#4*99*#11*1##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*#4*99*#11*2##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d
+down	*#4*99*#11*3##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d

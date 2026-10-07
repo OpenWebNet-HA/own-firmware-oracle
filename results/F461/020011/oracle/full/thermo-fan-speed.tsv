@@ -1,0 +1,27 @@
+# product=F461
+# version=020011
+# image_sha256=cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b
+# harness=full
+# target_sha256=1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-fan-speed
+# suite_sha256=96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#0#2*#11*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*#4*#0*#11*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*#4*#1*#11*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*#4*1*#11*0##	nack	out	bus:24 30 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*1*#11*1##	nack	out	bus:24 30 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*1*#11*2##	nack	out	bus:24 30 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*1*#11*3##	nack	out	bus:24 30 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*1*#11*4##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*#4*99*#11*0##	nack	out	bus:24 30 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*99*#11*1##	nack	out	bus:24 30 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*99*#11*2##	nack	out	bus:24 30 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*99*#11*3##	nack	out	bus:24 30 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d

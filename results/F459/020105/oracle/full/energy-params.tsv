@@ -1,0 +1,20 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# harness=full
+# target_sha256=b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=energy-params
+# suite_sha256=964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#18*51*51##	ack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d
+down	*#18*51*511#10#1##	-	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d
+down	*#18*51*511#10#2##	ack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d
+down	*#18*51*52##	ack	silent	-
+down	*#18*51*52#26#9##	nack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d

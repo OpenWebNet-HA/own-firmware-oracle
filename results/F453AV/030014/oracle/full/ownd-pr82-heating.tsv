@@ -1,0 +1,47 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# harness=full
+# target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=ownd-pr82-heating
+# suite_sha256=adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#1*#11*1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*#4*#99*#11*1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*#4*1*#11*1##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*#4*99*#11*1##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d
+down	*4*0*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*0*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d
+down	*4*1*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*1*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 30 30 30 30 30 0d
+down	*4*100*#0##	nack	silent	-
+down	*4*100*#0#2##	nack	silent	-
+down	*4*101*#0##	nack	silent	-
+down	*4*101*#0#2##	nack	silent	-
+down	*4*102*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*102*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 31 37 30 30 30 30 0d
+down	*4*103*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 36 30 30 30 30 0d
+down	*4*103*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 31 36 30 30 30 30 0d
+down	*4*110*#0##	nack	silent	-
+down	*4*110*#0#2##	nack	silent	-
+down	*4*111*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 31 30 30 30 0d
+down	*4*111*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 31 30 30 30 0d
+down	*4*202*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*202*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d
+down	*4*303*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*303*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d
+down	*4*303*1##	nack	silent	-
+down	*4*303*99##	nack	silent	-
+down	*4*311*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d
+down	*4*311*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d
+down	*4*311*#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d
+down	*4*311*#99##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 36 33 30 30 30 30 0d
+down	*4*311*1##	nack	silent	-
+down	*4*311*99##	nack	silent	-
