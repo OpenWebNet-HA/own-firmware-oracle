@@ -1,0 +1,74 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=intercom-ts10
+# suite_sha256=57339b7f4a32bc2548a4e72b8a74f162fd2c647c69f95f1c3c4a665f6dcfc119
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#8*0##	nack	silent	-
+down	*#8*1##	nack	silent	-
+down	*#8*11##	nack	silent	-
+down	*#8*11*0##	nack	silent	-
+down	*#8*20##	nack	silent	-
+down	*#8*20*0##	nack	silent	-
+down	*8*1#14#2#1*4##	nack	silent	-
+down	*8*1#14#2#11*4##	nack	silent	-
+down	*8*1#14#2#16*22##	nack	silent	-
+down	*8*1#6#2#1*2##	nack	silent	-
+down	*8*1#6#2#11*16##	nack	silent	-
+down	*8*1#6#2#2*1##	nack	silent	-
+down	*8*1#7#2#1*2##	nack	silent	-
+down	*8*1#7#2#11*16##	nack	silent	-
+down	*8*19*0##	nack	silent	-
+down	*8*19*1##	nack	silent	-
+down	*8*19*11##	nack	silent	-
+down	*8*19*20##	nack	silent	-
+down	*8*2#1#2*11##	nack	silent	-
+down	*8*2#1#4*11##	nack	silent	-
+down	*8*2#14#2#11*4##	nack	silent	-
+down	*8*2#6#2*11##	nack	silent	-
+down	*8*2#7#2*11##	nack	silent	-
+down	*8*20*0##	nack	silent	-
+down	*8*20*1##	nack	silent	-
+down	*8*20*11##	nack	silent	-
+down	*8*20*20##	nack	silent	-
+down	*8*21*0##	nack	silent	-
+down	*8*21*11##	nack	silent	-
+down	*8*22*0##	nack	silent	-
+down	*8*22*11##	nack	silent	-
+down	*8*3#1#2*411##	nack	silent	-
+down	*8*3#1#3*11##	nack	silent	-
+down	*8*3#1#4*411##	nack	silent	-
+down	*8*3#6#2*411##	nack	silent	-
+down	*8*3#7#2*411##	nack	silent	-
+down	*8*37#1*11##	nack	silent	-
+down	*8*37#2*11##	nack	silent	-
+down	*8*4#1*1##	nack	silent	-
+down	*8*4#11*20##	nack	silent	-
+down	*8*4#11*21##	nack	silent	-
+down	*8*40#1#2*20##	nack	silent	-
+down	*8*40#1#4*20##	nack	silent	-
+down	*8*59#1*20##	nack	silent	-
+down	*8*59#2*20##	nack	silent	-
+down	*8*6#1*1##	nack	silent	-
+down	*8*6#11*20##	nack	silent	-
+down	*8*60#1*20##	nack	silent	-
+down	*8*60#2*20##	nack	silent	-
+down	*8*61#1*20##	nack	silent	-
+down	*8*61#2*20##	nack	silent	-
+down	*8*62#1*20##	nack	silent	-
+down	*8*62#2*20##	nack	silent	-
+down	*8*63*11##	nack	silent	-
+down	*8*64*11##	nack	silent	-
+down	*8*76*11##	nack	silent	-
+down	*8*77#5*11##	nack	silent	-
+down	*8*78*11##	nack	silent	-
+down	*8*79#1#4#5*11##	nack	silent	-
