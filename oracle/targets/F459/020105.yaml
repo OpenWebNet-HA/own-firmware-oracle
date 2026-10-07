@@ -1,0 +1,93 @@
+# Oracle target: F459 firmware 2.1.5. Every program is pinned by path and
+# sha256 to results/F459/020105/manifest.tsv (oracle/target.py checks it).
+product: F459
+version: "020105"
+
+# Manifest prefix for the root filesystem layer:
+sysroot:
+  - "F459_020105.fwz!btweb_only.ext3.gz.sha1.sig.zip!btweb_only.ext3.gz~gunzip:"
+
+bus_device: /dev/ttyS1
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_daemon><stackopen>
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "9b3edb368927115773eabb41be37e875367ab3cb0385c7e675260f124b32d3dd"
+    role: supervisor
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79"
+    role: own_server
+    port: 20000
+  # p1: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "6c78dccb464391953779d96afa83a91590a1d4a8f9202db631f46cf5b99eda9c"
+    role: bus_server
+    port: 20001
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "5ac68be0535924ce65b4e179d1cc573408bcf390cfe87f4f369c6f3c164eb1e0"
+    role: translator
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "53de597f128488ff69557c9f6d14af14ffb321fe7d3d1631ed3d537cb5ce9b5d"
+    role: translator
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "7925ff014a6708a4591fe6c7241ee004ae840589c9c97e86e0ad5c222f0c2a69"
+    role: translator
+  # multimedia / sound
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "cfea2685c59cf00f4f8b08a3ca1f3eadf400f2da81af5fc8b3c8fc366d683137"
+    role: translator
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "3ed742a703b875fb6c9f706b81146433d44ea0d203c0e5738b8bf3ab02266ae6"
+    role: translator
+  # supervision / energy
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "103cc6e624fce0c617f868fa784b6f07ff10bfd43bebd65525434d19a0ef4417"
+    role: translator
+  # coso
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "505b3d49b6d922b67194d70c53a6503d13ca18af9e3add9d52d2e5005520399e"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\topenserver\n"
+  devices:
+    /dev/ttyS1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.6.32"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full

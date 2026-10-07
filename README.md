@@ -84,7 +84,7 @@ can add a layer the judge lacks: **does a real gateway accept this?**
 Proposed, in order of effort:
 
 1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
-   index at `results/mcp_index.json` (303 unique frames, 815 verdicts across 4
+   index at `results/mcp_index.json` (303 unique frames, 1,034 verdicts across 5
    active gateway emulators). The MCP stays offline and read-only; it consumes
    this generated corpus like it does for the Machine KB.
 2. **`parse_and_validate_frame` gains a `firmware_verdict` per catalogued
@@ -277,7 +277,7 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all 10 Op
 | **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) | Pending Emulation |
 | **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | Server gateway stack (`Image` / kernel) | Pending Emulation |
 | **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | Basic IP interface gateway stack | Pending Emulation |
-| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack | Pending Emulation |
+| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`) | **Emulated** (Phase 2 — 4 suites) |
 | **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack | Pending Emulation |
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller
@@ -304,11 +304,11 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 - **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 7 suites)*
 - **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — Sound & Intercom suites via serial PTY)*
 - **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway. *(Emulated — Energy & Intercom suites via multi-daemon stack)*
+- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway. *(Emulated — Sound, Intercom, Energy, & Thermo suites)*
 - **F453AV** (`030014` / 3.0.14): DIN audio/video web server. *(Unpacked / Pending Emulation)*
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Catalogued / Pending Emulation)*
 - **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64). *(Unpacked / Pending Emulation)*
 - **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet). *(Unpacked / Pending Emulation)*
-- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway. *(Unpacked / Pending Emulation)*
 - **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64). *(Unpacked / Pending Emulation)*
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
@@ -483,12 +483,13 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **Sound Diffusion (WHO 22)**: `sound-who22.cases` verified on MyHomeServer1, F454, and MH200N ([`findings/MyHomeServer1/sound-who22.md`](findings/MyHomeServer1/sound-who22.md)). Proves byte-identical SCS output between MHS1 (`bt_multi`) and F454 for volume, while MH200N strictly refuses WHO 22 at its subsystem boundary.
   - **Energy Management (WHO 18 & WHO 3)**: `energy-ts10.cases` verified on MyHomeServer1, MH202, and MH200N ([`findings/MyHomeServer1/energy-ts10.md`](findings/MyHomeServer1/energy-ts10.md)). Proves exact equivalence between TS10 WHAT commands (`*18*57..`) and classic dimension frames (`*#18*..*511..`), automated reporting (`DIMENSION 1200`), and Stop&Go breaker controls.
   - **Video Door Entry & Intercom (WHO 8)**: `intercom-ts10.cases` verified on MyHomeServer1, MH202, MH200N, and F454 ([`findings/MyHomeServer1/intercom-ts10.md`](findings/MyHomeServer1/intercom-ts10.md)). Confirms subsystem boundary isolation across automation gateways (MHS1, MH200N, MH202) versus Audio/Video routing on F454.
-- **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 4 active gateways under QEMU user emulation:
+- **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 5 active gateways under QEMU user emulation:
   - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver`).
   - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018).
   - **F454** (`020051`): Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial PTY `/dev/ttyS1`, `bt_vct`, `openserver`, `scsserver`).
   - **MH202** (`010024`): Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver`).
-- **Phase 3: Hash-Pinned MCP Verdict Index.** `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for direct consumption by `openwebnet-mcp`. The index tracks **303 unique OpenWebNet frames** across **17 test suites** and **4 active gateways** (MH200N, MyHomeServer1, F454, MH202), delivering **815 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`test_mcp_index_matches_tsv_sources`). The remaining 6 unpacked gateways (F450, F453AV, F455, F459, F460, F461) are indexed in the fleet catalog with verified image provenance and staged for emulation targets.
+  - **F459** (`020105`): Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso`).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for direct consumption by `openwebnet-mcp`. The index tracks **303 unique OpenWebNet frames** across **17 test suites** and **5 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459), delivering **1,034 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`test_mcp_index_matches_tsv_sources`). The remaining 5 catalogued gateways (F450, F453AV, F455, F460, F461) are indexed in the fleet catalog with verified image provenance and staged for emulation targets.
 
 ## License
 
