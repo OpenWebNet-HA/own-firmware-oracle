@@ -1,0 +1,18 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# program=bt_termo
+# target_sha256=7925ff014a6708a4591fe6c7241ee004ae840589c9c97e86e0ad5c222f0c2a69
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:30004	ok
+bind	inet:127.0.0.1:31004	ok
+exit	running	timeout
+listen	inet:127.0.0.1:30004	ok
+listen	inet:127.0.0.1:31004	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok

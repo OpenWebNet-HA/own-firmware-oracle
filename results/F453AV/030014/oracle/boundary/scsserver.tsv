@@ -1,0 +1,26 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# program=scsserver
+# target_sha256=9ccecdc9374f3edbdfa97771b64375ab235359e41d5e4e6102311f5699a53376
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:20001	ok
+exit	running	timeout
+ioctl	/dev/ttyPIC TCFLSH	ok
+ioctl	/dev/ttyPIC TCGETS	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttyPIC TIOCMGET	ENOTTY
+listen	inet:0.0.0.0:20001	ok
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/var/Pic_Rel.txt O_RDWR	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/scsserver O_WRONLY|O_CREAT|O_TRUNC	ok
+write	/dev/ttyPIC	$020000\x0d
+write	/dev/ttyPIC	$24\x0d
+write	/dev/ttyPIC	$2603\x0d
+write	/dev/ttyPIC	$2702\x0d

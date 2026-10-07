@@ -1,0 +1,16 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# program=openserver
+# target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+connect	inet:127.0.0.1:40001	ECONNREFUSED
+exit	running	timeout
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/home/bticino/sp/dbfiles_ws.xml O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/openserver O_WRONLY|O_CREAT|O_TRUNC	ok

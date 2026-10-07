@@ -1,0 +1,63 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# program=bt_processi
+# target_sha256=9d293f9eeaae436d2c446439fe1c3f5b9f8fd03231e81219825cb70aecc36bcb
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:20000	ok
+bind	inet:0.0.0.0:20001	ok
+bind	inet:0.0.0.0:30013	ok
+bind	inet:0.0.0.0:40013	ok
+connect	inet:127.0.0.1:20001	ECONNREFUSED
+connect	inet:127.0.0.1:20001	ok
+connect	inet:127.0.0.1:40013	ok
+connect	unix:/var/run/.nscd_socket	EINVAL
+execve	/bin/fw_printenv	ok
+execve	/bin/sh	ECHILD
+execve	/bin/sh	ok
+execve	/usr/bin/env	ECHILD
+execve	/usr/sbin/apache	ok
+exit	running	timeout
+ioctl	/dev/ttyPIC TCFLSH	ok
+ioctl	/dev/ttyPIC TCGETS	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	fd TCGETS	ENOTTY
+listen	inet:0.0.0.0:20000	ok
+listen	inet:0.0.0.0:20001	ok
+listen	inet:0.0.0.0:30013	ok
+listen	inet:0.0.0.0:40013	ok
+open	/dev/nvram O_RDONLY|O_DSYNC	ENOENT
+open	/dev/nvram O_RDWR|O_DSYNC	ENOENT
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/dev/wd O_WRONLY|O_DSYNC	ENOENT
+open	/etc/apache/apache.conf O_RDONLY	ok
+open	/etc/fstab O_RDONLY	ok
+open	/etc/fw_env.config O_RDONLY	ok
+open	/etc/group O_RDONLY	ok
+open	/etc/hosts O_WRONLY|O_CREAT|O_TRUNC	ok
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/etc/mtab O_RDONLY	ENOENT
+open	/etc/nsswitch.conf O_RDONLY	ok
+open	/etc/passwd O_RDONLY	ok
+open	/etc/resolv.conf O_RDWR|O_CREAT|O_TRUNC	ok
+open	/home/bticino/sp/dbfiles_ws.xml O_RDONLY	ok
+open	/proc/meminfo O_RDONLY	ok
+open	/proc/sys/dev/btweb/hw_version O_RDONLY	ENOENT
+open	/proc/sys/dev/btweb/rtc_invalid O_RDONLY	ENOENT
+open	/var/Pic_Rel.txt O_RDWR	ENOENT
+open	/var/name O_RDONLY	ok
+open	/var/name O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/run/apache.pid O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/bt_device O_WRONLY|O_CREAT|O_TRUNC	ok
+open	/var/tmp/bticino/bt_wd/openserver O_WRONLY|O_CREAT|O_TRUNC	ok
+open	/var/tmp/bticino/bt_wd/scsserver O_WRONLY|O_CREAT|O_TRUNC	ok
+write	/dev/ttyPIC	$020000\x0d
+write	/dev/ttyPIC	$24\x0d
+write	/dev/ttyPIC	$2603\x0d
+write	/dev/ttyPIC	$2702\x0d

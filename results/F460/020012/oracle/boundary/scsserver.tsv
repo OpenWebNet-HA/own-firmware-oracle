@@ -1,0 +1,27 @@
+# product=F460
+# version=020012
+# image_sha256=b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26
+# program=scsserver
+# target_sha256=d8b8d3815974b090a15a7235e4ec91be01b848abd72115d4e90e8a5a848526d8
+# emulator=qemu-aarch64-8.2.2
+# kernel_release=5.10.35
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:20001	ok
+bind	inet:127.0.0.1:20002	ok
+exit	running	timeout
+ioctl	/dev/ttyRPMSG30 TCFLSH	ok
+ioctl	/dev/ttyRPMSG30 TCGETS	ok
+ioctl	/dev/ttyRPMSG30 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B115200,CS8,CREAD|CLOCAL	ok
+listen	inet:127.0.0.1:20001	ok
+listen	inet:127.0.0.1:20002	ok
+open	/dev/ttyRPMSG30 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/Pic_Conf.txt.UW62W3 O_RDWR|O_CREAT|O_EXCL	ok
+open	/var/tmp/Pic_Conf_ext.txt.O062W3 O_RDWR|O_CREAT|O_EXCL	ok
+open	/var/tmp/Pic_Rel.txt.UK62W3 O_RDWR|O_CREAT|O_EXCL	ok
+open	/var/tmp/bticino/bt_wd/scsserver O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttyRPMSG30	$024\x0d

@@ -1,0 +1,21 @@
+# product=F454
+# version=020051
+# image_sha256=15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3
+# program=scsserver
+# target_sha256=281bb0eee184420bda73b8cdd3c88b9b14cfd87814b7913c0cfc7b21a1e6f197
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+ioctl	/dev/ttyS1 TCFLSH	ok
+ioctl	/dev/ttyS1 TCGETS	ok
+ioctl	/dev/ttyS1 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttyS1 TIOCMGET	ENOTTY
+open	/dev/ttyS1 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttyS1	$24\x0d

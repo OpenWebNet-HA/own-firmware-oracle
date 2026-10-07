@@ -1,0 +1,19 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# program=bt_luci
+# target_sha256=fca2f1e22a13c96012419423cf649252765cdf759a457205074c9bcbdfc8d3da
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:30001	ok
+bind	inet:0.0.0.0:40001	ok
+connect	inet:127.0.0.1:20001	ECONNREFUSED
+exit	running	timeout
+listen	inet:0.0.0.0:30001	ok
+listen	inet:0.0.0.0:40001	ok
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/bticino/bt_wd/bt_luci O_WRONLY|O_CREAT|O_TRUNC	ok

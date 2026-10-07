@@ -1,0 +1,31 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# program=bt_device
+# target_sha256=53de597f128488ff69557c9f6d14af14ffb321fe7d3d1631ed3d537cb5ce9b5d
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=10
+# oracle_version=1
+kind	detail	result
+bind	inet:127.0.0.1:30013	ok
+bind	inet:127.0.0.1:31013	ok
+execve	/bin/sh	ECHILD
+execve	/bin/uname	ok
+exit	running	timeout
+ioctl	fd TCGETS	ENOTTY
+listen	inet:127.0.0.1:30013	ok
+listen	inet:127.0.0.1:31013	ok
+open	/dev/rtc O_RDONLY	ENOENT
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/proc/meminfo O_RDONLY|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/flags/CONF_STATUS O_RDONLY	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+open	/var/tmp/version.txt O_RDONLY	ok
+open	/var/tmp/version.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok

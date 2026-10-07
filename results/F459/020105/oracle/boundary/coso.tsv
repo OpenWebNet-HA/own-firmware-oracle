@@ -1,0 +1,26 @@
+# product=F459
+# version=020105
+# image_sha256=1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3
+# program=coso
+# target_sha256=505b3d49b6d922b67194d70c53a6503d13ca18af9e3add9d52d2e5005520399e
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=10
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+open	/etc/host.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/hosts O_RDONLY|O_CLOEXEC	ok
+open	/etc/ld.so.cache O_RDONLY|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/etc/resolv.conf O_RDONLY|O_CLOEXEC	ENOENT
+open	/home/bticino/cfg/coso_plugins/automation_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/automation_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/debug O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/scs_cmd O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/libcoso O_RDONLY|O_DIRECTORY|O_LARGEFILE|O_NONBLOCK|O_CLOEXEC	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/coso.log O_WRONLY|O_APPEND|O_CREAT|O_LARGEFILE	ok
