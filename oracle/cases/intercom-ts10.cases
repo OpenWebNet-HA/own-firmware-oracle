@@ -1,0 +1,80 @@
+; Video Door Entry & Intercom: BTicino 10" Touch Screen (libqtdevices TS10_1_0_23) WHO 8 suite.
+; Covers Door Lock Actuators, Staircase Lights, Camera Auto-Switching & Cycling, PTZ Movements,
+; Audio/Video Intercom Calls (Internal, External, Pager), Answering/Termination, and Teleloop.
+
+; 1. Door Lock Actuators (WHERE = Actuator / Entrance Panel address)
+down *8*19*20##
+down *8*20*20##
+down *8*19*11##
+down *8*20*11##
+down *8*19*1##
+down *8*20*1##
+down *8*19*0##
+down *8*20*0##
+
+; 2. Staircase Lighting Control
+down *8*21*11##
+down *8*22*11##
+down *8*21*0##
+down *8*22*0##
+
+; 3. Camera Auto-Switching and External Unit Cycling
+down *8*4#11*20##
+down *8*4#11*21##
+down *8*4#1*1##
+down *8*6#11*20##
+down *8*6#1*1##
+
+; 4. Camera PTZ Movements (Press and Release)
+down *8*59#1*20##
+down *8*59#2*20##
+down *8*60#1*20##
+down *8*60#2*20##
+down *8*61#1*20##
+down *8*61#2*20##
+down *8*62#1*20##
+down *8*62#2*20##
+
+; 5. Intercom Calling Modes (Internal Bus, External Bus, Pager)
+down *8*1#6#2#11*16##
+down *8*1#6#2#1*2##
+down *8*1#6#2#2*1##
+down *8*1#7#2#11*16##
+down *8*1#7#2#1*2##
+down *8*1#14#2#11*4##
+down *8*1#14#2#1*4##
+down *8*1#14#2#16*22##
+down *8*2#14#2#11*4##
+
+; 6. Call Management & Sessions (VCT Init, Answering, End of Call, Stop Video, Rearm)
+down *8*37#1*11##
+down *8*37#2*11##
+down *8*2#1#4*11##
+down *8*2#1#2*11##
+down *8*2#6#2*11##
+down *8*2#7#2*11##
+down *8*3#1#4*411##
+down *8*3#1#2*411##
+down *8*3#6#2*411##
+down *8*3#7#2*411##
+down *8*3#1#3*11##
+down *8*40#1#4*20##
+down *8*40#1#2*20##
+
+; 7. Teleloop Controls & Associations
+down *8*76*11##
+down *8*77#5*11##
+down *8*78*11##
+down *8*79#1#4#5*11##
+
+; 8. Multimedia Amplifier Mute / Restore
+down *8*63*11##
+down *8*64*11##
+
+; 9. Status & Identification Queries
+down *#8*20##
+down *#8*11##
+down *#8*1##
+down *#8*0##
+down *#8*20*0##
+down *#8*11*0##
