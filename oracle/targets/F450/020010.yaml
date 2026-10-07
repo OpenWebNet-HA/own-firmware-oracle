@@ -70,8 +70,11 @@ runtime:
   kernel_release: "2.6.32"
 
 boundary:
-  status: pending
+  status: discovered
+  bus: pty
+  own: full
   # Note: F450 runs bacclient as p0 (OpenWebNet daemon) instead of openserver.
-  # bacclient requires an external BACnet plant SOAP web service on 127.0.0.1:1234
-  # to query configured BACnet points before it will listen on port 20000.
-  # Pending emulation until the BACnet web service is simulated.
+  # bacclient communicates with a BACnet plant SOAP web service on 127.0.0.1:1234
+  # to initialize configured BACnet points before binding port 20000.
+  # Emulation Approach A: QemuTarget provides a lightweight built-in SOAP mock
+  # on port 1234 that satisfies bacclient initialization.

@@ -1,0 +1,19 @@
+# product=F450
+# version=020010
+# image_sha256=9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da
+# harness=full
+# target_sha256=e5bd026f22d56f40b697b55d1f0865aed4bbeb2aafbeafc1b1d53e6ca9fe1ec4
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=interface-routing
+# suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*0*1*31#4#01##	nack	silent	-
+down	*0*1*31#4#02##	nack	silent	-
+down	*14*0*31#4#01##	nack	silent	-
+down	*14*0*31#4#02##	nack	silent	-

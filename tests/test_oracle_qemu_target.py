@@ -13,6 +13,8 @@ import os
 import socket
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -1248,3 +1250,194 @@ def test_qemu_target_connect_sessions_auth_not_implemented(tmp_path):
         NotImplementedError, match="authentication scheme 'openwebnet' not implemented"
     ):
         tgt._connect_sessions(20000)
+
+
+def _f450_dummy_spec() -> target.TargetSpec:
+    prog_bac = target.Program(
+        "bacclient",
+        "home/bticino/bin/bacclient",
+        "4" * 64,
+        "fs:",
+        role="own_server",
+        port=20000,
+    )
+    prog_scs = target.Program(
+        "scsserver",
+        "home/bticino/bin/scsserver",
+        "2" * 64,
+        "fs:",
+        role="bus_server",
+        port=20001,
+    )
+    return target.TargetSpec(
+        product="F450",
+        version="020010",
+        sysroot=("fs:",),
+        programs={
+            "bacclient": prog_bac,
+            "scsserver": prog_scs,
+        },
+        boundary={"status": "discovered", "bus": "pty", "own": "full"},
+        image_sha256="e" * 64,
+        runtime=target.Runtime(devices={"/dev/ttyS1": "pty"}),
+    )
+
+
+def test_soap_worker_success():
+    stop_evt = threading.Event()
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(1)
+    port = srv.getsockname()[1]
+    t = threading.Thread(
+        target=qemu_target._soap_worker, args=(srv, stop_evt), daemon=True
+    )
+    t.start()
+
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=2.0) as s:
+            # getValue
+            s.sendall(
+                b"<SOAP-ENV:Envelope><SOAP-ENV:Body><ns:getValue/></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+            )
+            resp = s.recv(4096).decode("latin-1")
+            assert "getValueResponse" in resp
+            assert '<result xsi:type="xsd:string">1</result>' in resp
+
+            # setValue
+            s.sendall(
+                b"<SOAP-ENV:Envelope><SOAP-ENV:Body><ns:setValue/></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+            )
+            resp = s.recv(4096).decode("latin-1")
+            assert "setValueResponse" in resp
+    finally:
+        stop_evt.set()
+        srv.close()
+        t.join(timeout=2.0)
+
+
+def test_soap_worker_branches():
+    stop_evt = threading.Event()
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(1)
+    port = srv.getsockname()[1]
+    t = threading.Thread(
+        target=qemu_target._soap_worker, args=(srv, stop_evt), daemon=True
+    )
+    t.start()
+
+    try:
+        # Client connects and immediately closes without sending data
+        with socket.create_connection(("127.0.0.1", port), timeout=2.0):
+            pass
+
+        # Client connects and sends incomplete envelope then stops
+        with socket.create_connection(("127.0.0.1", port), timeout=2.0) as s:
+            s.sendall(b"<SOAP-ENV:Envelope>")
+            time.sleep(1.2)  # trigger conn timeout
+    finally:
+        stop_evt.set()
+        srv.close()
+        t.join(timeout=2.0)
+
+
+def test_soap_worker_accept_timeout_and_error():
+    stop_evt = threading.Event()
+    srv = MagicMock()
+
+    # 1. TimeoutError then stop_evt set
+    def fake_accept():
+        stop_evt.set()
+        raise TimeoutError
+
+    srv.accept.side_effect = fake_accept
+    qemu_target._soap_worker(srv, stop_evt)
+
+    # 2. OSError breaks immediately
+    stop_evt.clear()
+    srv.accept.side_effect = OSError("closed")
+    qemu_target._soap_worker(srv, stop_evt)
+
+
+def test_soap_worker_send_error():
+    stop_evt = threading.Event()
+    srv = MagicMock()
+    fake_conn = MagicMock()
+    fake_conn.recv.return_value = (
+        b"<SOAP-ENV:Envelope><SOAP-ENV:Body><ns:getValue/></SOAP-ENV:Body>"
+        b"</SOAP-ENV:Envelope>"
+    )
+
+    def fake_send(data):
+        stop_evt.set()
+        raise OSError("send failed")
+
+    fake_conn.sendall.side_effect = fake_send
+    srv.accept.return_value = (fake_conn, ("127.0.0.1", 12345))
+    qemu_target._soap_worker(srv, stop_evt)
+    assert fake_conn.close.called
+
+
+def test_soap_worker_inner_stop():
+    stop_evt = threading.Event()
+    srv = MagicMock()
+    fake_conn = MagicMock()
+
+    def fake_recv(bufsize):
+        stop_evt.set()
+        return b"incomplete"
+
+    fake_conn.recv.side_effect = fake_recv
+    srv.accept.return_value = (fake_conn, ("127.0.0.1", 12345))
+    qemu_target._soap_worker(srv, stop_evt)
+    assert fake_conn.close.called
+
+
+def test_qemu_target_f450_soap_lifecycle(monkeypatch, tmp_path):
+    spec = _f450_dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(tgt, "_active_clients", set)
+    monkeypatch.setattr(
+        qemu_target,
+        "read_ports_from_stack_open",
+        lambda p: {"scsserver": 20001, "bacclient": 20000},
+    )
+    monkeypatch.setattr(qemu_target, "port_is_free", lambda port: True)
+    monkeypatch.setattr(
+        tgt,
+        "_start_program",
+        lambda name, dev_map, trace_dir: MagicMock(poll=lambda: None),
+    )
+    monkeypatch.setattr(
+        qemu_target, "wait_tcp_port", lambda port, timeout, on_poll: True
+    )
+    monkeypatch.setattr(tgt, "_connect_sessions", lambda port: None)
+
+    fake_sock = MagicMock()
+    fake_sock.accept.side_effect = TimeoutError
+    monkeypatch.setattr(socket, "socket", lambda *args, **kwargs: fake_sock)
+
+    tgt.restart()
+    assert tgt._soap_server is fake_sock
+    assert tgt._soap_thread is not None
+    assert tgt._soap_stop is not None
+
+    tgt._stop()
+    assert tgt._soap_server is None
+    assert tgt._soap_thread is None
+    assert tgt._soap_stop is None
+    assert fake_sock.close.called
+
+    # Calling _stop again when everything is None
+    tgt._stop()
