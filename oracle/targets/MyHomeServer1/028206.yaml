@@ -91,7 +91,7 @@ runtime:
 #     commands ($24\r) to it.
 #   own: full -- openserver binds and listens on TCP 20000 (<Sevices><OwnPort>
 #     in cfg/openserver), scsserver on 20001 and the translators on 30001/31001
-#     (bt_luci), 30004/31004 (bt_termo), 30022/31022 (bt_multi).
+#     (bt_luci), 30004/31004 (bt_termo), 30018/31018 (bt_supervisione), 30022/31022 (bt_multi).
 boundary:
   status: discovered
   bus: pty
