@@ -16,6 +16,8 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -43,6 +45,7 @@ class GatewayRecord:
     image_sha256: str
     target_sha256: str
     suites: set[str]
+    status: str = "pending_emulation"
 
 
 def parse_output_column(output_str: str) -> tuple[list[str], list[str]]:
@@ -138,11 +141,54 @@ def read_oracle_tsv(
     return entries
 
 
-def build_index(results_dir: Path, root: Path = ROOT) -> dict[str, object]:
-    """Build the index dictionary from all oracle TSVs under results_dir."""
-    tsv_files = sorted(results_dir.glob("*/[0-9]*/oracle/full/*.tsv"))
-
+def discover_catalog_gateways(
+    catalog_dir: Path,
+) -> dict[tuple[str, str], GatewayRecord]:
+    """Scan catalog directory and return GatewayRecord mappings."""
     gateways_map: dict[tuple[str, str], GatewayRecord] = {}
+    if not catalog_dir.is_dir():
+        return gateways_map
+
+    for yaml_path in sorted(catalog_dir.glob("*/*.yaml")):
+        try:
+            entry = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError:
+            entry = None
+
+        if not isinstance(entry, dict):
+            continue
+
+        product = str(entry.get("product", "")).strip()
+        version = str(entry.get("version", "")).strip()
+        image_obj = entry.get("image")
+        image_sha = ""
+        if isinstance(image_obj, dict):
+            image_sha = str(image_obj.get("sha256", "")).strip()
+
+        if product and version:
+            gateways_map[(product, version)] = GatewayRecord(
+                product=product,
+                version=version,
+                image_sha256=image_sha,
+                target_sha256="",
+                suites=set(),
+                status="pending_emulation",
+            )
+
+    return gateways_map
+
+
+def build_index(
+    results_dir: Path,
+    catalog_dir: Path | None = None,
+    root: Path = ROOT,
+) -> dict[str, object]:
+    """Build index from catalog metadata and oracle TSVs under results_dir."""
+    if catalog_dir is None:
+        catalog_dir = root / "catalog"
+
+    gateways_map = discover_catalog_gateways(catalog_dir)
+    tsv_files = sorted(results_dir.glob("*/[0-9]*/oracle/full/*.tsv"))
     verdicts_map: dict[str, list[dict[str, object]]] = {}
 
     for tsv_path in tsv_files:
@@ -159,7 +205,15 @@ def build_index(results_dir: Path, root: Path = ROOT) -> dict[str, object]:
                 image_sha256=first_entry.image_sha256,
                 target_sha256=first_entry.target_sha256,
                 suites=set(),
+                status="emulated",
             )
+        else:
+            if first_entry.target_sha256:
+                gateways_map[gw_key].target_sha256 = first_entry.target_sha256
+            if first_entry.image_sha256:
+                gateways_map[gw_key].image_sha256 = first_entry.image_sha256
+            gateways_map[gw_key].status = "emulated"
+
         if first_entry.suite:
             gateways_map[gw_key].suites.add(first_entry.suite)
 
@@ -172,6 +226,7 @@ def build_index(results_dir: Path, root: Path = ROOT) -> dict[str, object]:
         {
             "image_sha256": gw.image_sha256,
             "product": gw.product,
+            "status": gw.status,
             "suites": sorted(gw.suites),
             "target_sha256": gw.target_sha256,
             "version": gw.version,
@@ -226,6 +281,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Root directory containing results (default: ROOT/results)",
     )
     parser.add_argument(
+        "--catalog-dir",
+        type=Path,
+        default=ROOT / "catalog",
+        help="Root directory containing catalog YAML files (default: ROOT/catalog)",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=ROOT / "results" / "mcp_index.json",
@@ -244,7 +305,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    index_data = build_index(args.results_dir)
+    index_data = build_index(args.results_dir, catalog_dir=args.catalog_dir)
     rendered = format_index_json(index_data)
 
     gateways_obj = index_data.get("gateways", [])
@@ -279,13 +340,18 @@ def main(argv: list[str] | None = None) -> int:
     print(f"wrote {rel_out} ({total_inputs} inputs, {gateways_count} gateways)")
 
     if args.summary:
+        emulated_count = sum(1 for g in gateways_list if g.get("status") == "emulated")
+        pending_count = len(gateways_list) - emulated_count
         print(f"Total Unique Inputs: {total_inputs}")
-        print(f"Gateways Indexed: {gateways_count}")
+        print(
+            f"Gateways Indexed: {gateways_count} "
+            f"({emulated_count} emulated, {pending_count} pending emulation)"
+        )
         for gw in gateways_list:
             suites_val = gw["suites"]
-            print(
-                f"  - {gw['product']} {gw['version']}: {len(suites_val)} suites"  # type: ignore[arg-type]
-            )
+            n_suites = len(suites_val)  # type: ignore[arg-type]
+            status_str = f" [{gw.get('status', 'unknown')}]"
+            print(f"  - {gw['product']} {gw['version']}: {n_suites} suites{status_str}")
 
     return 0
 

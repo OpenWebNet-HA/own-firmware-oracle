@@ -42,45 +42,58 @@ def split_own(buf: bytearray) -> list[str]:
     return frames
 
 
-def prepare_stack_open(cfg_path: Path, active_clients: set[str]) -> None:
-    """Trim stack_open.xml and cfg/openserver to active clients only."""
-    if cfg_path.exists():
-        tree = ET.parse(cfg_path)  # noqa: S314 - verified sysroot file
-        openserver_el = tree.find("sw/openserver")
-        if openserver_el is not None:
-            for child in list(openserver_el):
-                if child.tag.startswith("client_"):
-                    name_el = child.find("name")
-                    if name_el is None or name_el.text not in active_clients:
-                        openserver_el.remove(child)
-            tree.write(cfg_path)
+def _trim_stack_open_xml(cfg_path: Path, active_clients: set[str]) -> None:
+    if not cfg_path.exists():
+        return
+    tree = ET.parse(cfg_path)  # noqa: S314 - verified sysroot file
+    openserver_el = tree.find("sw/openserver")
+    if openserver_el is None:
+        return
+    client_idx = 1
+    for child in list(openserver_el):
+        if child.tag.startswith("client_"):
+            name_el = child.find("name")
+            if name_el is None or name_el.text not in active_clients:
+                openserver_el.remove(child)
+            else:
+                child.tag = f"client_{client_idx:02d}"
+                client_idx += 1
+    tree.write(cfg_path)
 
-    ops_cfg = cfg_path.parent / "openserver"
-    if ops_cfg.exists():
-        lines = ops_cfg.read_text(encoding="latin-1").splitlines()
-        new_lines: list[str] = []
-        in_stackopen = False
-        client_idx = 1
-        for line in lines:
-            stripped = line.strip()
-            if stripped == "[Stackopen]":
-                in_stackopen = True
+
+def _trim_openserver_ini(ops_cfg: Path, active_clients: set[str]) -> None:
+    if not ops_cfg.exists():
+        return
+    lines = ops_cfg.read_text(encoding="latin-1").splitlines()
+    new_lines: list[str] = []
+    in_stackopen = False
+    client_idx = 1
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "[Stackopen]":
+            in_stackopen = True
+            new_lines.append(line)
+            continue
+        if in_stackopen:
+            if stripped.startswith("["):
+                in_stackopen = False
                 new_lines.append(line)
                 continue
-            if in_stackopen:
-                if stripped.startswith("["):
-                    in_stackopen = False
-                    new_lines.append(line)
-                    continue
-                if "=" in line:
-                    _, val = line.split("=", 1)
-                    client_name = val.split(";")[0]
-                    if client_name in active_clients:
-                        new_lines.append(f"client_{client_idx:02d}={val}")
-                        client_idx += 1
-                    continue
-            new_lines.append(line)
-        ops_cfg.write_text("\n".join(new_lines) + "\n", encoding="latin-1")
+            if "=" in line:
+                _, val = line.split("=", 1)
+                client_name = val.split(";")[0]
+                if client_name in active_clients:
+                    new_lines.append(f"client_{client_idx:02d}={val}")
+                    client_idx += 1
+                continue
+        new_lines.append(line)
+    ops_cfg.write_text("\n".join(new_lines) + "\n", encoding="latin-1")
+
+
+def prepare_stack_open(cfg_path: Path, active_clients: set[str]) -> None:
+    """Trim stack_open.xml and cfg/openserver to active clients only."""
+    _trim_stack_open_xml(cfg_path, active_clients)
+    _trim_openserver_ini(cfg_path.parent / "openserver", active_clients)
 
 
 def read_ports_from_stack_open(cfg_path: Path) -> dict[str, int]:
@@ -435,6 +448,10 @@ class QemuTarget:
                     raise
 
         self._running = True
+        deadline = time.monotonic() + 0.25
+        while time.monotonic() < deadline:
+            self.bus.pump()
+            time.sleep(0.02)
         self.settle()
         self.take_bus()
         self.take_own()

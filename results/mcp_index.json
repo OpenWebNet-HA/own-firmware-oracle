@@ -2,8 +2,65 @@
   "format_version": "1.0.0",
   "gateways": [
     {
+      "image_sha256": "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da",
+      "product": "F450",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020010"
+    },
+    {
+      "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
+      "product": "F453AV",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "030014"
+    },
+    {
+      "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
+      "product": "F454",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020051"
+    },
+    {
+      "image_sha256": "cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9",
+      "product": "F455",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "010102"
+    },
+    {
+      "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
+      "product": "F459",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020105"
+    },
+    {
+      "image_sha256": "b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26",
+      "product": "F460",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020012"
+    },
+    {
+      "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+      "product": "F461",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020011"
+    },
+    {
       "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
       "product": "MH200N",
+      "status": "emulated",
       "suites": [
         "energy-params",
         "interface-routing",
@@ -13,6 +70,7 @@
         "thermo-actuator",
         "thermo-central-mode",
         "thermo-fan-speed",
+        "thermo-ts10",
         "thermo-valve",
         "thermo-zone-mode",
         "what19",
@@ -22,12 +80,22 @@
       "version": "010108"
     },
     {
+      "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
+      "product": "MH202",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
+      "version": "010024"
+    },
+    {
       "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
       "product": "MyHomeServer1",
+      "status": "emulated",
       "suites": [
         "lights-level",
         "ownd-pr82-heating",
-        "ownd-pr82-lights"
+        "ownd-pr82-lights",
+        "thermo-ts10"
       ],
       "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
       "version": "028206"
@@ -35,7 +103,7 @@
   ],
   "generator": "own-firmware-oracle",
   "schema_version": "1.0.0",
-  "total_unique_inputs": 89,
+  "total_unique_inputs": 125,
   "verdicts": {
     "*#1*0*#1*100*0##": [
       {
@@ -589,6 +657,108 @@
         "version": "010108"
       }
     ],
+    "*#4*#0*#30*07*10*2026##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 16,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 33 30 37 30 41 31 41 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 16,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*#0*#31*18*30##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 17,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 34 31 32 31 45 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 17,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*#0*#32*04*15##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 18,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 35 30 34 30 46 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 18,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*#4*#0*20##": [
       {
         "bus_frames": [],
@@ -635,6 +805,108 @@
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
         "verdict": "silent",
+        "version": "028206"
+      }
+    ],
+    "*#4*#23#1*#14*0215*1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 19,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 32 32 42 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 19,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*#23#1*#14*0230*2##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 20,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 32 32 45 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 20,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*#23#1*#14*0250*3##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 21,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 32 33 32 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 21,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
         "version": "028206"
       }
     ],
@@ -774,6 +1046,108 @@
         "version": "010108"
       }
     ],
+    "*#4*1*0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 22,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 30 31 33 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 22,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*1*15#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 23,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 31 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 23,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*1*15#2##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 24,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 32 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 24,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*#4*1*19##": [
       {
         "bus_frames": [],
@@ -806,6 +1180,242 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
+      }
+    ],
+    "*#4*23#1*0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 25,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 25,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "silent",
+        "version": "028206"
+      }
+    ],
+    "*#4*23#1*15#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 26,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 26,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*23*#11*0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 27,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 27,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*23*#11*1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 28,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 28,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*23*#11*2##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 29,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 29,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*23*#11*3##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 30,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 33 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 30,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*23*11##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 31,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 31 37 33 30 30 42 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 31,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
       }
     ],
     "*#4*40*19##": [
@@ -1883,6 +2493,40 @@
         "version": "028206"
       }
     ],
+    "*4*102*#23#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 32,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 37 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 32,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*4*103*#0##": [
       {
         "bus_frames": [
@@ -2008,6 +2652,40 @@
         "version": "028206"
       }
     ],
+    "*4*112#0210#5*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 33,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 39 32 41 30 35 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 33,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*4*202*#0##": [
       {
         "bus_frames": [],
@@ -2071,6 +2749,108 @@
         "source_tsv": "results/MyHomeServer1/028206/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*202*#23#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 34,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 37 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 34,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*212#0210#5*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 35,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 39 32 41 30 35 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 35,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*302*#23#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 36,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 37 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 36,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
         "verdict": "out",
         "version": "028206"
@@ -2144,6 +2924,40 @@
         "version": "028206"
       }
     ],
+    "*4*303*#23#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 37,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 36 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 37,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*4*303*1##": [
       {
         "bus_frames": [],
@@ -2192,6 +3006,108 @@
         "source_tsv": "results/MyHomeServer1/028206/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3101*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 38,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 38,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3101*#0#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 39,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 31 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 39,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3102*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 40,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 31 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 40,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
         "verdict": "out",
         "version": "028206"
@@ -2299,6 +3215,40 @@
         "version": "028206"
       }
     ],
+    "*4*311*#23#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 41,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 41,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
     "*4*311*#99##": [
       {
         "bus_frames": [
@@ -2366,7 +3316,345 @@
         "verdict": "silent",
         "version": "028206"
       }
+    ],
+    "*4*3116*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 42,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 46 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 42,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*312#0210#5*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 43,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 43,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*312#0210#5*#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 44,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 44,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*315#3101*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 45,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 34 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 45,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3201*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 46,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 46,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3201*#0#1##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 47,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 33 30 30 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 47,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3202*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 48,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 31 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 48,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*3216*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 49,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 46 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 49,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*4*33#3101*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 50,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 50,
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "silent",
+        "version": "028206"
+      }
+    ],
+    "*4*33005#3101*#0##": [
+      {
+        "bus_frames": [],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
+        "line_number": 51,
+        "product": "MH200N",
+        "reply": "nack",
+        "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
+        "verdict": "silent",
+        "version": "010108"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 35 30 35 30 30 0d"
+        ],
+        "direction": "down",
+        "emitted_own": [],
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 51,
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/full/thermo-ts10.tsv",
+        "suite": "thermo-ts10",
+        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
     ]
   },
-  "verdicts_sha256": "53df92a0f3f29beac2a84267163779a9b0415a2cc05e28921526a51cdd517c66"
+  "verdicts_sha256": "2c5612e821e27b7dbc1c3a3dd293e4f5bce06a735d99b237abdcdcc0f9628224"
 }

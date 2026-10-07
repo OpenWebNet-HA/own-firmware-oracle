@@ -1,0 +1,58 @@
+; Thermo: BTicino 10" Touch Screen (libqtdevices TS10_1_0_23) protocol suite.
+; Covers ControlledProbeDevice, NonControlledProbeDevice, and ThermalDevice.
+; Tests compound addressing (probe#central), protection modes, fan speed,
+; external radio probes, weekly programs, scenarios, timed manual, and calendar dimensions.
+
+; 1. ControlledProbeDevice: Zone mode control on compound address (#23#1)
+down *4*311*#23#1##
+down *4*303*#23#1##
+down *4*302*#23#1##
+down *4*102*#23#1##
+down *4*202*#23#1##
+
+; 2. ControlledProbeDevice: Setpoint control on compound address
+down *#4*#23#1*#14*0250*3##
+down *#4*#23#1*#14*0215*1##
+down *#4*#23#1*#14*0230*2##
+
+; 3. ControlledProbeDevice: Fan coil speed commands (plain zone extracted)
+down *#4*23*#11*0##
+down *#4*23*#11*1##
+down *#4*23*#11*2##
+down *#4*23*#11*3##
+down *#4*23*11##
+
+; 4. NonControlledProbeDevice: Status requests (internal vs external radio sensor)
+down *#4*1*0##
+down *#4*1*15#1##
+down *#4*1*15#2##
+down *#4*23#1*0##
+down *#4*23#1*15#1##
+
+; 5. ThermalDevice: Central Unit weekly programs (3101..3116)
+down *4*3101*#0##
+down *4*3102*#0##
+down *4*3116*#0##
+down *4*3101*#0#1##
+
+; 6. ThermalDevice: Central Unit preset scenarios (3201..3216)
+down *4*3201*#0##
+down *4*3202*#0##
+down *4*3216*#0##
+down *4*3201*#0#1##
+
+; 7. ThermalDevice: Timed manual mode overrides
+down *4*312#0210#5*#0##
+down *4*112#0210#5*#0##
+down *4*212#0210#5*#0##
+down *4*312#0210#5*#1##
+
+; 8. ThermalDevice: Weekend and Holiday mode schedules
+down *4*315#3101*#0##
+down *4*33005#3101*#0##
+down *4*33#3101*#0##
+
+; 9. ThermalDevice: Calendar Dimension write commands (dimensions 30, 31, 32)
+down *#4*#0*#30*07*10*2026##
+down *#4*#0*#31*18*30##
+down *#4*#0*#32*04*15##
