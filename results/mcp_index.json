@@ -167,14 +167,6 @@
       "version": "020011"
     },
     {
-      "image_sha256": "dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4",
-      "product": "H4684",
-      "status": "catalogued",
-      "suites": [],
-      "target_sha256": "",
-      "version": "020054"
-    },
-    {
       "image_sha256": "48b571e320295d01e41316810eafca57720e6a02c4f22ac196b057b0c2ca8a2c",
       "product": "L4561N",
       "status": "catalogued",
