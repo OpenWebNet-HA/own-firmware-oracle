@@ -1,0 +1,54 @@
+# Oracle target: H4684 firmware 2.0.54. Every program is pinned by path and
+# sha256 to results/H4684/020054/manifest.tsv (oracle/target.py checks it).
+product: H4684
+version: "020054"
+
+# Manifest prefixes overlaid in order (later wins): the rootfs, then the
+# application zip that the device unpacks over it.
+sysroot:
+  - "Version_2_0.zip!H4684_020054.fwz!H4684_rel_2_0_54.zip!H4684_rel_2_0_54/btweb_only.gz~gunzip:"
+  - "Version_2_0.zip!H4684_020054.fwz!H4684_rel_2_0_54.zip!H4684_rel_2_0_54/btweb_app.zip!"
+
+bus_device: /dev/ttyPIC
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_processi>
+  bt_processi:
+    path: home/bticino/bin/bt_processi
+    sha256: "6b28cbdbebc593e3715d1b45723457c23ad7a6ddbe7bd3c97a7e9be3bb2084a8"
+    role: supervisor
+  # p1: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd"
+    role: own_server
+    port: 20000
+  # p2: owns /dev/ttyPIC (stack_open.xml) and serves the translators on
+  # TCP 20001 (<scsserver><port>; the translators' <port_scs>)
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "fe3cbc13a8c3b9cbe52489d821693d64f2cae2bfb21a06706896f2f737eeb81d"
+    role: bus_server
+    port: 20001
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "d30e6c06c8b6af084be9e54f884788df4ac9a8e7495f4da963b5905ae7293c1c"
+    role: translator
+  # diagnostics, clock -- WHO 13 / 1013
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "5b0768d672719f2952a14d898c825266b02703b6db407c0c0ad3bc8a9712b246"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /home/bticino/lib
+  devices:
+    /dev/ttyPIC: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.4.19"
