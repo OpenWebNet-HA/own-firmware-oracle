@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -12,8 +12,8 @@
 # suite=thermo-valve
 # suite_sha256=d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#4*1*19##	nack	silent	-	-	unchecked
-down	*#4*40*19##	nack	silent	-	-	unchecked
-down	*#4*41*19##	nack	silent	-	-	unchecked
+down	*#4*1*19##	nack	out	bus:24 30 34 39 39 30 31 33 30 31 33 0d | bus:24 32 34 0d | bus:24 32 34 0d | own:*#1013**11*111111101111111011111101##	OWNGatewayDiagnosticEvent	unchecked
+down	*#4*40*19##	nack	out	bus:24 30 34 39 39 32 38 33 30 31 33 0d | bus:24 32 34 0d	-	unchecked
+down	*#4*41*19##	nack	out	bus:24 30 34 39 39 32 39 33 30 31 33 0d | bus:24 32 34 0d	-	unchecked

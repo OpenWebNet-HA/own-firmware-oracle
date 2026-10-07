@@ -12,6 +12,6 @@
 # suite=what19
 # suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*#1*74##	-	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##	OWNLightingEvent | OWNEvent	agree EVID-MH200-WHAT19-FAULT
