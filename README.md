@@ -422,7 +422,7 @@ python tools/check.py --product MyHomeServer1 --version 028206 --suite ownd-pr82
 
 ### 5. Querying the Cross-Firmware Verdict Index (`results/mcp_index.json`)
 
-The cross-firmware MCP index provides hash-pinned answers for AI assistants and parsers without needing to run emulators:
+The cross-firmware MCP index (`schema_version: "1.1.0"`) provides hash-pinned answers for AI assistants and parsers without needing to run emulators. Gateways are indexed with status `"emulated"` (verdicts present) or `"catalogued"` (fleet inventory entry, empty `target_sha256`, `suites: []`). The canonical `verdicts_sha256` digest covers the sorted verdicts map, ensuring deterministic answer integrity.
 
 ```bash
 # Check that the index matches all current oracle TSVs:
@@ -440,7 +440,8 @@ index_path = Path("results/mcp_index.json")
 index = json.loads(index_path.read_text(encoding="utf-8"))
 print(f"Verdicts SHA-256: {index['verdicts_sha256']}")
 print(f"Indexed frames: {len(index['verdicts'])}")
-print(f"Gateways: {[f\"{g['product']} {g['version']} [{g['status']}]\" for g in index['gateways']]}")
+gateways = [f"{g['product']} {g['version']} [{g['status']}]" for g in index["gateways"]]
+print(f"Gateways: {gateways}")
 
 # Lookup cross-gateway verdict for a sound volume command (WHO 22):
 target_frame = "*#22*3#1#1*#1*20##"  # Direct volume 20
@@ -448,7 +449,9 @@ target_frame = "*#22*3#1#1*#1*20##"  # Direct volume 20
 for entry in index["verdicts"].get(target_frame, []):
     print(f"[{entry['product']} {entry['version']}] Suite: {entry['suite']}")
     print(f"  Reply:      {entry['reply']}")  # 'ack' on MHS1 & F454, 'nack' on MH200N
-    print(f"  Verdict:    {entry['verdict']}")  # 'out' on MHS1 & F454, 'silent' on MH200N
+    print(
+        f"  Verdict:    {entry['verdict']}"
+    )  # 'out' on MHS1 & F454, 'silent' on MH200N
     print(f"  Bus output: {entry['bus_frames']}")  # ['$0493018114\r' on MHS1 and F454]
 ```
 
@@ -493,7 +496,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 17 suites).
   - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 17 suites).
   - **F450** (`020010`): IP interface gateway (`bacclient`, `scsserver`, `bt_device`, `bt_termo` via built-in SOAP mock on port 1234 — 17 suites).
-- **Phase 3: Hash-Pinned MCP Verdict Index.** `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint for direct consumption by `openwebnet-mcp`. The index tracks **303 unique OpenWebNet frames** across **17 test suites** and **9 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450), delivering **3,015 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`test_mcp_index_matches_tsv_sources`). The sole remaining catalogued gateway, F455, is documented as pending emulation with zero added value to the matrix (bare-metal ARM Cortex-M flash firmware without an OS; basic lighting/shutter OpenWebNet subset already 100% covered).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full 10-gateway catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **303 unique OpenWebNet frames** across **17 test suites** and **9 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450), delivering **3,015 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`test_mcp_index_matches_tsv_sources`). The sole remaining catalogued gateway, F455, is indexed with `status: "catalogued"` and empty suite arrays (bare-metal ARM Cortex-M flash firmware without an OS; basic lighting/shutter OpenWebNet subset already 100% covered).
 
 ## License
 
