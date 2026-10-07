@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import errno
 import io
 import os
 import socket
@@ -285,6 +286,63 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
     tgt.sysroot_base = tmp_path / "nonexistent"
     tgt._copy_sysroot()
     assert tgt.sysroot.exists()
+
+
+def test_qemu_target_copy_sysroot_rmtree_retry(tmp_path, monkeypatch):
+    spec = _dummy_spec()
+    work = tmp_path / "work"
+    work.mkdir()
+    staged = tmp_path / "staged"
+    staged.mkdir()
+    (staged / "test.txt").write_text("ok")
+
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        work,
+        staged_sysroot=staged,
+    )
+    tgt._copy_sysroot()
+    assert tgt.sysroot.exists()
+
+    calls = 0
+    orig_rmtree = qemu_target.shutil.rmtree
+
+    def fail_twice_then_succeed(path):
+        nonlocal calls
+        calls += 1
+        if calls < 3:
+            err = OSError("directory not empty")
+            err.errno = errno.ENOTEMPTY
+            raise err
+        orig_rmtree(path)
+
+    monkeypatch.setattr(qemu_target.shutil, "rmtree", fail_twice_then_succeed)
+    monkeypatch.setattr(qemu_target.time, "sleep", lambda _s: None)
+
+    tgt._copy_sysroot()
+    assert calls == 3
+    assert (tgt.sysroot / "test.txt").read_text() == "ok"
+
+    err_perm = OSError("permission denied")
+    err_perm.errno = errno.EPERM
+    monkeypatch.setattr(
+        qemu_target.shutil,
+        "rmtree",
+        MagicMock(side_effect=err_perm),
+    )
+    with pytest.raises(OSError, match="permission denied"):
+        tgt._copy_sysroot()
+
+    err_busy = OSError("persistent busy")
+    err_busy.errno = errno.EBUSY
+    monkeypatch.setattr(
+        qemu_target.shutil,
+        "rmtree",
+        MagicMock(side_effect=err_busy),
+    )
+    with pytest.raises(OSError, match="persistent busy"):
+        tgt._copy_sysroot()
 
 
 def test_qemu_target_active_clients(tmp_path):

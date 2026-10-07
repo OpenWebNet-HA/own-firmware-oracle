@@ -12,6 +12,8 @@ backed by a PTY.
 from __future__ import annotations
 
 import contextlib
+import errno
+import logging
 import os
 import select
 import shutil
@@ -24,6 +26,8 @@ from pathlib import Path
 from typing import IO
 
 from oracle import bus, run, sandbox, target
+
+logger = logging.getLogger(__name__)
 
 BANNER = "*#*1##"
 NACK = "*#*0##"
@@ -249,7 +253,22 @@ class QemuTarget:
         if self.sysroot_base.resolve() == self.sysroot.resolve():
             return
         if self.sysroot.exists():
-            shutil.rmtree(self.sysroot)
+            attempt = 0
+            while True:
+                try:
+                    shutil.rmtree(self.sysroot)
+                    break
+                except OSError as err:
+                    if err.errno not in (errno.ENOTEMPTY, errno.EBUSY) or attempt >= 4:
+                        raise
+                    logger.debug(
+                        "rmtree(%s) failed (%s), retrying (attempt %d)...",
+                        self.sysroot,
+                        err,
+                        attempt + 1,
+                    )
+                    time.sleep(0.05 * (2**attempt))
+                    attempt += 1
         shutil.copytree(self.sysroot_base, self.sysroot, symlinks=True)
         for f_path, content in self.spec.runtime.files.items():
             dest = self.sysroot / f_path.lstrip("/")

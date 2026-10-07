@@ -1,0 +1,88 @@
+# Oracle target: F454 firmware 2.0.51. Every program is pinned by path and
+# sha256 to results/F454/020051/manifest.tsv (oracle/target.py checks it).
+product: F454
+version: "020051"
+
+# Manifest prefix for the root filesystem layer:
+sysroot:
+  - "F454_020051.fwz!btweb_only.ext3.gz~gunzip:"
+
+bus_device: /dev/ttyS1
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_daemon><stackopen>
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "de5ac53dd39ed7ecad94457d65d5dbb1ff0ff7d906e854096e3a3f097efb73c6"
+    role: supervisor
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d"
+    role: own_server
+    port: 20000
+  # p1: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "281bb0eee184420bda73b8cdd3c88b9b14cfd87814b7913c0cfc7b21a1e6f197"
+    role: bus_server
+    port: 20001
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "1c9f959acd002fa5c97f0073eda767bade580bd3f2cf242e1e305c631342581c"
+    role: translator
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "ce43e480d0603cbde752d646dfcd57f5461057b29c852eb8847529edaaee9343"
+    role: translator
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "d2c9f8e5f62d45e836f5b52780f8353d89cad57acd40540f6852b3be5461870f"
+    role: translator
+  # multimedia / multi
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "39cab3b8efd9dd2b91de41b2ff477b75dc6cbafd86894979e7ef869712904bd9"
+    role: translator
+  # coso
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "7259067a648b215ef93ba93ede0037296cffe273a099b72e6c593dcb9057ee89"
+    role: translator
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+    /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
+  files:
+    /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\topenserver\n"
+  devices:
+    /dev/ttyS1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.6.32"
+
+# Filled from discovery; the rows are in
+# results/F454/020051/oracle/boundary/<program>.tsv.
+#   bus: pty -- scsserver opens /dev/ttyS1 and the pty answers TCGETS /
+#     TCSETS / TCFLSH (38400 8N1, IXON|IXOFF); scsserver writes PIC command ($24\r)
+#   own: full -- openserver binds and listens on TCP 20000, scsserver on 20001
+boundary:
+  status: discovered
+  bus: pty
+  own: full
