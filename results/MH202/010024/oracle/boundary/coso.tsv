@@ -1,0 +1,47 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# program=coso
+# target_sha256=6865c2d1d441d25effa31275080ded70ad3538a8a49288e3002ffb196b066175
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+open	/dev/urandom O_RDONLY|O_LARGEFILE	ok
+open	/etc/hosts O_RDONLY|O_CLOEXEC	ok
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/etc/nsswitch.conf O_RDONLY	ok
+open	/etc/resolv.conf O_RDONLY	ENOENT
+open	/home/bticino/cfg/coso_plugins/alarm_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/alarm_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/alarm_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/automation_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/automation_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/automation_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/aux_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/cen_cmd_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/cen_cmd_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/lights_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/lights_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/lights_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/multimedia_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/multimedia_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/multimedia_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/scenarios_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/scenarios_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/scs_cmd O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/special_cmd_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/special_cmd_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/thermo_stm O_RDONLY|O_LARGEFILE	ENOENT
+open	/home/bticino/cfg/coso_plugins/thermo_syn_cfg O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/thermo_tr O_RDONLY|O_LARGEFILE	ENOENT
+open	/home/bticino/cfg/coso_plugins/trasv_cmd_stm O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/trasv_cmd_syn O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/cfg/coso_plugins/trasv_cmd_tr O_RDONLY|O_LARGEFILE	ok
+open	/home/bticino/libcoso O_RDONLY|O_DIRECTORY|O_LARGEFILE|O_NONBLOCK|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT|O_LARGEFILE	ok
+open	/var/tmp/conf.xml O_RDONLY	ok

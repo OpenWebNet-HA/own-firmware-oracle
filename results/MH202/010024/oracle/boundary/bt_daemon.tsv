@@ -1,0 +1,76 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# program=bt_daemon
+# target_sha256=41a8844318d47cf33571b6d74a7de528dea5118d4c2289f4d666de419d91b1b6
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+bind	inet:0.0.0.0:20000	ok
+bind	inet:0.0.0.0:30013	ok
+bind	inet:0.0.0.0:31013	ok
+execve	/bin/sh	ECHILD
+execve	/bin/sh	ok
+execve	/bin/uname	ok
+execve	/usr/bin/env	ok
+exit	running	timeout
+ioctl	/dev/ttyS1 TCFLSH	ok
+ioctl	/dev/ttyS1 TCGETS	ok
+ioctl	/dev/ttyS1 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttyS1 TIOCMGET	ENOTTY
+listen	inet:0.0.0.0:20000	ok
+listen	inet:0.0.0.0:30013	ok
+listen	inet:0.0.0.0:31013	ok
+open	/dev/led O_WRONLY|O_DSYNC	ENOENT
+open	/dev/rtc O_RDONLY	ENOENT
+open	/dev/ttyS1 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/home/bticino/cfg/extra/conf/conf.img O_RDONLY	ENOENT
+open	/home/bticino/cfg/extra/conf/conf.img O_RDWR|O_CREAT	ok
+open	/home/bticino/cfg/extra/conf/conf_copy.img O_RDONLY	ENOENT
+open	/home/bticino/cfg/extra/conf/conf_copy.img O_RDWR|O_CREAT	ok
+open	/home/bticino/cfg/restore/conf.xml.def O_RDONLY	ok
+open	/home/bticino/cfg/restore/conf.xml.def O_RDONLY|O_LARGEFILE	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/conf.xml O_WRONLY|O_CREAT|O_EXCL|O_LARGEFILE	EEXIST
+open	/var/tmp/conf.xml O_WRONLY|O_CREAT|O_EXCL|O_LARGEFILE	ok
+open	/var/tmp/conf.zip O_RDONLY	ENOENT
+open	/var/tmp/conf.zip O_RDONLY	ok
+open	/var/tmp/conf.zip O_WRONLY|O_CREAT|O_TRUNC	ok
+open	/var/tmp/env.txt O_RDONLY	ok
+open	/var/tmp/env.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
+open	/var/tmp/flags/CONF_STATUS O_RDONLY	ok
+open	/var/tmp/flags/CONF_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/EXTRAS_STATUS O_RDONLY	ok
+open	/var/tmp/flags/EXTRAS_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/RECOVERY_PARTITION_KNL_STATUS O_RDONLY	ok
+open	/var/tmp/flags/RECOVERY_PARTITION_KNL_STATUS O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/RUNNING_FW_COPY O_RDONLY	ok
+open	/var/tmp/flags/RUNNING_FW_COPY O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/WORKING_MODE O_RDONLY	ok
+open	/var/tmp/flags/WORKING_MODE O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/flags/branddiag O_RDONLY	ENOENT
+open	/var/tmp/flags/branddiag O_RDONLY	ok
+open	/var/tmp/flags/code O_RDONLY	ENOENT
+open	/var/tmp/flags/code O_RDONLY	ok
+open	/var/tmp/flags/codecfg O_RDONLY	ENOENT
+open	/var/tmp/flags/codecfg O_RDONLY	ok
+open	/var/tmp/flags/codediag O_RDONLY	ENOENT
+open	/var/tmp/flags/codediag O_RDONLY	ok
+open	/var/tmp/flags/linediag O_RDONLY	ENOENT
+open	/var/tmp/flags/linediag O_RDONLY	ok
+open	/var/tmp/flags/nconfdiag O_RDONLY	ENOENT
+open	/var/tmp/flags/nconfdiag O_RDONLY	ok
+open	/var/tmp/flags/pid O_RDONLY	ENOENT
+open	/var/tmp/flags/pid O_RDONLY	ok
+open	/var/tmp/flags/vid O_RDONLY	ENOENT
+open	/var/tmp/flags/vid O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+open	/var/tmp/version.txt O_RDONLY	ok
+open	/var/tmp/version.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
+open	/var/tmp/ziJqAXzU O_WRONLY|O_CREAT|O_TRUNC	ok
+write	/dev/ttyS1	$24\x0d

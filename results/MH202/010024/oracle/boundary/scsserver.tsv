@@ -1,0 +1,21 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# program=scsserver
+# target_sha256=8bf4e7ff1d92a6c71a82ac10ba7008fb590246a3638e7db509217a54e9ab2be5
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.6.32
+# window_s=3
+# oracle_version=1
+kind	detail	result
+exit	running	timeout
+ioctl	/dev/ttyS1 TCFLSH	ok
+ioctl	/dev/ttyS1 TCGETS	ok
+ioctl	/dev/ttyS1 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	/dev/ttyS1 TIOCMGET	ENOTTY
+open	/dev/ttyS1 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttyS1	$24\x0d
