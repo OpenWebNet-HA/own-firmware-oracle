@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -12,7 +12,7 @@
 # suite=lights-level
 # suite_sha256=f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*#1*0*#1*100*0##	nack	silent	-	-	unchecked
 down	*#1*31*#1*100*0##	nack	silent	-	-	unchecked

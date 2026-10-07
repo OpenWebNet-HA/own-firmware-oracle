@@ -55,6 +55,16 @@ programs:
     path: home/bticino/bin/coso
     sha256: "7259067a648b215ef93ba93ede0037296cffe273a099b72e6c593dcb9057ee89"
     role: translator
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "cdaf2fa5ffce77a24b722c12d951407bed7294e3a0a3605cc78a8b07a4e444a1"
+    role: translator
+  # supervision / energy
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "12c4d6f09d53fe2f1862eea8d1112b9b960f0511b11ac7a3767a22b0daaabfd2"
+    role: translator
 
 runtime:
   cwd: /home/bticino

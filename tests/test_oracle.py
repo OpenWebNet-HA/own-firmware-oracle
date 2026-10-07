@@ -329,6 +329,9 @@ def test_committed_mh200n_target_matches_the_manifest():
         "scsserver",
         "bt_luci",
         "bt_device",
+        "bt_termo",
+        "bt_supervisione",
+        "bt_energia",
     }
     assert spec.programs["bt_luci"].layer.endswith("btweb_app.zip!")
     assert spec.arch == "arm"

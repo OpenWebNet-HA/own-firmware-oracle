@@ -2352,18 +2352,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 31 43 30 30 30 41 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 16,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -2420,18 +2422,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 31 43 30 30 30 41 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -2503,18 +2507,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 43 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 17,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -2577,18 +2583,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 43 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -2660,18 +2668,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 18,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -2726,18 +2736,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -2809,18 +2821,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 19,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -2876,18 +2890,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -2959,18 +2975,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 20,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3034,7 +3052,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -3111,18 +3129,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 32 30 30 30 32 31 44 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 21,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3179,18 +3199,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 33 31 30 31 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -3262,18 +3284,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 32 30 30 30 32 31 44 46 46 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 22,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3336,7 +3360,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -3411,18 +3435,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 32 35 30 30 36 30 34 44 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 23,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3479,18 +3505,21 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 32 30 30 30 32 31 44 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 32 30 30 30 32 31 44 46 46 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -3562,18 +3591,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 24,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3637,7 +3668,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -3648,7 +3681,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -3720,18 +3753,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 38 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 25,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3793,7 +3828,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -3870,18 +3905,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 38 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 26,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -3957,18 +3994,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 38 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 26,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -4072,33 +4111,37 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 16,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 27,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -4223,33 +4266,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 30 30 38 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 27,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -4387,33 +4434,37 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 17,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 28,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -4606,18 +4657,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -4627,7 +4680,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 28,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -4770,33 +4823,37 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 18,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 29,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -4990,33 +5047,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 29,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -5122,18 +5183,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 42 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 30,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -5214,18 +5277,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 30,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -5303,7 +5368,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 31,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -5427,7 +5492,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 31,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -5504,18 +5569,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 43 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 32,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -5599,18 +5666,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 32,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -5680,18 +5749,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 44 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 33,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -5794,18 +5865,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 42 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 33,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -5875,18 +5948,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 30 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 34,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -6005,7 +6080,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 34,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -6080,18 +6155,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 30 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 35,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -6173,18 +6250,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 43 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 35,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -6320,7 +6399,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 19,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
@@ -6335,7 +6414,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 36,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -6585,7 +6664,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 36,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -6765,33 +6844,37 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 20,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 30 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 37,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -6955,33 +7038,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-params.tsv",
         "suite": "energy-params",
         "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 44 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 37,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -7093,7 +7180,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 38,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -7157,7 +7244,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 38,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -7234,18 +7321,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 39,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -7358,18 +7447,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 39,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -7648,18 +7739,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 41,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -7743,18 +7836,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 41,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -7832,7 +7927,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 42,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -7897,7 +7992,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 42,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -7974,18 +8069,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 38 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 43,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -8098,18 +8195,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 38 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 43,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -8181,18 +8280,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 44,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -8286,18 +8387,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 44,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -12615,18 +12718,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 45,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -12677,18 +12782,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 45,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -12756,18 +12863,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 34 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 46,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -12824,7 +12933,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 46,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -12905,7 +13014,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 47,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -12959,18 +13068,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 34 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 47,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -13036,18 +13147,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 34 30 32 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 48,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -13108,7 +13221,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 48,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -13186,18 +13299,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 49,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -13248,18 +13363,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 34 30 32 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 49,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -13327,18 +13444,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 50,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -13389,18 +13508,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 33 37 30 30 35 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 50,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -13479,7 +13600,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 51,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -13536,18 +13657,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 51,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -13620,7 +13743,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -13631,7 +13756,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -13691,7 +13816,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 52,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -13841,18 +13966,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -13992,18 +14119,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -14169,18 +14298,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 33 30 37 30 41 31 41 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -14350,18 +14481,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 34 31 32 31 45 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -14531,18 +14664,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 35 30 34 30 46 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -14697,9 +14832,15 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 39 30 30 33 30 31 30 0d",
+          "24 32 34 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*#1013**11*111111101111111011111101##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
@@ -14708,7 +14849,7 @@
         "suite": "thermo-actuator",
         "suite_sha256": "7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -14954,33 +15095,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15160,18 +15305,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 32 32 42 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15321,18 +15468,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 32 32 45 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15482,18 +15631,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 32 33 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15635,18 +15786,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15804,7 +15957,10 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 38 31 33 31 31 30 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -15815,7 +15971,7 @@
         "suite": "thermo-actuator",
         "suite_sha256": "7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -15966,18 +16122,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -16237,33 +16395,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -16447,18 +16609,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -16608,18 +16772,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -16758,18 +16924,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 30 42 30 34 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -16920,9 +17088,15 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 30 31 33 30 30 30 0d",
+          "24 32 34 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*#1013**11*111111101111111011111101##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
@@ -16931,7 +17105,7 @@
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -17082,18 +17256,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -17243,18 +17419,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 24,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -17412,9 +17590,15 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 30 31 33 30 31 33 0d",
+          "24 32 34 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*#1013**11*111111101111111011111101##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
@@ -17423,7 +17607,7 @@
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -17878,18 +18062,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 26,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18039,18 +18225,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 27,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18198,18 +18386,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 28,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18357,18 +18547,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 29,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18521,18 +18713,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 30,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18683,9 +18877,15 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 31 37 33 30 30 42 0d",
+          "24 32 34 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*#1013**11*111111101111111011111101##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 31,
         "product": "MH200N",
@@ -18694,7 +18894,7 @@
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -18851,7 +19051,10 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 32 38 33 30 31 33 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -18862,7 +19065,7 @@
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -19019,7 +19222,10 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 39 32 39 33 30 31 33 0d",
+          "24 32 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -19030,7 +19236,7 @@
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -19181,18 +19387,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 24,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -19452,33 +19660,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -19662,18 +19874,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 26,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -19823,18 +20037,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 27,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-fan-speed.tsv",
         "suite": "thermo-fan-speed",
         "suite_sha256": "96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -23442,7 +23658,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 53,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -23526,7 +23742,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 53,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -23603,7 +23819,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -23614,7 +23832,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -23700,7 +23918,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 34 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -23711,7 +23931,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -23873,7 +24093,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 55,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -23950,18 +24170,23 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 32 0d",
+          "24 30 33 41 41 30 30 31 36 31 30 0d",
+          "24 30 33 41 41 30 30 31 36 31 31 0d",
+          "24 30 33 41 41 30 30 31 36 30 36 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 56,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -24046,7 +24271,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -24057,7 +24284,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -24127,18 +24354,22 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 37 0d",
+          "24 30 33 41 41 30 30 31 36 30 38 0d",
+          "24 30 33 41 41 30 30 31 36 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 57,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -24310,7 +24541,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 58,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -24381,18 +24612,23 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 32 0d",
+          "24 30 33 41 41 30 30 31 36 31 30 0d",
+          "24 30 33 41 41 30 30 31 36 31 31 0d",
+          "24 30 33 41 41 30 30 31 36 30 36 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 58,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -24464,7 +24700,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -24475,7 +24713,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -24532,18 +24770,22 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 37 0d",
+          "24 30 33 41 41 30 30 31 36 30 38 0d",
+          "24 30 33 41 41 30 30 31 36 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 59,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -24621,7 +24863,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 60,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -24689,7 +24931,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 60,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -24766,7 +25008,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -24777,7 +25021,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -24834,7 +25078,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -24845,7 +25091,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -24925,7 +25171,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 62,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -24993,7 +25239,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 62,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -25068,7 +25314,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -25079,7 +25327,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -25136,7 +25384,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -25147,7 +25397,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -25225,18 +25475,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 64,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -25299,7 +25551,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 64,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -25381,7 +25633,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 36 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -25392,7 +25646,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -25449,7 +25703,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -25460,7 +25716,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -25532,18 +25788,22 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 37 0d",
+          "24 30 33 41 41 30 30 31 36 30 38 0d",
+          "24 30 33 41 41 30 30 31 36 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 66,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -25600,18 +25860,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 31 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 66,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -25689,7 +25951,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 67,
         "product": "F454",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -25751,7 +26013,9 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 36 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -25762,7 +26026,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -25834,7 +26098,15 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 32 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 31 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 36 30 31 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 36 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 34 30 31 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 34 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 35 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -25845,7 +26117,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "timeout",
         "version": "020051"
       },
       {
@@ -25902,18 +26174,22 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 33 41 41 30 30 31 36 30 37 0d",
+          "24 30 33 41 41 30 30 31 36 30 38 0d",
+          "24 30 33 41 41 30 30 31 36 30 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 68,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -25985,18 +26261,24 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 35 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 44 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 30 30 41 30 31 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 31 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 34 30 41 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 69,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -26059,7 +26341,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 69,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -26142,7 +26424,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 70,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -26204,7 +26486,15 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 32 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 31 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 36 30 31 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 36 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 34 30 31 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 34 30 30 0d",
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 35 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
@@ -26215,7 +26505,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "timeout",
         "version": "010108"
       },
       {
@@ -26287,18 +26577,26 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 42 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 43 30 41 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 31 30 30 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 30 46 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 46 46 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 71,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "timeout",
         "version": "020051"
       },
       {
@@ -26355,18 +26653,25 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 32 33 32 31 30 30 31 30 35 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 44 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 30 30 41 30 31 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 31 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 34 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 71,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "timeout",
         "version": "010108"
       },
       {
@@ -26438,18 +26743,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 34 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 72,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -26506,18 +26813,26 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 42 30 41 30 30 0d",
+          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 43 30 41 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 31 30 30 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 30 46 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 46 46 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 32 30 30 30 30 0d",
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 34 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 72,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "timeout",
         "version": "010108"
       },
       {
@@ -26589,18 +26904,20 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 34 30 32 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 73,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -26657,18 +26974,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 42 31 31 32 33 32 37 30 30 34 30 32 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 73,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -33639,7 +33958,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 74,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -33699,7 +34018,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 74,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -34185,7 +34504,9 @@
         "version": "030014"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 37 30 31 31 33 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
@@ -34196,7 +34517,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "020051"
       },
       {
@@ -34247,9 +34568,13 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 37 30 31 31 33 30 30 0d"
+        ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*3*2*#1##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 78,
         "product": "MH200N",
@@ -34258,7 +34583,7 @@
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -34334,7 +34659,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 79,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -34392,16 +34717,18 @@
       {
         "bus_frames": [],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*3*2*#2##"
+        ],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 79,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -34475,7 +34802,7 @@
         "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
         "line_number": 80,
         "product": "F454",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F454/020051/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -34535,7 +34862,7 @@
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 80,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/energy-ts10.tsv",
         "suite": "energy-ts10",
         "suite_sha256": "ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad",
@@ -34795,33 +35122,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -35115,33 +35446,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -35324,18 +35659,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 46 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-zone-mode.tsv",
         "suite": "thermo-zone-mode",
         "suite_sha256": "46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -35596,33 +35933,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 46 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 46 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -35916,33 +36257,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 46 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 46 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -36126,18 +36471,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 46 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 17,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-zone-mode.tsv",
         "suite": "thermo-zone-mode",
         "suite_sha256": "46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -37281,33 +37628,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 28,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -37601,33 +37952,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 29,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -37812,18 +38167,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 37 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 32,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -37973,18 +38330,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 30,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -38134,18 +38493,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 31 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 31,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -38740,18 +39101,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 31 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 34,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -38901,18 +39264,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 31 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 35,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -39062,18 +39427,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 39 32 41 30 35 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 33,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -39333,33 +39700,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 36,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -39653,33 +40024,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 37,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 26,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -39863,18 +40238,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 37 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 34,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -40024,18 +40401,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 39 32 41 30 35 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 35,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -40185,18 +40564,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 37 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 36,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -40456,33 +40837,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 38,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 27,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -40776,33 +41161,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 39,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 28,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -40986,18 +41375,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 36 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 37,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -41637,18 +42028,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 38,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -41798,18 +42191,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 39,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -41959,18 +42354,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 40,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -42236,33 +42633,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 42,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 29,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -42556,33 +42957,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 43,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 30,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-central-mode.tsv",
         "suite": "thermo-central-mode",
         "suite_sha256": "c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -42883,33 +43288,37 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 44,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-zone-mode.tsv",
         "suite": "thermo-zone-mode",
         "suite_sha256": "46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -43093,18 +43502,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 41,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -43254,18 +43665,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 32 36 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 45,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/ownd-pr82-heating.tsv",
         "suite": "ownd-pr82-heating",
         "suite_sha256": "adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -43853,18 +44266,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 46 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 42,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44014,18 +44429,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 43,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44175,18 +44592,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 44,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44334,18 +44753,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 34 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 45,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44495,18 +44916,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 46,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44656,18 +45079,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 33 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 47,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44817,18 +45242,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 31 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 48,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -44978,18 +45405,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 46 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 49,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -45288,18 +45717,20 @@
         "version": "020011"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 35 30 35 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 51,
         "product": "MH200N",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH200N/010108/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010108"
       },
       {
@@ -52805,5 +53236,5 @@
       }
     ]
   },
-  "verdicts_sha256": "8bbd808f4d88a0053570fe5e090263b92b0457669f48ee0c8dce1fff72b17e65"
+  "verdicts_sha256": "438c1c3074042929c01e4b8a22c94bc43391eaef89cdb2b692355e01e8df9072"
 }

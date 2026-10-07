@@ -43,6 +43,21 @@ programs:
     path: home/bticino/bin/bt_device
     sha256: "c54e00cd5dcb67975a741c784896bd429313483adf0f2f54acf77ed3bd3f3621"
     role: translator
+  # thermoregulation -- WHO 4
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "fa2e45e707b1a6d6ce31d04a54490e1ec7453bd2932b44aba23fc5bfeeac2b4c"
+    role: translator
+  # supervision / energy meter reading -- WHO 18
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "a40ebcb4b2cb50cc055d21e8617ae8c8fa6d752f9f7dce3bbe048816a65c2dd6"
+    role: translator
+  # energy management / load control -- WHO 3
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "b916f796972ea794aab16e2ed312b37403ec3e08895247388da72651d1d7344f"
+    role: translator
 
 # What the device's boot sets up before bt_processi starts the programs. Each
 # value cites the image (paths inside the staged sysroot); nothing is guessed

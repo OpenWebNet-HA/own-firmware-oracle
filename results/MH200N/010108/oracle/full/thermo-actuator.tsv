@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -13,6 +13,6 @@
 # suite_sha256=7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a
 # oracle_version=1
 direction	input	reply	verdict	output
-down	*#4*#0*20##	nack	silent	-
-down	*#4*1#1*20##	nack	silent	-
+down	*#4*#0*20##	nack	out	bus:24 30 34 42 39 30 30 33 30 31 30 0d | bus:24 32 34 0d | bus:24 32 34 0d | own:*#1013**11*111111101111111011111101##
+down	*#4*1#1*20##	nack	out	bus:24 30 34 39 39 38 31 33 31 31 30 0d | bus:24 32 34 0d
 down	*#4*1*20##	nack	silent	-
