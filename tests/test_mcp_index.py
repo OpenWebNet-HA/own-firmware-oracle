@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
@@ -123,10 +125,12 @@ def test_build_index(tmp_path: Path):
 
     index_data = mcp_index.build_index(res_dir, root=tmp_path)
     assert index_data["format_version"] == "1.0.0"
+    assert index_data["schema_version"] == "1.1.0"
     assert index_data["total_unique_inputs"] == 1
     assert len(index_data["gateways"]) == 1
     gw = index_data["gateways"][0]
     assert gw["product"] == "MH200N"
+    assert gw["status"] == "emulated"
     assert gw["suites"] == ["s1"]
     assert "*1*1*31##" in index_data["verdicts"]
     assert len(index_data["verdicts"]["*1*1*31##"]) == 2
@@ -139,7 +143,7 @@ def test_format_index_json():
     assert json.loads(formatted) == data
 
 
-def test_build_index_with_catalog(tmp_path: Path):
+def test_build_index_with_catalog(tmp_path: Path, capsys):
     cat_dir = tmp_path / "catalog"
     (cat_dir / "F454").mkdir(parents=True)
     (cat_dir / "MH200N").mkdir(parents=True)
@@ -148,7 +152,7 @@ def test_build_index_with_catalog(tmp_path: Path):
     (cat_dir / "NoProd").mkdir(parents=True)
     (cat_dir / "NoImgDict").mkdir(parents=True)
 
-    # 1. Valid pending emulation entry
+    # 1. Valid catalogued entry
     (cat_dir / "F454" / "020051.yaml").write_text(
         "product: F454\nversion: '020051'\nimage:\n  sha256: f454_img\n",
         encoding="utf-8",
@@ -185,7 +189,7 @@ def test_build_index_with_catalog(tmp_path: Path):
     tsv1.write_text(
         "# product=MH200N\n"
         "# version=010108\n"
-        "# image_sha256=mh_img_updated\n"
+        "# image_sha256=mh_img\n"
         "# target_sha256=tgt_updated\n"
         "# suite=s1\n"
         "direction\tinput\treply\tverdict\toutput\n"
@@ -209,7 +213,7 @@ def test_build_index_with_catalog(tmp_path: Path):
     gw_by_prod = {g["product"]: g for g in gateways}
 
     assert "F454" in gw_by_prod
-    assert gw_by_prod["F454"]["status"] == "pending_emulation"
+    assert gw_by_prod["F454"]["status"] == "catalogued"
     assert gw_by_prod["F454"]["suites"] == []
     assert gw_by_prod["F454"]["image_sha256"] == "f454_img"
     assert gw_by_prod["F454"]["target_sha256"] == ""
@@ -218,10 +222,68 @@ def test_build_index_with_catalog(tmp_path: Path):
     assert gw_by_prod["MH200N"]["status"] == "emulated"
     assert gw_by_prod["MH200N"]["suites"] == ["s1", "s2"]
     assert gw_by_prod["MH200N"]["target_sha256"] == "tgt_updated"
-    assert gw_by_prod["MH200N"]["image_sha256"] == "mh_img_updated"
+    assert gw_by_prod["MH200N"]["image_sha256"] == "mh_img"
 
     assert "NoImg" in gw_by_prod
     assert gw_by_prod["NoImg"]["image_sha256"] == ""
+
+    captured = capsys.readouterr()
+    assert "WARNING - failed to parse" in captured.err
+    assert "WARNING - skipping" in captured.err
+    assert "not a mapping" in captured.err
+    assert "missing product or version" in captured.err
+
+
+def test_build_index_conflicting_image_sha256(tmp_path: Path):
+    cat_dir = tmp_path / "catalog"
+    (cat_dir / "MH200N").mkdir(parents=True)
+    (cat_dir / "MH200N" / "010108.yaml").write_text(
+        "product: MH200N\nversion: '010108'\nimage:\n  sha256: mh_img_orig\n",
+        encoding="utf-8",
+    )
+    res_dir = tmp_path / "results"
+    full_dir = res_dir / "MH200N" / "010108" / "oracle" / "full"
+    full_dir.mkdir(parents=True)
+    (full_dir / "s1.tsv").write_text(
+        "# product=MH200N\n"
+        "# version=010108\n"
+        "# image_sha256=mh_img_conflict\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*31##\tack\tout\tbus:24 0d\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Conflicting image_sha256"):
+        mcp_index.build_index(res_dir, catalog_dir=cat_dir, root=tmp_path)
+
+
+def test_build_index_conflicting_target_sha256(tmp_path: Path):
+    cat_dir = tmp_path / "catalog"
+    (cat_dir / "MH200N").mkdir(parents=True)
+    (cat_dir / "MH200N" / "010108.yaml").write_text(
+        "product: MH200N\nversion: '010108'\nimage:\n  sha256: mh_img\n",
+        encoding="utf-8",
+    )
+    res_dir = tmp_path / "results"
+    full_dir = res_dir / "MH200N" / "010108" / "oracle" / "full"
+    full_dir.mkdir(parents=True)
+    (full_dir / "s1.tsv").write_text(
+        "# product=MH200N\n"
+        "# version=010108\n"
+        "# target_sha256=tgt_1\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*31##\tack\tout\tbus:24 0d\n",
+        encoding="utf-8",
+    )
+    (full_dir / "s2.tsv").write_text(
+        "# product=MH200N\n"
+        "# version=010108\n"
+        "# target_sha256=tgt_2\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*31##\tack\tout\tbus:24 0d\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Conflicting target_sha256"):
+        mcp_index.build_index(res_dir, catalog_dir=cat_dir, root=tmp_path)
 
 
 def test_main(tmp_path: Path, monkeypatch, capsys):
@@ -267,7 +329,7 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         assert mcp_index.main() == 0
         captured = capsys.readouterr()
         assert "wrote results/mcp_index.json" in captured.out
-        assert "Gateways Indexed: 2 (1 emulated, 1 pending emulation)" in captured.out
+        assert "Gateways Indexed: 2 (1 emulated, 1 catalogued)" in captured.out
 
         # 2. Check run passes
         monkeypatch.setattr(
@@ -319,6 +381,22 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         captured = capsys.readouterr()
         assert "is out of date" in captured.err
 
+        # 4b. Check run fails when build_index raises ValueError
+        with patch("mcp_index.build_index", side_effect=ValueError("conflicting hash")):
+            monkeypatch.setattr(
+                "sys.argv",
+                [
+                    "mcp_index.py",
+                    "--results-dir",
+                    str(res_dir),
+                    "--out",
+                    str(out_file),
+                ],
+            )
+            assert mcp_index.main() == 1
+            captured = capsys.readouterr()
+            assert "mcp_index: ERROR - conflicting hash" in captured.err
+
         # 5. Normal run outside ROOT (ValueError on relative_to)
         outside_out = tmp_path.parent / "outside_index.json"
         monkeypatch.setattr(
@@ -351,6 +429,6 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         )
         assert mcp_index.main() == 0
         captured = capsys.readouterr()
-        assert "pending emulation" in captured.out
+        assert "catalogued" in captured.out
         assert "[emulated]" in captured.out
-        assert "[pending_emulation]" in captured.out
+        assert "[catalogued]" in captured.out

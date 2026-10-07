@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """mcp_index -- build a deterministic, hash-pinned verdict index for openwebnet-mcp.
 
-Scans `results/<product>/<version>/oracle/**/*.tsv` and aggregates all input
-frames (down/up) into a deterministic JSON index mapping each frame to its
-observed gateway replies, verdicts, bus outputs, and emitted events with
-complete cryptographic and row-level provenance.
+Discovers the full gateway fleet from `catalog/*/*.yaml` and aggregates all input
+frames (down/up) from `results/<product>/<version>/oracle/full/*.tsv` into a
+deterministic JSON index mapping each frame to its observed gateway replies,
+verdicts, bus outputs, and emitted events with complete cryptographic and
+row-level provenance.
+
+Schema version 1.1.0 changes:
+- `gateways[]` entries record a `status` field: `"emulated"` (active emulator with
+  verdicts) or `"catalogued"` (catalogued in fleet, awaiting future emulation).
+- Catalogued gateways without test suites have `suites: []` and empty
+  `target_sha256: ""` (indicating no emulated target binary was pinned, not a hash).
+- `verdicts_sha256` is the canonical SHA-256 fingerprint over the sorted
+  `verdicts` mapping only; it does not cover fleet membership.
 """
 
 from __future__ import annotations
@@ -45,7 +54,7 @@ class GatewayRecord:
     image_sha256: str
     target_sha256: str
     suites: set[str]
-    status: str = "pending_emulation"
+    status: str = "catalogued"
 
 
 def parse_output_column(output_str: str) -> tuple[list[str], list[str]]:
@@ -152,10 +161,19 @@ def discover_catalog_gateways(
     for yaml_path in sorted(catalog_dir.glob("*/*.yaml")):
         try:
             entry = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        except yaml.YAMLError:
+        except yaml.YAMLError as exc:
+            print(
+                f"mcp_index: WARNING - failed to parse {yaml_path}: {exc}",
+                file=sys.stderr,
+            )
             entry = None
 
         if not isinstance(entry, dict):
+            if entry is not None:
+                print(
+                    f"mcp_index: WARNING - skipping {yaml_path}: not a mapping",
+                    file=sys.stderr,
+                )
             continue
 
         product = str(entry.get("product", "")).strip()
@@ -172,10 +190,44 @@ def discover_catalog_gateways(
                 image_sha256=image_sha,
                 target_sha256="",
                 suites=set(),
-                status="pending_emulation",
+                status="catalogued",
+            )
+        else:
+            print(
+                f"mcp_index: WARNING - skipping {yaml_path}: "
+                "missing product or version",
+                file=sys.stderr,
             )
 
     return gateways_map
+
+
+def _update_gateway_record(
+    gw: GatewayRecord,
+    gw_key: tuple[str, str],
+    first_entry: VerdictEntry,
+    tsv_path: Path,
+) -> None:
+    """Validate hashes and update an existing GatewayRecord with TSV data."""
+    if first_entry.image_sha256:
+        if gw.image_sha256 and gw.image_sha256 != first_entry.image_sha256:
+            raise ValueError(
+                f"Conflicting image_sha256 for {gw_key}: "
+                f"'{gw.image_sha256}' vs '{first_entry.image_sha256}' "
+                f"in {tsv_path}"
+            )
+        gw.image_sha256 = first_entry.image_sha256
+
+    if first_entry.target_sha256:
+        if gw.target_sha256 and gw.target_sha256 != first_entry.target_sha256:
+            raise ValueError(
+                f"Conflicting target_sha256 for {gw_key}: "
+                f"'{gw.target_sha256}' vs '{first_entry.target_sha256}' "
+                f"in {tsv_path}"
+            )
+        gw.target_sha256 = first_entry.target_sha256
+
+    gw.status = "emulated"
 
 
 def build_index(
@@ -208,11 +260,7 @@ def build_index(
                 status="emulated",
             )
         else:
-            if first_entry.target_sha256:
-                gateways_map[gw_key].target_sha256 = first_entry.target_sha256
-            if first_entry.image_sha256:
-                gateways_map[gw_key].image_sha256 = first_entry.image_sha256
-            gateways_map[gw_key].status = "emulated"
+            _update_gateway_record(gateways_map[gw_key], gw_key, first_entry, tsv_path)
 
         if first_entry.suite:
             gateways_map[gw_key].suites.add(first_entry.suite)
@@ -257,7 +305,7 @@ def build_index(
     return {
         "format_version": "1.0.0",
         "generator": "own-firmware-oracle",
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "verdicts_sha256": content_sha256,
         "total_unique_inputs": len(sorted_verdicts),
         "gateways": gateways_list,
@@ -305,7 +353,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    index_data = build_index(args.results_dir, catalog_dir=args.catalog_dir)
+    try:
+        index_data = build_index(args.results_dir, catalog_dir=args.catalog_dir)
+    except ValueError as exc:
+        print(f"mcp_index: ERROR - {exc}", file=sys.stderr)
+        return 1
+
     rendered = format_index_json(index_data)
 
     gateways_obj = index_data.get("gateways", [])
@@ -341,11 +394,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.summary:
         emulated_count = sum(1 for g in gateways_list if g.get("status") == "emulated")
-        pending_count = len(gateways_list) - emulated_count
+        catalogued_count = len(gateways_list) - emulated_count
         print(f"Total Unique Inputs: {total_inputs}")
         print(
             f"Gateways Indexed: {gateways_count} "
-            f"({emulated_count} emulated, {pending_count} pending emulation)"
+            f"({emulated_count} emulated, {catalogued_count} catalogued)"
         )
         for gw in gateways_list:
             suites_val = gw["suites"]
