@@ -438,6 +438,11 @@ def test_bus_get_responder():
     assert isinstance(r_pic, bus.PicResponder)
     assert r_pic.version == "010108"
     assert isinstance(bus.get_responder("pic-mh200n"), bus.PicResponder)
+    assert isinstance(bus.get_responder("sound_source"), bus.SoundSourceResponder)
+    r_pic_src = bus.get_responder("pic:sound_source", version="010108")
+    assert isinstance(r_pic_src, bus.PicResponder)
+    assert isinstance(r_pic_src.inner, bus.SoundSourceResponder)
+    assert r_pic_src.name == "pic:sound_source"
 
     # Error cases exercising all branch conditions
     for bad in (
@@ -450,6 +455,36 @@ def test_bus_get_responder():
             continue
         with pytest.raises(ValueError, match="unknown responder"):
             bus.get_responder(bad)
+
+
+def test_sound_source_responder():
+    ssr = bus.SoundSourceResponder(source_id=2)
+    assert ssr.name == "sound_source"
+    assert not ssr.power_on
+
+    # Non-write or non-matching frames return empty
+    assert ssr.respond(b"$24\r") == []
+    assert ssr.respond(b"$030490018F03C1\r") == []  # Source 3, not 2
+
+    # Power on write for Source 2
+    assert ssr.respond(b"$030490018F02C1\r") == []
+    assert ssr.power_on
+
+    # Status query returns ON frame
+    assert ssr.respond(b"$030495018F0200\r") == [b"$0490018F02C1\r"]
+
+    # Power off write
+    assert ssr.respond(b"$030491018F02C0\r") == []
+    assert not ssr.power_on
+
+    # Status query returns OFF frame
+    assert ssr.respond(b"$030495018F0200\r") == [b"$0490018F02C0\r"]
+
+    # Tuner Frequency query
+    assert ssr.respond(b"$030496018F0200\r") == [b"$06D101A1F8\r"]
+
+    # RDS query
+    assert ssr.respond(b"$030498018F0200\r") == [b"$0AD1524144494F202031\r"]
 
 
 def test_target_roles_and_ports():
