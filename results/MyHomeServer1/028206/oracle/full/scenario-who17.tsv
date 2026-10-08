@@ -1,0 +1,24 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=scenario-who17
+# suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#17##	nack	silent	-
+down	*#17*0##	nack	silent	-
+down	*#17*1##	nack	silent	-
+down	*#17*1*40##	nack	silent	-
+down	*#17*1*41##	nack	silent	-
+down	*17*1*1##	nack	silent	-
+down	*17*2*1##	nack	silent	-
+down	*17*3*1##	nack	silent	-
+down	*17*4*1##	nack	silent	-

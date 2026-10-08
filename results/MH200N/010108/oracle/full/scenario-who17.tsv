@@ -1,0 +1,24 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=scenario-who17
+# suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#17##	nack	silent	-
+down	*#17*0##	nack	silent	-
+down	*#17*1##	nack	silent	-
+down	*#17*1*40##	nack	silent	-
+down	*#17*1*41##	nack	silent	-
+down	*17*1*1##	nack	silent	-
+down	*17*2*1##	nack	silent	-
+down	*17*3*1##	nack	silent	-
+down	*17*4*1##	nack	silent	-

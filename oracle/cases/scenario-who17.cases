@@ -1,0 +1,17 @@
+; WHO 17 Scenario Management verification across gateway fleet.
+; Lifecycle commands, status requests, and dimension queries.
+
+; 1. Downstream lifecycle commands
+down *17*1*1##
+down *17*2*1##
+down *17*3*1##
+down *17*4*1##
+
+; 2. Downstream status queries
+down *#17*1##
+down *#17*0##
+down *#17##
+
+; 3. Downstream dimension queries
+down *#17*1*40##
+down *#17*1*41##
