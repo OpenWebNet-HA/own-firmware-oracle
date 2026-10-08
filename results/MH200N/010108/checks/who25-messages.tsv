@@ -12,7 +12,7 @@
 # suite=who25-messages
 # suite_sha256=57f36863e445aa963e48f4bfcd45297256dab5a2842c6b3c9944e66a845f7bb5
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*25*11#121*10##	nack	silent	-	-	unchecked
 down	*25*12*131##	nack	out	bus:24 30 34 42 31 31 46 39 34 30 30 0d | bus:24 32 34 0d | bus:24 32 34 0d	-	unchecked

@@ -12,7 +12,7 @@
 # suite=interface-routing
 # suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*0*1*31#4#01##	-	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked
 down	*0*1*31#4#02##	-	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked

@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -12,7 +12,7 @@
 # suite=matrix-refused
 # suite_sha256=688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*#1*1*#1*20##	nack	out	bus:24 30 30 32 30 30 30 30 0d	-	unchecked
 down	*#18*51*52##	nack	out	bus:24 30 30 32 30 30 30 30 0d	-	unchecked

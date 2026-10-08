@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -12,7 +12,7 @@
 # suite=ownd-pr82-lights
 # suite_sha256=57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
 down	*#1*31*#1*100*0##	nack	silent	-	-	unchecked
 down	*#1*31*#1*100*5##	nack	silent	-	-	unchecked

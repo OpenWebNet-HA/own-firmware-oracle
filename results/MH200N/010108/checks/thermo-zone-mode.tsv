@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
 # adapter=pty-1
-# reset=each
+# reset=0
 # bus=pty
 # framer=line
 # responder=pic
@@ -12,10 +12,10 @@
 # suite=thermo-zone-mode
 # suite_sha256=46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f
 # oracle_version=1
-# ownd_version=2.0.0-b9
+# ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*4*0*1##	nack	silent	-	-	unchecked
-down	*4*1*1##	nack	silent	-	-	unchecked
+down	*4*0*1##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 43 31 46 31 30 30 30 30 0d	-	unchecked
+down	*4*1*1##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 43 31 46 30 30 30 30 30 0d	-	unchecked
 down	*4*303*1##	nack	silent	-	-	unchecked
-down	*4*311*#1##	nack	silent	-	-	unchecked
+down	*4*311*#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d	-	unchecked
 down	*4*311*1##	nack	silent	-	-	unchecked
