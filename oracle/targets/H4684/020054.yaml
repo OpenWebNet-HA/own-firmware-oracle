@@ -38,17 +38,67 @@ programs:
     path: home/bticino/bin/bt_luci
     sha256: "d30e6c06c8b6af084be9e54f884788df4ac9a8e7495f4da963b5905ae7293c1c"
     role: translator
+    port: 40001
+
   # diagnostics, clock -- WHO 13 / 1013
   bt_device:
     path: home/bticino/bin/bt_device
     sha256: "5b0768d672719f2952a14d898c825266b02703b6db407c0c0ad3bc8a9712b246"
     role: translator
+    port: 40013
+
+  # thermoregulation
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "c21fceaaefd9e19601ecc3f959e88ebdb8f506e02b81d99dfcead502adbaa143"
+    role: translator
+    port: 40004
+
+  # sound diffusion
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "fe1e242c5489acdca850ed7768e46da1442774f586fb4990be8c7c6b2307ad81"
+    role: translator
+    port: 40016
+
+  # video door entry / intercom
+  bt_vct:
+    path: home/bticino/bin/bt_vct
+    sha256: "9820fa7eff2472e6f8c38055df755e3a8d794aa5a884c9b0f9d23f9dd4ea87f3"
+    role: translator
+    port: 40006
+
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "e09a74abe9471f49643b0566b0f5276313388d17c9029a4ed27fa3d44ed9bebb"
+    role: translator
+    port: 40003
+
+  # burglar alarm
+  bt_alarm:
+    path: home/bticino/bin/bt_alarm
+    sha256: "170e74e09720d57928ad8cffa6f6af55e2591f66c620d87b56475a7363021c97"
+    role: translator
+    port: 40005
 
 runtime:
   cwd: /home/bticino
   env:
-    LD_LIBRARY_PATH: /home/bticino/lib
+    LD_LIBRARY_PATH: /lib:/usr/lib:/home/bticino/lib
+  tmpfs:
+    - /var/tmp
+  dirs:
+    - /var/tmp/bticino/bt_wd
+    - /var/tmp/run/bticino
+    - /var/run
   devices:
     /dev/ttyPIC: pty
+    /dev/dsp1: pty
   stack_config: home/bticino/cfg/stack_open.xml
   kernel_release: "2.4.19"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full

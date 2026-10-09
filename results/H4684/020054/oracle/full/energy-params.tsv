@@ -1,0 +1,20 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=energy-params
+# suite_sha256=964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#18*51*51##	nack	silent	-
+down	*#18*51*511#10#1##	nack	silent	-
+down	*#18*51*511#10#2##	nack	silent	-
+down	*#18*51*52##	nack	silent	-
+down	*#18*51*52#26#9##	nack	silent	-

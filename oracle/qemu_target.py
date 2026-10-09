@@ -385,29 +385,39 @@ class QemuTarget:
             raise NotImplementedError(
                 f"authentication scheme {self.spec.own_auth!r} not implemented yet"
             )
+        is_open_v2 = self.spec.product == "H4684"
+
         s_ev = socket.create_connection(("127.0.0.1", port), timeout=3.0)
-        banner = recv_own_frame(s_ev, timeout=2.0)
-        if banner != BANNER:
-            s_ev.close()
-            raise RuntimeError(f"event session unexpected banner: {banner!r}")
-        s_ev.sendall(b"*99*1##")
-        ack = recv_own_frame(s_ev, timeout=2.0)
-        if ack != BANNER:
-            s_ev.close()
-            raise RuntimeError(f"event session handshake failed: {ack!r}")
+        if is_open_v2:
+            s_ev.sendall(b"*99***1##")
+            ack = recv_own_frame(s_ev, timeout=2.0)
+            if ack != BANNER:
+                s_ev.close()
+                raise RuntimeError(f"OPEN v2 event session handshake failed: {ack!r}")
+        else:
+            banner = recv_own_frame(s_ev, timeout=2.0)
+            if banner != BANNER:
+                s_ev.close()
+                raise RuntimeError(f"event session unexpected banner: {banner!r}")
+            s_ev.sendall(b"*99*1##")
+            ack = recv_own_frame(s_ev, timeout=2.0)
+            if ack != BANNER:
+                s_ev.close()
+                raise RuntimeError(f"event session handshake failed: {ack!r}")
         s_ev.setblocking(False)
         self._ev_sock = s_ev
 
         s_cmd = socket.create_connection(("127.0.0.1", port), timeout=3.0)
-        banner = recv_own_frame(s_cmd, timeout=2.0)
-        if banner != BANNER:
-            s_cmd.close()
-            raise RuntimeError(f"command session unexpected banner: {banner!r}")
-        s_cmd.sendall(b"*99*0##")
-        ack = recv_own_frame(s_cmd, timeout=2.0)
-        if ack != BANNER:
-            s_cmd.close()
-            raise RuntimeError(f"command session handshake failed: {ack!r}")
+        if not is_open_v2:
+            banner = recv_own_frame(s_cmd, timeout=2.0)
+            if banner != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session unexpected banner: {banner!r}")
+            s_cmd.sendall(b"*99*0##")
+            ack = recv_own_frame(s_cmd, timeout=2.0)
+            if ack != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session handshake failed: {ack!r}")
         s_cmd.settimeout(4.0)
         self._cmd_sock = s_cmd
 

@@ -119,6 +119,7 @@ EMULATED_ORDER = [
     "F460",
     "F461",
     "F450",
+    "H4684",
 ]
 
 # Known hardware categorization sets
@@ -281,9 +282,14 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
         "layers": "Ext2, Gzip, Zip",
         "daemons": (
             "Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, "
-            "`bt_luci`, `bt_device`)"
+            "`bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, "
+            "`bt_energia`, `bt_alarm`)"
         ),
-        "pending_status": "Pending Emulation (Phase 2 target defined)",
+        "phase2f_desc": (
+            "Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, "
+            "`bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, "
+            "`bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — {suites} suites)"
+        ),
     },
     "L4561N": {
         "title": "Stereo Control Interface",

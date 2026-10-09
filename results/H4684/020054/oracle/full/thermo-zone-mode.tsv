@@ -1,0 +1,20 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-zone-mode
+# suite_sha256=46cfe1d80f81ff4fec7f38e5d9bd5d2d6a2060cd9d6e9f2e167f0d666252fa5f
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*4*0*1##	nack	silent	-
+down	*4*1*1##	nack	silent	-
+down	*4*303*1##	nack	silent	-
+down	*4*311*#1##	ack	out	bus:24 35 32 30 32 30 35 0d | bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d
+down	*4*311*1##	nack	silent	-

@@ -1,0 +1,26 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=lights-level
+# suite_sha256=f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*0*#1*100*0##	nack	silent	-
+down	*#1*31*#1*100*0##	nack	silent	-
+down	*#1*31*#1*100*255##	nack	silent	-
+down	*#1*31*#1*100*5##	nack	silent	-
+down	*#1*31*#1*101*0##	ack	out	bus:24 35 32 30 32 30 35 0d | bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d
+down	*1*0#0*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d
+down	*1*0#1*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d
+down	*1*0#255*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d
+down	*1*0#5*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d
+down	*1*0*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 31 0d
+down	*1*1*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 30 0d

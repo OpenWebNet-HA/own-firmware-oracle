@@ -1,0 +1,80 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=energy-ts10
+# suite_sha256=ae576deb4f97c6af81e22c221f24dadb99f4813610e99e19ed96fc1d137896ad
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#18*11*#212*10##	nack	silent	-
+down	*#18*11*212##	nack	silent	-
+down	*#18*11*250##	nack	silent	-
+down	*#18*11*251##	nack	silent	-
+down	*#18*11*258##	nack	silent	-
+down	*#18*51*#1200#1*0##	nack	silent	-
+down	*#18*51*#1200#1*255##	nack	silent	-
+down	*#18*51*#517#1*1234##	nack	silent	-
+down	*#18*51*113##	nack	out	bus:24 35 32 30 32 30 35 0d
+down	*#18*51*1130##	nack	silent	-
+down	*#18*51*1134##	nack	silent	-
+down	*#18*51*51##	nack	silent	-
+down	*#18*51*511#10#1##	nack	silent	-
+down	*#18*51*511#10#2##	nack	silent	-
+down	*#18*51*512#10##	nack	silent	-
+down	*#18*51*513#10##	nack	silent	-
+down	*#18*51*514#10##	nack	silent	-
+down	*#18*51*516##	nack	out	bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d
+down	*#18*51*517#1##	nack	silent	-
+down	*#18*51*517#2##	nack	silent	-
+down	*#18*51*52##	nack	silent	-
+down	*#18*51*52#26#9##	nack	silent	-
+down	*#18*51*53##	nack	silent	-
+down	*#18*51*54##	nack	silent	-
+down	*#18*71#0*113##	nack	silent	-
+down	*#18*71#0*71##	nack	silent	-
+down	*#18*71#0*72#1##	nack	silent	-
+down	*#18*71#0*72#2##	nack	silent	-
+down	*#18*71#0*73##	nack	silent	-
+down	*#3*#1##	-	out	bus:24 30 33 41 41 30 30 31 36 31 34 0d
+down	*#3*#2##	nack	out	bus:24 30 33 41 41 30 30 31 36 31 34 0d
+down	*#3*0##	-	silent	-
+down	*#3*10*0##	nack	out	bus:24 30 33 41 41 30 30 31 36 31 33 0d
+down	*#3*10*1##	nack	silent	-
+down	*#3*10*2##	-	out	bus:24 30 33 41 41 30 30 31 36 31 32 0d | bus:24 30 33 41 41 30 30 31 36 31 30 0d | bus:24 30 33 41 41 30 30 31 36 31 31 0d | bus:24 30 33 41 41 30 30 31 36 30 36 0d
+down	*#3*10*3##	-	out	bus:24 30 33 41 41 30 30 31 36 30 37 0d | bus:24 30 33 41 41 30 30 31 36 30 38 0d | bus:24 30 33 41 41 30 30 31 36 30 39 0d
+down	*#3*10*4##	-	silent	-
+down	*18*21*11##	nack	out	bus:24 30 33 41 41 30 30 31 36 31 33 0d
+down	*18*22*11##	-	silent	-
+down	*18*23*11##	nack	out	bus:24 30 33 41 41 30 30 31 36 31 32 0d
+down	*18*24*11##	-	silent	-
+down	*18*26*11##	nack	out	bus:24 30 33 41 41 30 30 31 36 31 30 0d
+down	*18*27*11##	-	out	bus:24 30 33 41 41 30 30 31 36 31 31 0d
+down	*18*28*11##	nack	out	bus:24 30 33 41 41 30 30 31 36 30 36 0d
+down	*18*29*11##	-	out	bus:24 30 33 41 41 30 30 31 36 30 37 0d | bus:24 30 33 41 41 30 30 31 36 30 38 0d | bus:24 30 33 41 41 30 30 31 36 30 39 0d
+down	*18*510#10*51##	-	silent	-
+down	*18*52#10#1*51##	nack	silent	-
+down	*18*53#10*51##	nack	silent	-
+down	*18*56#10*51##	nack	silent	-
+down	*18*57#10#1*51##	nack	silent	-
+down	*18*58#10*51##	nack	silent	-
+down	*18*59#10*51##	nack	silent	-
+down	*18*71*71#0##	nack	silent	-
+down	*18*73#15*71#0##	nack	silent	-
+down	*18*73*71#0##	nack	silent	-
+down	*18*74*71#0##	nack	silent	-
+down	*18*75#1*71#0##	nack	silent	-
+down	*18*75#2*71#0##	nack	silent	-
+down	*3*0*#1##	nack	silent	-
+down	*3*0*0##	nack	silent	-
+down	*3*1*#1##	nack	silent	-
+down	*3*1*0##	nack	silent	-
+down	*3*2*#1##	nack	out	bus:24 30 34 42 37 30 31 31 33 30 30 0d | own:*3*2*#1##
+down	*3*2*#2##	ack	out	own:*3*2*#2##
+down	*3*3*#1##	ack	silent	-

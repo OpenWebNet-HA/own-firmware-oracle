@@ -1,0 +1,18 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=thermo-actuator
+# suite_sha256=7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#4*#0*20##	nack	silent	-
+down	*#4*1#1*20##	nack	silent	-
+down	*#4*1*20##	nack	silent	-

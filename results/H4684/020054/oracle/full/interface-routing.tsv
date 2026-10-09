@@ -1,0 +1,19 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=interface-routing
+# suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*0*1*31#4#01##	-	out	bus:24 35 32 30 32 30 35 0d | bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 45 34 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d | bus:24 30 36 45 34 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*0*1*31#4#02##	nack	out	bus:24 30 36 45 34 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d
+down	*14*0*31#4#01##	nack	out	bus:24 30 36 45 34 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d | bus:24 30 36 45 34 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d
+down	*14*0*31#4#02##	ack	out	bus:24 30 36 45 34 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d
