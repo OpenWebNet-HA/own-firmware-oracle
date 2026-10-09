@@ -1,0 +1,21 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=who25-messages
+# suite_sha256=57f36863e445aa963e48f4bfcd45297256dab5a2842c6b3c9944e66a845f7bb5
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*25*11#121*10##	nack	silent	-
+down	*25*12*131##	nack	silent	-
+down	*25*21#1*21##	nack	silent	-
+down	*25*23#8*233##	nack	silent	-
+down	*25*31#1*339##	nack	silent	-
+down	*25*32#1*33##	nack	silent	-

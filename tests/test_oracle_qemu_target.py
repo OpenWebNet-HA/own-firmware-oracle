@@ -736,6 +736,35 @@ def test_qemu_target_connect_sessions_success(monkeypatch, tmp_path):
     assert tgt._ev_sock is s_mock
 
 
+def test_qemu_target_connect_sessions_open_v2_success(monkeypatch, tmp_path):
+    spec = dataclasses.replace(_dummy_spec(), product="H4684")
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    s_mock = MagicMock()
+    monkeypatch.setattr(socket, "create_connection", lambda addr, timeout: s_mock)
+    monkeypatch.setattr(qemu_target, "recv_own_frame", lambda s, timeout: "*#*1##")
+
+    tgt._connect_sessions(20000)
+    assert tgt._cmd_sock is s_mock
+    assert tgt._ev_sock is s_mock
+    s_mock.sendall.assert_called_with(b"*99***1##")
+
+
+def test_qemu_target_connect_sessions_open_v2_failure(monkeypatch, tmp_path):
+    spec = dataclasses.replace(_dummy_spec(), product="H4684")
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    s_mock = MagicMock()
+    monkeypatch.setattr(socket, "create_connection", lambda addr, timeout: s_mock)
+    monkeypatch.setattr(qemu_target, "recv_own_frame", lambda s, timeout: "*#*0##")
+
+    with pytest.raises(RuntimeError, match="OPEN v2 event session handshake failed"):
+        tgt._connect_sessions(20000)
+    s_mock.close.assert_called_once()
+
+
 def test_qemu_target_stop_timeout_and_devices(tmp_path):
     spec = _dummy_spec()
     tgt = qemu_target.QemuTarget(

@@ -1,0 +1,26 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=matrix-refused
+# suite_sha256=688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*1*#1*20##	nack	silent	-
+down	*#18*51*52##	nack	silent	-
+down	*#2*1*#1*50##	nack	silent	-
+down	*15*01#1*0001##	nack	silent	-
+down	*15*01#2*0001##	nack	silent	-
+down	*15*01#3*0001##	nack	silent	-
+down	*15*01*0001##	nack	silent	-
+down	*2*1*21#4#1##	nack	silent	-
+down	*25*21*0001##	nack	out	bus:24 35 32 30 32 30 35 0d
+down	*25*22*0001##	nack	silent	-
+down	*25*23*0001##	nack	silent	-
