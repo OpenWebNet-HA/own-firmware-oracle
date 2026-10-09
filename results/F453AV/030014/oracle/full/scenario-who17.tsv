@@ -1,0 +1,24 @@
+# product=F453AV
+# version=030014
+# image_sha256=673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a
+# harness=full
+# target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=scenario-who17
+# suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#17##	nack	silent	-
+down	*#17*0##	nack	silent	-
+down	*#17*1##	nack	silent	-
+down	*#17*1*40##	nack	silent	-
+down	*#17*1*41##	nack	silent	-
+down	*17*1*1##	nack	silent	-
+down	*17*2*1##	nack	silent	-
+down	*17*3*1##	nack	silent	-
+down	*17*4*1##	nack	silent	-
