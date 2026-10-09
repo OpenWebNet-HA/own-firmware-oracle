@@ -33,6 +33,7 @@ ignore = [
 # Fixed argv lists, never a shell; git / debugfs come from PATH like any dev
 # tool. unpack.py checks the one variable argument (the work dir) first.
 "tools/guard.py" = ["S603", "S607"]
+"tools/plan.py" = ["S603", "S607"]
 # PLR0912/PLW0603: unpack's format sniffing and layer dispatch are flat
 # if/elif chains over magic numbers; SANDBOX is a CLI-set module switch.
 "tools/unpack.py" = ["S603", "S607", "PLR0912", "PLW0603"]
