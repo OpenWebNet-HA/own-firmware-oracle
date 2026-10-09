@@ -83,10 +83,12 @@ can add a layer the judge lacks: **does a real gateway accept this?**
 
 Proposed, in order of effort:
 
+<!-- MCP_METRICS_START -->
 1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
    index at `results/mcp_index.json` (389 unique frames, 3,173 verdicts across 9
    active gateway emulators). The MCP stays offline and read-only; it consumes
    this generated corpus like it does for the Machine KB.
+<!-- MCP_METRICS_END -->
 2. **`parse_and_validate_frame` gains a `firmware_verdict` per catalogued
    gateway** (`ack`, `nack`, `emits <bus frame>`, `not tested`). "Legal grammar,
    NACKed by MyHomeServer1 2.82.06" is the answer an assistant needs.
@@ -263,13 +265,14 @@ cannot go stale. Extraction tools (`debugfs`, `unsquashfs`, `fsck.cramfs`)
 run inside bubblewrap; `--no-sandbox` runs them unconfined and must be asked
 for explicitly.
 
-## Catalog: 11 Supported Gateways
+## Catalog: Supported Gateways & Hardware
 
-The oracle catalogues, unpacks, and tracks deterministic manifests for all 11 standalone OpenWebNet gateway models released by BTicino and Legrand:
+The oracle catalogues, unpacks, and tracks deterministic manifests for all standalone OpenWebNet gateway models released by BTicino and Legrand, as well as auxiliary touch screen consoles and interface hardware:
 
+<!-- FLEET_TABLE_START -->
 | Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact | Emulation Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 1,328 | U-Boot, Ext2, Zip | `openserver`, `scsserver` | **Emulated** (Phase 2 — 18 suites, full parity) |
+| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Zip | `openserver`, `scsserver` | **Emulated** (Phase 2 — 18 suites, full parity) |
 | **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 18 suites, full parity) |
 | **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`), `bt_vct`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 19 suites, full parity) |
 | **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 18 suites, full parity) |
@@ -280,12 +283,15 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all 11 st
 | **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | Basic IP interface gateway stack (`bacclient`, `scsserver`, `bt_device`, `bt_termo`) | **Emulated** (Phase 2 — 18 suites, full parity) |
 | **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`) | **Emulated** (Phase 2 — 18 suites, full parity) |
 | **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso`) | **Emulated** (Phase 2 — 18 suites, full parity) |
+| **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`) | Pending Emulation (Phase 2 target defined) |
+| **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
+<!-- FLEET_TABLE_END -->
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller
 
 The firmware oracle encounters two fundamentally different system architectures across the catalog:
 
-1. **Embedded Linux Gateways (9 of 11 models)**
+1. **Embedded Linux Gateways**
    - **Architectures**: Linux ARMv4 `oabi` (F453AV), ARMv5 `eabi5` (MH200N, MH202, F450, F454, F459), ARMv7 (MyHomeServer1), and AArch64 (F460, F461).
    - **Structure**: Multi-layer archives containing standard root filesystems (Ext2/4, SquashFS, CramFS, JFFS2). When unpacked, they produce hundreds to tens of thousands of individual user-space binaries, shared libraries, and configuration files.
    - **Oracle Execution**: Evaluated via user-space emulation (`qemu-arm` / `qemu-aarch64`) with simulated serial PTYs or Unix domain sockets.
@@ -296,11 +302,12 @@ The firmware oracle encounters two fundamentally different system architectures 
 
 ### Gateway Census: Complete Ingestion vs. Excluded Hardware
 
-The oracle project catalogues **100% of all standalone OpenWebNet IP/SCS gateways** for which BTicino or Legrand publicly released downloadable firmware update packages (11 out of 11).
+The oracle project catalogues **100% of all standalone OpenWebNet IP/SCS gateways** for which BTicino or Legrand publicly released downloadable firmware update packages.
 
 To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosystem, the table below details the ingested fleet versus hardware that is not part of the firmware oracle:
 
-#### 1. Ingested Fleet (11 of 11 Released Firmware Packages)
+#### 1. Ingested Fleet (Released Firmware Packages)
+<!-- FLEET_CENSUS_START -->
 - **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway. *(Emulated — 18 suites, full matrix parity)*
 - **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 18 suites, full matrix parity)*
 - **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — 19 suites, full matrix parity)*
@@ -313,10 +320,12 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter subset already 100% covered by Linux gateways with zero added value to the matrix)*
 - **MH201** (`030644` / 3.6.44): Hotel guest room scenario module (bare-metal ARM Cortex-M3 STM32F217). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter/scenario subset already covered by Linux gateways with zero added value to the matrix)*
 
-*(Note: Specialized bus interface hardware such as the **L4561N** Stereo Control Interface is also catalogued with full cryptographic provenance in `catalog/L4561N/040006.yaml`, bringing total catalogued firmware packages to 12).*
+*(Note: Auxiliary touch screen and specialized bus interface hardware such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`) and **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 13).*
+<!-- FLEET_CENSUS_END -->
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
 
+<!-- EXCLUDED_HARDWARE_START -->
 | Product SKU | Description | Exclusion Reason |
 | :--- | :--- | :--- |
 | **F452 / F452V** | First-generation Web Server DIN | Discontinued early 2000s hardware. Firmware was stored in masked ROM / EEPROM; no firmware update packages were ever published for download. |
@@ -324,13 +333,13 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 | **F458 / 003599** | IP Server | Specialized telecom/IP server module; no public firmware archive distributed. |
 | **MH200 / 003535** | Legacy Scenes Programmer | Physical RS232 serial hardware predecessor to MH200N (no Ethernet OpenWebNet server daemon). |
 | **HOMETOUCH 7" (3488 / 067259)** | Connected Touchscreen | Embedded Android touch display; firmware updates are distributed exclusively as full-device Android OTA updates, not OpenWebNet gateway images. |
-| **Classe 300X (`344642`, `344742`)** | Video Internal Unit with Wi-Fi | 2-wire video internal unit with Netatmo cloud bridging; firmware updates are delivered via encrypted OTA cloud synchronization. |
+| **Classe 300X (`344642`, `344742`)** | Video Internal Unit with Wi-Fi | 2-wire video internal unit with Netatmo cloud bridging; firmware updates are distributed exclusively as encrypted OTA cloud synchronization. |
 | **Classe 300 EOS (`344842`, `344845`)** | Smart Video Internal Unit | Connected video internal unit with Alexa; firmware updated exclusively via Netatmo / Legrand cloud OTA. |
-| **H4684 / L4684 / LN4684A (`067283`, `078474`)** | Colour Touch Screen 3.5" & 10" | Embedded display consoles; firmware flashed via MyHOME_Suite or USB, not released as standalone gateway images. |
 | **HC4690 / HD4690 / HS4690 (`067285`)** | Multimedia Touch Screen | 10-inch multimedia display console; specialized display firmware. |
 | **F422 / 003562** | SCS-to-SCS Interface Router | Pure galvanic bus-to-bus bridge microcontroller; no IP interface or OpenWebNet parser. |
 | **F429 / 002631** | SCS/DALI Gateway | Specialized DALI lighting interface controller; no OpenWebNet TCP server daemon. |
 | **BMNE4000 / 048832** | SCS/ZigBee Gateway | Hardware radio bridge; firmware is embedded radio stack without standalone OpenWebNet daemon. |
+<!-- EXCLUDED_HARDWARE_END -->
 
 ---
 
@@ -477,7 +486,9 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 
 ## Status
 
+<!-- STATUS_PHASE1_START -->
 - **Phase 1: Complete Fleet Ingestion & Unpack.** Done for all 11 standalone OpenWebNet gateways (MH200N, MyHomeServer1, F454, MH202, F453AV, F455, MH201, F461, F450, F459, F460). Every manifest is verified byte-for-byte and covered by weekly CI reproducibility runs.
+<!-- STATUS_PHASE1_END -->
 - **Phase 2b: Cross-Gateway Translation Divergence.**
   - `lights-level` suite verified on both MH200N and MyHomeServer1.
   - **MH200N**: Immediate ACK (`*#*1##` within ~13ms) upon queuing to the PIC UART.
@@ -489,6 +500,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **Sound Diffusion (WHO 22)**: `sound-who22.cases` verified on MyHomeServer1, F454, and MH200N ([`findings/MyHomeServer1/sound-who22.md`](findings/MyHomeServer1/sound-who22.md)). Proves byte-identical SCS output between MHS1 (`bt_multi`) and F454 for volume, while MH200N strictly refuses WHO 22 at its subsystem boundary.
   - **Energy Management (WHO 18 & WHO 3)**: `energy-ts10.cases` verified on MyHomeServer1, MH202, and MH200N ([`findings/MyHomeServer1/energy-ts10.md`](findings/MyHomeServer1/energy-ts10.md)). Proves exact equivalence between TS10 WHAT commands (`*18*57..`) and classic dimension frames (`*#18*..*511..`), automated reporting (`DIMENSION 1200`), and Stop&Go breaker controls.
   - **Video Door Entry & Intercom (WHO 8)**: `intercom-ts10.cases` verified on MyHomeServer1, MH202, MH200N, and F454 ([`findings/MyHomeServer1/intercom-ts10.md`](findings/MyHomeServer1/intercom-ts10.md)). Confirms subsystem boundary isolation across automation gateways (MHS1, MH200N, MH202) versus Audio/Video routing on F454.
+<!-- STATUS_PHASE2F_START -->
 - **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 9 active gateways under QEMU user emulation, achieving **full matrix parity across all 18 standard test suites (163 complete suite TSVs, including sound source suite on F454)**:
   - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver` — 18 suites).
   - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018 — 18 suites).
@@ -499,7 +511,10 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 18 suites).
   - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 18 suites).
   - **F450** (`020010`): IP interface gateway (`bacclient`, `scsserver`, `bt_device`, `bt_termo` via built-in SOAP mock on port 1234 — 18 suites).
+<!-- STATUS_PHASE2F_END -->
+<!-- STATUS_PHASE3_START -->
 - **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **389 unique OpenWebNet frames** across **19 test suites** and **9 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450), delivering **3,173 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
+<!-- STATUS_PHASE3_END -->
 
 ## License
 
