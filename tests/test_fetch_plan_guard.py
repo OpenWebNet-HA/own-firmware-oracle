@@ -315,6 +315,155 @@ def test_plan_keeps_a_blocked_entry_out_of_both_matrices(tmp_path, monkeypatch, 
     assert _plan(monkeypatch, capsys).startswith("BLOCK ")
 
 
+def test_touched_catalog_entries_handles_global_triggers_and_specific_paths(tmp_path):
+    cat = _catalog(tmp_path)
+    cat_rel = cat.relative_to(tmp_path).as_posix()
+
+    # Global triggers -> return None
+    assert plan.touched_catalog_entries(tmp_path, ["tools/unpack.py"]) is None
+    assert plan.touched_catalog_entries(tmp_path, ["requirements/oracle.txt"]) is None
+    assert (
+        plan.touched_catalog_entries(tmp_path, [".github/workflows/reproduce.yml"])
+        is None
+    )
+    assert (
+        plan.touched_catalog_entries(
+            tmp_path, [".github/actions/extraction-tools/action.yml"]
+        )
+        is None
+    )
+
+    # Specific catalog path (existing)
+    assert plan.touched_catalog_entries(tmp_path, [cat_rel]) == {cat_rel}
+
+    # Specific catalog path (non-existing) -> not in set
+    assert (
+        plan.touched_catalog_entries(tmp_path, ["catalog/NonExistent/01.yaml"]) == set()
+    )
+
+    # Specific result path (existing catalog entry)
+    res_path = "results/MH200N/010108/manifest.tsv"
+    assert plan.touched_catalog_entries(tmp_path, [res_path]) == {cat_rel}
+
+    # Results path with fewer than 3 parts (e.g. results/mcp_index.json)
+    assert plan.touched_catalog_entries(tmp_path, ["results/mcp_index.json"]) == set()
+
+    # Results path without corresponding catalog entry
+    assert (
+        plan.touched_catalog_entries(tmp_path, ["results/Ghost/0101/manifest.tsv"])
+        == set()
+    )
+
+    # Unrelated files (docs/README.md) -> empty set
+    assert (
+        plan.touched_catalog_entries(
+            tmp_path, ["docs/README.md", "oracle/targets/target.yaml"]
+        )
+        == set()
+    )
+
+
+def test_git_changed_files_success_and_failure(tmp_path, monkeypatch, capsys):
+    # Success case
+    class FakeProc:
+        stdout = "catalog/MH200N/010108.yaml\n\nresults/mcp_index.json\n"
+
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: FakeProc())
+    assert plan.git_changed_files("origin/main", tmp_path) == [
+        "catalog/MH200N/010108.yaml",
+        "results/mcp_index.json",
+    ]
+
+    # Failure case
+    def fail_run(*args, **kwargs):
+        raise subprocess.SubprocessError("git error")
+
+    monkeypatch.setattr(subprocess, "run", fail_run)
+    assert plan.git_changed_files("bad-ref", tmp_path) is None
+    captured = capsys.readouterr()
+    assert "git diff against 'bad-ref' failed" in captured.err
+
+
+def test_plan_reproduce_matrix_scoping(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(plan, "ROOT", tmp_path)
+    cat = _catalog(tmp_path)
+    cat_rel = cat.relative_to(tmp_path).as_posix()
+    _write_manifest(tmp_path)
+
+    # 1. Without scoping: includes all reproducible
+    assert (
+        _plan(monkeypatch, capsys, "--emit-reproduce-matrix") == f'matrix=["{cat_rel}"]'
+    )
+
+    # 2. Scoped by --changed-files to the catalog file
+    assert (
+        _plan(
+            monkeypatch,
+            capsys,
+            "--emit-reproduce-matrix",
+            "--changed-files",
+            cat_rel,
+        )
+        == f'matrix=["{cat_rel}"]'
+    )
+
+    # 3. Scoped by --changed-files to an unrelated file
+    assert (
+        _plan(
+            monkeypatch,
+            capsys,
+            "--emit-reproduce-matrix",
+            "--changed-files",
+            "docs/guide.md",
+        )
+        == "matrix=[]"
+    )
+
+    # 4. Scoped by --changed-files to a global trigger (e.g. tools/plan.py)
+    assert (
+        _plan(
+            monkeypatch,
+            capsys,
+            "--emit-reproduce-matrix",
+            "--changed-files",
+            "tools/plan.py",
+        )
+        == f'matrix=["{cat_rel}"]'
+    )
+
+    # 5. Scoped by --diff-base with git success
+    class FakeProc:
+        stdout = f"{cat_rel}\n"
+
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: FakeProc())
+    assert (
+        _plan(
+            monkeypatch,
+            capsys,
+            "--emit-reproduce-matrix",
+            "--diff-base",
+            "origin/main",
+        )
+        == f'matrix=["{cat_rel}"]'
+    )
+
+    # 6. Scoped by --diff-base when git fails -> fallback to full matrix
+    def fail_run(*args, **kwargs):
+        raise subprocess.SubprocessError("fail")
+
+    monkeypatch.setattr(subprocess, "run", fail_run)
+    assert (
+        _plan(
+            monkeypatch,
+            capsys,
+            "--emit-reproduce-matrix",
+            "--diff-base",
+            "bad-ref",
+        )
+        == f'matrix=["{cat_rel}"]'
+    )
+
+
 # --- schema: every rejection path --------------------------------------------
 
 CAT_PATH = Path("catalog/MH200N/010108.yaml")

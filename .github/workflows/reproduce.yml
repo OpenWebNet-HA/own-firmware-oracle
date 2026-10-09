@@ -11,8 +11,11 @@
 #     the vendor drops a file.
 #
 # Stale entries are oracle.yml's job: their manifest is SUPPOSED to change.
-# The firmware lives in $RUNNER_TEMP for one job and is deleted after it;
-# never cached, never an artifact.
+# On pull requests, the reproduce matrix is scoped to entries touched in the PR
+# (unless extraction tools/workflows changed, which triggers a full check), and
+# public firmware downloads are cached to avoid hammering vendor servers.
+# On weekly schedule runs, all public entries are re-downloaded afresh without
+# cache to catch vendor link-rot.
 name: reproduce
 on:
   pull_request:
@@ -41,12 +44,21 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with: { persist-credentials: false }
+        with:
+          persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
       - run: pip install --require-hashes -r requirements/oracle.txt
       - id: plan
-        run: python tools/plan.py --emit-reproduce-matrix >> "$GITHUB_OUTPUT"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            python tools/plan.py --emit-reproduce-matrix --diff-base "origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+          else
+            python tools/plan.py --emit-reproduce-matrix >> "$GITHUB_OUTPUT"
+          fi
 
   reproduce:
     needs: plan
@@ -65,6 +77,12 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install --require-hashes -r requirements/oracle.txt
       - uses: ./.github/actions/extraction-tools  # zizmor: ignore[self-repository] actionlint rejects the $/ form
+      - name: cache public firmware
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: ${{ runner.temp }}/own-fw
+          key: own-fw-${{ matrix.entry }}-${{ hashFiles(matrix.entry) }}
       - name: fetch from the vendor, re-run unpack, compare byte for byte
         env:
           ENTRY: ${{ matrix.entry }}
@@ -86,6 +104,9 @@ jobs:
             exit 1
           fi
           echo "\`results/$rel\`: reproduced byte for byte" >> "$GITHUB_STEP_SUMMARY"
-      - name: delete firmware from the runner
+      - name: delete unpacked files from the runner
         if: always()
-        run: rm -rf "$RUNNER_TEMP/own-fw" "$RUNNER_TEMP/out"
+        run: rm -rf "$RUNNER_TEMP/out"
+      - name: delete firmware on scheduled run
+        if: always() && github.event_name != 'pull_request'
+        run: rm -rf "$RUNNER_TEMP/own-fw"
