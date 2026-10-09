@@ -52,7 +52,18 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["check", "fwfetch", "guard", "jail", "oracle", "plan", "schema", "unpack"]
+known-first-party = [
+    "check",
+    "fwfetch",
+    "guard",
+    "jail",
+    "mcp_index",
+    "oracle",
+    "plan",
+    "schema",
+    "sync_readme",
+    "unpack",
+]
 
 [tool.mypy]
 python_version = "3.12"
