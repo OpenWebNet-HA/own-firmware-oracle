@@ -1,0 +1,7 @@
+# product=MH201 version=030644
+# image_sha256=8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63
+# tool_version=4
+path	type	size	sha256
+MH201_3_6_44.fwz	zip	212187	8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63
+MH201_3_6_44.fwz!MH201_3_6_44_signed.bin	data	501760	1868f378d3aa46f12cc5987f71d6d5403eceb0e82f6240cb747d1cc250b0851d
+MH201_3_6_44.fwz!fwz.xml	data	523	3f46e448b6f400ee1f2c7f674b38acb1821cfdb81ef026cd6f943f10ac73e922

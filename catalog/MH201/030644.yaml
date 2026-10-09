@@ -1,0 +1,26 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: MH201
+version: "030644"          # firmware 3.6.44 (IP scenario module for hotel room)
+name: "MH201 IP Scenario Module"
+
+wrapper:
+  filename: MH201_3_6_44.fwz
+  size: 212187
+  sha256: "8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/MH201_3_6_44.fwz"
+
+image:
+  filename: MH201_3_6_44.fwz
+  size: 212187
+  sha256: "8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to MH201
+    - "MH201"
+    - "bticino"
+
+status: unpackable

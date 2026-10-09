@@ -216,6 +216,14 @@
       "version": "010108"
     },
     {
+      "image_sha256": "8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63",
+      "product": "MH201",
+      "status": "catalogued",
+      "suites": [],
+      "target_sha256": "",
+      "version": "030644"
+    },
+    {
       "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
       "product": "MH202",
       "status": "emulated",
