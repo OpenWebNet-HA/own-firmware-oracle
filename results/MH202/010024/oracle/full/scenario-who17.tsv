@@ -1,0 +1,24 @@
+# product=MH202
+# version=010024
+# image_sha256=bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7
+# harness=full
+# target_sha256=5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=scenario-who17
+# suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#17##	nack	silent	-
+down	*#17*0##	nack	silent	-
+down	*#17*1##	nack	silent	-
+down	*#17*1*40##	nack	silent	-
+down	*#17*1*41##	nack	silent	-
+down	*17*1*1##	nack	silent	-
+down	*17*2*1##	nack	silent	-
+down	*17*3*1##	nack	silent	-
+down	*17*4*1##	nack	silent	-
