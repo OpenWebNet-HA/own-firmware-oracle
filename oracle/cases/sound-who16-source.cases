@@ -122,11 +122,11 @@ down *#16*101*7##
 down *#16*102*7##
 
 ; Recall stored station 1..5 via Dimension 7 write
-down *#16*101*#7*0*1##
-down *#16*101*#7*0*2##
-down *#16*101*#7*0*3##
-down *#16*101*#7*0*4##
-down *#16*101*#7*0*5##
+down *#16*101*#7*1##
+down *#16*101*#7*2##
+down *#16*101*#7*3##
+down *#16*101*#7*4##
+down *#16*101*#7*5##
 
 ; Memorize current station into preset 1..5 via Dimension 10 write
 down *#16*101*#10*1##
