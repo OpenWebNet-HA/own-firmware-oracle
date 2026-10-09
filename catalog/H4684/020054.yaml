@@ -1,0 +1,49 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: H4684
+article: "H4684"          # [ARTICOLO1] from vendor Info.txt (also L4684, N4684, NT4684)
+version: "020054"          # firmware 2.0.54 (colour touch screen)
+name: "colour touch screen"
+
+# The lawfully-downloadable wrapper. fwfetch verifies size + sha256 of every
+# layer it touches and fails on any mismatch.
+wrapper:
+  filename: Version_2_0.zip
+  size: 18746336
+  sha256: "41511712796cee61704f9d9cd1c85a14ce4fd6c8f5cea3b529d92117daf60e17"
+  encrypted: false
+  sources:
+    - vendor: "https://www.bticino.be/sites/default/files/Service-en-support/software-en-schemas2/My%20Home/TiDisplayColor/Versoin2_0(Current%20version)/Version%202_0.zip"
+
+# The firmware package inside the wrapper.
+image:
+  filename: H4684_020054.fwz
+  size: 5173401
+  sha256: "dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4"
+
+# Vendor packaging scheme.
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to H4684 (opens H4684_020054.fwz)
+    - "H4684"
+    - "bticino"          # opens H4684_rel_2_0_54.zip and btweb_app.zip
+
+# Flash map, lifted verbatim from the image's own Info_Rel.txt (16 MB mapping).
+flash:
+  machine: H4684
+  size_mb: 16
+  layout:
+    conf:             { offset: "0x40000",  size: "0x60000" }
+    conf_copy:        { offset: "0xa0000",  size: "0x60000" }
+    kernel:           { offset: "0x100000", size: "0x120000" }
+    btweb_only:       { offset: "0x220000", size: "0x800000" }   # rootfs
+    btweb_appl:       { offset: "0xa20000", size: "0x1c0000" }   # application
+    btweb_appl_copy:  { offset: "0xbe0000", size: "0x1c0000" }
+    btweb_ext:        { offset: "0xda0000", size: "0x240000" }
+
+undecoded_ok:
+  - path: "Version_2_0.zip!TiDisplayColor20.EXE"
+    reason: "Windows configuration software installer bundled in vendor download archive"
+
+status: unpackable
