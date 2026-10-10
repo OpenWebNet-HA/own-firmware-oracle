@@ -285,6 +285,7 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 | **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso`) | **Emulated** (Phase 2 — 19 suites, full parity) |
 | **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm`) | **Emulated** (Phase 2 — 19 suites, full parity) |
 | **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
+| **3550** | `030020` (3.0.20) | Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`) | 0 | Zip, ZipCrypto, Motorola S-record | 99-zone central unit firmware (`3550_030020.mot`, no OS) | Static analysis only (QEMU has no M16C target) |
 <!-- FLEET_TABLE_END -->
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller
@@ -320,7 +321,7 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter subset already 100% covered by Linux gateways with zero added value to the matrix)*
 - **MH201** (`030644` / 3.6.44): Hotel guest room scenario module (bare-metal ARM Cortex-M3 STM32F217). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter/scenario subset already covered by Linux gateways with zero added value to the matrix)*
 
-*(Note: Auxiliary touch screen and specialized bus interface hardware such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`) and **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 13).*
+*(Note: Auxiliary hardware (touch screen, bus interface, temperature control central unit) such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`), **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`), and **3550** Temperature Control Central Unit (`catalog/3550/030020.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 14).*
 <!-- FLEET_CENSUS_END -->
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
@@ -339,6 +340,8 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 | **F422 / 003562** | SCS-to-SCS Interface Router | Pure galvanic bus-to-bus bridge microcontroller; no IP interface or OpenWebNet parser. |
 | **F429 / 002631** | SCS/DALI Gateway | Specialized DALI lighting interface controller; no OpenWebNet TCP server daemon. |
 | **BMNE4000 / 048832** | SCS/ZigBee Gateway | Hardware radio bridge; firmware is embedded radio stack without standalone OpenWebNet daemon. |
+| **H4691 / LN4691 / KM4691** | Thermostat with display (temperature control zone probe) | No firmware package published: their Home Systems product sheets carry manuals only, and neither MyHOME_Suite 3.5.38 nor TiThermo 2.0 bundles a probe image. |
+| **L4600/4 / N4600/4** | 4-zone temperature control central unit | No firmware package published: the Home Systems product sheets carry manuals only. |
 <!-- EXCLUDED_HARDWARE_END -->
 
 ---
@@ -514,7 +517,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 19 suites).
 <!-- STATUS_PHASE2F_END -->
 <!-- STATUS_PHASE3_START -->
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **412 unique OpenWebNet frames** across **20 test suites** and **10 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **3,767 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **412 unique OpenWebNet frames** across **20 test suites** and **10 active gateways** (MH200N, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **3,767 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
 <!-- STATUS_PHASE3_END -->
 
 ## License

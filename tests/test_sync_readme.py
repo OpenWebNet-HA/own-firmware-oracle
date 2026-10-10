@@ -791,3 +791,22 @@ def test_real_repo_sync():
     """Verify that current repository README is 100% in sync with code."""
     ret = sync_readme.main(["--check"])
     assert ret == 0
+
+
+@pytest.mark.parametrize(
+    ("products", "joined"),
+    [
+        ([], None),
+        (["H4684"], "the **H4684** Colour Touch Screen"),
+        (["L4561N", "3550"], "Interface (`catalog/L4561N/1.yaml`) and **3550**"),
+        (["H4684", "L4561N", "3550"], "(`catalog/L4561N/1.yaml`), and **3550**"),
+    ],
+)
+def test_auxiliary_note_lists_one_two_or_more_products(products, joined) -> None:
+    entries = {p: {"version": "1"} for p in products}
+    note = sync_readme._format_auxiliary_note(entries, 14)
+    assert note.endswith("catalogued firmware packages to 14).*")
+    if joined is None:
+        assert "such as" not in note
+    else:
+        assert joined in note

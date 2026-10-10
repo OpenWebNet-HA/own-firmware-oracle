@@ -2,6 +2,14 @@
   "format_version": "1.0.0",
   "gateways": [
     {
+      "image_sha256": "ef2e3ccd3e67842a8ad19d50e8cd1c54c58eb8c04308948ec12f84b8a1c7a471",
+      "product": "3550",
+      "status": "catalogued",
+      "suites": [],
+      "target_sha256": "",
+      "version": "030020"
+    },
+    {
       "image_sha256": "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da",
       "product": "F450",
       "status": "emulated",

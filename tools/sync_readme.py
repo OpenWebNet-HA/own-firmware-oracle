@@ -73,6 +73,7 @@ FLEET_ORDER = [
     "F460",
     "H4684",
     "L4561N",
+    "3550",
 ]
 
 STANDALONE_GATEWAYS = [
@@ -107,6 +108,7 @@ NO_LINUX_ORDER = [
     "F455",
     "MH201",
     "L4561N",
+    "3550",
 ]
 
 EMULATED_ORDER = [
@@ -123,8 +125,8 @@ EMULATED_ORDER = [
 ]
 
 # Known hardware categorization sets
-KNOWN_AUXILIARY_PRODUCTS = {"H4684", "L4561N"}
-KNOWN_NO_LINUX_PRODUCTS = {"F455", "MH201", "L4561N"}
+KNOWN_AUXILIARY_PRODUCTS = {"H4684", "L4561N", "3550"}
+KNOWN_NO_LINUX_PRODUCTS = {"F455", "MH201", "L4561N", "3550"}
 
 # Curated metadata dictionary for historical / published models
 GATEWAY_METADATA: dict[str, dict[str, str]] = {
@@ -301,6 +303,13 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
             "Pending Emulation (Specialized bus interface — zero matrix value)"
         ),
     },
+    "3550": {
+        "title": "Temperature Control Central Unit",
+        "arch": "Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`)",
+        "layers": "Zip, ZipCrypto, Motorola S-record",
+        "daemons": "99-zone central unit firmware (`3550_030020.mot`, no OS)",
+        "pending_status": "Static analysis only (QEMU has no M16C target)",
+    },
 }
 
 KNOWN_EXCLUDED_HARDWARE = [
@@ -415,6 +424,25 @@ KNOWN_EXCLUDED_HARDWARE = [
         (
             "Hardware radio bridge; firmware is embedded radio stack without "
             "standalone OpenWebNet daemon."
+        ),
+    ),
+    (
+        "H4691 / LN4691 / KM4691",
+        ["H4691", "LN4691", "KM4691"],
+        "Thermostat with display (temperature control zone probe)",
+        (
+            "No firmware package published: their Home Systems product sheets "
+            "carry manuals only, and neither MyHOME_Suite 3.5.38 nor TiThermo "
+            "2.0 bundles a probe image."
+        ),
+    ),
+    (
+        "L4600/4 / N4600/4",
+        ["L4600/4", "N4600/4"],
+        "4-zone temperature control central unit",
+        (
+            "No firmware package published: the Home Systems product sheets "
+            "carry manuals only."
         ),
     ),
 ]
@@ -792,10 +820,11 @@ def _format_auxiliary_note(
     total_packages: int,
 ) -> str:
     """Format auxiliary hardware note at end of census block."""
-    ordered_aux = order_products(aux_entries.keys(), ["H4684", "L4561N"])
+    ordered_aux = order_products(aux_entries.keys(), ["H4684", "L4561N", "3550"])
     if not ordered_aux:
         return (
-            "*(Note: Auxiliary touch screen and specialized bus interface hardware "
+            "*(Note: Auxiliary hardware (touch screen, bus interface, temperature "
+            "control central unit) "
             "are also catalogued with full cryptographic provenance, bringing total "
             f"catalogued firmware packages to {total_packages}).*"
         )
@@ -817,7 +846,8 @@ def _format_auxiliary_note(
         aux_str = f"{', '.join(aux_items[:-1])}, and {aux_items[-1]}"
 
     return (
-        "*(Note: Auxiliary touch screen and specialized bus interface hardware "
+        "*(Note: Auxiliary hardware (touch screen, bus interface, temperature "
+        "control central unit) "
         f"such as {aux_str} are also catalogued with full cryptographic "
         f"provenance, bringing total catalogued firmware packages to "
         f"{total_packages}).*"
