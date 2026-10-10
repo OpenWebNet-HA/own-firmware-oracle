@@ -491,15 +491,25 @@ class QemuTarget:
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)
-        timeout = 30.0
+        timeout = 60.0
         if port is not None and not wait_tcp_port(
             port, timeout=timeout, on_poll=self.bus.pump
         ):
-            self._stop()
-            raise RuntimeError(
-                f"{name} did not listen on port {port} "
-                f"(see console log at {self.work_dir / f'console.{name}.log'})"
-            )
+            p = self._procs.pop(name)
+            if p.poll() is None:
+                p.terminate()
+                try:
+                    p.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+                    p.wait()
+            self._procs[name] = self._start_program(name, dev_map, trace_dir)
+            if not wait_tcp_port(port, timeout=timeout, on_poll=self.bus.pump):
+                self._stop()
+                raise RuntimeError(
+                    f"{name} did not listen on port {port} "
+                    f"(see console log at {self.work_dir / f'console.{name}.log'})"
+                )
 
     def _start_soap_server(self) -> None:
         # The firmware's own BACnet web service (ebacgw) serves port 1234 when

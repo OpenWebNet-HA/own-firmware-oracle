@@ -452,6 +452,63 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
         tgt.restart()
 
 
+def test_launch_daemon_retry(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(run, "open_devices", lambda rt: [])
+    monkeypatch.setattr(tgt, "_connect_sessions", lambda port: None)
+    monkeypatch.setattr(
+        qemu_target, "read_ports_from_stack_open", lambda p: {"bt_luci": 40001}
+    )
+
+    # 1. Retry succeeds on second attempt
+    scsserver_waits = 0
+
+    def retry_wait(port, timeout, **kwargs):
+        nonlocal scsserver_waits
+        if port == 20001:
+            scsserver_waits += 1
+            return scsserver_waits > 1
+        return True
+
+    proc_mock = MagicMock()
+    proc_mock.poll.return_value = None
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_mock)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 2. Dead process on retry (p.poll() is not None)
+    scsserver_waits = 0
+    proc_dead = MagicMock()
+    proc_dead.poll.return_value = 1
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_dead)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 3. TimeoutExpired on terminate wait
+    scsserver_waits = 0
+    proc_hung = MagicMock()
+    proc_hung.poll.return_value = None
+    waits = 0
+
+    def hung_wait(*args, **kwargs):
+        nonlocal waits
+        waits += 1
+        if waits == 1:
+            raise subprocess.TimeoutExpired(cmd="foo", timeout=1.0)
+
+    proc_hung.wait.side_effect = hung_wait
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_hung)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert proc_hung.kill.called
+
+
 def test_qemu_target_session_interaction(monkeypatch, tmp_path):
     spec = _dummy_spec()
     fake_bus = bus.Bus(
