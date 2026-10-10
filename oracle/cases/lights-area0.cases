@@ -1,0 +1,43 @@
+; WHO 1 Lighting: Area-0 point-to-point addressing (A=00, PL=01..15)
+; Stimulates gateways with 4-digit A=00 point addresses (assigned by Home + Project),
+; 2-digit zero-padded addresses, single-digit addresses, area 0 broadcast,
+; and local bus routing (#4#01).
+; Addresses OpenWebNet-HA/own-firmware-oracle#35 and OpenWebNet-HA/MyHOME#684.
+
+; 1. 4-digit point-to-point addressing (A=00, PL=1, 2, 10, 15)
+down *1*1*0001##
+down *1*0*0001##
+down *#1*0001##
+down *1*1*0002##
+down *1*0*0002##
+down *#1*0002##
+down *1*1*0010##
+down *1*0*0010##
+down *#1*0010##
+down *1*1*0015##
+down *1*0*0015##
+down *#1*0015##
+
+; 2. 2-digit zero-padded addressing (PL=2)
+down *1*1*02##
+down *1*0*02##
+down *#1*02##
+
+; 3. Single-digit addressing (WHERE=2: area 2 command vs point 2)
+down *1*1*2##
+down *1*0*2##
+down *#1*2##
+
+; 4. Area 0 broadcast vs General broadcast
+down *1*1*00##
+down *#1*00##
+down *1*1*0##
+down *#1*0##
+
+; 5. Local bus routing (#4#01)
+down *1*1*0002#4#01##
+down *#1*0002#4#01##
+down *1*1*0010#4#01##
+down *#1*0010#4#01##
+down *1*1*02#4#01##
+down *1*1*2#4#01##
