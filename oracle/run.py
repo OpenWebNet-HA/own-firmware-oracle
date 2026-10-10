@@ -22,6 +22,7 @@ import contextlib
 import os
 import select
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -88,6 +89,25 @@ class Device:
     # Line framing, not an idle gap: discovery must not depend on scheduling.
     framer: LineFramer = field(default_factory=LineFramer)
     bursts: list[bytes] = field(default_factory=list)
+
+
+def write_runtime_files(runtime: target.Runtime, sysroot: Path) -> None:
+    """Put the target's declared files and SQLite databases into a sysroot.
+
+    Databases are rebuilt from their SQL every time, so no state survives a
+    restart and the plant configuration lives in the target spec as code.
+    """
+    for f_path, content in runtime.files.items():
+        dest = sysroot / f_path.lstrip("/")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="latin-1")
+    for db_path, script in runtime.sqlite.items():
+        dest = sysroot / db_path.lstrip("/")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.unlink(missing_ok=True)
+        with contextlib.closing(sqlite3.connect(dest)) as db:
+            db.executescript(script)
+            db.commit()
 
 
 def open_devices(runtime: target.Runtime) -> list[Device]:
@@ -226,10 +246,7 @@ def cmd_discover(args: argparse.Namespace) -> int:
             f"{staged.dirs} empty dirs",
             file=sys.stderr,
         )
-        for f_path, content in spec.runtime.files.items():
-            dest = work / "sysroot" / f_path.lstrip("/")
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(content, encoding="latin-1")
+        write_runtime_files(spec.runtime, work / "sysroot")
         with (work / "console.log").open("wb") as console:
             code, devices = run_discovery(
                 spec, args.program, work, args.seconds, console

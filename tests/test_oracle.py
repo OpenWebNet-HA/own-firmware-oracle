@@ -672,3 +672,37 @@ def test_target_spec_links_and_files_validation(tmp_path):
 
 
 # Sandbox, discovery, staging and the command line: test_oracle_discovery.py
+
+
+def test_target_spec_sqlite_validation(tmp_path):
+    ok_prog = (
+        f'  a: {{path: bin/a, sha256: "{"b" * 64}", role: translator, port: 8080}}'
+    )
+    spec, results = _write_target(
+        tmp_path / "t1",
+        ok_prog,
+        extra="runtime:\n  sqlite:\n    /cfg/plant.sqlite: 'CREATE TABLE t (x);'\n",
+    )
+    loaded = target.load(spec, results)
+    assert loaded.runtime.sqlite == {"/cfg/plant.sqlite": "CREATE TABLE t (x);"}
+
+    spec, results = _write_target(
+        tmp_path / "t2", ok_prog, extra="runtime:\n  sqlite: not_a_dict\n"
+    )
+    with pytest.raises(target.TargetError, match="must be mappings"):
+        target.load(spec, results)
+
+    spec, results = _write_target(
+        tmp_path / "t3", ok_prog, extra="runtime:\n  sqlite:\n    rel/db: 'x'\n"
+    )
+    with pytest.raises(target.TargetError, match="not a plain absolute guest path"):
+        target.load(spec, results)
+
+    spec, results = _write_target(
+        tmp_path / "t4", ok_prog, extra="runtime:\n  sqlite:\n    /cfg/db: 123\n"
+    )
+    with pytest.raises(
+        target.TargetError,
+        match=r"runtime\.sqlite\[/cfg/db\]: content must be a string",
+    ):
+        target.load(spec, results)

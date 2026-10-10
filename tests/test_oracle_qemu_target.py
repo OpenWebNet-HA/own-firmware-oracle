@@ -1470,3 +1470,23 @@ def test_qemu_target_f450_soap_lifecycle(monkeypatch, tmp_path):
 
     # Calling _stop again when everything is None
     tgt._stop()
+
+
+def test_qemu_target_f450_uses_its_own_bacnet_service(tmp_path):
+    """With the firmware's ebacgw on port 1234 there is no mock to start."""
+    spec = _f450_dummy_spec()
+    ebacgw = target.Program(
+        "ebacgw",
+        "home/bticino/bin/ebacgw",
+        "3" * 64,
+        "fs:",
+        role="translator",
+        port=qemu_target.SOAP_PORT,
+    )
+    spec = dataclasses.replace(spec, programs={**spec.programs, "ebacgw": ebacgw})
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    tgt._start_soap_server()
+    assert tgt._soap_server is None
+    assert tgt._soap_thread is None

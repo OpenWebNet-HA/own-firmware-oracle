@@ -525,7 +525,7 @@ def test_build_fleet_census_block(tmp_path: Path):
     assert "**MH200N**" in census
     assert "Emulated — 1 suites, full matrix parity" in census
     assert "**F450**" in census
-    assert "full matrix parity via built-in SOAP mock" in census
+    assert "BACnet side on the firmware's own `ebacgw`" in census
     assert "**F455**" in census
     assert "Pending Emulation — bare-metal microcontroller" in census
     assert "**MH202**" in census

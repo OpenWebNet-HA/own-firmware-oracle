@@ -5,9 +5,11 @@ No firmware, no qemu, no bwrap. Where a process is needed, the jail is swapped
 for a small Python stand-in that writes to the device pty like a program would.
 """
 
+import contextlib
 import dataclasses
 import io
 import os
+import sqlite3
 import stat
 import sys
 import textwrap
@@ -771,3 +773,25 @@ def test_failed_opens_name_no_fd():
     )
     assert discover.Fact("open", "/dev/nvram O_RDONLY", "ENOENT") in facts
     assert discover.Fact("ioctl", "fd TCGETS", "ok") in facts
+
+
+def test_write_runtime_files_builds_databases_fresh(tmp_path):
+    runtime = target.Runtime(
+        files={"/etc/board": "model"},
+        sqlite={
+            "/cfg/extra/50/master.sqlite": (
+                "CREATE TABLE Object (type, instance, property);"
+                "INSERT INTO Object VALUES (8, 123456, 120);"
+            )
+        },
+    )
+    root = tmp_path / "sysroot"
+    db = root / "cfg/extra/50/master.sqlite"
+    db.parent.mkdir(parents=True)
+    db.write_bytes(b"stale state from a previous run")
+
+    run.write_runtime_files(runtime, root)
+
+    assert (root / "etc/board").read_text() == "model"
+    with contextlib.closing(sqlite3.connect(db)) as con:
+        assert con.execute("SELECT * FROM Object").fetchall() == [(8, 123456, 120)]

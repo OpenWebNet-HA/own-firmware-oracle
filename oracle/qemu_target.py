@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 BANNER = "*#*1##"
 NACK = "*#*0##"
+SOAP_PORT = 1234  # F450 bacclient <-> ebacgw BACnet web service (urn:bacnet_ws)
 
 
 def split_own(buf: bytearray) -> list[str]:
@@ -327,10 +328,7 @@ class QemuTarget:
                     time.sleep(0.05 * (2**attempt))
                     attempt += 1
         shutil.copytree(self.sysroot_base, self.sysroot, symlinks=True)
-        for f_path, content in self.spec.runtime.files.items():
-            dest = self.sysroot / f_path.lstrip("/")
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(content, encoding="latin-1")
+        run.write_runtime_files(self.spec.runtime, self.sysroot)
 
     def _active_clients(self) -> set[str]:
         if self.harness.startswith("unit:"):
@@ -488,11 +486,15 @@ class QemuTarget:
             )
 
     def _start_soap_server(self) -> None:
+        # The firmware's own BACnet web service (ebacgw) serves port 1234 when
+        # the target runs it; the mock is only a stand-in for targets that don't.
+        if any(p.port == SOAP_PORT for p in self.spec.programs.values()):
+            return
         if "bacclient" in self.spec.programs or self.spec.product == "F450":
             self._soap_stop = threading.Event()
             srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            srv.bind(("127.0.0.1", 1234))
+            srv.bind(("127.0.0.1", SOAP_PORT))
             srv.listen(5)
             self._soap_server = srv
             self._soap_thread = threading.Thread(
