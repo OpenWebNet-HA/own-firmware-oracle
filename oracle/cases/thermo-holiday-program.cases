@@ -1,0 +1,50 @@
+; Thermo: holiday plan, multi-day vacation and season frames (OWNd PR #97, review item 2).
+; Question: do the gateways accept the forms the PR decodes, and what goes on the bus?
+; The PR reads the parameter after 115# / 215# / 13DDD# / 23DDD# / 33DDD# as the weekly
+; program to resume (1102 -> program 2), not as a temperature. The bus telegram shows
+; whether the translator emits a program byte or a temperature byte for it. Frames the
+; PR description quotes as replayed are listed first; the rest are their neighbours,
+; so a difference between two rows can be read from the bytes.
+;
+; Not answered here: what a central unit reports while a holiday or vacation runs
+; (review item 3). That is the central unit's behaviour, not the gateway's, and needs
+; a capture from a plant.
+
+; 1. Frames quoted in the PR description as replayed.
+down *4*115#1102*#0##
+down *4*215#2102*#0##
+down *4*13005#3102*#0##
+down *4*23005#3102*#0##
+down *4*33005#3102*#0##
+down *4*1*23##
+down *4*0*23##
+
+; 2. Daily holiday plan: every return program of the season-specific forms, and the
+;    generic form (315#3101 is also in thermo-ts10).
+down *4*115#1101*#0##
+down *4*115#1103*#0##
+down *4*215#2101*#0##
+down *4*215#2103*#0##
+down *4*315#3101*#0##
+down *4*315#3102*#0##
+
+; 3. Multi-day vacation: the day count and the return program each varied on their own
+;    (33005#3101 is also in thermo-ts10; 33DDD#31PP is what OWNd's set_central_holiday
+;    sends). 13DDD#11PP / 23DDD#21PP are the seasonal program numbers in the
+;    seasonal form, which the specification does not list for multi-day frames.
+down *4*33005#3101*#0##
+down *4*33001#3102*#0##
+down *4*33255#3102*#0##
+down *4*13001#3102*#0##
+down *4*13255#3102*#0##
+down *4*13005#1102*#0##
+down *4*23005#2102*#0##
+
+; 4. Bare holiday WHATs without a program parameter.
+down *4*115*#0##
+down *4*13005*#0##
+down *4*33005*#0##
+
+; 5. Setpoint writes for comparison: a real temperature byte on the bus.
+down *#4*#0*#14*0250*1##
+down *#4*#0*#14*0210*1##
