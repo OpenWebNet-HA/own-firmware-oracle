@@ -214,14 +214,17 @@ def test_parse_runs(repo: Path) -> None:
 def _fake_runner(
     behaviour: dict[str, str], seen: list[list[str]], committed_root: Path
 ):
-    """Write what oracle.run would: same bytes, a changed input, a changed verdict."""
+    """Write what oracle.run would: same bytes, a changed input, a changed verdict.
+
+    `flaky` and `second-fails` behave like `new` on the first run only."""
 
     def run(argv):
         seen.append(list(argv))
         suite = Path(argv[5]).stem
         out = Path(argv[argv.index("-o") + 1])
         mode = behaviour[suite]
-        if mode == "fail":
+        again = len([a for a in seen if Path(a[5]).stem == suite]) > 1
+        if mode == "fail" or (mode == "second-fails" and again):
             return 3
         if mode == "silent":
             return 0  # exit 0 but no file: still a failure
@@ -231,6 +234,8 @@ def _fake_runner(
             text = text.replace("image_sha256=v", "image_sha256=new")
         if mode == "regressed":
             text = text.replace("\tack\t", "\tnack\t")
+        if mode == "flaky" and again:
+            text += "row seen only on the second run\n"
         out.write_text(text)
         return 0
 
@@ -246,12 +251,14 @@ def _fake_runner(
         ("regressed", 1, False, "| alpha | each | **regressed** |"),
         ("fail", 1, False, "| alpha | each | **run failed** |"),
         ("silent", 1, False, "| alpha | each | **run failed** |"),
+        ("flaky", 1, False, "| alpha | each | **unstable** |"),
+        ("second-fails", 1, False, "| alpha | each | **unstable** |"),
     ],
 )
 def test_run_target(
     repo, tmp_path, monkeypatch, capsys, mode, rc, kept, summary
 ) -> None:
-    if mode != "new":
+    if mode not in ("new", "flaky", "second-fails"):
         _tsv(repo, "GW1", "010000", "alpha")
     step = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(step))
@@ -278,6 +285,7 @@ def test_run_target(
     text = step.read_text()
     assert "### GW1 010000" in text
     assert summary in text
+    assert not list(out.rglob("*.again"))  # the second run never lingers
     if mode == "regressed":
         assert "```diff" in text
         assert "+down\t*1*1*21##\tnack\tout" in text
@@ -285,6 +293,11 @@ def test_run_target(
             "::error file=results/GW1/010000/oracle/full/alpha.tsv::"
             in capsys.readouterr().out
         )
+    if mode == "flaky":
+        assert "+row seen only on the second run" in text
+        assert "two runs with the same inputs disagree" in capsys.readouterr().out
+    if mode in ("new", "stale"):
+        assert len(seen) == 2  # produced results are run twice
 
 
 def test_run_target_without_a_step_summary(repo, tmp_path, monkeypatch) -> None:
@@ -366,4 +379,4 @@ def test_main(repo, tmp_path, monkeypatch, capsys) -> None:
         runner=_fake_runner({"alpha": "new"}, seen, repo),
     )
     assert got == 0
-    assert len(seen) == 1
+    assert len(seen) == 2  # a new result is reproduced before it is kept

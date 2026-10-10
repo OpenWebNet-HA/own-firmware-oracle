@@ -190,7 +190,7 @@ requirements/                       hash-locked CI dependencies
 | `pr` | every PR, `main` | ruff, ruff format, mypy `--strict`, zizmor, actionlint + shellcheck; guard; pytest on Python 3.12–3.14 incl. a real-debugfs end-to-end test, coverage ratchet; dependency review. `ci-ok` is the one check to require. |
 | `reproduce` | PRs touching `tools/`, `catalog/`, `results/`; weekly | re-fetches every fresh, publicly downloadable image, re-runs `unpack`, fails on any byte of difference from `results/` |
 | `oracle` | `main`, weekly | rebuilds stale manifests (new image or `TOOL_VERSION`) and opens one results PR |
-| `suites` | PRs touching `oracle/`, `catalog/`, suite results; `main`, weekly | re-runs every emulated suite on every target under qemu-user (`tools/suite_plan.py`): fails when a re-run with the same inputs gives different verdicts, produces missing or stale results and opens one results PR on `main`, and opens an issue when the weekly run regresses |
+| `suites` | PRs touching `oracle/`, `catalog/`, suite results; `main`, weekly | re-runs every emulated suite on every target under qemu-user (`tools/suite_plan.py`): fails when a re-run with the same inputs gives different verdicts, produces missing or stale results only if a second run reproduces them, and opens one results PR on `main`, and opens an issue when the weekly run regresses |
 | `codeql` | every PR, `main`, weekly | CodeQL `security-extended` on the tools and on the workflows |
 | `scorecard` | `main`, weekly | OpenSSF Scorecard, published + in code scanning |
 

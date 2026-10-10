@@ -7,16 +7,19 @@ gives exactly that file. suites.yml re-checks every claim in Actions, so a
 change to the oracle, a target, a case file or the runner can no longer alter
 a verdict unnoticed, and nobody needs the firmware or QEMU locally.
 
-Every (emulated target, suite) pair gets one of four verdicts:
+Every (emulated target, suite) pair gets one of five verdicts:
 
   same       the run reproduced the committed file byte for byte
   new        no file was committed yet (a new suite or target): produced
   stale      an input recorded in the header changed (image, target, case
              file, oracle version, reset policy...): produced, to be committed
   regressed  same inputs, different output: the job FAILS
+  unstable   a new or stale result that a second run does not reproduce:
+             the job FAILS, so a flaky result never enters results/
 
-Produced files (new and stale) are uploaded; on main the publish job turns
-them into one pull request, so results are never computed by hand.
+Produced files (new and stale, each reproduced twice) are uploaded; on main
+the publish job turns them into one pull request, so results are never
+computed by hand.
 
 Planning (--emit-matrix) groups the pairs by target, one Actions job each, and
 scopes a pull request to what it touched. Running (--run) executes one job.
@@ -261,21 +264,16 @@ def run_target(
         rel = Path("results") / product / version / "oracle" / "full" / f"{suite}.tsv"
         produced = out_dir / rel
         produced.parent.mkdir(parents=True, exist_ok=True)
-        argv = [
-            sys.executable,
-            "-m",
-            "oracle.run",
-            "suite",
-            target,
-            str(names[suite].relative_to(root)),
-            "--image",
-            image,
-            "--reset",
-            reset,
-            "-o",
-            str(produced),
-        ]
-        if runner(argv) != 0 or not produced.is_file():
+        case = str(names[suite].relative_to(root))
+
+        def run_once(out: Path, case: str = case, reset: str = reset) -> bool:
+            argv = [
+                sys.executable, "-m", "oracle.run", "suite", target, case,
+                "--image", image, "--reset", reset, "-o", str(out),
+            ]  # fmt: skip
+            return runner(argv) == 0 and out.is_file()
+
+        if not run_once(produced):
             failures += 1
             rows.append(f"| {suite} | {reset} | **run failed** |")
             print(f"::error::{product} {version} {suite}: oracle.run failed")
@@ -283,26 +281,40 @@ def run_target(
             continue
         committed = root / rel
         v = verdict(committed, produced)
-        rows.append(
-            f"| {suite} | {reset} | {'**regressed**' if v == 'regressed' else v} |"
-        )
+        # (old, new, label) of the diff that explains a failure
+        evidence: tuple[Path, Path, str] | None = None
+        if v == "regressed":
+            evidence = (committed, produced, "re-run")
+        elif v in ("new", "stale"):
+            # A result only enters results/ if it reproduces: run it again.
+            again = produced.with_name(produced.name + ".again")
+            if not run_once(again):
+                again.write_text("", encoding="ascii")
+            if again.read_bytes() != produced.read_bytes():
+                v, evidence = "unstable", (produced, again, "second run")
+            else:
+                again.unlink()
+        rows.append(f"| {suite} | {reset} | {f'**{v}**' if evidence else v} |")
         if v == "same":
             produced.unlink()
-        elif v == "regressed":
+        if evidence is not None:
             failures += 1
+            old, new, label = evidence
             diff = difflib.unified_diff(
-                committed.read_text(encoding="ascii").splitlines(),
-                produced.read_text(encoding="ascii").splitlines(),
+                old.read_text(encoding="ascii").splitlines(),
+                new.read_text(encoding="ascii").splitlines(),
                 str(rel),
-                "re-run",
+                label,
                 lineterm="",
             )
-            details += [f"#### `{rel}` regressed", "```diff", *list(diff)[:200], "```"]
-            print(
-                f"::error file={rel}::same inputs, different verdicts "
-                "(diff in the job summary)"
-            )
-            produced.unlink()
+            details += [f"#### `{rel}` {v}", "```diff", *list(diff)[:200], "```"]
+            why = {
+                "regressed": "same inputs, different verdicts",
+                "unstable": "two runs with the same inputs disagree",
+            }[v]
+            print(f"::error file={rel}::{why} (diff in the job summary)")
+            produced.unlink(missing_ok=True)
+            new.unlink(missing_ok=True)
     _summary([*rows, "", *details])
     return 1 if failures else 0
 
