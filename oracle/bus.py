@@ -278,6 +278,7 @@ class PicResponder:
       answered with $26000\\r (virtual configuration).
     - $27 / $02: configuration echo and handshake frames during bus init.
     - $03: write standard SCS frame to bus; acknowledged by PIC with $19\\r.
+    - $04: write 4-byte SCS frame to bus; acknowledged by PIC with $00\\r.
     - $06: write extended SCS frame to bus; acknowledged by PIC with $00\\r.
     """
 
@@ -307,6 +308,11 @@ class PicResponder:
             return [b"$00\r"]
         if frame.startswith(b"$03"):
             answers = [b"$19\r"]
+            if not isinstance(self.inner, Silent):
+                answers.extend(self.inner.respond(frame))
+            return answers
+        if frame.startswith(b"$04"):
+            answers = [b"$00\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
