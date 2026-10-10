@@ -1,0 +1,39 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+#
+# The 99-zone temperature control central unit ships its firmware inside the
+# TiThermo 2.0 configuration software download, next to the installer, as the
+# TiThermo manual (section 8, "Firmware update") shows. The .fwz holds a
+# Motorola S-record image (3550_030020.mot) and info.txt ("TYPE=FILE
+# MITSUBISHI"); the S-records cover 0x0E0000-0x0FFFFF with the M16C fixed
+# vector table at the top. Bare-metal, no OS: catalogued for hashes, layers
+# and static facts, not for QEMU emulation (QEMU has no M16C target).
+product: "3550"
+article: "3550"            # [ARTICOLO] from the vendor info.txt
+version: "030020"          # firmware 3.0.20 ([FW_VER] in info.txt)
+name: "temperature control central unit (99 zones)"
+
+wrapper:
+  filename: Version_2_0.zip
+  size: 9656492
+  sha256: "c5dee2e9835e03da819b5e75b168890284fdbb17f9ec0e9588a3a308dfa33d04"
+  encrypted: false
+  sources:
+    - vendor: "https://www.bticino.be/sites/default/files/Service-en-support/software-en-schemas2/My%20Home/TiThermo/Version%202_0%20(Current%20version)/Version%202_0.zip"
+
+image:
+  filename: 3550_030020.fwz
+  size: 82142
+  sha256: "ef2e3ccd3e67842a8ad19d50e8cd1c54c58eb8c04308948ec12f84b8a1c7a471"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to 3550 (opens 3550_030020.fwz: "the password is the model")
+    - "3550"
+
+undecoded_ok:
+  - path: "Version_2_0.zip!TiThermo20.EXE"
+    reason: "Windows configuration software installer bundled in vendor download archive"
+
+status: unpackable
