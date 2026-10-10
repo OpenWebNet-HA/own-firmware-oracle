@@ -1,0 +1,43 @@
+# product=F450
+# version=020010
+# image_sha256=9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da
+# harness=full
+# target_sha256=e5bd026f22d56f40b697b55d1f0865aed4bbeb2aafbeafc1b1d53e6ca9fe1ec4
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=300
+# suite=lights-area0
+# suite_sha256=71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3
+# oracle_version=1
+direction	input	reply	verdict	output
+down	*#1*0##	nack	silent	-
+down	*#1*00##	nack	silent	-
+down	*#1*0001##	nack	silent	-
+down	*#1*0002##	nack	silent	-
+down	*#1*0002#4#01##	nack	silent	-
+down	*#1*0010##	nack	silent	-
+down	*#1*0010#4#01##	nack	silent	-
+down	*#1*0015##	nack	silent	-
+down	*#1*02##	nack	silent	-
+down	*#1*2##	nack	silent	-
+down	*1*0*0001##	nack	silent	-
+down	*1*0*0002##	nack	silent	-
+down	*1*0*0010##	nack	silent	-
+down	*1*0*0015##	nack	silent	-
+down	*1*0*02##	nack	silent	-
+down	*1*0*2##	nack	silent	-
+down	*1*1*0##	nack	silent	-
+down	*1*1*00##	nack	silent	-
+down	*1*1*0001##	nack	silent	-
+down	*1*1*0002##	nack	silent	-
+down	*1*1*0002#4#01##	nack	silent	-
+down	*1*1*0010##	nack	silent	-
+down	*1*1*0010#4#01##	nack	silent	-
+down	*1*1*0015##	nack	silent	-
+down	*1*1*02##	nack	silent	-
+down	*1*1*02#4#01##	nack	silent	-
+down	*1*1*2##	nack	silent	-
+down	*1*1*2#4#01##	nack	silent	-
