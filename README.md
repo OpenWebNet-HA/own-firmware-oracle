@@ -190,12 +190,13 @@ requirements/                       hash-locked CI dependencies
 | `pr` | every PR, `main` | ruff, ruff format, mypy `--strict`, zizmor, actionlint + shellcheck; guard; pytest on Python 3.12–3.14 incl. a real-debugfs end-to-end test, coverage ratchet; dependency review. `ci-ok` is the one check to require. |
 | `reproduce` | PRs touching `tools/`, `catalog/`, `results/`; weekly | re-fetches every fresh, publicly downloadable image, re-runs `unpack`, fails on any byte of difference from `results/` |
 | `oracle` | `main`, weekly | rebuilds stale manifests (new image or `TOOL_VERSION`) and opens one results PR |
+| `suites` | PRs touching `oracle/`, `catalog/`, suite results; `main`, weekly | re-runs every emulated suite on every target under qemu-user (`tools/suite_plan.py`): fails when a re-run with the same inputs gives different verdicts, produces missing or stale results and opens one results PR on `main`, and opens an issue when the weekly run regresses |
 | `codeql` | every PR, `main`, weekly | CodeQL `security-extended` on the tools and on the workflows |
 | `scorecard` | `main`, weekly | OpenSSF Scorecard, published + in code scanning |
 
 None of them gives a fork PR a secret or a write token. Firmware only lands in
-`$RUNNER_TEMP` and is deleted after the job; it is never cached and never uploaded
-as an artifact. Actions are pinned to commit SHAs, and Python deps are installed
+`$RUNNER_TEMP` and is deleted after the job; it is never uploaded as an artifact,
+and only public vendor images are cached, on pull requests (`reproduce`, `suites`). Actions are pinned to commit SHAs, and Python deps are installed
 with `--require-hashes`. Dependabot bumps both every month.
 
 Contributing: `pip install pre-commit && pre-commit install` runs ruff and the guard
