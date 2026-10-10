@@ -236,16 +236,17 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "JFFS2, Zip",
         "daemons": (
-            "Basic IP interface gateway stack (`bacclient`, `scsserver`, `bt_device`, "
-            "`bt_termo`)"
+            "OPEN-BACnet gateway stack (`bacclient`, `ebacgw`, `scsserver`, "
+            "`bt_device`, `bt_termo`)"
         ),
         "census_desc": "IP interface gateway (OPEN-BACnet)",
         "census_emulation_note": (
-            "Emulated — {suites} suites, full matrix parity via built-in SOAP mock"
+            "Emulated — {suites} suites, BACnet side on the firmware's own "
+            "`ebacgw` and its factory plant"
         ),
         "phase2f_desc": (
-            "IP interface gateway (`bacclient`, `scsserver`, `bt_device`, "
-            "`bt_termo` via built-in SOAP mock on port 1234 — {suites} suites)"
+            "OPEN-BACnet gateway (`bacclient`, `ebacgw` on its factory BACnet "
+            "plant, `scsserver`, `bt_device`, `bt_termo` — {suites} suites)"
         ),
     },
     "F459": {

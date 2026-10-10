@@ -25,7 +25,15 @@ programs:
     role: own_server
     port: 20000
 
-  # p1: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
+  # p1 in stack_open.xml: the BACnet gateway, the firmware's own SOAP web
+  # service (urn:bacnet_ws) on TCP 1234 that bacclient reads its points from.
+  ebacgw:
+    path: home/bticino/bin/ebacgw
+    sha256: "b99d2566662f692d949f24f4d0f9c2c9eb5c00f24e90b319a183462155c63ddd"
+    role: translator
+    port: 1234
+
+  # p3: owns /dev/ttyS1 (stack_open.xml) and serves the translators on TCP 20001
   scsserver:
     path: home/bticino/bin/scsserver
     sha256: "3d928cde18b54800c92e1ec6223db1c26ac31018b0927dcfa0133b0d4173b5af"
@@ -58,12 +66,42 @@ runtime:
     - /var/volatile/log
     - /var/volatile/tmp/bticino/bt_wd
     - /var/tmp/cfg
+    - /var/tmp/db   # ebacgw copies cfg/extra/50/master.sqlite here at start
   links:
     /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
     /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
     /var/volatile/tmp/hosts: /home/bticino/cfg/hosts
   files:
     /home/bticino/cfg/hosts: "127.0.0.1\tlocalhost.localdomain\tlocalhost\n127.0.0.1\tbacclient\n127.0.0.1\topenserver\n"
+  # The BACnet database ebacgw opens at start (cfg/extra/50/master.sqlite,
+  # uploaded by TiOpenBacnet on a real F450). Built from the firmware's own
+  # code and factory files, nothing invented -- see findings/F450/
+  # bacnet-plant-database.md for the decompiled evidence:
+  # - tables and columns: ebacgw's SQL; column order from its own insert
+  #   INSERT INTO Object VALUES(type, instance, property, idx, encoding,
+  #   value), e.g. (8, <device>, 531, 1, 2, '47808'); encoding = BACnet
+  #   application tag (2 unsigned, 7 character string);
+  # - the gateway's Device object (type 8), instance 123456 = <bacnet_id>
+  #   of the factory cfg/restore/conf.xml.def;
+  # - the four properties ebacgw requires before it serves (exit -4..-7):
+  #   120 vendor-identifier (582, the value ebacgw writes itself),
+  #   514 web service port (1234: bacclient calls 127.0.0.1:1234),
+  #   515 adapter web service (127.0.0.1:1235: bacclient binds 1235),
+  #   516 adapter process (only checked for presence).
+  # Everything else (Device name, versions, the plant objects from
+  # BACnetTemplates.xml) ebacgw and bacclient write at runtime.
+  sqlite:
+    /home/bticino/cfg/extra/50/master.sqlite: |
+      CREATE TABLE Object (type INTEGER, instance INTEGER, property INTEGER,
+                           idx INTEGER, encoding INTEGER, value TEXT);
+      CREATE TABLE RemoteObjects (device INTEGER, type INTEGER,
+                                  instance INTEGER, name TEXT);
+      CREATE TABLE remotenetworks (network INTEGER, device INTEGER, mac TEXT);
+      CREATE TABLE routers (net INTEGER, mac TEXT);
+      INSERT INTO Object VALUES (8, 123456, 120, 1, 2, '582');
+      INSERT INTO Object VALUES (8, 123456, 514, 1, 2, '1234');
+      INSERT INTO Object VALUES (8, 123456, 515, 1, 7, '127.0.0.1:1235');
+      INSERT INTO Object VALUES (8, 123456, 516, 1, 7, 'bacclient');
   devices:
     /dev/ttyS1: pty
   stack_config: home/bticino/cfg/stack_open.xml
@@ -74,7 +112,7 @@ boundary:
   bus: pty
   own: full
   # Note: F450 runs bacclient as p0 (OpenWebNet daemon) instead of openserver.
-  # bacclient communicates with a BACnet plant SOAP web service on 127.0.0.1:1234
-  # to initialize configured BACnet points before binding port 20000.
-  # Emulation Approach A: QemuTarget provides a lightweight built-in SOAP mock
-  # on port 1234 that satisfies bacclient initialization.
+  # bacclient reaches the BACnet side through ebacgw's SOAP service on
+  # 127.0.0.1:1234 and serves its own on 1235. Both run as firmware, on the
+  # plant database above (findings/F450/bacnet-plant-database.md); the
+  # harness's SOAP mock is no longer used for this target.

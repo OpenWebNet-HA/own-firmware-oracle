@@ -11,4 +11,4 @@
 ## Protocol & Boundary Cut
 - **Absence of `openserver`**: Standalone OpenWebNet gateways (`MH200N`, `F454`, `MH202`, `F453AV`, `F459`, `F460`, `F461`, `MyHomeServer1`) run `openserver` listening on TCP port 20000. F450 does NOT run `openserver`.
 - **BACnet Interface**: F450 acts as a BACnet server/client gateway, translating OpenWebNet/SCS frames directly into BACnet protocol objects over BACnet/IP (UDP port 47808).
-- **Target Specification**: Pinned in `oracle/targets/F450/020010.yaml` with roles `supervisor` (`bt_daemon`), `bus_server` (`scsserver`), and `translator` (`bacclient`, `ebacgw`, `bt_device`, `bt_termo`).
+- **Target Specification**: Pinned in `oracle/targets/F450/020010.yaml`: `bacclient` as `own_server` (TCP 20000), `scsserver` as `bus_server`, and `ebacgw` (TCP 1234, the BACnet SOAP service), `bt_device` and `bt_termo` as translators. `ebacgw` runs on a plant database built from the firmware's own code and factory files: see [bacnet-plant-database.md](bacnet-plant-database.md).

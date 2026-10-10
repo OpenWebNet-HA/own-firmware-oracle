@@ -101,6 +101,9 @@ class Runtime:
     dirs: tuple[str, ...] = ()
     links: dict[str, str] = field(default_factory=dict)  # guest dest -> guest target
     files: dict[str, str] = field(default_factory=dict)  # guest path -> content
+    # guest path -> SQL script; the harness builds each SQLite database fresh
+    # at every restart (a plant configuration the firmware reads, as code).
+    sqlite: dict[str, str] = field(default_factory=dict)
     devices: dict[str, str] = field(default_factory=dict)  # guest path -> kind
     stack_config: str = "home/bticino/cfg/stack_open.xml"
     kernel_release: str = ""
@@ -231,6 +234,7 @@ def _validate_runtime_paths(
     links: dict[object, object],
     files: dict[object, object],
     devices: dict[object, object],
+    sqlite: dict[object, object],
 ) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
     try:
         cwd = str(cwd_raw)
@@ -241,10 +245,13 @@ def _validate_runtime_paths(
         for dest, target_link in links.items():
             guest_path(str(dest))
             guest_path(str(target_link))
-        for path, content in files.items():
-            guest_path(str(path))
-            if not isinstance(content, str):
-                raise TargetError(f"runtime.files[{path}]: content must be a string")
+        for section, entries in (("files", files), ("sqlite", sqlite)):
+            for path, content in entries.items():
+                guest_path(str(path))
+                if not isinstance(content, str):
+                    raise TargetError(
+                        f"runtime.{section}[{path}]: content must be a string"
+                    )
         for path, kind in devices.items():
             guest_path(str(path))
             if kind not in DEVICE_KINDS:
@@ -264,6 +271,7 @@ def _runtime(raw: object) -> Runtime:
         "dirs",
         "links",
         "files",
+        "sqlite",
         "devices",
         "stack_config",
         "kernel_release",
@@ -274,15 +282,17 @@ def _runtime(raw: object) -> Runtime:
     devices = raw.get("devices", {})
     links = raw.get("links", {})
     files = raw.get("files", {})
+    sqlite = raw.get("sqlite", {})
     if (
         not isinstance(env, dict)
         or not isinstance(devices, dict)
         or not isinstance(links, dict)
         or not isinstance(files, dict)
+        or not isinstance(sqlite, dict)
     ):
         raise TargetError(
-            "runtime.env, runtime.devices, runtime.links and runtime.files "
-            "must be mappings"
+            "runtime.env, runtime.devices, runtime.links, runtime.files and "
+            "runtime.sqlite must be mappings"
         )
     cwd, tmpfs, dirs = _validate_runtime_paths(
         raw.get("cwd", "/"),
@@ -291,6 +301,7 @@ def _runtime(raw: object) -> Runtime:
         links,
         files,
         devices,
+        sqlite,
     )
     for key, value in env.items():
         if not ENV_NAME.fullmatch(str(key)) or not isinstance(value, str):
@@ -315,6 +326,7 @@ def _runtime(raw: object) -> Runtime:
         dirs=dirs,
         links={str(k): str(v) for k, v in links.items()},
         files={str(k): str(v) for k, v in files.items()},
+        sqlite={str(k): str(v) for k, v in sqlite.items()},
         devices={str(k): str(v) for k, v in devices.items()},
         stack_config=stack_config,
         kernel_release=kernel_release,
