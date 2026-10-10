@@ -10988,7 +10988,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 33 30 31 38 46 43 36 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -10999,7 +11001,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -11165,14 +11167,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 33 30 31 38 46 43 36 0d"
+          "24 30 36 44 31 30 31 46 38 33 33 30 33 30 30 30 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 18,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -11359,14 +11361,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d"
+          "24 30 34 39 35 30 31 38 46 41 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 19,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -11554,18 +11556,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 35 30 31 38 46 43 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 20,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -11719,14 +11723,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 46 38 33 33 30 33 30 30 30 30 30 30 0d"
+          "24 30 34 39 33 30 31 38 31 31 34 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 21,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -11888,14 +11892,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 35 30 31 38 46 41 30 0d"
+          "24 30 34 39 33 30 31 38 31 30 35 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 22,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -12057,15 +12061,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 35 30 31 38 46 43 30 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 38 30 32 30 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 23,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -12228,15 +12231,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 33 30 31 38 31 31 34 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 30 42 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 24,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -12397,15 +12399,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 33 30 31 38 31 30 35 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 31 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 25,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -12566,15 +12567,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 36 44 31 30 31 31 38 33 32 30 38 30 32 30 30 30 30 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 30 32 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 26,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -12734,7 +12734,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 30 33 30 30 38 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -12745,7 +12747,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -12900,7 +12902,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 31 33 30 30 38 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -12911,7 +12915,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -13097,14 +13101,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 30 42 0d"
+          "24 30 34 39 35 30 31 38 31 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 29,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -13280,18 +13284,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 35 30 31 38 31 38 46 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 30,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -13485,18 +13491,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 33 30 38 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 31,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -13669,14 +13677,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 31 30 0d"
+          "24 30 36 44 31 30 31 31 38 33 33 30 43 30 30 30 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 32,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -13877,18 +13885,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 33 30 37 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 33,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -14062,18 +14072,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 33 30 43 30 30 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 34,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -14247,14 +14259,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 30 32 0d"
+          "24 30 36 44 31 30 31 31 38 33 33 30 37 30 30 30 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 35,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -14439,18 +14451,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 35 30 30 38 32 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 36,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -14629,18 +14643,20 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 35 30 31 38 46 41 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 37,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -14809,9 +14825,7 @@
         "version": "010108"
       },
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 32 30 43 30 33 30 30 38 30 0d"
-        ],
+        "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -14822,7 +14836,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
+        "verdict": "silent",
         "version": "010024"
       },
       {
@@ -14973,7 +14987,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 36 30 31 38 31 31 39 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -14984,7 +15000,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -15131,7 +15147,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 36 30 31 38 31 38 32 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -15142,7 +15160,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -17804,18 +17822,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 42 39 30 30 33 30 31 30 0d",
-          "24 32 34 0d",
-          "24 32 34 0d"
+          "24 30 34 42 39 30 30 33 30 31 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [
-          "*#1013**11*111111101111111011111101##"
-        ],
+        "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 16,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-actuator.tsv",
         "suite": "thermo-actuator",
         "suite_sha256": "7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a",
@@ -19037,15 +19051,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 38 31 33 31 31 30 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 38 31 33 31 31 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 17,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-actuator.tsv",
         "suite": "thermo-actuator",
         "suite_sha256": "7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a",
@@ -20280,18 +20293,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 30 31 33 30 30 30 0d",
-          "24 32 34 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 30 31 33 30 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [
-          "*#1013**11*111111101111111011111101##"
-        ],
+        "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 22,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -20417,15 +20426,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 30 31 33 30 30 30 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 30 31 33 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 22,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -20662,7 +20670,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 24,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -20833,18 +20841,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 30 31 33 30 31 33 0d",
-          "24 32 34 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 30 31 33 30 31 33 0d"
         ],
         "direction": "down",
-        "emitted_own": [
-          "*#1013**11*111111101111111011111101##"
-        ],
+        "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 16,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-valve.tsv",
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
@@ -21213,7 +21217,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 25,
         "product": "F453AV",
-        "reply": "-",
+        "reply": "nack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -21377,7 +21381,9 @@
         "version": "020010"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
@@ -21388,7 +21394,7 @@
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "030014"
       },
       {
@@ -21554,14 +21560,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 27,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -21731,18 +21737,20 @@
         "version": "020010"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 28,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "030014"
       },
       {
@@ -21907,18 +21915,20 @@
         "version": "020010"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 29,
         "product": "F453AV",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "030014"
       },
       {
@@ -22084,9 +22094,6 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d",
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d",
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d",
           "24 30 36 44 31 31 37 30 33 30 32 30 42 30 33 30 30 30 30 0d"
         ],
         "direction": "down",
@@ -22094,7 +22101,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 30,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -22272,7 +22279,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 31,
         "product": "F453AV",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -22389,15 +22396,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 31 37 33 30 30 42 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 31 37 33 30 30 42 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 31,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -22447,15 +22453,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 32 38 33 30 31 33 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 32 38 33 30 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 17,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-valve.tsv",
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
@@ -22639,15 +22644,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 39 32 39 33 30 31 33 0d",
-          "24 32 34 0d"
+          "24 30 34 39 39 32 39 33 30 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 18,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-valve.tsv",
         "suite": "thermo-valve",
         "suite_sha256": "d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf",
@@ -33239,14 +33243,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 32 30 43 31 33 30 30 38 30 0d"
+          "24 30 34 39 31 30 36 38 30 30 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 41,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -33407,7 +33411,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 42 31 30 30 38 30 30 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -33418,7 +33424,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -33573,7 +33579,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 31 30 31 38 31 31 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -33584,7 +33592,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -33743,16 +33751,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 35 30 31 38 31 38 46 0d"
+          "24 30 34 39 31 30 30 38 32 32 33 0d"
         ],
         "direction": "down",
-        "emitted_own": [
-          "*#22*3#1#1*1*5##"
-        ],
+        "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 44,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -33911,15 +33917,15 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [
-          "*#22*3#1#1*1*5##"
+        "bus_frames": [
+          "24 30 34 42 30 30 30 38 30 30 33 0d"
         ],
+        "direction": "down",
+        "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 45,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34080,15 +34086,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 36 44 31 30 31 31 38 33 33 30 38 30 30 30 30 30 30 0d"
+          "24 30 34 39 30 30 31 38 31 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 46,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34250,14 +34255,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 33 30 43 30 30 30 30 30 30 0d"
+          "24 30 34 39 34 30 31 38 46 44 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 47,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34419,14 +34424,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 33 30 37 30 30 30 30 30 30 0d"
+          "24 30 34 39 34 30 31 38 31 30 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 48,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34588,14 +34593,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 33 30 43 30 30 30 30 30 30 0d"
+          "24 30 34 39 34 30 31 38 31 30 35 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 49,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34757,14 +34762,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 31 38 33 33 30 37 30 30 30 30 30 30 0d"
+          "24 30 36 44 31 30 31 46 38 33 35 30 31 34 31 30 34 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 50,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -34931,14 +34936,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 35 30 30 38 32 30 30 0d"
+          "24 30 36 44 31 30 31 46 38 33 35 30 31 34 32 30 34 30 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 51,
         "product": "MH202",
-        "reply": "ack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -35099,15 +35104,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 42 35 30 31 38 46 41 30 0d"
+          "24 30 34 39 33 30 31 38 46 44 32 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 52,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -35266,15 +35270,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 42 36 30 31 38 31 31 39 0d"
+          "24 30 34 39 33 30 31 38 46 44 35 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 53,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -35431,18 +35434,21 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 30 30 31 38 46 30 33 0d",
+          "24 30 34 39 30 30 36 38 30 30 33 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 54,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -35600,15 +35606,15 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 42 36 30 31 38 31 38 32 0d"
+          "24 30 34 39 30 30 31 38 46 31 33 0d",
+          "24 30 34 39 30 30 31 38 31 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 55,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -35759,15 +35765,15 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 31 30 36 38 30 30 33 0d"
+          "24 30 34 39 30 30 31 38 46 32 33 0d",
+          "24 30 34 39 30 30 30 38 32 32 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 56,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -35930,8 +35936,9 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 42 31 30 30 38 30 30 33 0d"
+          "24 30 34 41 31 30 46 38 31 30 33 0d",
+          "24 30 34 39 30 30 30 38 30 30 33 0d",
+          "24 30 34 39 30 30 37 38 46 30 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
@@ -36109,8 +36116,9 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 31 30 31 38 31 31 33 0d"
+          "24 30 34 41 31 30 46 38 31 31 33 0d",
+          "24 30 34 39 30 30 31 38 31 31 33 0d",
+          "24 30 34 39 30 30 31 38 46 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
@@ -36295,8 +36303,9 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 31 30 30 38 32 32 33 0d"
+          "24 30 34 41 31 30 46 38 31 31 33 0d",
+          "24 30 34 39 30 30 31 38 31 31 33 0d",
+          "24 30 34 39 30 30 32 38 46 31 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
@@ -36472,8 +36481,9 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 42 30 30 30 38 30 30 33 0d"
+          "24 30 34 41 31 30 46 38 31 32 33 0d",
+          "24 30 34 39 30 30 30 38 32 32 33 0d",
+          "24 30 34 39 30 30 37 38 46 32 33 0d"
         ],
         "direction": "down",
         "emitted_own": [],
@@ -36646,15 +36656,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 30 30 31 38 31 31 33 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 37 43 30 43 30 34 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 61,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -36832,15 +36841,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 34 30 31 38 46 44 31 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 37 43 30 43 30 38 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 62,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -37022,15 +37030,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 34 30 31 38 31 30 31 0d"
+          "24 30 34 39 34 30 31 38 31 31 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 63,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -37199,15 +37206,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 34 39 34 30 31 38 31 30 35 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 37 34 31 43 30 43 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 64,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -37374,15 +37380,14 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
-          "24 30 36 44 31 30 31 46 38 33 35 30 31 34 31 30 34 30 30 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 37 38 31 43 30 43 30 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 65,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -37542,7 +37547,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 32 30 38 34 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -37553,7 +37560,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -37708,7 +37715,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 32 30 38 38 31 30 30 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -37719,7 +37728,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -37875,14 +37884,14 @@
       },
       {
         "bus_frames": [
-          "24 30 36 44 31 30 31 46 38 33 35 30 31 34 32 30 34 30 30 0d"
+          "24 30 34 39 34 30 31 38 46 41 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 68,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -38040,7 +38049,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 34 30 31 38 46 41 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -38051,7 +38062,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -38207,7 +38218,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 43 31 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -38218,7 +38231,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -38376,14 +38389,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 33 30 31 38 46 44 32 0d"
+          "24 30 36 44 31 30 31 31 38 33 32 30 43 33 33 30 30 43 32 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 71,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -38544,7 +38557,7 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d"
+          "24 30 34 39 34 30 31 38 46 42 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
@@ -38709,7 +38722,9 @@
         "version": "010108"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 34 39 34 30 31 38 46 42 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
@@ -38720,7 +38735,7 @@
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -38877,14 +38892,14 @@
       },
       {
         "bus_frames": [
-          "24 30 34 39 33 30 31 38 46 44 35 0d"
+          "24 30 34 39 34 30 31 38 46 43 31 0d"
         ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 74,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "-",
         "source_tsv": "results/MH202/010024/oracle/full/sound-who22.tsv",
         "suite": "sound-who22",
         "suite_sha256": "7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942",
@@ -45446,7 +45461,6 @@
       },
       {
         "bus_frames": [
-          "24 32 34 0d",
           "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 37 30 30 0d"
         ],
         "direction": "down",
@@ -45454,7 +45468,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 32,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -55855,7 +55869,7 @@
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "crash",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -56447,7 +56461,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 50,
         "product": "F453AV",
-        "reply": "ack",
+        "reply": "nack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -56833,7 +56847,7 @@
         "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
         "line_number": 51,
         "product": "F453AV",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/F453AV/030014/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
@@ -57067,18 +57081,20 @@
         "version": "010024"
       },
       {
-        "bus_frames": [],
+        "bus_frames": [
+          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 35 30 35 30 30 0d"
+        ],
         "direction": "down",
         "emitted_own": [],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 51,
         "product": "MH202",
-        "reply": "-",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/thermo-ts10.tsv",
         "suite": "thermo-ts10",
         "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
         "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
+        "verdict": "out",
         "version": "010024"
       },
       {
@@ -65903,5 +65919,5 @@
       }
     ]
   },
-  "verdicts_sha256": "b9c6cc5484f31c7bc74339bf7f32d17ebd238b8181d64bb56d3f0dc2049e9231"
+  "verdicts_sha256": "3ffc04e43be603f5cf738c6d9c869359ff9c3f655d34ce2ce5c9bcb24d5fe7d0"
 }
