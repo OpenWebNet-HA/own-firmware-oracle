@@ -625,7 +625,7 @@ def test_run_cmd_discover_writes_the_boundary_record(tmp_path, monkeypatch, caps
         "# emulator=qemu-arm-9.9",
         "# kernel_release=2.4.19",
         "# window_s=2",
-        "# oracle_version=1",
+        "# oracle_version=2",
     ]
     assert text.splitlines()[9:] == [
         "kind\tdetail\tresult",

@@ -1,0 +1,213 @@
+# Re-runs the emulated suites in Actions: the behaviour twin of reproduce.yml.
+#
+# Every committed results/<product>/<version>/oracle/full/<suite>.tsv is a
+# claim that running oracle/cases/<suite>.cases on that target gives exactly
+# that file. This workflow re-runs the claims on the runner and judges each
+# re-run (tools/suite_plan.py):
+#   same       reproduced byte for byte
+#   new        no file committed yet (a new suite or target)  -> produced
+#   stale      an input in the header changed (image, target, case file,
+#              oracle version, reset...)                      -> produced
+#   regressed  same inputs, different verdicts                -> job FAILS
+#
+# Pull requests run only the pairs they touch (a case file: that suite on
+# every target; a target or catalog entry: every suite on it); a change to
+# the oracle itself re-runs everything. Produced files are uploaded as an
+# artifact and listed in the job summary.
+#
+# On main (and weekly, and on demand) everything runs, and the publish job
+# turns the produced files into ONE pull request with the index and README
+# regenerated, so results are never computed by hand. A scheduled run that
+# finds a regression opens (or comments on) an issue, so drift caused by a
+# new runner image or a vendor change is reported even when nobody watches.
+#
+# Firmware: only public vendor images (no secrets, no environment), fetched
+# to $RUNNER_TEMP, cached on pull requests exactly like reproduce.yml, and
+# never uploaded. Injection hygiene: no ${{ }} expression is expanded inside a
+# `run:` script; values reach the shell through `env:` only. suite_plan.py
+# validates every name before it reaches the matrix or an argv.
+name: suites
+on:
+  pull_request:
+    paths:
+      - "oracle/**"
+      - "results/*/*/oracle/full/**"
+      - "catalog/**"
+      - "tools/suite_plan.py"
+      - "tools/fwfetch.py"
+      - "tools/schema.py"
+      - "requirements/oracle.txt"
+      - ".github/workflows/suites.yml"
+      - ".github/actions/**"
+  push:
+    branches: [main]
+    paths:
+      - "oracle/**"
+      - "catalog/**"
+      - "tools/suite_plan.py"
+      - ".github/workflows/suites.yml"
+  schedule:
+    - cron: "0 5 * * 1"  # weekly, after oracle.yml and reproduce.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: suites-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r requirements/oracle.txt
+      - id: plan
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            python tools/suite_plan.py --emit-matrix --diff-base "origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+          else
+            python tools/suite_plan.py --emit-matrix >> "$GITHUB_OUTPUT"
+          fi
+
+  run:
+    needs: plan
+    if: ${{ needs.plan.outputs.matrix != '[]' }}
+    # Same image as reproduce.yml and the committed results: qemu-user 8.2.2.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r requirements/oracle.txt
+      - uses: ./.github/actions/extraction-tools  # zizmor: ignore[self-repository] actionlint rejects the $/ form
+      # The firmware runs through binfmt_misc, which must carry the F flag so
+      # the interpreter works inside the bubblewrap jail (oracle/sandbox.py).
+      - name: qemu-user with binfmt_misc
+        run: |
+          sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+          for arch in arm aarch64; do
+            grep -q '^flags: .*F' "/proc/sys/fs/binfmt_misc/qemu-$arch"
+          done
+          qemu-arm-static --version | head -n 1
+      - name: cache public firmware
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4.2.2
+        with:
+          path: ${{ runner.temp }}/own-fw
+          key: own-fw-${{ matrix.job.catalog }}-${{ hashFiles(matrix.job.catalog) }}
+      - name: run the suites and judge every re-run
+        env:
+          CATALOG: ${{ matrix.job.catalog }}
+          TARGET: ${{ matrix.job.target }}
+          RUNS: ${{ matrix.job.runs }}
+          OWN_FW_CACHE: ${{ runner.temp }}/own-fw
+        run: |
+          img="$(python tools/fwfetch.py "$CATALOG")"
+          python tools/suite_plan.py --run --target "$TARGET" --image "$img" \
+            --runs "$RUNS" --out "$RUNNER_TEMP/produced"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
+        with:
+          name: produced-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/produced/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: delete firmware and work files from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/produced" "$RUNNER_TEMP/own-fw"
+
+  publish:
+    needs: [plan, run]
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.matrix != '[]' && !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r requirements/oracle.txt
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          pattern: produced-*
+          merge-multiple: true
+          path: incoming
+      # Only results/<product>/<version>/oracle/full/<suite>.tsv may come
+      # through; anything else in the artifacts fails the job.
+      - name: accept suite results only
+        run: |
+          mkdir -p incoming
+          find incoming -type f | while IFS= read -r f; do
+            rel="${f#incoming/}"
+            if ! printf '%s\n' "$rel" | grep -Eqx 'results/[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*/oracle/full/[A-Za-z0-9][A-Za-z0-9._-]*\.tsv'; then
+              echo "unexpected file in artifacts: $rel" >&2
+              exit 1
+            fi
+            mkdir -p "$(dirname "$rel")"
+            cp "$f" "$rel"
+          done
+          rm -rf incoming
+      - name: regenerate the index and README, then guard
+        run: |
+          python tools/mcp_index.py
+          python tools/sync_readme.py
+          python3 tools/guard.py
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+        with:
+          add-paths: |
+            results
+            README.md
+          branch: oracle/update-suites
+          title: "oracle: new and refreshed suite results"
+          commit-message: "oracle: new and refreshed suite results"
+          body: |
+            Produced by the `suites` workflow in Actions for every (target, suite)
+            pair that had no committed result (`new`) or whose recorded inputs
+            changed (`stale`). Regressions never reach this PR: they fail the
+            run instead. `results/mcp_index.json` and `README.md` were
+            regenerated and `tools/guard.py` ran over the tree.
+          delete-branch: true
+
+  alert:
+    needs: [plan, run]
+    if: ${{ failure() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: open or update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="suites: scheduled re-run found regressions"
+          body="The weekly \`suites\` run judged at least one suite **regressed** or failed to run: $RUN_URL (diffs in the job summaries)."
+          n="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

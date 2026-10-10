@@ -245,6 +245,7 @@ class QemuTarget:
         clock: bus.Clock | None = None,
         quiet_ms: float = 50.0,
         max_ms: float = 300.0,
+        cmd_timeout: float = 8.0,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -256,6 +257,7 @@ class QemuTarget:
         self.harness = harness
         self.quiet_ms = quiet_ms
         self.max_ms = max_ms
+        self.cmd_timeout = cmd_timeout
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -287,6 +289,8 @@ class QemuTarget:
         )
         self._bus_mark: int = 0
         self._cmd_sock: socket.socket | None = None
+        self._cmd_buf: bytearray = bytearray()
+        self._open_port: int | None = None
         self._ev_sock: socket.socket | None = None
         self._ev_buf: bytearray = bytearray()
         self._own_events: list[str] = []
@@ -378,6 +382,28 @@ class QemuTarget:
             stderr=console,
         )
 
+    def _connect_cmd_session(self, port: int) -> None:
+        if self._cmd_sock is not None:
+            with contextlib.suppress(OSError):
+                self._cmd_sock.close()
+            self._cmd_sock = None
+        self._cmd_buf.clear()
+        is_open_v2 = self.spec.product == "H4684"
+
+        s_cmd = socket.create_connection(("127.0.0.1", port), timeout=3.0)
+        if not is_open_v2:
+            banner = recv_own_frame(s_cmd, timeout=2.0)
+            if banner != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session unexpected banner: {banner!r}")
+            s_cmd.sendall(b"*99*0##")
+            ack = recv_own_frame(s_cmd, timeout=2.0)
+            if ack != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session handshake failed: {ack!r}")
+        s_cmd.settimeout(self.cmd_timeout)
+        self._cmd_sock = s_cmd
+
     def _connect_sessions(self, port: int) -> None:
         if self.spec.own_auth != "none":
             raise NotImplementedError(
@@ -404,23 +430,13 @@ class QemuTarget:
                 raise RuntimeError(f"event session handshake failed: {ack!r}")
         s_ev.setblocking(False)
         self._ev_sock = s_ev
-
-        s_cmd = socket.create_connection(("127.0.0.1", port), timeout=3.0)
-        if not is_open_v2:
-            banner = recv_own_frame(s_cmd, timeout=2.0)
-            if banner != BANNER:
-                s_cmd.close()
-                raise RuntimeError(f"command session unexpected banner: {banner!r}")
-            s_cmd.sendall(b"*99*0##")
-            ack = recv_own_frame(s_cmd, timeout=2.0)
-            if ack != BANNER:
-                s_cmd.close()
-                raise RuntimeError(f"command session handshake failed: {ack!r}")
-        s_cmd.settimeout(4.0)
-        self._cmd_sock = s_cmd
+        self._open_port = port
+        self._connect_cmd_session(port)
 
     def _stop(self) -> None:
         self._running = False
+        self._open_port = None
+        self._cmd_buf.clear()
         if self._cmd_sock is not None:
             with contextlib.suppress(OSError):
                 self._cmd_sock.close()
@@ -475,15 +491,25 @@ class QemuTarget:
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)
-        timeout = 25.0 if name == "bacclient" else 10.0
+        timeout = 60.0
         if port is not None and not wait_tcp_port(
             port, timeout=timeout, on_poll=self.bus.pump
         ):
-            self._stop()
-            raise RuntimeError(
-                f"{name} did not listen on port {port} "
-                f"(see console log at {self.work_dir / f'console.{name}.log'})"
-            )
+            p = self._procs.pop(name)
+            if p.poll() is None:
+                p.terminate()
+                try:
+                    p.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+                    p.wait()
+            self._procs[name] = self._start_program(name, dev_map, trace_dir)
+            if not wait_tcp_port(port, timeout=timeout, on_poll=self.bus.pump):
+                self._stop()
+                raise RuntimeError(
+                    f"{name} did not listen on port {port} "
+                    f"(see console log at {self.work_dir / f'console.{name}.log'})"
+                )
 
     def _start_soap_server(self) -> None:
         # The firmware's own BACnet web service (ebacgw) serves port 1234 when
@@ -565,13 +591,30 @@ class QemuTarget:
                     raise
 
         self._running = True
-        deadline = time.monotonic() + 0.25
+        deadline = time.monotonic() + 0.5
         while time.monotonic() < deadline:
             self.bus.pump()
             time.sleep(0.02)
         self.settle()
         self.take_bus()
         self.take_own()
+
+    def _handle_cmd_frame(self, frame: str) -> bool:
+        if frame == BANNER:
+            self._reply = "ack"
+            return True
+        if frame == NACK:
+            self._reply = "nack"
+            return True
+        self._own_events.append(frame)
+        return False
+
+    def _recover_cmd_session(self) -> None:
+        if self._reply == "-" and self._running and self._open_port is not None:
+            try:
+                self._connect_cmd_session(self._open_port)
+            except (OSError, RuntimeError):
+                self._cmd_sock = None
 
     def send_own(self, frame: str) -> None:
         self._reply = "-"
@@ -586,8 +629,8 @@ class QemuTarget:
             return
         try:
             self._cmd_sock.sendall(frame.encode("ascii"))
-            buf = bytearray()
-            deadline = time.monotonic() + 4.0
+            self._cmd_buf.clear()
+            deadline = time.monotonic() + self.cmd_timeout
             while time.monotonic() < deadline:
                 self.bus.pump()
                 self._pump_own()
@@ -597,19 +640,14 @@ class QemuTarget:
                 chunk = self._cmd_sock.recv(1024)
                 if not chunk:
                     break
-                buf.extend(chunk)
-                frames = split_own(buf)
-                for f in frames:
-                    if f == BANNER:
-                        self._reply = "ack"
-                    elif f == NACK:
-                        self._reply = "nack"
-                    else:
-                        self._own_events.append(f)
-                if self._reply != "-":
-                    return
+                self._cmd_buf.extend(chunk)
+                for f in split_own(self._cmd_buf):
+                    if self._handle_cmd_frame(f):
+                        return
         except (TimeoutError, OSError):
             self._reply = "-"
+        finally:
+            self._recover_cmd_session()
 
     def take_reply(self) -> str:
         r, self._reply = self._reply, "-"

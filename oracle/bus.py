@@ -269,16 +269,19 @@ class PicResponder:
 
     Answers status requests ($24), configurators ($26), configuration echo
     ($27, $02), and frame write acknowledgements ($03 -> $19 for standard SCS,
-    $06 -> $00 for extended SCS). Other frames are passed to the inner responder.
+    $00 for extended/special SCS frames). Other frames are passed to the inner
+    responder.
 
-    Protocol opcodes reverse-engineered from MH200N scsserver binary:
+    Protocol opcodes reverse-engineered from MH200N/H4684 scsserver binary:
     - $24: requests PIC status and firmware version string;
       answered with $25<version>\\r.
     - $26: requests hardware configurators;
       answered with $26000\\r (virtual configuration).
-    - $27 / $02: configuration echo and handshake frames during bus init.
+    - $27 / $02 / $28: configuration echo and handshake frames during bus init.
     - $03: write standard SCS frame to bus; acknowledged by PIC with $19\\r.
-    - $06: write extended SCS frame to bus; acknowledged by PIC with $00\\r.
+    - $04 / $05 / $06: write 4/5/extended SCS frame to bus; acknowledged with $00\\r.
+    - $15 / $16: bus configuration/diagnostics; acknowledged with $00\\r.
+    - $51 / $52 / $53: auxiliary/energy/special frames; acknowledged with $00\\r.
     """
 
     def __init__(
@@ -303,15 +306,22 @@ class PicResponder:
             or frame.startswith(b"$28")
         ):
             return [frame]
-        if frame.startswith(b"$15") or frame.startswith(b"$16"):
-            return [b"$00\r"]
-        if frame.startswith(b"$03"):
-            answers = [b"$19\r"]
+        if (
+            frame.startswith(b"$15")
+            or frame.startswith(b"$16")
+            or frame.startswith(b"$04")
+            or frame.startswith(b"$05")
+            or frame.startswith(b"$06")
+            or frame.startswith(b"$51")
+            or frame.startswith(b"$52")
+            or frame.startswith(b"$53")
+        ):
+            answers = [b"$00\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
-        if frame.startswith(b"$06"):
-            answers = [b"$00\r"]
+        if frame.startswith(b"$03"):
+            answers = [b"$19\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers

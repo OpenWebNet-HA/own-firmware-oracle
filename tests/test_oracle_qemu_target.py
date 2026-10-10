@@ -80,7 +80,12 @@ def test_pic_responder():
     assert resp.respond(b"$150500FF\r") == [b"$00\r"]
     assert resp.respond(b"$1600\r") == [b"$00\r"]
     assert resp.respond(b"$0331001200\r") == [b"$19\r"]
+    assert resp.respond(b"$04B7011300\r") == [b"$00\r"]
+    assert resp.respond(b"$05010203\r") == [b"$00\r"]
     assert resp.respond(b"$06D13101420D0D0100\r") == [b"$00\r"]
+    assert resp.respond(b"$5101\r") == [b"$00\r"]
+    assert resp.respond(b"$520205\r") == [b"$00\r"]
+    assert resp.respond(b"$530102\r") == [b"$00\r"]
     assert resp.respond(b"$99\r") == []
 
     # With inner scripted responder
@@ -88,6 +93,7 @@ def test_pic_responder():
         "test",
         {
             b"$0331001200\r": [b"echo"],
+            b"$04B7011300\r": [b"echo4"],
             b"$06D13101420D0D0100\r": [b"echo6"],
             b"$99\r": [b"inner"],
         },
@@ -95,6 +101,7 @@ def test_pic_responder():
     resp_inner = bus.PicResponder(version="010108", inner=inner)
     assert resp_inner.name == "pic:script:test"
     assert resp_inner.respond(b"$0331001200\r") == [b"$19\r", b"echo"]
+    assert resp_inner.respond(b"$04B7011300\r") == [b"$00\r", b"echo4"]
     assert resp_inner.respond(b"$06D13101420D0D0100\r") == [b"$00\r", b"echo6"]
     assert resp_inner.respond(b"$99\r") == [b"inner"]
 
@@ -445,6 +452,63 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
         tgt.restart()
 
 
+def test_launch_daemon_retry(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(run, "open_devices", lambda rt: [])
+    monkeypatch.setattr(tgt, "_connect_sessions", lambda port: None)
+    monkeypatch.setattr(
+        qemu_target, "read_ports_from_stack_open", lambda p: {"bt_luci": 40001}
+    )
+
+    # 1. Retry succeeds on second attempt
+    scsserver_waits = 0
+
+    def retry_wait(port, timeout, **kwargs):
+        nonlocal scsserver_waits
+        if port == 20001:
+            scsserver_waits += 1
+            return scsserver_waits > 1
+        return True
+
+    proc_mock = MagicMock()
+    proc_mock.poll.return_value = None
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_mock)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 2. Dead process on retry (p.poll() is not None)
+    scsserver_waits = 0
+    proc_dead = MagicMock()
+    proc_dead.poll.return_value = 1
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_dead)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 3. TimeoutExpired on terminate wait
+    scsserver_waits = 0
+    proc_hung = MagicMock()
+    proc_hung.poll.return_value = None
+    waits = 0
+
+    def hung_wait(*args, **kwargs):
+        nonlocal waits
+        waits += 1
+        if waits == 1:
+            raise subprocess.TimeoutExpired(cmd="foo", timeout=1.0)
+
+    proc_hung.wait.side_effect = hung_wait
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_hung)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert proc_hung.kill.called
+
+
 def test_qemu_target_session_interaction(monkeypatch, tmp_path):
     spec = _dummy_spec()
     fake_bus = bus.Bus(
@@ -488,6 +552,7 @@ def test_qemu_target_session_interaction(monkeypatch, tmp_path):
         assert tgt.take_own() == ["*#1*31*0##"]
 
         # 4. Command socket timeout
+        tgt.cmd_timeout = 0.01
         s_cmd1.settimeout(0.01)
         tgt.send_own("*1*1*31##")
         assert tgt.take_reply() == "-"
@@ -905,6 +970,54 @@ def test_qemu_target_send_own_and_pump_branches():
     tgt._ev_sock.fileno.return_value = 42
     with patch("select.select", side_effect=ValueError("bad fd")):
         tgt._pump_own()
+
+
+def test_qemu_target_send_own_reconnect():
+    spec = _dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        Path("/tmp/img.zip"),
+        Path("/tmp/w"),
+        staged_sysroot=Path("/tmp"),
+        bus_instance=fake_bus,
+    )
+    tgt._running = True
+    tgt._open_port = 20000
+    tgt.cmd_timeout = 0.01
+
+    mock_cmd = MagicMock()
+    mock_cmd.fileno.return_value = 43
+    mock_cmd.recv.side_effect = [b""]
+    tgt._cmd_sock = mock_cmd
+    reconnected: list[int] = []
+    tgt._connect_cmd_session = reconnected.append
+    with patch("select.select", return_value=([mock_cmd], [], [])):
+        tgt.send_own("*1*1*31##")
+    assert tgt.take_reply() == "-"
+    assert reconnected == [20000]
+
+    mock_cmd2 = MagicMock()
+    mock_cmd2.fileno.return_value = 44
+    mock_cmd2.recv.side_effect = [b""]
+    tgt._connect_cmd_session = MagicMock(side_effect=OSError("reconnect fail"))
+    tgt._cmd_sock = mock_cmd2
+    with patch("select.select", return_value=([mock_cmd2], [], [])):
+        tgt.send_own("*1*1*31##")
+    assert tgt.take_reply() == "-"
+    assert tgt._cmd_sock is None
+
+    old_cmd = MagicMock()
+    tgt._cmd_sock = old_cmd
+    with (
+        patch("socket.create_connection") as mock_conn,
+        patch("oracle.qemu_target.recv_own_frame", return_value="*#*1##"),
+    ):
+        mock_conn.return_value = MagicMock()
+        qemu_target.QemuTarget._connect_cmd_session(tgt, 20000)
+    old_cmd.close.assert_called_once()
 
 
 def test_pty_port_negative_fd():
