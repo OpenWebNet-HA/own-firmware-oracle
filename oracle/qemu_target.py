@@ -491,7 +491,7 @@ class QemuTarget:
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)
-        timeout = 25.0 if name == "bacclient" else 10.0
+        timeout = 30.0
         if port is not None and not wait_tcp_port(
             port, timeout=timeout, on_poll=self.bus.pump
         ):
