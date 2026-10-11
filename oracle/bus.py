@@ -303,6 +303,7 @@ class PicResponder:
         if (
             frame.startswith(b"$27")
             or frame.startswith(b"$02")
+            or frame.startswith(b"$002")
             or frame.startswith(b"$28")
         ):
             return [frame]
@@ -310,8 +311,11 @@ class PicResponder:
             frame.startswith(b"$15")
             or frame.startswith(b"$16")
             or frame.startswith(b"$04")
+            or frame.startswith(b"$004")
             or frame.startswith(b"$05")
+            or frame.startswith(b"$005")
             or frame.startswith(b"$06")
+            or frame.startswith(b"$006")
             or frame.startswith(b"$51")
             or frame.startswith(b"$52")
             or frame.startswith(b"$53")
@@ -320,7 +324,7 @@ class PicResponder:
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
-        if frame.startswith(b"$03"):
+        if frame.startswith(b"$03") or frame.startswith(b"$003"):
             answers = [b"$19\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))

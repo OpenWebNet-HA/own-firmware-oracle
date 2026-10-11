@@ -4,16 +4,16 @@
 # harness=full
 # target_sha256=3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2
 # adapter=pty-1
-# reset=0
+# reset=each
 # bus=pty
 # framer=line
 # responder=pic
 # settle_ms=300
 # suite=thermo-holiday-program
 # suite_sha256=81a69b97d18cf13dbade5c658729f13c50a210182071fb1c29fcdab8f4b4f94f
-# oracle_version=1
+# oracle_version=2
 direction	input	reply	verdict	output
-down	*#4*#0*#14*0210*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d | bus:24 30 30 36 44 31 30 30 30 33 30 32 43 31 31 32 32 41 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
+down	*#4*#0*#14*0210*1##	nack	out	bus:24 30 30 36 44 31 30 30 30 33 30 32 43 31 31 32 32 41 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
 down	*#4*#0*#14*0250*1##	nack	out	bus:24 30 30 36 44 31 30 30 30 33 30 32 43 31 31 32 33 32 30 30 0d | bus:24 30 30 32 30 30 30 30 0d
 down	*4*0*23##	nack	out	bus:24 30 30 34 39 33 31 37 33 30 30 31 0d | bus:24 30 30 32 30 30 30 30 0d
 down	*4*1*23##	nack	out	bus:24 30 30 34 39 33 31 37 33 30 30 30 0d | bus:24 30 30 32 30 30 30 30 0d

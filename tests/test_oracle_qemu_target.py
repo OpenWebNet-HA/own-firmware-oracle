@@ -76,13 +76,18 @@ def test_pic_responder():
     assert resp.respond(b"$2603\r") == [b"$26000\r"]
     assert resp.respond(b"$270200\r") == [b"$270200\r"]
     assert resp.respond(b"$020000\r") == [b"$020000\r"]
+    assert resp.respond(b"$0020000\r") == [b"$0020000\r"]
     assert resp.respond(b"$2802\r") == [b"$2802\r"]
     assert resp.respond(b"$150500FF\r") == [b"$00\r"]
     assert resp.respond(b"$1600\r") == [b"$00\r"]
     assert resp.respond(b"$0331001200\r") == [b"$19\r"]
+    assert resp.respond(b"$00331001200\r") == [b"$19\r"]
     assert resp.respond(b"$04B7011300\r") == [b"$00\r"]
+    assert resp.respond(b"$004B7011300\r") == [b"$00\r"]
     assert resp.respond(b"$05010203\r") == [b"$00\r"]
+    assert resp.respond(b"$005010203\r") == [b"$00\r"]
     assert resp.respond(b"$06D13101420D0D0100\r") == [b"$00\r"]
+    assert resp.respond(b"$006D13101420D0D0100\r") == [b"$00\r"]
     assert resp.respond(b"$5101\r") == [b"$00\r"]
     assert resp.respond(b"$520205\r") == [b"$00\r"]
     assert resp.respond(b"$530102\r") == [b"$00\r"]
@@ -270,6 +275,22 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
     )
     assert tgt.settle_ms == 300.0
     assert tgt.alive() is False
+    assert tgt.quiet_ms == 50.0
+
+    spec_f460 = dataclasses.replace(spec, product="F460")
+    tgt_f460 = qemu_target.QemuTarget(
+        spec_f460, tmp_path / "img.zip", work, staged_sysroot=staged
+    )
+    assert tgt_f460.quiet_ms == 20.0
+    spec_f461 = dataclasses.replace(spec, product="F461")
+    tgt_f461 = qemu_target.QemuTarget(
+        spec_f461,
+        tmp_path / "img.zip",
+        work,
+        staged_sysroot=staged,
+        quiet_ms=15.0,
+    )
+    assert tgt_f461.quiet_ms == 15.0
 
     tgt._copy_sysroot()
     assert (tgt.sysroot / "test.txt").read_text() == "ok"

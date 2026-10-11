@@ -11,7 +11,7 @@
 # settle_ms=300
 # suite=scenario-who17
 # suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
-# oracle_version=1
+# oracle_version=2
 direction	input	reply	verdict	output
 down	*#17##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#17*0##	nack	out	bus:24 30 30 32 30 30 30 30 0d
