@@ -255,8 +255,6 @@ class QemuTarget:
         self.image = image
         self.work_dir = work_dir
         self.harness = harness
-        if spec.product in ("F460", "F461") and quiet_ms == 50.0:
-            quiet_ms = 20.0
         self.quiet_ms = quiet_ms
         self.max_ms = max_ms
         self.cmd_timeout = cmd_timeout

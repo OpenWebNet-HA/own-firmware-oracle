@@ -11,7 +11,7 @@
 # settle_ms=300
 # suite=ownd-pr82-heating
 # suite_sha256=adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a
-# oracle_version=2
+# oracle_version=1
 direction	input	reply	verdict	output
 down	*#4*#1*#11*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#4*#99*#11*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d

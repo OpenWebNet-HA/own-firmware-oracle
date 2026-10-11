@@ -11,7 +11,7 @@
 # settle_ms=300
 # suite=intercom-ts10
 # suite_sha256=57339b7f4a32bc2548a4e72b8a74f162fd2c647c69f95f1c3c4a665f6dcfc119
-# oracle_version=2
+# oracle_version=1
 direction	input	reply	verdict	output
 down	*#8*0##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#8*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
@@ -19,14 +19,14 @@ down	*#8*11##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#8*11*0##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#8*20##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*#8*20*0##	nack	out	bus:24 30 30 32 30 30 30 30 0d
-down	*8*1#14#2#1*4##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*8*1#14#2#1*4##	nack	silent	-
 down	*8*1#14#2#11*4##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*1#14#2#16*22##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*1#6#2#1*2##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*1#6#2#11*16##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*1#6#2#2*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*1#7#2#1*2##	nack	out	bus:24 30 30 32 30 30 30 30 0d
-down	*8*1#7#2#11*16##	nack	out	bus:24 30 30 32 30 30 30 30 0d
+down	*8*1#7#2#11*16##	nack	silent	-
 down	*8*19*0##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*19*1##	nack	out	bus:24 30 30 32 30 30 30 30 0d
 down	*8*19*11##	nack	out	bus:24 30 30 32 30 30 30 30 0d

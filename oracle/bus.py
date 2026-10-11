@@ -272,16 +272,25 @@ class PicResponder:
     $00 for extended/special SCS frames). Other frames are passed to the inner
     responder.
 
-    Protocol opcodes reverse-engineered from MH200N/H4684 scsserver binary:
-    - $24: requests PIC status and firmware version string;
-      answered with $25<version>\\r.
-    - $26: requests hardware configurators;
-      answered with $26000\\r (virtual configuration).
-    - $27 / $02 / $28: configuration echo and handshake frames during bus init.
-    - $03: write standard SCS frame to bus; acknowledged by PIC with $19\\r.
-    - $04 / $05 / $06: write 4/5/extended SCS frame to bus; acknowledged with $00\\r.
-    - $15 / $16: bus configuration/diagnostics; acknowledged with $00\\r.
-    - $51 / $52 / $53: auxiliary/energy/special frames; acknowledged with $00\\r.
+    Protocol opcodes reverse-engineered from MH200N/H4684 scsserver binary
+    (2-digit UART protocol) and F460/F461 scsserver binary (3-digit RPMsg protocol):
+    - 3-digit RPMsg protocol (F460, F461 Cortex-M4):
+      - $024: requests PIC status and firmware version; answered with $025<version>\r.
+      - $026: requests hardware configurators; answered with $026000000\r.
+      - $028: requests hardware configurators ext; answered with $0280000\r.
+      - $002: keepalive / status query; acknowledged with $000\r.
+      - $003: write standard SCS frame to bus; acknowledged with $019\r.
+      - $004 / $005 / $006 / $015 / $016 / $051 / $052 / $053: acknowledged with $000\r.
+    - 2-digit UART protocol (legacy ARM32 gateways):
+      - $24: requests PIC status and firmware version string;
+        answered with $25<version>\\r.
+      - $26: requests hardware configurators;
+        answered with $26000\\r (virtual configuration).
+      - $27 / $02 / $28: configuration echo and handshake frames during bus init.
+      - $03: write standard SCS frame to bus; acknowledged by PIC with $19\\r.
+      - $04 / $05 / $06: write 4/5/extended SCS frame to bus; acknowledged with $00\\r.
+      - $15 / $16: bus configuration/diagnostics; acknowledged with $00\\r.
+      - $51 / $52 / $53: auxiliary/energy/special frames; acknowledged with $00\\r.
     """
 
     def __init__(
@@ -295,40 +304,77 @@ class PicResponder:
             "pic" if isinstance(self.inner, Silent) else f"pic:{self.inner.name}"
         )
 
-    def respond(self, frame: bytes) -> list[bytes]:
+    def _respond_3digit(self, frame: bytes) -> list[bytes] | None:
+        if frame.startswith(b"$024"):
+            return [f"$025{self.version.zfill(8)}\r".encode("ascii")]
+        if frame.startswith(b"$026"):
+            return [b"$026000000\r"]
+        if frame.startswith(b"$028"):
+            return [b"$0280000\r"]
+        if frame.startswith(b"$002"):
+            return [b"$000\r"]
+        if frame.startswith(b"$003"):
+            answers = [b"$019\r"]
+            if not isinstance(self.inner, Silent):
+                answers.extend(self.inner.respond(frame))
+            return answers
+        if any(
+            frame.startswith(p)
+            for p in (
+                b"$004",
+                b"$005",
+                b"$006",
+                b"$015",
+                b"$016",
+                b"$051",
+                b"$052",
+                b"$053",
+            )
+        ):
+            answers = [b"$000\r"]
+            if not isinstance(self.inner, Silent):
+                answers.extend(self.inner.respond(frame))
+            return answers
+        return None
+
+    def _respond_2digit(self, frame: bytes) -> list[bytes] | None:
         if frame.startswith(b"$24"):
             return [f"$25{self.version}\r".encode("ascii")]
         if frame.startswith(b"$26"):
             return [b"$26000\r"]
-        if (
-            frame.startswith(b"$27")
-            or frame.startswith(b"$02")
-            or frame.startswith(b"$002")
-            or frame.startswith(b"$28")
-        ):
+        if any(frame.startswith(p) for p in (b"$27", b"$02", b"$28")):
             return [frame]
-        if (
-            frame.startswith(b"$15")
-            or frame.startswith(b"$16")
-            or frame.startswith(b"$04")
-            or frame.startswith(b"$004")
-            or frame.startswith(b"$05")
-            or frame.startswith(b"$005")
-            or frame.startswith(b"$06")
-            or frame.startswith(b"$006")
-            or frame.startswith(b"$51")
-            or frame.startswith(b"$52")
-            or frame.startswith(b"$53")
+        if any(
+            frame.startswith(p)
+            for p in (
+                b"$15",
+                b"$16",
+                b"$04",
+                b"$05",
+                b"$06",
+                b"$51",
+                b"$52",
+                b"$53",
+            )
         ):
             answers = [b"$00\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
-        if frame.startswith(b"$03") or frame.startswith(b"$003"):
+        if frame.startswith(b"$03"):
             answers = [b"$19\r"]
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
+        return None
+
+    def respond(self, frame: bytes) -> list[bytes]:
+        res_3d = self._respond_3digit(frame)
+        if res_3d is not None:
+            return res_3d
+        res_2d = self._respond_2digit(frame)
+        if res_2d is not None:
+            return res_2d
         return self.inner.respond(frame)
 
 
