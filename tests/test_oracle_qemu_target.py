@@ -436,10 +436,14 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_mock)
 
     # scsserver timeout
+    tgt.work_dir.mkdir(parents=True, exist_ok=True)
+    (tgt.work_dir / "console.scsserver.log").write_text(
+        "critical failure", encoding="utf-8"
+    )
     monkeypatch.setattr(
         qemu_target, "wait_tcp_port", lambda port, timeout, **kwargs: False
     )
-    with pytest.raises(RuntimeError, match="scsserver did not listen"):
+    with pytest.raises(RuntimeError, match="critical failure"):
         tgt.restart()
 
     # translator timeout

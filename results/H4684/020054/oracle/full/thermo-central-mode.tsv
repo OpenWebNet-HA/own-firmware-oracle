@@ -11,7 +11,7 @@
 # settle_ms=300
 # suite=thermo-central-mode
 # suite_sha256=c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7
-# oracle_version=1
+# oracle_version=2
 direction	input	reply	verdict	output
 down	*4*0*#0##	nack	silent	-
 down	*4*0*#0#2##	nack	silent	-
@@ -19,7 +19,7 @@ down	*4*1*#0##	nack	silent	-
 down	*4*1*#0#2##	nack	silent	-
 down	*4*100*#0##	nack	silent	-
 down	*4*101*#0##	nack	silent	-
-down	*4*102*#0##	ack	out	bus:24 35 32 30 32 30 35 0d | bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d
+down	*4*102*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d
 down	*4*102*#0#2##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 37 30 30 30 30 0d
 down	*4*110*#0##	nack	silent	-
 down	*4*202*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 30 30 0d

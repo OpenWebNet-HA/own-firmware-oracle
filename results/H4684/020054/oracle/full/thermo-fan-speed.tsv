@@ -11,9 +11,9 @@
 # settle_ms=300
 # suite=thermo-fan-speed
 # suite_sha256=96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5
-# oracle_version=1
+# oracle_version=2
 direction	input	reply	verdict	output
-down	*#4*#0#2*#11*1##	ack	out	bus:24 35 32 30 32 30 35 0d | bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | bus:24 30 36 44 31 30 31 30 46 33 33 30 31 30 30 30 30 30 30 0d
+down	*#4*#0#2*#11*1##	nack	silent	-
 down	*#4*#0*#11*1##	nack	silent	-
 down	*#4*#1*#11*1##	nack	silent	-
 down	*#4*1*#11*0##	nack	silent	-

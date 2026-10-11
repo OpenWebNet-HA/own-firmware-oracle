@@ -211,6 +211,7 @@ def wait_tcp_port(
     timeout: float = 5.0,
     poll_interval: float = 0.05,
     on_poll: Callable[[], object] | None = None,
+    connect_timeout: float = 1.0,
 ) -> bool:
     """Poll until a local TCP port is open or timeout expires."""
     start_t = time.monotonic()
@@ -219,7 +220,7 @@ def wait_tcp_port(
             on_poll()
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(poll_interval)
+                s.settimeout(connect_timeout)
                 s.connect(("127.0.0.1", port))
                 return True
         except OSError:
@@ -518,13 +519,23 @@ class QemuTarget:
                 except subprocess.TimeoutExpired:
                     p.kill()
                     p.wait()
+            wait_port_free(port)
             self._procs[name] = self._start_program(name, dev_map, trace_dir)
             if not wait_tcp_port(port, timeout=timeout, on_poll=self.bus.pump):
+                console_text = ""
+                log_path = self.work_dir / f"console.{name}.log"
+                if log_path.is_file():
+                    with contextlib.suppress(OSError):
+                        console_text = log_path.read_text(
+                            encoding="utf-8", errors="replace"
+                        ).strip()
                 self._stop()
-                raise RuntimeError(
-                    f"{name} did not listen on port {port} "
-                    f"(see console log at {self.work_dir / f'console.{name}.log'})"
+                details = (
+                    f" (console log: {console_text})"
+                    if console_text
+                    else f" (see console log at {log_path})"
                 )
+                raise RuntimeError(f"{name} did not listen on port {port}{details}")
 
     def _start_soap_server(self) -> None:
         # The firmware's own BACnet web service (ebacgw) serves port 1234 when
