@@ -105,6 +105,8 @@ def test_pic_responder():
             b"$0331001200\r": [b"echo"],
             b"$04B7011300\r": [b"echo4"],
             b"$06D13101420D0D0100\r": [b"echo6"],
+            b"$00331001200\r": [b"echo3d"],
+            b"$004B7011300\r": [b"echo4_3d"],
             b"$99\r": [b"inner"],
         },
     )
@@ -113,6 +115,8 @@ def test_pic_responder():
     assert resp_inner.respond(b"$0331001200\r") == [b"$19\r", b"echo"]
     assert resp_inner.respond(b"$04B7011300\r") == [b"$00\r", b"echo4"]
     assert resp_inner.respond(b"$06D13101420D0D0100\r") == [b"$00\r", b"echo6"]
+    assert resp_inner.respond(b"$00331001200\r") == [b"$019\r", b"echo3d"]
+    assert resp_inner.respond(b"$004B7011300\r") == [b"$000\r", b"echo4_3d"]
     assert resp_inner.respond(b"$99\r") == [b"inner"]
 
 
