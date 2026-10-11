@@ -191,6 +191,21 @@ def port_is_free(port: int, host: str = "127.0.0.1") -> bool:
             return True
 
 
+def wait_port_free(
+    port: int,
+    host: str = "127.0.0.1",
+    timeout: float = 10.0,
+    poll_interval: float = 0.05,
+) -> bool:
+    """Poll until a local TCP port is free or timeout expires."""
+    start_t = time.monotonic()
+    while time.monotonic() - start_t < timeout:
+        if port_is_free(port):
+            return True
+        time.sleep(poll_interval)
+    return port_is_free(port)
+
+
 def wait_tcp_port(
     port: int,
     timeout: float = 5.0,
@@ -487,7 +502,7 @@ class QemuTarget:
         dev_map: dict[str, str],
         trace_dir: Path | None,
     ) -> None:
-        if port is not None and not port_is_free(port):
+        if port is not None and not wait_port_free(port):
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)

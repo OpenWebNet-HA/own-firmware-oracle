@@ -1075,6 +1075,48 @@ def test_port_is_free():
         s2.close()
 
 
+def test_wait_port_free():
+    # 1. Free port returns True immediately
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    assert qemu_target.wait_port_free(port, timeout=0.1) is True
+
+    # 2. Busy port times out and returns False
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2.bind(("127.0.0.1", 0))
+    s2.listen(128)
+    busy_port = s2.getsockname()[1]
+    try:
+        assert (
+            qemu_target.wait_port_free(busy_port, timeout=0.05, poll_interval=0.01)
+            is False
+        )
+    finally:
+        s2.close()
+
+    # 3. Busy port that becomes free during polling returns True
+    s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s3.bind(("127.0.0.1", 0))
+    s3.listen(128)
+    closing_port = s3.getsockname()[1]
+
+    def close_soon() -> None:
+        time.sleep(0.02)
+        s3.close()
+
+    t = threading.Thread(target=close_soon)
+    t.start()
+    try:
+        assert (
+            qemu_target.wait_port_free(closing_port, timeout=1.0, poll_interval=0.01)
+            is True
+        )
+    finally:
+        t.join()
+
+
 def test_wait_tcp_port_with_on_poll():
     poll_calls = []
 
@@ -1145,8 +1187,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 1. scsserver port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 20001,
+        "wait_port_free",
+        lambda p, **kw: p != 20001,
     )
     with pytest.raises(RuntimeError, match="port 20001 is already in use"):
         tgt.restart()
@@ -1154,8 +1196,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 2. client port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 30001,
+        "wait_port_free",
+        lambda p, **kw: p != 30001,
     )
     monkeypatch.setattr(
         tgt,
@@ -1169,8 +1211,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 3. openserver port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 20000,
+        "wait_port_free",
+        lambda p, **kw: p != 20000,
     )
     with pytest.raises(RuntimeError, match="port 20000 is already in use"):
         tgt.restart()
