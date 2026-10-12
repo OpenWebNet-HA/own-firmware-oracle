@@ -10,8 +10,10 @@ future qemu adapters works without firmware and is unit-tested in pr.yml.
 #    were made before that changed (found by suites.yml: F453AV energy-params
 #    and others re-ran with the same inputs but a different reply column).
 # 3: the reply wait outlasts a slow cold start (a late ACK/NACK was recorded as
-#    "-") and the settle window grew from 50/300 ms to 200/1000 ms (a bus frame
-#    arriving after the quiet window landed on the NEXT step). Found by
-#    suites.yml: F461 energy-ts10 and F453AV/H4684/MH202 suites disagreed
-#    between two runs, or with the committed file, on exactly those columns.
+#    "-") and the settle window grew from 50/300 ms to 1000/3000 ms: on slow
+#    runners a bus frame, or the death of a crashed program, landed on the
+#    NEXT step (or was noticed a step late), so two runs shifted rows against
+#    each other. Found by suites.yml: F450, F453AV, F459, F460, F461, H4684 and
+#    MH202 suites disagreed between two runs, or with the committed file, on
+#    exactly those columns.
 ORACLE_VERSION = "3"

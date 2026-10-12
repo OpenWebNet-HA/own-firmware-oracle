@@ -282,9 +282,9 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
         work,
         staged_sysroot=staged,
     )
-    assert tgt.settle_ms == 1000.0
+    assert tgt.settle_ms == 3000.0
     assert tgt.alive() is False
-    assert tgt.quiet_ms == 200.0
+    assert tgt.quiet_ms == 1000.0
 
     tgt._copy_sysroot()
     assert (tgt.sysroot / "test.txt").read_text() == "ok"
