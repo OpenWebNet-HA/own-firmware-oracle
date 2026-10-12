@@ -282,9 +282,9 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
         work,
         staged_sysroot=staged,
     )
-    assert tgt.settle_ms == 300.0
+    assert tgt.settle_ms == 1000.0
     assert tgt.alive() is False
-    assert tgt.quiet_ms == 50.0
+    assert tgt.quiet_ms == 200.0
 
     tgt._copy_sysroot()
     assert (tgt.sysroot / "test.txt").read_text() == "ok"
@@ -469,6 +469,55 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(qemu_target, "wait_tcp_port", fake_wait_open)
     with pytest.raises(RuntimeError, match="openserver did not listen"):
         tgt.restart()
+
+
+def test_restart_retries_a_transient_bring_up_failure(monkeypatch, tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(), tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    calls: list[int] = []
+
+    def flaky() -> None:
+        calls.append(1)
+        if len(calls) < 3:
+            raise RuntimeError("bt_termo did not listen on port 40004")
+
+    monkeypatch.setattr(tgt, "_restart_once", flaky)
+    stops: list[int] = []
+    monkeypatch.setattr(tgt, "_stop", lambda: stops.append(1))
+    tgt.restart()
+    assert len(calls) == 3  # failed twice, third attempt came up
+    assert len(stops) == 2  # torn down after each failure
+
+
+def test_restart_raises_the_last_error_after_all_attempts(monkeypatch, tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        restart_attempts=2,
+    )
+    errors = iter(["first", "second", "third"])
+
+    def always_fails() -> None:
+        raise RuntimeError(next(errors))
+
+    monkeypatch.setattr(tgt, "_restart_once", always_fails)
+    monkeypatch.setattr(tgt, "_stop", lambda: None)
+    with pytest.raises(RuntimeError, match="second"):
+        tgt.restart()
+
+
+def test_restart_attempts_is_at_least_one(tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        restart_attempts=0,
+    )
+    assert tgt.restart_attempts == 1
 
 
 def test_launch_daemon_retry(monkeypatch, tmp_path):

@@ -259,10 +259,11 @@ class QemuTarget:
         framer: bus.Framer | None = None,
         responder: bus.Responder | None = None,
         clock: bus.Clock | None = None,
-        quiet_ms: float = 50.0,
-        max_ms: float = 300.0,
+        quiet_ms: float = 200.0,
+        max_ms: float = 1000.0,
         cmd_timeout: float = 8.0,
         reply_grace: float = 22.0,
+        restart_attempts: int = 3,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -281,6 +282,7 @@ class QemuTarget:
         # many seconds later than a warm one; without this the reply column
         # records "-" or "ack" depending on how cold the runner was.
         self.reply_grace = reply_grace
+        self.restart_attempts = max(1, restart_attempts)
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -564,6 +566,29 @@ class QemuTarget:
             self._soap_thread.start()
 
     def restart(self) -> None:
+        """(Re)start the whole stack; retry a failed bring-up from scratch.
+
+        A daemon that never listens (a loaded runner, a port still held) raises
+        RuntimeError. One such failure must not abort a suite that has already
+        run for many minutes, so the stack is torn down and brought up again up
+        to restart_attempts times; the last error is raised if all fail."""
+        last: RuntimeError = RuntimeError("stack never started")
+        for attempt in range(1, self.restart_attempts + 1):
+            try:
+                self._restart_once()
+                return
+            except RuntimeError as err:
+                last = err
+                logger.warning(
+                    "stack start failed (attempt %d/%d): %s",
+                    attempt,
+                    self.restart_attempts,
+                    err,
+                )
+                self._stop()
+        raise last
+
+    def _restart_once(self) -> None:
         self._stop()
         self._copy_sysroot()
         cfg_path = self.sysroot / self.spec.runtime.stack_config
