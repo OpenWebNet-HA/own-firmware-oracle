@@ -1152,6 +1152,54 @@ def test_send_own_grace_is_capped(tmp_path):
         s2.close()
 
 
+def _crash_target(tmp_path, **kw):
+    fake_bus = MagicMock()
+    fake_bus.settle.return_value = True  # the bus is quiet at once
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+        **kw,
+    )
+    proc = MagicMock()
+    proc.poll.return_value = None
+    tgt._procs = {"scsserver": proc}
+    tgt._running = True
+    return tgt, proc
+
+
+def test_settle_notices_a_program_that_dies_after_the_bus_went_quiet(tmp_path):
+    """The crash lands on this step, not on the next one (or nowhere)."""
+    tgt, proc = _crash_target(tmp_path, crash_grace=3.0)
+    t = threading.Timer(0.3, lambda: setattr(proc.poll, "return_value", -11))
+    t.start()
+    try:
+        started = time.monotonic()
+        assert tgt.settle() is True
+        assert tgt.alive() is False
+        assert 0.2 < time.monotonic() - started < 2.5  # stopped at the crash
+    finally:
+        t.cancel()
+
+
+def test_settle_waits_at_most_crash_grace_for_a_healthy_target(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.2)
+    started = time.monotonic()
+    assert tgt.settle() is True
+    assert tgt.alive() is True
+    assert 0.15 <= time.monotonic() - started < 1.5
+
+
+def test_settle_does_not_wait_for_a_target_that_is_not_running(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=30.0)
+    tgt._running = False
+    started = time.monotonic()
+    assert tgt.settle() is True
+    assert time.monotonic() - started < 1.0
+
+
 def test_pty_port_negative_fd():
     port = bus.PtyPort(-1)
     assert port.read() == b""

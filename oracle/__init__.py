@@ -15,5 +15,7 @@ future qemu adapters works without firmware and is unit-tested in pr.yml.
 #    NEXT step (or was noticed a step late), so two runs shifted rows against
 #    each other. Found by suites.yml: F450, F453AV, F459, F460, F461, H4684 and
 #    MH202 suites disagreed between two runs, or with the committed file, on
-#    exactly those columns.
+#    exactly those columns. settle() also watches the programs for 2 s after
+#    the bus is quiet, so a crash shortly after the answer is recorded on its
+#    own step in every run.
 ORACLE_VERSION = "3"

@@ -264,6 +264,7 @@ class QemuTarget:
         cmd_timeout: float = 8.0,
         reply_grace: float = 22.0,
         restart_attempts: int = 3,
+        crash_grace: float = 2.0,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -283,6 +284,7 @@ class QemuTarget:
         # records "-" or "ack" depending on how cold the runner was.
         self.reply_grace = reply_grace
         self.restart_attempts = max(1, restart_attempts)
+        self.crash_grace = crash_grace
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -759,9 +761,23 @@ class QemuTarget:
         self.bus.inject(data)
 
     def settle(self) -> bool:
-        return self.bus.settle(
+        settled = self.bus.settle(
             quiet_ms=self.quiet_ms, max_ms=self.max_ms, on_poll=self._pump_own
         )
+        # A program that segfaults shortly AFTER answering (the firmware's own
+        # bugs, under qemu-user) must be noticed in this step in every run: if
+        # alive() is read a moment too early, the crash lands on the next step
+        # or, under reset=each, is lost with the restart. Watch for it, keep
+        # collecting whatever the dying program still emits, and stop as soon
+        # as one is gone.
+        deadline = time.monotonic() + self.crash_grace
+        while self._running and self._procs and time.monotonic() < deadline:
+            if not self.alive():
+                break
+            self.bus.pump()
+            self._pump_own()
+            time.sleep(0.02)
+        return settled
 
     def alive(self) -> bool:
         if not self._running or not self._procs:
