@@ -32,6 +32,7 @@ import difflib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from collections import Counter
@@ -241,6 +242,26 @@ def parse_runs(runs: str, root: Path) -> list[tuple[str, str]]:
     return out
 
 
+def _keep_evidence(
+    evidence_dir: Path | None, rel: Path, old: Path, new: Path, label: str, diff: str
+) -> None:
+    """Copy both sides of a failing comparison and the FULL diff aside.
+
+    The job summary shows at most 200 diff lines and is gone from the API; the
+    files land in evidence_dir, which suites.yml uploads as its own artifact
+    (never under produced-*, which the publish job turns into results)."""
+    if evidence_dir is None:
+        return
+    dest = evidence_dir / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    first, second = (
+        ("run1", "run2") if label == "second run" else ("committed", "rerun")
+    )
+    shutil.copyfile(old, dest.with_name(f"{dest.name}.{first}"))
+    shutil.copyfile(new, dest.with_name(f"{dest.name}.{second}"))
+    dest.with_name(f"{dest.name}.diff").write_text(diff, encoding="utf-8")
+
+
 def run_target(
     root: Path,
     target: str,
@@ -248,8 +269,12 @@ def run_target(
     runs: str,
     out_dir: Path,
     runner: Runner = _subprocess_runner,
+    evidence_dir: Path | None = None,
 ) -> int:
-    """Run each suite on one target; keep only new and stale files in out_dir."""
+    """Run each suite on one target; keep only new and stale files in out_dir.
+
+    A failing comparison (regressed or unstable) is also kept, with its full
+    diff, under evidence_dir when one is given."""
     product, version = parse_target(target)
     names = suites(root)
     failures = 0
@@ -300,14 +325,17 @@ def run_target(
         if evidence is not None:
             failures += 1
             old, new, label = evidence
-            diff = difflib.unified_diff(
-                old.read_text(encoding="ascii").splitlines(),
-                new.read_text(encoding="ascii").splitlines(),
-                str(rel),
-                label,
-                lineterm="",
+            diff = list(
+                difflib.unified_diff(
+                    old.read_text(encoding="ascii").splitlines(),
+                    new.read_text(encoding="ascii").splitlines(),
+                    str(rel),
+                    label,
+                    lineterm="",
+                )
             )
-            details += [f"#### `{rel}` {v}", "```diff", *list(diff)[:200], "```"]
+            _keep_evidence(evidence_dir, rel, old, new, label, "\n".join(diff) + "\n")
+            details += [f"#### `{rel}` {v}", "```diff", *diff[:200], "```"]
             why = {
                 "regressed": "same inputs, different verdicts",
                 "unstable": "two runs with the same inputs disagree",
@@ -329,6 +357,11 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
     ap.add_argument("--image")
     ap.add_argument("--runs")
     ap.add_argument("--out", type=Path)
+    ap.add_argument(
+        "--evidence",
+        type=Path,
+        help="keep both runs and the full diff of a failing suite here",
+    )
     args = ap.parse_args(argv)
 
     if args.emit_matrix:
@@ -344,7 +377,9 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
     if args.run:
         if not (args.target and args.image and args.runs and args.out):
             ap.error("--run needs --target, --image, --runs and --out")
-        return run_target(ROOT, args.target, args.image, args.runs, args.out, runner)
+        return run_target(
+            ROOT, args.target, args.image, args.runs, args.out, runner, args.evidence
+        )
     for job in plan(ROOT):
         print(f"{job['target']}: {job['runs']}")
     return 0

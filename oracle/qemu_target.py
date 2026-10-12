@@ -262,6 +262,7 @@ class QemuTarget:
         quiet_ms: float = 50.0,
         max_ms: float = 300.0,
         cmd_timeout: float = 8.0,
+        reply_grace: float = 22.0,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -274,6 +275,12 @@ class QemuTarget:
         self.quiet_ms = quiet_ms
         self.max_ms = max_ms
         self.cmd_timeout = cmd_timeout
+        # Extra seconds to wait for a late ACK/NACK once cmd_timeout has passed,
+        # but only while the firmware is visibly working on the command (bus or
+        # event traffic since it was sent). A cold qemu-user start can answer
+        # many seconds later than a warm one; without this the reply column
+        # records "-" or "ack" depending on how cold the runner was.
+        self.reply_grace = reply_grace
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -654,10 +661,25 @@ class QemuTarget:
                 )
             return
         try:
+            mark = self.bus.mark()
+            seen_events = len(self._own_events)
             self._cmd_sock.sendall(frame.encode("ascii"))
             self._cmd_buf.clear()
-            deadline = time.monotonic() + self.cmd_timeout
-            while time.monotonic() < deadline:
+            start = time.monotonic()
+            deadline = start + self.cmd_timeout
+            hard_deadline = deadline + self.reply_grace
+            while True:
+                now = time.monotonic()
+                if now >= deadline:
+                    # No reply yet. A firmware that already put this command on
+                    # the bus (or emitted events) is alive and merely slow, e.g.
+                    # a cold qemu-user start: keep waiting, but never past the
+                    # hard cap. A silent firmware is a genuine "-" right away.
+                    busy = bool(self.bus.gateway_frames(mark)) or (
+                        len(self._own_events) > seen_events
+                    )
+                    if not busy or now >= hard_deadline:
+                        break
                 self.bus.pump()
                 self._pump_own()
                 r, _, _ = select.select([self._cmd_sock], [], [], 0.01)

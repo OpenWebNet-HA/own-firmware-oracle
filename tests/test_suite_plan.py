@@ -6,6 +6,7 @@ replaced by a fake runner that writes the file a real run would have written.
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -298,6 +299,99 @@ def test_run_target(
         assert "two runs with the same inputs disagree" in capsys.readouterr().out
     if mode in ("new", "stale"):
         assert len(seen) == 2  # produced results are run twice
+
+
+@pytest.mark.parametrize(
+    ("mode", "names"),
+    [
+        ("flaky", ("run1", "run2")),
+        ("regressed", ("committed", "rerun")),
+    ],
+)
+def test_run_target_keeps_evidence(repo, tmp_path, monkeypatch, mode, names) -> None:
+    if mode != "flaky":
+        _tsv(repo, "GW1", "010000", "alpha")
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    evidence = tmp_path / "evidence"
+    got = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "alpha:each",
+        tmp_path / "out",
+        _fake_runner({"alpha": mode}, [], repo),
+        evidence,
+    )
+    assert got == 1
+    base = evidence / "results/GW1/010000/oracle/full/alpha.tsv"
+    for name in names:
+        assert base.with_name(f"alpha.tsv.{name}").is_file()
+    diff = base.with_name("alpha.tsv.diff").read_text()
+    assert diff.startswith("--- results/GW1/010000/oracle/full/alpha.tsv")
+    assert "+" in diff
+
+
+def test_run_target_evidence_is_complete_and_only_for_failures(
+    repo, tmp_path, monkeypatch
+) -> None:
+    """The summary caps the diff at 200 lines; the evidence file does not."""
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    evidence = tmp_path / "evidence"
+    big = "".join(f"row {i}\n" for i in range(500))
+    calls = {"n": 0}
+
+    def runner(argv):
+        out = Path(argv[argv.index("-o") + 1])
+        calls["n"] += 1
+        out.write_text("# suite=x\n" + (big if calls["n"] > 1 else ""))
+        return 0
+
+    got = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "alpha:each",
+        tmp_path / "out",
+        runner,
+        evidence,
+    )
+    assert got == 1
+    diff = next(evidence.rglob("*.diff")).read_text().splitlines()
+    assert len(diff) > 500  # not truncated at 200
+
+    # nothing failed -> nothing kept
+    shutil.rmtree(evidence)
+    got = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "beta:0",
+        tmp_path / "out2",
+        _fake_runner({"beta": "new"}, [], repo),
+        evidence,
+    )
+    assert got == 0
+    assert not evidence.exists()
+
+
+def test_main_passes_evidence_through(repo, tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(suite_plan, "ROOT", repo)
+    seen = {}
+
+    def fake_run_target(*args):
+        seen["evidence"] = args[-1]
+        return 0
+
+    monkeypatch.setattr(suite_plan, "run_target", fake_run_target)
+    rc = suite_plan.main(
+        [
+            "--run", "--target", "oracle/targets/GW1/010000.yaml",
+            "--image", "/i", "--runs", "alpha:each", "--out", str(tmp_path),
+            "--evidence", str(tmp_path / "ev"),
+        ]
+    )  # fmt: skip
+    assert rc == 0
+    assert seen["evidence"] == tmp_path / "ev"
 
 
 def test_run_target_without_a_step_summary(repo, tmp_path, monkeypatch) -> None:

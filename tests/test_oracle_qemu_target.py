@@ -1039,6 +1039,70 @@ def test_qemu_target_send_own_reconnect():
     old_cmd.close.assert_called_once()
 
 
+def _grace_target(tmp_path, busy: bool, **kw):
+    spec = _dummy_spec()
+    fake_bus = MagicMock()
+    fake_bus.mark.return_value = 0
+    fake_bus.gateway_frames.return_value = [b"$04B1009379\r"] if busy else []
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+        **kw,
+    )
+    s_cmd1, s_cmd2 = socket.socketpair()
+    tgt._cmd_sock = s_cmd1
+    tgt._running = True
+    return tgt, s_cmd1, s_cmd2
+
+
+def test_send_own_waits_for_a_late_ack_while_the_firmware_is_busy(tmp_path):
+    """A cold runner answers after cmd_timeout; the reply must still be "ack"."""
+    tgt, s1, s2 = _grace_target(tmp_path, busy=True, cmd_timeout=0.05, reply_grace=3.0)
+    t = threading.Timer(0.4, lambda: s2.sendall(b"*#*1##"))
+    t.start()
+    try:
+        started = time.monotonic()
+        tgt.send_own("*#18*51*511#10#1##")
+        assert tgt.take_reply() == "ack"
+        assert 0.3 < time.monotonic() - started < 2.5
+    finally:
+        t.cancel()
+        s1.close()
+        s2.close()
+
+
+def test_send_own_does_not_wait_for_a_silent_firmware(tmp_path):
+    """No bus or event activity: the reply is "-" at cmd_timeout, as before."""
+    tgt, s1, s2 = _grace_target(
+        tmp_path, busy=False, cmd_timeout=0.05, reply_grace=30.0
+    )
+    try:
+        started = time.monotonic()
+        tgt.send_own("*1*1*31##")
+        assert tgt.take_reply() == "-"
+        assert time.monotonic() - started < 1.0
+    finally:
+        s1.close()
+        s2.close()
+
+
+def test_send_own_grace_is_capped(tmp_path):
+    """A busy firmware that never answers is waited for at most reply_grace."""
+    tgt, s1, s2 = _grace_target(tmp_path, busy=True, cmd_timeout=0.05, reply_grace=0.3)
+    try:
+        started = time.monotonic()
+        tgt.send_own("*1*1*31##")
+        assert tgt.take_reply() == "-"
+        elapsed = time.monotonic() - started
+        assert 0.3 <= elapsed < 2.0
+    finally:
+        s1.close()
+        s2.close()
+
+
 def test_pty_port_negative_fd():
     port = bus.PtyPort(-1)
     assert port.read() == b""

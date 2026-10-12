@@ -122,7 +122,8 @@ jobs:
         run: |
           img="$(python tools/fwfetch.py "$CATALOG")"
           python tools/suite_plan.py --run --target "$TARGET" --image "$img" \
-            --runs "$RUNS" --out "$RUNNER_TEMP/produced"
+            --runs "$RUNS" --out "$RUNNER_TEMP/produced" \
+            --evidence "$RUNNER_TEMP/evidence"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         if: always()
         with:
@@ -130,9 +131,18 @@ jobs:
           path: ${{ runner.temp }}/produced/
           if-no-files-found: ignore
           retention-days: 7
+      # Both runs and the full diff of every regressed/unstable suite. A
+      # separate artifact name: publish only downloads produced-*.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
+        with:
+          name: evidence-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/evidence/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: delete firmware and work files from the runner
         if: always()
-        run: rm -rf "$RUNNER_TEMP/produced" "$RUNNER_TEMP/own-fw"
+        run: rm -rf "$RUNNER_TEMP/produced" "$RUNNER_TEMP/evidence" "$RUNNER_TEMP/own-fw"
 
   publish:
     needs: [plan, run]
