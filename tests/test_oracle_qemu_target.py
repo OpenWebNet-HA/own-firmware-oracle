@@ -9,6 +9,7 @@ import contextlib
 import dataclasses
 import errno
 import io
+import logging
 import os
 import socket
 import subprocess
@@ -733,6 +734,7 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
             self.bus.framer.name = "line"
             self.bus.responder.name = "pic"
             self.settle_ms = 300.0
+            self.idle_stats = qemu_target.IdleStats()
 
         def __enter__(self):
             return self
@@ -786,6 +788,50 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
     ]
     assert run.main(args_keep) == 0
     assert keep_dir.exists()
+
+
+def test_cmd_suite_annotates_capped_idle_waits(monkeypatch, tmp_path, capsys):
+    spec = _dummy_spec()
+    cases_file = tmp_path / "lights.cases"
+    cases_file.write_text("down *1*1*31##\n", encoding="ascii")
+    monkeypatch.setattr(target, "load", lambda p, r: spec)
+    monkeypatch.setattr(
+        run,
+        "stage_target",
+        lambda sp, img, work, sandboxed: run.stage.Staged(work / "sysroot", 1, 0, 0),
+    )
+    stats = qemu_target.IdleStats()
+
+    class DummyTarget:
+        def __init__(self, *args, **kwargs):
+            self.bus = MagicMock()
+            self.bus.framer.name = "line"
+            self.bus.responder.name = "pic"
+            self.settle_ms = 300.0
+            self.idle_stats = stats
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(qemu_target, "QemuTarget", DummyTarget)
+    monkeypatch.setattr(driver, "run_suite", lambda tgt, s, restart_every: [])
+    argv = ["suite", "oracle/targets/MH200N/010108.yaml", str(cases_file)]
+    argv += ["--image", "img.zip", "-o", str(tmp_path / "out.tsv")]
+
+    stats.add(0.5, capped=False)
+    assert run.main(argv) == 0
+    out, err = capsys.readouterr()
+    assert "::warning" not in out
+    assert "cpu-idle waits: 1" in err
+
+    stats.add(30.0, capped=True)
+    assert run.main(argv) == 0
+    out, _ = capsys.readouterr()
+    assert "::warning title=cpu-idle cap::" in out
+    assert "1 of 2 waits" in out
 
 
 def test_recv_own_frame_branches():
@@ -935,7 +981,7 @@ def test_qemu_target_restart_branches(monkeypatch, tmp_path):
     proc_mock.poll.return_value = None
     monkeypatch.setattr(tgt1, "_start_program", lambda name, dev, trace: proc_mock)
     monkeypatch.setattr(tgt1, "_connect_sessions", lambda port: None)
-    monkeypatch.setattr(tgt1, "settle", lambda: True)
+    monkeypatch.setattr(tgt1, "settle", lambda **kw: True)
 
     m1, s1 = os.pipe()
     monkeypatch.setattr(
@@ -955,7 +1001,7 @@ def test_qemu_target_restart_branches(monkeypatch, tmp_path):
     monkeypatch.setattr(tgt2, "_copy_sysroot", lambda: None)
     monkeypatch.setattr(tgt2, "_start_program", lambda name, dev, trace: proc_mock)
     monkeypatch.setattr(tgt2, "_connect_sessions", lambda port: None)
-    monkeypatch.setattr(tgt2, "settle", lambda: True)
+    monkeypatch.setattr(tgt2, "settle", lambda **kw: True)
     m2, s2 = os.pipe()
     monkeypatch.setattr(
         run, "open_devices", lambda rt: [run.Device("/dev/ttyPIC", m2, s2, "/dev/null")]
@@ -1198,6 +1244,137 @@ def test_settle_does_not_wait_for_a_target_that_is_not_running(tmp_path):
     started = time.monotonic()
     assert tgt.settle() is True
     assert time.monotonic() - started < 1.0
+
+
+@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="needs /proc")
+def test_descendant_cpu_ticks_sees_a_busy_child_and_ignores_missing_pids():
+    spin = subprocess.Popen([sys.executable, "-c", "while True: pass"])
+    try:
+        first = qemu_target.descendant_cpu_ticks([os.getpid()])
+        time.sleep(0.6)
+        second = qemu_target.descendant_cpu_ticks([os.getpid()])
+        assert first is not None
+        assert second is not None
+        assert second > first  # the spinning child counts as a descendant
+        assert qemu_target.descendant_cpu_ticks([2**22 + 12345]) == 0
+        assert qemu_target.descendant_cpu_ticks([]) == 0
+    finally:
+        spin.kill()
+        spin.wait()
+
+
+def test_descendant_cpu_ticks_without_proc(monkeypatch):
+    def no_proc(self):
+        raise OSError("no /proc")
+
+    monkeypatch.setattr(Path, "iterdir", no_proc)
+    assert qemu_target.descendant_cpu_ticks([1]) is None
+
+
+def _idle_target(tmp_path, ticks, **kw):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.0, **kw)
+    values = iter(ticks)
+    last = [0]
+
+    def fake_ticks():
+        last[0] = next(values, last[0])
+        return last[0]
+
+    tgt._cpu_ticks = fake_ticks
+    return tgt
+
+
+def test_wait_cpu_idle_returns_once_the_programs_stop_computing(tmp_path):
+    # 0.4 s of heavy CPU (+10 ticks per poll), then nothing
+    busy = [i * 10 for i in range(8)]
+    tgt = _idle_target(
+        tmp_path,
+        busy + [busy[-1]] * 200,
+        cpu_idle_ms=200.0,
+        cpu_idle_ticks=3,
+        cpu_idle_max=10.0,
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    elapsed = time.monotonic() - started
+    assert 0.4 < elapsed < 3.0  # waited out the busy phase, then stopped
+
+
+def test_wait_cpu_idle_tolerates_isolated_background_ticks(tmp_path):
+    # one stray tick every 10 polls (~2/s, like the quiet F461 in the probe)
+    ticks = [i // 10 for i in range(300)]
+    tgt = _idle_target(
+        tmp_path, ticks, cpu_idle_ms=300.0, cpu_idle_ticks=3, cpu_idle_max=10.0
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert time.monotonic() - started < 1.5
+
+
+def test_wait_cpu_idle_is_bounded(tmp_path):
+    tgt = _idle_target(
+        tmp_path,
+        [i * 10 for i in range(10_000)],  # never idle
+        cpu_idle_ms=200.0,
+        cpu_idle_ticks=3,
+        cpu_idle_max=0.5,
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert 0.45 <= time.monotonic() - started < 2.0
+
+
+def test_wait_cpu_idle_without_a_tick_source_or_when_disabled(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.0, cpu_idle_max=30.0)
+    tgt._cpu_ticks = lambda: None  # /proc unreadable
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert time.monotonic() - started < 0.5
+
+    tgt2, _ = _crash_target(tmp_path, crash_grace=0.0, cpu_idle_max=0.0)
+    tgt2._cpu_ticks = lambda: pytest.fail("must not poll when disabled")
+    tgt2._wait_cpu_idle(tgt2.cpu_idle_max)
+
+
+def test_wait_cpu_idle_counts_waits_and_reports_a_capped_one(tmp_path, caplog):
+    tgt = _idle_target(tmp_path, [0] * 500, cpu_idle_ms=100.0, cpu_idle_max=5.0)
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert (tgt.idle_stats.waits, tgt.idle_stats.capped) == (1, 0)
+    assert 0.09 <= tgt.idle_stats.longest < 1.0
+
+    busy = _idle_target(tmp_path, [i * 10 for i in range(10_000)], cpu_idle_ms=100.0)
+    with caplog.at_level(logging.WARNING, logger="oracle.qemu_target"):
+        busy._wait_cpu_idle(0.3)
+    assert (busy.idle_stats.waits, busy.idle_stats.capped) == (1, 1)
+    assert "still busy after 0.3 s" in caplog.text
+    assert "1 capped" in busy.idle_stats.summary()
+
+
+def test_wait_cpu_idle_does_not_count_a_program_that_died(tmp_path):
+    tgt = _idle_target(tmp_path, [i * 10 for i in range(10_000)], cpu_idle_ms=100.0)
+    tgt._procs["scsserver"].poll.return_value = -11
+    tgt._wait_cpu_idle(5.0)
+    assert tgt.idle_stats.waits == 0  # a crash is not a slow step
+
+
+def test_settle_uses_the_start_bound_only_when_asked(tmp_path):
+    tgt, _ = _crash_target(
+        tmp_path, crash_grace=0.0, cpu_idle_max=7.0, start_idle_max=90.0
+    )
+    limits: list[float] = []
+    tgt._wait_cpu_idle = limits.append
+    tgt.settle()
+    tgt.settle(idle_max=tgt.start_idle_max)
+    assert limits == [7.0, 90.0]
+
+
+def test_cpu_ticks_needs_integer_pids_from_the_programs(tmp_path):
+    tgt, proc = _crash_target(tmp_path)
+    assert tgt._cpu_ticks() is None  # a MagicMock pid is not an int
+    proc.pid = os.getpid()
+    assert isinstance(tgt._cpu_ticks(), int) or tgt._cpu_ticks() is None
+    tgt._procs = {}
+    assert tgt._cpu_ticks() is None
 
 
 def test_pty_port_negative_fd():

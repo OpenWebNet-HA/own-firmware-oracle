@@ -23,6 +23,7 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
@@ -33,6 +34,67 @@ logger = logging.getLogger(__name__)
 BANNER = "*#*1##"
 NACK = "*#*0##"
 SOAP_PORT = 1234  # F450 bacclient <-> ebacgw BACnet web service (urn:bacnet_ws)
+
+
+@dataclass
+class IdleStats:
+    """How long settle() waited for the programs to become idle (starts and
+    steps). capped counts the waits that ran out of time while they were still
+    busy: those rows may still depend on the runner's speed."""
+
+    waits: int = 0
+    total: float = 0.0
+    longest: float = 0.0
+    capped: int = 0
+
+    def add(self, seconds: float, capped: bool) -> None:
+        self.waits += 1
+        self.total += seconds
+        self.longest = max(self.longest, seconds)
+        self.capped += capped
+
+    def summary(self) -> str:
+        return (
+            f"cpu-idle waits: {self.waits}, {self.total:.1f} s in total, "
+            f"longest {self.longest:.1f} s, {self.capped} capped"
+        )
+
+
+def descendant_cpu_ticks(roots: list[int]) -> int | None:
+    """CPU ticks (user + system) of the given processes and all their children.
+
+    A firmware answer is "finished" when its emulated processes stop computing,
+    however slowly the runner executes them; a fixed time window cannot say
+    that. Returns None where /proc is not available (the caller then falls back
+    to the bus-quiet window alone)."""
+    try:
+        entries = [p.name for p in Path("/proc").iterdir() if p.name.isdigit()]
+    except OSError:
+        return None
+    children: dict[int, list[int]] = {}
+    cpu: dict[int, int] = {}
+    for d in entries:
+        try:
+            raw = Path(f"/proc/{d}/stat").read_text(encoding="ascii", errors="replace")
+            # the command name may contain spaces and parentheses: split after
+            # its closing parenthesis; then ppid is field 1, utime/stime 11, 12
+            rest = raw.rpartition(")")[2].split()
+            ppid, utime, stime = int(rest[1]), int(rest[11]), int(rest[12])
+        except (OSError, ValueError, IndexError):
+            continue  # the process exited while we were looking
+        children.setdefault(ppid, []).append(int(d))
+        cpu[int(d)] = utime + stime
+    total = 0
+    todo = list(roots)
+    seen: set[int] = set()
+    while todo:
+        pid = todo.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        total += cpu.get(pid, 0)
+        todo.extend(children.get(pid, []))
+    return total
 
 
 def split_own(buf: bytearray) -> list[str]:
@@ -265,6 +327,10 @@ class QemuTarget:
         reply_grace: float = 22.0,
         restart_attempts: int = 3,
         crash_grace: float = 2.0,
+        cpu_idle_ms: float = 500.0,
+        cpu_idle_ticks: int = 3,
+        cpu_idle_max: float = 30.0,
+        start_idle_max: float = 90.0,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -285,6 +351,18 @@ class QemuTarget:
         self.reply_grace = reply_grace
         self.restart_attempts = max(1, restart_attempts)
         self.crash_grace = crash_grace
+        # settle() ends once the emulated programs use at most cpu_idle_ticks of
+        # CPU over the last cpu_idle_ms (the probe on a quiet F461 shows only
+        # isolated background ticks, ~2/s), or after cpu_idle_max seconds.
+        self.cpu_idle_ms = cpu_idle_ms
+        self.cpu_idle_ticks = cpu_idle_ticks
+        self.cpu_idle_max = cpu_idle_max
+        # Booting takes far longer than a step. The first command must not
+        # reach a stack that is still initialising (F461 thermo-actuator: the
+        # first step was "silent" in one run and answered in the other), so a
+        # start waits for the same idleness with its own, larger bound.
+        self.start_idle_max = start_idle_max
+        self.idle_stats = IdleStats()
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -655,7 +733,7 @@ class QemuTarget:
         while time.monotonic() < deadline:
             self.bus.pump()
             time.sleep(0.02)
-        self.settle()
+        self.settle(idle_max=self.start_idle_max)
         self.take_bus()
         self.take_own()
 
@@ -760,7 +838,8 @@ class QemuTarget:
     def inject_bus(self, data: bytes) -> None:
         self.bus.inject(data)
 
-    def settle(self) -> bool:
+    def settle(self, idle_max: float | None = None) -> bool:
+        """Wait until the step has finished; idle_max overrides cpu_idle_max."""
         settled = self.bus.settle(
             quiet_ms=self.quiet_ms, max_ms=self.max_ms, on_poll=self._pump_own
         )
@@ -777,7 +856,60 @@ class QemuTarget:
             self.bus.pump()
             self._pump_own()
             time.sleep(0.02)
+        self._wait_cpu_idle(self.cpu_idle_max if idle_max is None else idle_max)
         return settled
+
+    def _cpu_ticks(self) -> int | None:
+        """CPU ticks of the launched programs and their descendants."""
+        pids: list[int] = []
+        for proc in self._procs.values():
+            if not isinstance(proc.pid, int):
+                return None
+            pids.append(proc.pid)
+        return descendant_cpu_ticks(pids) if pids else None
+
+    def _wait_cpu_idle(self, limit: float) -> None:
+        """Wait until the emulated programs have stopped computing.
+
+        A cold or loaded runner answers seconds later than a warm one: a bus
+        frame, an event or a crash then lands after any fixed time window, on
+        the next step or not at all. CPU use is the one signal that does not
+        depend on the runner's speed: the step has really finished when the
+        programs have used (almost) no CPU for cpu_idle_ms. Bounded by limit;
+        where /proc is unreadable only the windows above apply.
+
+        Every wait is counted in idle_stats. A wait that runs out of time while
+        the programs are still busy is logged: that step's row may still
+        depend on the runner's speed."""
+        if limit <= 0 or not self._running or not self._procs:
+            return
+        window = self.cpu_idle_ms / 1000.0
+        began = time.monotonic()
+        deadline = began + limit
+        samples: list[tuple[float, int]] = []
+        while time.monotonic() < deadline and self.alive():
+            ticks = self._cpu_ticks()
+            if ticks is None:
+                return
+            now = time.monotonic()
+            samples.append((now, ticks))
+            # keep the newest sample that is at least one window old at [0]
+            while len(samples) > 1 and now - samples[1][0] >= window:
+                samples.pop(0)
+            start, base = samples[0]
+            if now - start >= window and ticks - base <= self.cpu_idle_ticks:
+                self.idle_stats.add(now - began, capped=False)
+                return
+            self.bus.pump()
+            self._pump_own()
+            time.sleep(0.05)
+        if self.alive():
+            self.idle_stats.add(time.monotonic() - began, capped=True)
+            logger.warning(
+                "%s programs still busy after %.1f s (cpu_idle cap)",
+                self.spec.product,
+                limit,
+            )
 
     def alive(self) -> bool:
         if not self._running or not self._procs:

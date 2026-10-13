@@ -17,5 +17,8 @@ future qemu adapters works without firmware and is unit-tested in pr.yml.
 #    MH202 suites disagreed between two runs, or with the committed file, on
 #    exactly those columns. settle() also watches the programs for 2 s after
 #    the bus is quiet, so a crash shortly after the answer is recorded on its
-#    own step in every run.
+#    own step in every run. Finally settle() waits until the emulated programs
+#    are CPU-idle (suites.yml showed frames arriving more than 3 s after the
+#    command on a cold, loaded runner, so no fixed window is reliable), and a
+#    start waits for the same idleness before the first command is sent.
 ORACLE_VERSION = "3"

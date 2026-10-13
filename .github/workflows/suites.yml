@@ -113,7 +113,11 @@ jobs:
         with:
           path: ${{ runner.temp }}/own-fw
           key: own-fw-${{ matrix.job.catalog }}-${{ hashFiles(matrix.job.catalog) }}
+      # A step timeout below the job's: a run that overruns (a target that never
+      # goes CPU-idle pays cpu_idle_max on every step) fails this step, and the
+      # evidence upload and firmware cleanup below still run.
       - name: run the suites and judge every re-run
+        timeout-minutes: 270
         env:
           CATALOG: ${{ matrix.job.catalog }}
           TARGET: ${{ matrix.job.target }}

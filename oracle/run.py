@@ -447,6 +447,17 @@ def cmd_suite(args: argparse.Namespace) -> int:
             sandboxed=not args.no_sandbox,
         ) as tgt:
             rows = driver.run_suite(tgt, suite, restart_every=restart_every)
+            idle = tgt.idle_stats
+            print(f"{suite.name}: {idle.summary()}", file=sys.stderr)
+            if idle.capped:
+                # a GitHub annotation: the rows of capped steps may still
+                # depend on the runner's speed, even if both runs agree
+                print(
+                    f"::warning title=cpu-idle cap::{spec.product} "
+                    f"{spec.version} {suite.name}: {idle.capped} of "
+                    f"{idle.waits} waits ran out of time while the programs "
+                    "were still busy"
+                )
             header = suite_header(
                 spec,
                 args.harness,
