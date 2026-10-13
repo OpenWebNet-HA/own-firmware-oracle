@@ -4,7 +4,7 @@
 # harness=full
 # target_sha256=dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc
 # adapter=pty-1
-# reset=0
+# reset=each
 # bus=pty
 # framer=line
 # responder=pic

@@ -23,7 +23,18 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
 import unpack
-from oracle import bus, cases, discover, driver, record, run, sandbox, stage, target
+from oracle import (
+    ORACLE_VERSION,
+    bus,
+    cases,
+    discover,
+    driver,
+    record,
+    run,
+    sandbox,
+    stage,
+    target,
+)
 from test_oracle import _write_target
 
 OK = f'  a: {{path: bin/a, sha256: "{"b" * 64}"}}'
@@ -625,7 +636,7 @@ def test_run_cmd_discover_writes_the_boundary_record(tmp_path, monkeypatch, caps
         "# emulator=qemu-arm-9.9",
         "# kernel_release=2.4.19",
         "# window_s=2",
-        "# oracle_version=1",
+        f"# oracle_version={ORACLE_VERSION}",
     ]
     assert text.splitlines()[9:] == [
         "kind\tdetail\tresult",

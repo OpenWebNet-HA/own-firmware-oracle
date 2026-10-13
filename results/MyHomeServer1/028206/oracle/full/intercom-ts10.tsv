@@ -11,7 +11,7 @@
 # settle_ms=300
 # suite=intercom-ts10
 # suite_sha256=57339b7f4a32bc2548a4e72b8a74f162fd2c647c69f95f1c3c4a665f6dcfc119
-# oracle_version=1
+# oracle_version=2
 direction	input	reply	verdict	output
 down	*#8*0##	nack	silent	-
 down	*#8*1##	nack	silent	-

@@ -9,6 +9,7 @@ import contextlib
 import dataclasses
 import errno
 import io
+import logging
 import os
 import socket
 import subprocess
@@ -80,22 +81,43 @@ def test_pic_responder():
     assert resp.respond(b"$150500FF\r") == [b"$00\r"]
     assert resp.respond(b"$1600\r") == [b"$00\r"]
     assert resp.respond(b"$0331001200\r") == [b"$19\r"]
+    assert resp.respond(b"$04B7011300\r") == [b"$00\r"]
+    assert resp.respond(b"$05010203\r") == [b"$00\r"]
     assert resp.respond(b"$06D13101420D0D0100\r") == [b"$00\r"]
+    assert resp.respond(b"$5101\r") == [b"$00\r"]
+    assert resp.respond(b"$520205\r") == [b"$00\r"]
+    assert resp.respond(b"$530102\r") == [b"$00\r"]
     assert resp.respond(b"$99\r") == []
+
+    # 3-digit RPMsg PIC protocol (F460/F461)
+    assert resp.respond(b"$024\r") == [b"$02500010108\r"]
+    assert resp.respond(b"$02603\r") == [b"$026000000\r"]
+    assert resp.respond(b"$02802\r") == [b"$0280000\r"]
+    assert resp.respond(b"$0020000\r") == [b"$000\r"]
+    assert resp.respond(b"$00331001200\r") == [b"$019\r"]
+    assert resp.respond(b"$004B7011300\r") == [b"$000\r"]
+    assert resp.respond(b"$005010203\r") == [b"$000\r"]
+    assert resp.respond(b"$006D13101420D0D0100\r") == [b"$000\r"]
 
     # With inner scripted responder
     inner = bus.Scripted(
         "test",
         {
             b"$0331001200\r": [b"echo"],
+            b"$04B7011300\r": [b"echo4"],
             b"$06D13101420D0D0100\r": [b"echo6"],
+            b"$00331001200\r": [b"echo3d"],
+            b"$004B7011300\r": [b"echo4_3d"],
             b"$99\r": [b"inner"],
         },
     )
     resp_inner = bus.PicResponder(version="010108", inner=inner)
     assert resp_inner.name == "pic:script:test"
     assert resp_inner.respond(b"$0331001200\r") == [b"$19\r", b"echo"]
+    assert resp_inner.respond(b"$04B7011300\r") == [b"$00\r", b"echo4"]
     assert resp_inner.respond(b"$06D13101420D0D0100\r") == [b"$00\r", b"echo6"]
+    assert resp_inner.respond(b"$00331001200\r") == [b"$019\r", b"echo3d"]
+    assert resp_inner.respond(b"$004B7011300\r") == [b"$000\r", b"echo4_3d"]
     assert resp_inner.respond(b"$99\r") == [b"inner"]
 
 
@@ -261,8 +283,9 @@ def test_qemu_target_init_and_copy_sysroot(tmp_path):
         work,
         staged_sysroot=staged,
     )
-    assert tgt.settle_ms == 300.0
+    assert tgt.settle_ms == 3000.0
     assert tgt.alive() is False
+    assert tgt.quiet_ms == 1000.0
 
     tgt._copy_sysroot()
     assert (tgt.sysroot / "test.txt").read_text() == "ok"
@@ -414,10 +437,14 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_mock)
 
     # scsserver timeout
+    tgt.work_dir.mkdir(parents=True, exist_ok=True)
+    (tgt.work_dir / "console.scsserver.log").write_text(
+        "critical failure", encoding="utf-8"
+    )
     monkeypatch.setattr(
         qemu_target, "wait_tcp_port", lambda port, timeout, **kwargs: False
     )
-    with pytest.raises(RuntimeError, match="scsserver did not listen"):
+    with pytest.raises(RuntimeError, match="critical failure"):
         tgt.restart()
 
     # translator timeout
@@ -443,6 +470,112 @@ def test_qemu_target_restart_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(qemu_target, "wait_tcp_port", fake_wait_open)
     with pytest.raises(RuntimeError, match="openserver did not listen"):
         tgt.restart()
+
+
+def test_restart_retries_a_transient_bring_up_failure(monkeypatch, tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(), tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    calls: list[int] = []
+
+    def flaky() -> None:
+        calls.append(1)
+        if len(calls) < 3:
+            raise RuntimeError("bt_termo did not listen on port 40004")
+
+    monkeypatch.setattr(tgt, "_restart_once", flaky)
+    stops: list[int] = []
+    monkeypatch.setattr(tgt, "_stop", lambda: stops.append(1))
+    tgt.restart()
+    assert len(calls) == 3  # failed twice, third attempt came up
+    assert len(stops) == 2  # torn down after each failure
+
+
+def test_restart_raises_the_last_error_after_all_attempts(monkeypatch, tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        restart_attempts=2,
+    )
+    errors = iter(["first", "second", "third"])
+
+    def always_fails() -> None:
+        raise RuntimeError(next(errors))
+
+    monkeypatch.setattr(tgt, "_restart_once", always_fails)
+    monkeypatch.setattr(tgt, "_stop", lambda: None)
+    with pytest.raises(RuntimeError, match="second"):
+        tgt.restart()
+
+
+def test_restart_attempts_is_at_least_one(tmp_path):
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        restart_attempts=0,
+    )
+    assert tgt.restart_attempts == 1
+
+
+def test_launch_daemon_retry(monkeypatch, tmp_path):
+    spec = _dummy_spec()
+    tgt = qemu_target.QemuTarget(
+        spec, tmp_path / "img.zip", tmp_path / "w", staged_sysroot=tmp_path
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(run, "open_devices", lambda rt: [])
+    monkeypatch.setattr(tgt, "_connect_sessions", lambda port: None)
+    monkeypatch.setattr(
+        qemu_target, "read_ports_from_stack_open", lambda p: {"bt_luci": 40001}
+    )
+
+    # 1. Retry succeeds on second attempt
+    scsserver_waits = 0
+
+    def retry_wait(port, timeout, **kwargs):
+        nonlocal scsserver_waits
+        if port == 20001:
+            scsserver_waits += 1
+            return scsserver_waits > 1
+        return True
+
+    proc_mock = MagicMock()
+    proc_mock.poll.return_value = None
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_mock)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 2. Dead process on retry (p.poll() is not None)
+    scsserver_waits = 0
+    proc_dead = MagicMock()
+    proc_dead.poll.return_value = 1
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_dead)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert scsserver_waits == 2
+
+    # 3. TimeoutExpired on terminate wait
+    scsserver_waits = 0
+    proc_hung = MagicMock()
+    proc_hung.poll.return_value = None
+    waits = 0
+
+    def hung_wait(*args, **kwargs):
+        nonlocal waits
+        waits += 1
+        if waits == 1:
+            raise subprocess.TimeoutExpired(cmd="foo", timeout=1.0)
+
+    proc_hung.wait.side_effect = hung_wait
+    monkeypatch.setattr(tgt, "_start_program", lambda name, dev, trace: proc_hung)
+    monkeypatch.setattr(qemu_target, "wait_tcp_port", retry_wait)
+    tgt.restart()
+    assert proc_hung.kill.called
 
 
 def test_qemu_target_session_interaction(monkeypatch, tmp_path):
@@ -488,6 +621,7 @@ def test_qemu_target_session_interaction(monkeypatch, tmp_path):
         assert tgt.take_own() == ["*#1*31*0##"]
 
         # 4. Command socket timeout
+        tgt.cmd_timeout = 0.01
         s_cmd1.settimeout(0.01)
         tgt.send_own("*1*1*31##")
         assert tgt.take_reply() == "-"
@@ -600,6 +734,7 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
             self.bus.framer.name = "line"
             self.bus.responder.name = "pic"
             self.settle_ms = 300.0
+            self.idle_stats = qemu_target.IdleStats()
 
         def __enter__(self):
             return self
@@ -653,6 +788,50 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
     ]
     assert run.main(args_keep) == 0
     assert keep_dir.exists()
+
+
+def test_cmd_suite_annotates_capped_idle_waits(monkeypatch, tmp_path, capsys):
+    spec = _dummy_spec()
+    cases_file = tmp_path / "lights.cases"
+    cases_file.write_text("down *1*1*31##\n", encoding="ascii")
+    monkeypatch.setattr(target, "load", lambda p, r: spec)
+    monkeypatch.setattr(
+        run,
+        "stage_target",
+        lambda sp, img, work, sandboxed: run.stage.Staged(work / "sysroot", 1, 0, 0),
+    )
+    stats = qemu_target.IdleStats()
+
+    class DummyTarget:
+        def __init__(self, *args, **kwargs):
+            self.bus = MagicMock()
+            self.bus.framer.name = "line"
+            self.bus.responder.name = "pic"
+            self.settle_ms = 300.0
+            self.idle_stats = stats
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(qemu_target, "QemuTarget", DummyTarget)
+    monkeypatch.setattr(driver, "run_suite", lambda tgt, s, restart_every: [])
+    argv = ["suite", "oracle/targets/MH200N/010108.yaml", str(cases_file)]
+    argv += ["--image", "img.zip", "-o", str(tmp_path / "out.tsv")]
+
+    stats.add(0.5, capped=False)
+    assert run.main(argv) == 0
+    out, err = capsys.readouterr()
+    assert "::warning" not in out
+    assert "cpu-idle waits: 1" in err
+
+    stats.add(30.0, capped=True)
+    assert run.main(argv) == 0
+    out, _ = capsys.readouterr()
+    assert "::warning title=cpu-idle cap::" in out
+    assert "1 of 2 waits" in out
 
 
 def test_recv_own_frame_branches():
@@ -802,7 +981,7 @@ def test_qemu_target_restart_branches(monkeypatch, tmp_path):
     proc_mock.poll.return_value = None
     monkeypatch.setattr(tgt1, "_start_program", lambda name, dev, trace: proc_mock)
     monkeypatch.setattr(tgt1, "_connect_sessions", lambda port: None)
-    monkeypatch.setattr(tgt1, "settle", lambda: True)
+    monkeypatch.setattr(tgt1, "settle", lambda **kw: True)
 
     m1, s1 = os.pipe()
     monkeypatch.setattr(
@@ -822,7 +1001,7 @@ def test_qemu_target_restart_branches(monkeypatch, tmp_path):
     monkeypatch.setattr(tgt2, "_copy_sysroot", lambda: None)
     monkeypatch.setattr(tgt2, "_start_program", lambda name, dev, trace: proc_mock)
     monkeypatch.setattr(tgt2, "_connect_sessions", lambda port: None)
-    monkeypatch.setattr(tgt2, "settle", lambda: True)
+    monkeypatch.setattr(tgt2, "settle", lambda **kw: True)
     m2, s2 = os.pipe()
     monkeypatch.setattr(
         run, "open_devices", lambda rt: [run.Device("/dev/ttyPIC", m2, s2, "/dev/null")]
@@ -907,6 +1086,326 @@ def test_qemu_target_send_own_and_pump_branches():
         tgt._pump_own()
 
 
+def test_qemu_target_send_own_reconnect():
+    spec = _dummy_spec()
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        Path("/tmp/img.zip"),
+        Path("/tmp/w"),
+        staged_sysroot=Path("/tmp"),
+        bus_instance=fake_bus,
+    )
+    tgt._running = True
+    tgt._open_port = 20000
+    tgt.cmd_timeout = 0.01
+
+    mock_cmd = MagicMock()
+    mock_cmd.fileno.return_value = 43
+    mock_cmd.recv.side_effect = [b""]
+    tgt._cmd_sock = mock_cmd
+    reconnected: list[int] = []
+    tgt._connect_cmd_session = reconnected.append
+    with patch("select.select", return_value=([mock_cmd], [], [])):
+        tgt.send_own("*1*1*31##")
+    assert tgt.take_reply() == "-"
+    assert reconnected == [20000]
+
+    mock_cmd2 = MagicMock()
+    mock_cmd2.fileno.return_value = 44
+    mock_cmd2.recv.side_effect = [b""]
+    tgt._connect_cmd_session = MagicMock(side_effect=OSError("reconnect fail"))
+    tgt._cmd_sock = mock_cmd2
+    with patch("select.select", return_value=([mock_cmd2], [], [])):
+        tgt.send_own("*1*1*31##")
+    assert tgt.take_reply() == "-"
+    assert tgt._cmd_sock is None
+
+    old_cmd = MagicMock()
+    tgt._cmd_sock = old_cmd
+    with (
+        patch("socket.create_connection") as mock_conn,
+        patch("oracle.qemu_target.recv_own_frame", return_value="*#*1##"),
+    ):
+        mock_conn.return_value = MagicMock()
+        qemu_target.QemuTarget._connect_cmd_session(tgt, 20000)
+    old_cmd.close.assert_called_once()
+
+
+def _grace_target(tmp_path, busy: bool, **kw):
+    spec = _dummy_spec()
+    fake_bus = MagicMock()
+    fake_bus.mark.return_value = 0
+    fake_bus.gateway_frames.return_value = [b"$04B1009379\r"] if busy else []
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+        **kw,
+    )
+    s_cmd1, s_cmd2 = socket.socketpair()
+    tgt._cmd_sock = s_cmd1
+    tgt._running = True
+    return tgt, s_cmd1, s_cmd2
+
+
+def test_send_own_waits_for_a_late_ack_while_the_firmware_is_busy(tmp_path):
+    """A cold runner answers after cmd_timeout; the reply must still be "ack"."""
+    tgt, s1, s2 = _grace_target(tmp_path, busy=True, cmd_timeout=0.05, reply_grace=3.0)
+    t = threading.Timer(0.4, lambda: s2.sendall(b"*#*1##"))
+    t.start()
+    try:
+        started = time.monotonic()
+        tgt.send_own("*#18*51*511#10#1##")
+        assert tgt.take_reply() == "ack"
+        assert 0.3 < time.monotonic() - started < 2.5
+    finally:
+        t.cancel()
+        s1.close()
+        s2.close()
+
+
+def test_send_own_does_not_wait_for_a_silent_firmware(tmp_path):
+    """No bus or event activity: the reply is "-" at cmd_timeout, as before."""
+    tgt, s1, s2 = _grace_target(
+        tmp_path, busy=False, cmd_timeout=0.05, reply_grace=30.0
+    )
+    try:
+        started = time.monotonic()
+        tgt.send_own("*1*1*31##")
+        assert tgt.take_reply() == "-"
+        assert time.monotonic() - started < 1.0
+    finally:
+        s1.close()
+        s2.close()
+
+
+def test_send_own_grace_is_capped(tmp_path):
+    """A busy firmware that never answers is waited for at most reply_grace."""
+    tgt, s1, s2 = _grace_target(tmp_path, busy=True, cmd_timeout=0.05, reply_grace=0.3)
+    try:
+        started = time.monotonic()
+        tgt.send_own("*1*1*31##")
+        assert tgt.take_reply() == "-"
+        elapsed = time.monotonic() - started
+        assert 0.3 <= elapsed < 2.0
+    finally:
+        s1.close()
+        s2.close()
+
+
+def _crash_target(tmp_path, **kw):
+    fake_bus = MagicMock()
+    fake_bus.settle.return_value = True  # the bus is quiet at once
+    tgt = qemu_target.QemuTarget(
+        _dummy_spec(),
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+        **kw,
+    )
+    proc = MagicMock()
+    proc.poll.return_value = None
+    tgt._procs = {"scsserver": proc}
+    tgt._running = True
+    return tgt, proc
+
+
+def test_settle_notices_a_program_that_dies_after_the_bus_went_quiet(tmp_path):
+    """The crash lands on this step, not on the next one (or nowhere)."""
+    tgt, proc = _crash_target(tmp_path, crash_grace=3.0)
+    t = threading.Timer(0.3, lambda: setattr(proc.poll, "return_value", -11))
+    t.start()
+    try:
+        started = time.monotonic()
+        assert tgt.settle() is True
+        assert tgt.alive() is False
+        assert 0.2 < time.monotonic() - started < 2.5  # stopped at the crash
+    finally:
+        t.cancel()
+
+
+def test_settle_waits_at_most_crash_grace_for_a_healthy_target(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.2)
+    started = time.monotonic()
+    assert tgt.settle() is True
+    assert tgt.alive() is True
+    assert 0.15 <= time.monotonic() - started < 1.5
+
+
+def test_settle_does_not_wait_for_a_target_that_is_not_running(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=30.0)
+    tgt._running = False
+    started = time.monotonic()
+    assert tgt.settle() is True
+    assert time.monotonic() - started < 1.0
+
+
+@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="needs /proc")
+def test_descendant_cpu_ticks_sees_a_busy_child_and_ignores_missing_pids():
+    spin = subprocess.Popen([sys.executable, "-c", "while True: pass"])
+    try:
+        first = qemu_target.descendant_cpu_ticks([os.getpid()])
+        time.sleep(0.6)
+        second = qemu_target.descendant_cpu_ticks([os.getpid()])
+        assert first is not None
+        assert second is not None
+        assert second > first  # the spinning child counts as a descendant
+        assert qemu_target.descendant_cpu_ticks([2**22 + 12345]) == 0
+        assert qemu_target.descendant_cpu_ticks([]) == 0
+    finally:
+        spin.kill()
+        spin.wait()
+
+
+def test_descendant_cpu_ticks_without_proc(monkeypatch):
+    def no_proc(self):
+        raise OSError("no /proc")
+
+    monkeypatch.setattr(Path, "iterdir", no_proc)
+    assert qemu_target.descendant_cpu_ticks([1]) is None
+
+
+def _stat(pid: int, comm: str, ppid: int, utime: int, stime: int) -> str:
+    # pid (comm) state ppid pgrp session tty tpgid flags minflt cminflt
+    # majflt cmajflt utime stime ...
+    return f"{pid} ({comm}) S {ppid} 0 0 0 0 0 0 0 0 0 {utime} {stime} 0 0\n"
+
+
+def test_descendant_cpu_ticks_on_a_fake_proc_tree(tmp_path):
+    proc = tmp_path / "proc"
+    stats = {
+        10: _stat(10, "scsserver", 1, 5, 2),
+        11: _stat(11, "bt (luci) x", 10, 3, 1),  # spaces and parentheses
+        12: _stat(12, "grandchild", 11, 1, 0),
+        20: _stat(20, "unrelated", 1, 100, 100),
+        30: "30 (truncated) S\n",  # IndexError: half-written stat
+        31: "31 (garbled) S x 0 0 0 0 0 0 0 0 0 a b\n",  # ValueError
+    }
+    for pid, text in stats.items():
+        (proc / str(pid)).mkdir(parents=True)
+        (proc / str(pid) / "stat").write_text(text, encoding="ascii")
+    (proc / "40").mkdir()  # exited between listing and reading: no stat file
+    (proc / "self").mkdir()  # not a pid
+
+    assert qemu_target.descendant_cpu_ticks([10], proc) == 5 + 2 + 3 + 1 + 1
+    # a pid named twice (or reached twice) is counted once
+    assert qemu_target.descendant_cpu_ticks([10, 11], proc) == 12
+    assert qemu_target.descendant_cpu_ticks([20], proc) == 200
+    assert qemu_target.descendant_cpu_ticks([40], proc) == 0
+
+
+def _idle_target(tmp_path, ticks, **kw):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.0, **kw)
+    values = iter(ticks)
+    last = [0]
+
+    def fake_ticks():
+        last[0] = next(values, last[0])
+        return last[0]
+
+    tgt._cpu_ticks = fake_ticks
+    return tgt
+
+
+def test_wait_cpu_idle_returns_once_the_programs_stop_computing(tmp_path):
+    # 0.4 s of heavy CPU (+10 ticks per poll), then nothing
+    busy = [i * 10 for i in range(8)]
+    tgt = _idle_target(
+        tmp_path,
+        busy + [busy[-1]] * 200,
+        cpu_idle_ms=200.0,
+        cpu_idle_ticks=3,
+        cpu_idle_max=10.0,
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    elapsed = time.monotonic() - started
+    assert 0.4 < elapsed < 3.0  # waited out the busy phase, then stopped
+
+
+def test_wait_cpu_idle_tolerates_isolated_background_ticks(tmp_path):
+    # one stray tick every 10 polls (~2/s, like the quiet F461 in the probe)
+    ticks = [i // 10 for i in range(300)]
+    tgt = _idle_target(
+        tmp_path, ticks, cpu_idle_ms=300.0, cpu_idle_ticks=3, cpu_idle_max=10.0
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert time.monotonic() - started < 1.5
+
+
+def test_wait_cpu_idle_is_bounded(tmp_path):
+    tgt = _idle_target(
+        tmp_path,
+        [i * 10 for i in range(10_000)],  # never idle
+        cpu_idle_ms=200.0,
+        cpu_idle_ticks=3,
+        cpu_idle_max=0.5,
+    )
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert 0.45 <= time.monotonic() - started < 2.0
+
+
+def test_wait_cpu_idle_without_a_tick_source_or_when_disabled(tmp_path):
+    tgt, _ = _crash_target(tmp_path, crash_grace=0.0, cpu_idle_max=30.0)
+    tgt._cpu_ticks = lambda: None  # /proc unreadable
+    started = time.monotonic()
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert time.monotonic() - started < 0.5
+
+    tgt2, _ = _crash_target(tmp_path, crash_grace=0.0, cpu_idle_max=0.0)
+    tgt2._cpu_ticks = lambda: pytest.fail("must not poll when disabled")
+    tgt2._wait_cpu_idle(tgt2.cpu_idle_max)
+
+
+def test_wait_cpu_idle_counts_waits_and_reports_a_capped_one(tmp_path, caplog):
+    tgt = _idle_target(tmp_path, [0] * 500, cpu_idle_ms=100.0, cpu_idle_max=5.0)
+    tgt._wait_cpu_idle(tgt.cpu_idle_max)
+    assert (tgt.idle_stats.waits, tgt.idle_stats.capped) == (1, 0)
+    assert 0.09 <= tgt.idle_stats.longest < 1.0
+
+    busy = _idle_target(tmp_path, [i * 10 for i in range(10_000)], cpu_idle_ms=100.0)
+    with caplog.at_level(logging.WARNING, logger="oracle.qemu_target"):
+        busy._wait_cpu_idle(0.3)
+    assert (busy.idle_stats.waits, busy.idle_stats.capped) == (1, 1)
+    assert "still busy after 0.3 s" in caplog.text
+    assert "1 capped" in busy.idle_stats.summary()
+
+
+def test_wait_cpu_idle_does_not_count_a_program_that_died(tmp_path):
+    tgt = _idle_target(tmp_path, [i * 10 for i in range(10_000)], cpu_idle_ms=100.0)
+    tgt._procs["scsserver"].poll.return_value = -11
+    tgt._wait_cpu_idle(5.0)
+    assert tgt.idle_stats.waits == 0  # a crash is not a slow step
+
+
+def test_settle_uses_the_start_bound_only_when_asked(tmp_path):
+    tgt, _ = _crash_target(
+        tmp_path, crash_grace=0.0, cpu_idle_max=7.0, start_idle_max=90.0
+    )
+    limits: list[float] = []
+    tgt._wait_cpu_idle = limits.append
+    tgt.settle()
+    tgt.settle(idle_max=tgt.start_idle_max)
+    assert limits == [7.0, 90.0]
+
+
+def test_cpu_ticks_needs_integer_pids_from_the_programs(tmp_path):
+    tgt, proc = _crash_target(tmp_path)
+    assert tgt._cpu_ticks() is None  # a MagicMock pid is not an int
+    proc.pid = os.getpid()
+    assert isinstance(tgt._cpu_ticks(), int) or tgt._cpu_ticks() is None
+    tgt._procs = {}
+    assert tgt._cpu_ticks() is None
+
+
 def test_pty_port_negative_fd():
     port = bus.PtyPort(-1)
     assert port.read() == b""
@@ -945,6 +1444,48 @@ def test_port_is_free():
         assert qemu_target.port_is_free(busy_port) is False
     finally:
         s2.close()
+
+
+def test_wait_port_free():
+    # 1. Free port returns True immediately
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    assert qemu_target.wait_port_free(port, timeout=0.1) is True
+
+    # 2. Busy port times out and returns False
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2.bind(("127.0.0.1", 0))
+    s2.listen(128)
+    busy_port = s2.getsockname()[1]
+    try:
+        assert (
+            qemu_target.wait_port_free(busy_port, timeout=0.05, poll_interval=0.01)
+            is False
+        )
+    finally:
+        s2.close()
+
+    # 3. Busy port that becomes free during polling returns True
+    s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s3.bind(("127.0.0.1", 0))
+    s3.listen(128)
+    closing_port = s3.getsockname()[1]
+
+    def close_soon() -> None:
+        time.sleep(0.02)
+        s3.close()
+
+    t = threading.Thread(target=close_soon)
+    t.start()
+    try:
+        assert (
+            qemu_target.wait_port_free(closing_port, timeout=1.0, poll_interval=0.01)
+            is True
+        )
+    finally:
+        t.join()
 
 
 def test_wait_tcp_port_with_on_poll():
@@ -1017,8 +1558,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 1. scsserver port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 20001,
+        "wait_port_free",
+        lambda p, **kw: p != 20001,
     )
     with pytest.raises(RuntimeError, match="port 20001 is already in use"):
         tgt.restart()
@@ -1026,8 +1567,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 2. client port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 30001,
+        "wait_port_free",
+        lambda p, **kw: p != 30001,
     )
     monkeypatch.setattr(
         tgt,
@@ -1041,8 +1582,8 @@ def test_qemu_target_restart_port_conflicts(monkeypatch, tmp_path):
     # 3. openserver port conflict
     monkeypatch.setattr(
         qemu_target,
-        "port_is_free",
-        lambda p: p != 20000,
+        "wait_port_free",
+        lambda p, **kw: p != 20000,
     )
     with pytest.raises(RuntimeError, match="port 20000 is already in use"):
         tgt.restart()

@@ -23,6 +23,7 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
@@ -33,6 +34,67 @@ logger = logging.getLogger(__name__)
 BANNER = "*#*1##"
 NACK = "*#*0##"
 SOAP_PORT = 1234  # F450 bacclient <-> ebacgw BACnet web service (urn:bacnet_ws)
+
+
+@dataclass
+class IdleStats:
+    """How long settle() waited for the programs to become idle (starts and
+    steps). capped counts the waits that ran out of time while they were still
+    busy: those rows may still depend on the runner's speed."""
+
+    waits: int = 0
+    total: float = 0.0
+    longest: float = 0.0
+    capped: int = 0
+
+    def add(self, seconds: float, capped: bool) -> None:
+        self.waits += 1
+        self.total += seconds
+        self.longest = max(self.longest, seconds)
+        self.capped += capped
+
+    def summary(self) -> str:
+        return (
+            f"cpu-idle waits: {self.waits}, {self.total:.1f} s in total, "
+            f"longest {self.longest:.1f} s, {self.capped} capped"
+        )
+
+
+def descendant_cpu_ticks(roots: list[int], proc: Path = Path("/proc")) -> int | None:
+    """CPU ticks (user + system) of the given processes and all their children.
+
+    A firmware answer is "finished" when its emulated processes stop computing,
+    however slowly the runner executes them; a fixed time window cannot say
+    that. Returns None where /proc is not available (the caller then falls back
+    to the bus-quiet window alone)."""
+    try:
+        entries = [p.name for p in proc.iterdir() if p.name.isdigit()]
+    except OSError:
+        return None
+    children: dict[int, list[int]] = {}
+    cpu: dict[int, int] = {}
+    for d in entries:
+        try:
+            raw = (proc / d / "stat").read_text(encoding="ascii", errors="replace")
+            # the command name may contain spaces and parentheses: split after
+            # its closing parenthesis; then ppid is field 1, utime/stime 11, 12
+            rest = raw.rpartition(")")[2].split()
+            ppid, utime, stime = int(rest[1]), int(rest[11]), int(rest[12])
+        except (OSError, ValueError, IndexError):
+            continue  # the process exited while we were looking
+        children.setdefault(ppid, []).append(int(d))
+        cpu[int(d)] = utime + stime
+    total = 0
+    todo = list(roots)
+    seen: set[int] = set()
+    while todo:
+        pid = todo.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        total += cpu.get(pid, 0)
+        todo.extend(children.get(pid, []))
+    return total
 
 
 def split_own(buf: bytearray) -> list[str]:
@@ -191,11 +253,27 @@ def port_is_free(port: int, host: str = "127.0.0.1") -> bool:
             return True
 
 
+def wait_port_free(
+    port: int,
+    host: str = "127.0.0.1",
+    timeout: float = 10.0,
+    poll_interval: float = 0.05,
+) -> bool:
+    """Poll until a local TCP port is free or timeout expires."""
+    start_t = time.monotonic()
+    while time.monotonic() - start_t < timeout:
+        if port_is_free(port):
+            return True
+        time.sleep(poll_interval)
+    return port_is_free(port)
+
+
 def wait_tcp_port(
     port: int,
     timeout: float = 5.0,
     poll_interval: float = 0.05,
     on_poll: Callable[[], object] | None = None,
+    connect_timeout: float = 1.0,
 ) -> bool:
     """Poll until a local TCP port is open or timeout expires."""
     start_t = time.monotonic()
@@ -204,7 +282,7 @@ def wait_tcp_port(
             on_poll()
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(poll_interval)
+                s.settimeout(connect_timeout)
                 s.connect(("127.0.0.1", port))
                 return True
         except OSError:
@@ -243,8 +321,16 @@ class QemuTarget:
         framer: bus.Framer | None = None,
         responder: bus.Responder | None = None,
         clock: bus.Clock | None = None,
-        quiet_ms: float = 50.0,
-        max_ms: float = 300.0,
+        quiet_ms: float = 1000.0,
+        max_ms: float = 3000.0,
+        cmd_timeout: float = 8.0,
+        reply_grace: float = 22.0,
+        restart_attempts: int = 3,
+        crash_grace: float = 2.0,
+        cpu_idle_ms: float = 500.0,
+        cpu_idle_ticks: int = 3,
+        cpu_idle_max: float = 30.0,
+        start_idle_max: float = 90.0,
         sandboxed: bool = True,
         keep_trace: bool = False,
         staged_sysroot: Path | None = None,
@@ -256,6 +342,27 @@ class QemuTarget:
         self.harness = harness
         self.quiet_ms = quiet_ms
         self.max_ms = max_ms
+        self.cmd_timeout = cmd_timeout
+        # Extra seconds to wait for a late ACK/NACK once cmd_timeout has passed,
+        # but only while the firmware is visibly working on the command (bus or
+        # event traffic since it was sent). A cold qemu-user start can answer
+        # many seconds later than a warm one; without this the reply column
+        # records "-" or "ack" depending on how cold the runner was.
+        self.reply_grace = reply_grace
+        self.restart_attempts = max(1, restart_attempts)
+        self.crash_grace = crash_grace
+        # settle() ends once the emulated programs use at most cpu_idle_ticks of
+        # CPU over the last cpu_idle_ms (the probe on a quiet F461 shows only
+        # isolated background ticks, ~2/s), or after cpu_idle_max seconds.
+        self.cpu_idle_ms = cpu_idle_ms
+        self.cpu_idle_ticks = cpu_idle_ticks
+        self.cpu_idle_max = cpu_idle_max
+        # Booting takes far longer than a step. The first command must not
+        # reach a stack that is still initialising (F461 thermo-actuator: the
+        # first step was "silent" in one run and answered in the other), so a
+        # start waits for the same idleness with its own, larger bound.
+        self.start_idle_max = start_idle_max
+        self.idle_stats = IdleStats()
         self.sandboxed = sandboxed
         self.keep_trace = keep_trace
         self.clock = clock or bus.MonotonicClock()
@@ -287,6 +394,8 @@ class QemuTarget:
         )
         self._bus_mark: int = 0
         self._cmd_sock: socket.socket | None = None
+        self._cmd_buf: bytearray = bytearray()
+        self._open_port: int | None = None
         self._ev_sock: socket.socket | None = None
         self._ev_buf: bytearray = bytearray()
         self._own_events: list[str] = []
@@ -378,6 +487,28 @@ class QemuTarget:
             stderr=console,
         )
 
+    def _connect_cmd_session(self, port: int) -> None:
+        if self._cmd_sock is not None:
+            with contextlib.suppress(OSError):
+                self._cmd_sock.close()
+            self._cmd_sock = None
+        self._cmd_buf.clear()
+        is_open_v2 = self.spec.product == "H4684"
+
+        s_cmd = socket.create_connection(("127.0.0.1", port), timeout=3.0)
+        if not is_open_v2:
+            banner = recv_own_frame(s_cmd, timeout=2.0)
+            if banner != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session unexpected banner: {banner!r}")
+            s_cmd.sendall(b"*99*0##")
+            ack = recv_own_frame(s_cmd, timeout=2.0)
+            if ack != BANNER:
+                s_cmd.close()
+                raise RuntimeError(f"command session handshake failed: {ack!r}")
+        s_cmd.settimeout(self.cmd_timeout)
+        self._cmd_sock = s_cmd
+
     def _connect_sessions(self, port: int) -> None:
         if self.spec.own_auth != "none":
             raise NotImplementedError(
@@ -404,23 +535,13 @@ class QemuTarget:
                 raise RuntimeError(f"event session handshake failed: {ack!r}")
         s_ev.setblocking(False)
         self._ev_sock = s_ev
-
-        s_cmd = socket.create_connection(("127.0.0.1", port), timeout=3.0)
-        if not is_open_v2:
-            banner = recv_own_frame(s_cmd, timeout=2.0)
-            if banner != BANNER:
-                s_cmd.close()
-                raise RuntimeError(f"command session unexpected banner: {banner!r}")
-            s_cmd.sendall(b"*99*0##")
-            ack = recv_own_frame(s_cmd, timeout=2.0)
-            if ack != BANNER:
-                s_cmd.close()
-                raise RuntimeError(f"command session handshake failed: {ack!r}")
-        s_cmd.settimeout(4.0)
-        self._cmd_sock = s_cmd
+        self._open_port = port
+        self._connect_cmd_session(port)
 
     def _stop(self) -> None:
         self._running = False
+        self._open_port = None
+        self._cmd_buf.clear()
         if self._cmd_sock is not None:
             with contextlib.suppress(OSError):
                 self._cmd_sock.close()
@@ -471,19 +592,39 @@ class QemuTarget:
         dev_map: dict[str, str],
         trace_dir: Path | None,
     ) -> None:
-        if port is not None and not port_is_free(port):
+        if port is not None and not wait_port_free(port):
             self._stop()
             raise RuntimeError(f"port {port} is already in use before starting {name}")
         self._procs[name] = self._start_program(name, dev_map, trace_dir)
-        timeout = 25.0 if name == "bacclient" else 10.0
+        timeout = 60.0
         if port is not None and not wait_tcp_port(
             port, timeout=timeout, on_poll=self.bus.pump
         ):
-            self._stop()
-            raise RuntimeError(
-                f"{name} did not listen on port {port} "
-                f"(see console log at {self.work_dir / f'console.{name}.log'})"
-            )
+            p = self._procs.pop(name)
+            if p.poll() is None:
+                p.terminate()
+                try:
+                    p.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    p.kill()
+                    p.wait()
+            wait_port_free(port)
+            self._procs[name] = self._start_program(name, dev_map, trace_dir)
+            if not wait_tcp_port(port, timeout=timeout, on_poll=self.bus.pump):
+                console_text = ""
+                log_path = self.work_dir / f"console.{name}.log"
+                if log_path.is_file():
+                    with contextlib.suppress(OSError):
+                        console_text = log_path.read_text(
+                            encoding="utf-8", errors="replace"
+                        ).strip()
+                self._stop()
+                details = (
+                    f" (console log: {console_text})"
+                    if console_text
+                    else f" (see console log at {log_path})"
+                )
+                raise RuntimeError(f"{name} did not listen on port {port}{details}")
 
     def _start_soap_server(self) -> None:
         # The firmware's own BACnet web service (ebacgw) serves port 1234 when
@@ -505,6 +646,29 @@ class QemuTarget:
             self._soap_thread.start()
 
     def restart(self) -> None:
+        """(Re)start the whole stack; retry a failed bring-up from scratch.
+
+        A daemon that never listens (a loaded runner, a port still held) raises
+        RuntimeError. One such failure must not abort a suite that has already
+        run for many minutes, so the stack is torn down and brought up again up
+        to restart_attempts times; the last error is raised if all fail."""
+        last: RuntimeError = RuntimeError("stack never started")
+        for attempt in range(1, self.restart_attempts + 1):
+            try:
+                self._restart_once()
+                return
+            except RuntimeError as err:
+                last = err
+                logger.warning(
+                    "stack start failed (attempt %d/%d): %s",
+                    attempt,
+                    self.restart_attempts,
+                    err,
+                )
+                self._stop()
+        raise last
+
+    def _restart_once(self) -> None:
         self._stop()
         self._copy_sysroot()
         cfg_path = self.sysroot / self.spec.runtime.stack_config
@@ -565,13 +729,30 @@ class QemuTarget:
                     raise
 
         self._running = True
-        deadline = time.monotonic() + 0.25
+        deadline = time.monotonic() + 0.5
         while time.monotonic() < deadline:
             self.bus.pump()
             time.sleep(0.02)
-        self.settle()
+        self.settle(idle_max=self.start_idle_max)
         self.take_bus()
         self.take_own()
+
+    def _handle_cmd_frame(self, frame: str) -> bool:
+        if frame == BANNER:
+            self._reply = "ack"
+            return True
+        if frame == NACK:
+            self._reply = "nack"
+            return True
+        self._own_events.append(frame)
+        return False
+
+    def _recover_cmd_session(self) -> None:
+        if self._reply == "-" and self._running and self._open_port is not None:
+            try:
+                self._connect_cmd_session(self._open_port)
+            except (OSError, RuntimeError):
+                self._cmd_sock = None
 
     def send_own(self, frame: str) -> None:
         self._reply = "-"
@@ -585,10 +766,25 @@ class QemuTarget:
                 )
             return
         try:
+            mark = self.bus.mark()
+            seen_events = len(self._own_events)
             self._cmd_sock.sendall(frame.encode("ascii"))
-            buf = bytearray()
-            deadline = time.monotonic() + 4.0
-            while time.monotonic() < deadline:
+            self._cmd_buf.clear()
+            start = time.monotonic()
+            deadline = start + self.cmd_timeout
+            hard_deadline = deadline + self.reply_grace
+            while True:
+                now = time.monotonic()
+                if now >= deadline:
+                    # No reply yet. A firmware that already put this command on
+                    # the bus (or emitted events) is alive and merely slow, e.g.
+                    # a cold qemu-user start: keep waiting, but never past the
+                    # hard cap. A silent firmware is a genuine "-" right away.
+                    busy = bool(self.bus.gateway_frames(mark)) or (
+                        len(self._own_events) > seen_events
+                    )
+                    if not busy or now >= hard_deadline:
+                        break
                 self.bus.pump()
                 self._pump_own()
                 r, _, _ = select.select([self._cmd_sock], [], [], 0.01)
@@ -597,19 +793,14 @@ class QemuTarget:
                 chunk = self._cmd_sock.recv(1024)
                 if not chunk:
                     break
-                buf.extend(chunk)
-                frames = split_own(buf)
-                for f in frames:
-                    if f == BANNER:
-                        self._reply = "ack"
-                    elif f == NACK:
-                        self._reply = "nack"
-                    else:
-                        self._own_events.append(f)
-                if self._reply != "-":
-                    return
+                self._cmd_buf.extend(chunk)
+                for f in split_own(self._cmd_buf):
+                    if self._handle_cmd_frame(f):
+                        return
         except (TimeoutError, OSError):
             self._reply = "-"
+        finally:
+            self._recover_cmd_session()
 
     def take_reply(self) -> str:
         r, self._reply = self._reply, "-"
@@ -647,10 +838,78 @@ class QemuTarget:
     def inject_bus(self, data: bytes) -> None:
         self.bus.inject(data)
 
-    def settle(self) -> bool:
-        return self.bus.settle(
+    def settle(self, idle_max: float | None = None) -> bool:
+        """Wait until the step has finished; idle_max overrides cpu_idle_max."""
+        settled = self.bus.settle(
             quiet_ms=self.quiet_ms, max_ms=self.max_ms, on_poll=self._pump_own
         )
+        # A program that segfaults shortly AFTER answering (the firmware's own
+        # bugs, under qemu-user) must be noticed in this step in every run: if
+        # alive() is read a moment too early, the crash lands on the next step
+        # or, under reset=each, is lost with the restart. Watch for it, keep
+        # collecting whatever the dying program still emits, and stop as soon
+        # as one is gone.
+        deadline = time.monotonic() + self.crash_grace
+        while self._running and self._procs and time.monotonic() < deadline:
+            if not self.alive():
+                break
+            self.bus.pump()
+            self._pump_own()
+            time.sleep(0.02)
+        self._wait_cpu_idle(self.cpu_idle_max if idle_max is None else idle_max)
+        return settled
+
+    def _cpu_ticks(self) -> int | None:
+        """CPU ticks of the launched programs and their descendants."""
+        pids: list[int] = []
+        for proc in self._procs.values():
+            if not isinstance(proc.pid, int):
+                return None
+            pids.append(proc.pid)
+        return descendant_cpu_ticks(pids) if pids else None
+
+    def _wait_cpu_idle(self, limit: float) -> None:
+        """Wait until the emulated programs have stopped computing.
+
+        A cold or loaded runner answers seconds later than a warm one: a bus
+        frame, an event or a crash then lands after any fixed time window, on
+        the next step or not at all. CPU use is the one signal that does not
+        depend on the runner's speed: the step has really finished when the
+        programs have used (almost) no CPU for cpu_idle_ms. Bounded by limit;
+        where /proc is unreadable only the windows above apply.
+
+        Every wait is counted in idle_stats. A wait that runs out of time while
+        the programs are still busy is logged: that step's row may still
+        depend on the runner's speed."""
+        if limit <= 0 or not self._running or not self._procs:
+            return
+        window = self.cpu_idle_ms / 1000.0
+        began = time.monotonic()
+        deadline = began + limit
+        samples: list[tuple[float, int]] = []
+        while time.monotonic() < deadline and self.alive():
+            ticks = self._cpu_ticks()
+            if ticks is None:
+                return
+            now = time.monotonic()
+            samples.append((now, ticks))
+            # keep the newest sample that is at least one window old at [0]
+            while len(samples) > 1 and now - samples[1][0] >= window:
+                samples.pop(0)
+            start, base = samples[0]
+            if now - start >= window and ticks - base <= self.cpu_idle_ticks:
+                self.idle_stats.add(now - began, capped=False)
+                return
+            self.bus.pump()
+            self._pump_own()
+            time.sleep(0.05)
+        if self.alive():
+            self.idle_stats.add(time.monotonic() - began, capped=True)
+            logger.warning(
+                "%s programs still busy after %.1f s (cpu_idle cap)",
+                self.spec.product,
+                limit,
+            )
 
     def alive(self) -> bool:
         if not self._running or not self._procs:
