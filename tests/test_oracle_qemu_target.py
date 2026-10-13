@@ -1271,6 +1271,35 @@ def test_descendant_cpu_ticks_without_proc(monkeypatch):
     assert qemu_target.descendant_cpu_ticks([1]) is None
 
 
+def _stat(pid: int, comm: str, ppid: int, utime: int, stime: int) -> str:
+    # pid (comm) state ppid pgrp session tty tpgid flags minflt cminflt
+    # majflt cmajflt utime stime ...
+    return f"{pid} ({comm}) S {ppid} 0 0 0 0 0 0 0 0 0 {utime} {stime} 0 0\n"
+
+
+def test_descendant_cpu_ticks_on_a_fake_proc_tree(tmp_path):
+    proc = tmp_path / "proc"
+    stats = {
+        10: _stat(10, "scsserver", 1, 5, 2),
+        11: _stat(11, "bt (luci) x", 10, 3, 1),  # spaces and parentheses
+        12: _stat(12, "grandchild", 11, 1, 0),
+        20: _stat(20, "unrelated", 1, 100, 100),
+        30: "30 (truncated) S\n",  # IndexError: half-written stat
+        31: "31 (garbled) S x 0 0 0 0 0 0 0 0 0 a b\n",  # ValueError
+    }
+    for pid, text in stats.items():
+        (proc / str(pid)).mkdir(parents=True)
+        (proc / str(pid) / "stat").write_text(text, encoding="ascii")
+    (proc / "40").mkdir()  # exited between listing and reading: no stat file
+    (proc / "self").mkdir()  # not a pid
+
+    assert qemu_target.descendant_cpu_ticks([10], proc) == 5 + 2 + 3 + 1 + 1
+    # a pid named twice (or reached twice) is counted once
+    assert qemu_target.descendant_cpu_ticks([10, 11], proc) == 12
+    assert qemu_target.descendant_cpu_ticks([20], proc) == 200
+    assert qemu_target.descendant_cpu_ticks([40], proc) == 0
+
+
 def _idle_target(tmp_path, ticks, **kw):
     tgt, _ = _crash_target(tmp_path, crash_grace=0.0, **kw)
     values = iter(ticks)

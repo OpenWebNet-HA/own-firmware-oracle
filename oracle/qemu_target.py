@@ -60,7 +60,7 @@ class IdleStats:
         )
 
 
-def descendant_cpu_ticks(roots: list[int]) -> int | None:
+def descendant_cpu_ticks(roots: list[int], proc: Path = Path("/proc")) -> int | None:
     """CPU ticks (user + system) of the given processes and all their children.
 
     A firmware answer is "finished" when its emulated processes stop computing,
@@ -68,14 +68,14 @@ def descendant_cpu_ticks(roots: list[int]) -> int | None:
     that. Returns None where /proc is not available (the caller then falls back
     to the bus-quiet window alone)."""
     try:
-        entries = [p.name for p in Path("/proc").iterdir() if p.name.isdigit()]
+        entries = [p.name for p in proc.iterdir() if p.name.isdigit()]
     except OSError:
         return None
     children: dict[int, list[int]] = {}
     cpu: dict[int, int] = {}
     for d in entries:
         try:
-            raw = Path(f"/proc/{d}/stat").read_text(encoding="ascii", errors="replace")
+            raw = (proc / d / "stat").read_text(encoding="ascii", errors="replace")
             # the command name may contain spaces and parentheses: split after
             # its closing parenthesis; then ppid is field 1, utime/stime 11, 12
             rest = raw.rpartition(")")[2].split()
