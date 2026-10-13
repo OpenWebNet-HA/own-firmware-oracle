@@ -62,16 +62,16 @@ def format_lighting_where(area: int, pl: int) -> str:
     """Format WHERE string according to BTicino firmware parsing rules."""
     if area == 0:
         if 1 <= pl <= 9:
-            return f"0{pl}"      # Must be 2 digits: "01".."09"
+            return f"0{pl}"  # Must be 2 digits: "01".."09"
         elif 10 <= pl <= 15:
-            return f"00{pl}"     # Must be 4 digits: "0010".."0015"
+            return f"00{pl}"  # Must be 4 digits: "0010".."0015"
         else:
             raise ValueError(f"Invalid PL {pl} for Area 0")
     elif 1 <= area <= 9:
         if 0 <= pl <= 9:
-            return f"{area}{pl}" # 2 digits: "10".."99"
+            return f"{area}{pl}"  # 2 digits: "10".."99"
         elif 10 <= pl <= 15:
-            return f"0{area}{pl}"# 4 digits: "0110".."0915"
+            return f"0{area}{pl}"  # 4 digits: "0110".."0915"
 ```
 
 ### Event Ingestion
