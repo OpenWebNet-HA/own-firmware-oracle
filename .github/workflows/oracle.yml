@@ -109,12 +109,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-      pull-requests: write
     steps:
-      # create-pull-request authenticates with its own token input, so the
-      # checkout does not need to leave credentials in .git/config.
+      # The push at the end needs the checkout credentials.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with: { persist-credentials: false }
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           pattern: manifest-*
@@ -137,16 +134,17 @@ jobs:
       # guard also checks untracked files, i.e. the manifests just copied in.
       - name: guard
         run: python3 tools/guard.py
-      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
-        with:
-          add-paths: results
-          branch: oracle/update-results
-          title: "oracle: refresh firmware manifests"
-          commit-message: "oracle: refresh firmware manifests"
-          body: |
-            Rebuilt by the `oracle` workflow for every catalog entry whose
-            (image sha256, tool_version) key was not yet in `results/`.
-            Only `<product>/<version>/manifest.tsv` files pass the publish job,
-            and `tools/guard.py` ran over them. Once merged, `reproduce`
-            re-checks these manifests every week.
-          delete-branch: true
+      # The org does not let Actions open pull requests, so the job only
+      # pushes the branch; open the PR from oracle/update-results by hand.
+      - name: push manifests to oracle/update-results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results
+          if git diff --cached --quiet; then
+            echo "nothing new to publish"
+            exit 0
+          fi
+          git checkout -B oracle/update-results
+          git commit -m "oracle: refresh firmware manifests"
+          git push --force origin oracle/update-results
