@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=ownd-pr82-heating
 # suite_sha256=adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a
-# oracle_version=2
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#4*#1*#11*1##	nack	silent	-
 down	*#4*#99*#11*1##	nack	silent	-

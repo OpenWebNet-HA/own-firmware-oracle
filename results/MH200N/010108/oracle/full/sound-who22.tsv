@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=sound-who22
 # suite_sha256=7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942
-# oracle_version=1
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#22*2#1*#6*33##	nack	silent	-
 down	*#22*2#1*#6*7##	nack	silent	-

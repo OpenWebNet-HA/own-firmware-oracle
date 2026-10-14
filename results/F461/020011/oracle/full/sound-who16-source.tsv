@@ -1,0 +1,92 @@
+# product=F461
+# version=020011
+# image_sha256=cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b
+# harness=full
+# target_sha256=1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=sound-who16-source
+# suite_sha256=4f1cd8ac2aa6bada07a67207e1cb8c47bd617fd391fad3f292d7517b7f4c5009
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#16*0*5##	nack	silent	-
+down	*#16*100*5##	nack	silent	-
+down	*#16*101*#10*1##	nack	silent	-
+down	*#16*101*#10*3##	nack	silent	-
+down	*#16*101*#10*5##	nack	silent	-
+down	*#16*101*#6*0*107000##	nack	silent	-
+down	*#16*101*#6*0*98500##	nack	silent	-
+down	*#16*101*#7*1##	nack	silent	-
+down	*#16*101*#7*2##	nack	silent	-
+down	*#16*101*#7*3##	nack	silent	-
+down	*#16*101*#7*4##	nack	silent	-
+down	*#16*101*#7*5##	nack	silent	-
+down	*#16*101*5##	nack	silent	-
+down	*#16*101*6##	nack	silent	-
+down	*#16*101*7##	nack	silent	-
+down	*#16*101*8##	nack	silent	-
+down	*#16*101*9##	nack	silent	-
+down	*#16*102*#6*0*101500##	nack	silent	-
+down	*#16*102*5##	nack	silent	-
+down	*#16*102*6##	nack	silent	-
+down	*#16*102*7##	nack	silent	-
+down	*#16*102*8##	nack	silent	-
+down	*#16*102*9##	nack	silent	-
+down	*#16*103*5##	nack	silent	-
+down	*#16*104*5##	nack	silent	-
+down	*16*0*101##	nack	silent	-
+down	*16*0*102##	nack	silent	-
+down	*16*10*101##	nack	silent	-
+down	*16*10*102##	nack	silent	-
+down	*16*100*101##	nack	silent	-
+down	*16*100*102##	nack	silent	-
+down	*16*101*101##	nack	silent	-
+down	*16*101*102##	nack	silent	-
+down	*16*102*101##	nack	silent	-
+down	*16*102*102##	nack	silent	-
+down	*16*13*101##	nack	silent	-
+down	*16*13*102##	nack	silent	-
+down	*16*13*103##	nack	silent	-
+down	*16*13*104##	nack	silent	-
+down	*16*20*100##	nack	silent	-
+down	*16*23*100##	nack	silent	-
+down	*16*3*101##	nack	silent	-
+down	*16*3*102##	nack	silent	-
+down	*16*3*103##	nack	silent	-
+down	*16*3*104##	nack	silent	-
+down	*16*3*111##	nack	silent	-
+down	*16*3*112##	nack	silent	-
+down	*16*3*122##	nack	silent	-
+down	*16*3*123##	nack	silent	-
+down	*16*5000*101##	nack	silent	-
+down	*16*5001*101##	nack	silent	-
+down	*16*5005*101##	nack	silent	-
+down	*16*5010*101##	nack	silent	-
+down	*16*5100*101##	nack	silent	-
+down	*16*5101*101##	nack	silent	-
+down	*16*5105*101##	nack	silent	-
+down	*16*5110*101##	nack	silent	-
+down	*16*6000*102##	nack	silent	-
+down	*16*6001*101##	nack	silent	-
+down	*16*6001*102##	nack	silent	-
+down	*16*6002*101##	nack	silent	-
+down	*16*6002*102##	nack	silent	-
+down	*16*6005*101##	nack	silent	-
+down	*16*6005*102##	nack	silent	-
+down	*16*6010*102##	nack	silent	-
+down	*16*6015*102##	nack	silent	-
+down	*16*6016*102##	nack	silent	-
+down	*16*6100*102##	nack	silent	-
+down	*16*6101*101##	nack	silent	-
+down	*16*6101*102##	nack	silent	-
+down	*16*6102*101##	nack	silent	-
+down	*16*6102*102##	nack	silent	-
+down	*16*6105*101##	nack	silent	-
+down	*16*6105*102##	nack	silent	-
+down	*16*6110*102##	nack	silent	-
+down	*16*6115*102##	nack	silent	-
+down	*16*6116*102##	nack	silent	-

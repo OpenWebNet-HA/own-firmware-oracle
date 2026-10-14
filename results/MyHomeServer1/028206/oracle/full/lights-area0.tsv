@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=lights-area0
 # suite_sha256=71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3
-# oracle_version=1
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#1*0##	ack	out	bus:24 30 34 42 31 30 30 31 35 30 30 0d
 down	*#1*00##	ack	out	bus:24 30 34 42 33 30 30 31 35 30 30 0d
