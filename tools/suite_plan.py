@@ -18,7 +18,7 @@ Every (emulated target, suite) pair gets one of five verdicts:
              the job FAILS, so a flaky result never enters results/
 
 Produced files (new and stale, each reproduced twice) are uploaded; on main
-the publish job turns them into one pull request, so results are never
+the publish job pushes them to oracle/update-suites, so results are never
 computed by hand.
 
 Planning (--emit-matrix) groups the pairs by target, one Actions job each, and

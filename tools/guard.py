@@ -7,7 +7,7 @@ if someone points a result at the wrong path, this fails the build.
 
 Checks every file git would commit -- tracked files AND untracked files that
 are not gitignored. The untracked half matters: in oracle.yml a freshly written
-manifest is untracked when guard runs, and create-pull-request commits it next.
+manifest is untracked when guard runs, and the publish job commits it next.
   * no known binary magic (ELF / zip / gzip / xz / 7z / squashfs / cramfs /
     UBI / ext / uImage);
   * no NUL byte anywhere (a renamed blob without known magic);
