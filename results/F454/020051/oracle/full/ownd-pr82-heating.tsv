@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=ownd-pr82-heating
 # suite_sha256=adad16dc49a8fc39f23205212bc6365ec702326f5e201764d33b2095fa80f27a
-# oracle_version=1
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#4*#1*#11*1##	nack	silent	-
 down	*#4*#99*#11*1##	nack	silent	-
@@ -37,8 +37,8 @@ down	*4*202*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 32 37 30 30 
 down	*4*202*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 32 37 30 30 30 30 0d
 down	*4*303*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d
 down	*4*303*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 30 36 30 30 30 30 0d
-down	*4*303*1##	nack	out	bus:24 30 34 39 33 30 31 33 30 30 46 0d | bus:24 32 34 0d
-down	*4*303*99##	nack	out	bus:24 30 34 39 33 36 33 33 30 30 46 0d | bus:24 32 34 0d
+down	*4*303*1##	ack	out	bus:24 30 34 39 33 30 31 33 30 30 46 0d
+down	*4*303*99##	ack	out	bus:24 30 34 39 33 36 33 33 30 30 46 0d
 down	*4*311*#0##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 30 30 30 30 30 0d
 down	*4*311*#0#2##	ack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 32 30 30 30 30 30 30 0d
 down	*4*311*#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 32 30 31 30 30 30 30 0d

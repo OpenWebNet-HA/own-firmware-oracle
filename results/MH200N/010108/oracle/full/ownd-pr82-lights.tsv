@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=ownd-pr82-lights
 # suite_sha256=57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707
-# oracle_version=1
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#1*31*#1*100*0##	nack	silent	-
 down	*#1*31*#1*100*5##	nack	silent	-

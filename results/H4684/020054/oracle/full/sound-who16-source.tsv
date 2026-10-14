@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=sound-who16-source
 # suite_sha256=4f1cd8ac2aa6bada07a67207e1cb8c47bd617fd391fad3f292d7517b7f4c5009
-# oracle_version=2
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#16*0*5##	ack	out	bus:24 30 34 42 35 30 30 38 30 38 46 0d
 down	*#16*100*5##	ack	out	bus:24 30 34 41 35 30 46 38 31 38 46 0d

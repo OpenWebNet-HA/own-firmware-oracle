@@ -16,10 +16,11 @@
 # artifact and listed in the job summary.
 #
 # On main (and weekly, and on demand) everything runs, and the publish job
-# turns the produced files into ONE pull request with the index and README
-# regenerated, so results are never computed by hand. A scheduled run that
-# finds a regression opens (or comments on) an issue, so drift caused by a
-# new runner image or a vendor change is reported even when nobody watches.
+# pushes the produced files (with the index and README regenerated) to
+# oracle/update-suites, so results are never computed by hand. A scheduled
+# run that finds a regression opens (or comments on) an issue, so drift
+# caused by a new runner image or a vendor change is reported even when
+# nobody watches.
 #
 # Firmware: only public vendor images (no secrets, no environment), fetched
 # to $RUNNER_TEMP, cached on pull requests exactly like reproduce.yml, and
@@ -155,8 +156,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-      pull-requests: write
     steps:
+      # The token is handed to the push step only, not left in .git/config.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: { persist-credentials: false }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
@@ -187,21 +188,25 @@ jobs:
           python tools/mcp_index.py
           python tools/sync_readme.py
           python3 tools/guard.py
-      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
-        with:
-          add-paths: |
-            results
-            README.md
-          branch: oracle/update-suites
-          title: "oracle: new and refreshed suite results"
-          commit-message: "oracle: new and refreshed suite results"
-          body: |
-            Produced by the `suites` workflow in Actions for every (target, suite)
-            pair that had no committed result (`new`) or whose recorded inputs
-            changed (`stale`). Regressions never reach this PR: they fail the
-            run instead. `results/mcp_index.json` and `README.md` were
-            regenerated and `tools/guard.py` ran over the tree.
-          delete-branch: true
+      # The org does not let Actions open pull requests, so the job only
+      # pushes the branch; open the PR from oracle/update-suites by hand.
+      - name: push suite results to oracle/update-suites
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results README.md
+          if git diff --cached --quiet; then
+            echo "nothing new to publish"
+            exit 0
+          fi
+          git checkout -B oracle/update-suites
+          git commit -m "oracle: new and refreshed suite results"
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push --force origin oracle/update-suites
 
   alert:
     needs: [plan, run]

@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=thermo-valve
 # suite_sha256=d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf
-# oracle_version=2
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#4*1*19##	nack	out	bus:24 30 34 39 39 30 31 33 30 31 33 0d
 down	*#4*40*19##	nack	out	bus:24 30 34 39 39 32 38 33 30 31 33 0d

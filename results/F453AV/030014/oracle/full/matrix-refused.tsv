@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=matrix-refused
 # suite_sha256=688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40
-# oracle_version=1
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*#1*1*#1*20##	nack	silent	-
 down	*#18*51*52##	nack	silent	-

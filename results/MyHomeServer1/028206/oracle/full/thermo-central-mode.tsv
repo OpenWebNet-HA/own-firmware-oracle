@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic
-# settle_ms=300
+# settle_ms=3000
 # suite=thermo-central-mode
 # suite_sha256=c2a003ea3e00d05ee10a22143f2bf83522f987c2491900449d1f8b07a76d57d7
-# oracle_version=2
+# oracle_version=3
 direction	input	reply	verdict	output
 down	*4*0*#0##	nack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 46 31 30 30 30 30 0d
 down	*4*0*#0#2##	nack	out	bus:24 30 36 44 31 30 32 30 33 30 32 43 31 46 31 30 30 30 30 0d
