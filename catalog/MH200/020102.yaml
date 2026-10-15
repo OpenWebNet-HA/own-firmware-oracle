@@ -1,0 +1,43 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: MH200
+article: "003535"          # MH200 Scenes Programmer
+version: "020102"          # firmware 2.1.2
+name: "scenarios scheduler"
+
+# The lawfully-downloadable wrapper. fwfetch verifies size + sha256 of every
+# layer it touches and fails on any mismatch.
+wrapper:
+  filename: MH200_020102.zip
+  size: 4499412
+  sha256: "373305c11b2d72ff08912c83d1b4770d2315983eab90bdd3a9b1c04350b2a96b"
+  encrypted: false
+  sources:
+    - r2: "sha256/37/33/373305c11b2d72ff08912c83d1b4770d2315983eab90bdd3a9b1c04350b2a96b"
+
+# The firmware package inside the wrapper.
+image:
+  filename: MH200_020102.fwz
+  size: 4497835
+  sha256: "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b"
+
+# Vendor packaging scheme.
+password_scheme:
+  candidates:
+    - "$PRODUCT"       # expands to MH200 (opens MH200_020102.fwz)
+    - "MH200"
+    - "bticino"        # opens MH200_rel_2_1_2.zip and btweb_app.zip
+    - "SCHEDULER"
+
+# Flash map, lifted verbatim from the image's own Info_Rel.txt.
+flash:
+  machine: MH200
+  size_mb: 16
+  layout:
+    conf:        { offset: "0x40000",  size: "0x60000" }
+    kernel:      { offset: "0x100000", size: "0x120000" }
+    btweb_only:  { offset: "0x220000", size: "0x800000" }
+    btweb_appl:  { offset: "0xa20000", size: "0x1c0000" }
+
+status: unpackable

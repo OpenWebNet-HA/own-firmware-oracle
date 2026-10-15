@@ -236,6 +236,14 @@
       "version": "040006"
     },
     {
+      "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+      "product": "MH200",
+      "status": "catalogued",
+      "suites": [],
+      "target_sha256": "",
+      "version": "020102"
+    },
+    {
       "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
       "product": "MH200N",
       "status": "emulated",

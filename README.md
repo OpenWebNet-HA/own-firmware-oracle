@@ -274,6 +274,7 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 | Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact | Emulation Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Zip | `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **MH200** | `020102` (2.1.2) | Linux ARMv4 `oabi` | 279 | Ext2, Zip | `openserver`, `scsserver`, `bt_luci` | Pending Emulation (Phase 2 target defined) |
 | **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
 | **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`), `bt_vct`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
 | **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
@@ -311,6 +312,7 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 #### 1. Ingested Fleet (Released Firmware Packages)
 <!-- FLEET_CENSUS_START -->
 - **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway. *(Emulated — 21 suites, full matrix parity)*
+- **MH200** (`020102` / 2.1.2): Legacy DIN scenario programmer & OpenWebNet gateway. *(Pending Emulation — Phase 2 target defined)*
 - **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 21 suites, full matrix parity)*
 - **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — 21 suites, full matrix parity)*
 - **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway. *(Emulated — 21 suites, full matrix parity)*
@@ -322,7 +324,7 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter subset already 100% covered by Linux gateways with zero added value to the matrix)*
 - **MH201** (`030644` / 3.6.44): Hotel guest room scenario module (bare-metal ARM Cortex-M3 STM32F217). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter/scenario subset already covered by Linux gateways with zero added value to the matrix)*
 
-*(Note: Auxiliary hardware (touch screen, bus interface, temperature control central unit) such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`), **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`), and **3550** Temperature Control Central Unit (`catalog/3550/030020.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 14).*
+*(Note: Auxiliary hardware (touch screen, bus interface, temperature control central unit) such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`), **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`), and **3550** Temperature Control Central Unit (`catalog/3550/030020.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 15).*
 <!-- FLEET_CENSUS_END -->
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
@@ -333,7 +335,6 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 | **F452 / F452V** | First-generation Web Server DIN | Discontinued early 2000s hardware. Firmware was stored in masked ROM / EEPROM; no firmware update packages were ever published for download. |
 | **F453** | Enhanced Web Server DIN | Pre-Audio/Video version, replaced by F453AV. No separate public firmware download package exists. |
 | **F458 / 003599** | IP Server | Specialized telecom/IP server module; no public firmware archive distributed. |
-| **MH200 / 003535** | Legacy Scenes Programmer | Physical RS232 serial hardware predecessor to MH200N (no Ethernet OpenWebNet server daemon). |
 | **HOMETOUCH 7" (3488 / 067259)** | Connected Touchscreen | Embedded Android touch display; firmware updates are distributed exclusively as full-device Android OTA updates, not OpenWebNet gateway images. |
 | **Classe 300X (`344642`, `344742`)** | Video Internal Unit with Wi-Fi | 2-wire video internal unit with Netatmo cloud bridging; firmware updates are distributed exclusively as encrypted OTA cloud synchronization. |
 | **Classe 300 EOS (`344842`, `344845`)** | Smart Video Internal Unit | Connected video internal unit with Alexa; firmware updated exclusively via Netatmo / Legrand cloud OTA. |
@@ -491,7 +492,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 ## Status
 
 <!-- STATUS_PHASE1_START -->
-- **Phase 1: Complete Fleet Ingestion & Unpack.** Done for all 11 standalone OpenWebNet gateways (MH200N, MyHomeServer1, F454, MH202, F453AV, F455, MH201, F461, F450, F459, F460). Every manifest is verified byte-for-byte and covered by weekly CI reproducibility runs.
+- **Phase 1: Complete Fleet Ingestion & Unpack.** Done for all 12 standalone OpenWebNet gateways (MH200N, MH200, MyHomeServer1, F454, MH202, F453AV, F455, MH201, F461, F450, F459, F460). Every manifest is verified byte-for-byte and covered by weekly CI reproducibility runs.
 <!-- STATUS_PHASE1_END -->
 - **Phase 2b: Cross-Gateway Translation Divergence.**
   - `lights-level` suite verified on both MH200N and MyHomeServer1.

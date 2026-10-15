@@ -61,6 +61,7 @@ MARKERS = [
 # (new catalogued items are appended in sorted order)
 FLEET_ORDER = [
     "MH200N",
+    "MH200",
     "MyHomeServer1",
     "F454",
     "MH202",
@@ -78,6 +79,7 @@ FLEET_ORDER = [
 
 STANDALONE_GATEWAYS = [
     "MH200N",
+    "MH200",
     "MyHomeServer1",
     "F454",
     "MH202",
@@ -92,6 +94,7 @@ STANDALONE_GATEWAYS = [
 
 PHASE1_ORDER = [
     "MH200N",
+    "MH200",
     "MyHomeServer1",
     "F454",
     "MH202",
@@ -113,6 +116,7 @@ NO_LINUX_ORDER = [
 
 EMULATED_ORDER = [
     "MH200N",
+    "MH200",
     "MyHomeServer1",
     "F454",
     "MH202",
@@ -130,6 +134,16 @@ KNOWN_NO_LINUX_PRODUCTS = {"F455", "MH201", "L4561N", "3550"}
 
 # Curated metadata dictionary for historical / published models
 GATEWAY_METADATA: dict[str, dict[str, str]] = {
+    "MH200": {
+        "arch": "Linux ARMv4 `oabi`",
+        "layers": "Ext2, Zip",
+        "daemons": "`openserver`, `scsserver`, `bt_luci`",
+        "census_desc": "Legacy DIN scenario programmer & OpenWebNet gateway",
+        "phase2f_desc": (
+            "Legacy DIN scenario programmer (`openserver`, `scsserver` —"
+            " {suites} suites)"
+        ),
+    },
     "MH200N": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "U-Boot, Ext2, Zip",
