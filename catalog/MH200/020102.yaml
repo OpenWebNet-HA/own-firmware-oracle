@@ -14,6 +14,9 @@ wrapper:
   sha256: "373305c11b2d72ff08912c83d1b4770d2315983eab90bdd3a9b1c04350b2a96b"
   encrypted: false
   sources:
+    # Official vendor service pack provided directly by Legrand Technical Support
+    # to community member @peterbeepping (OpenWebNet-HA/MyHOME#713) for hardware
+    # maintenance; archived into project R2 storage.
     - r2: "sha256/37/33/373305c11b2d72ff08912c83d1b4770d2315983eab90bdd3a9b1c04350b2a96b"
 
 # The firmware package inside the wrapper.

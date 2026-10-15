@@ -356,15 +356,6 @@ KNOWN_EXCLUDED_HARDWARE = [
         ),
     ),
     (
-        "MH200 / 003535",
-        ["MH200", "003535"],
-        "Legacy Scenes Programmer",
-        (
-            "Physical RS232 serial hardware predecessor to MH200N (no Ethernet "
-            "OpenWebNet server daemon)."
-        ),
-    ),
-    (
         'HOMETOUCH 7" (3488 / 067259)',
         ["HOMETOUCH", "3488", "067259"],
         "Connected Touchscreen",

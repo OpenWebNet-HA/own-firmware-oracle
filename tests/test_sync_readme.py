@@ -560,7 +560,7 @@ def test_build_excluded_hardware_block(tmp_path: Path):
     excluded = sync_readme.build_excluded_hardware_block(cat_dir)
     assert "H4684" not in excluded
     assert "F452" in excluded
-    assert "MH200 / 003535" in excluded
+    assert "F458 / 003599" in excluded
 
 
 def test_build_status_phase1_block(tmp_path: Path):
