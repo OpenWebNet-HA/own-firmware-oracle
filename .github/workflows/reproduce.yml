@@ -22,7 +22,7 @@ on:
     paths:
       - "tools/**"
       - "catalog/**"
-      - "results/**"
+      - "results/*/*/manifest.tsv"
       - "requirements/oracle.txt"
       - ".github/workflows/reproduce.yml"
   schedule:

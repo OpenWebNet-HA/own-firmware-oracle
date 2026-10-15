@@ -141,6 +141,33 @@ def test_plan_runs_every_suite_on_every_target(repo: Path) -> None:
     ]
 
 
+def test_plan_shards_long_target_runs(repo: Path) -> None:
+    cases = repo / "oracle" / "cases"
+    for idx, name in enumerate(("c1", "c2", "c3", "c4")):
+        lines = ["# comment", "; comment", ""] + [
+            f"down *1*1*{i}##" for i in range(idx + 1)
+        ]
+        (cases / f"{name}.cases").write_text("\n".join(lines) + "\n")
+    _tsv(repo, "GW1", "010000", "alpha", reset="each")
+    _tsv(repo, "GW1", "010000", "beta", reset="each")
+    _tsv(repo, "GW1", "010000", "c4", reset="0")
+    jobs = [
+        j
+        for j in suite_plan.plan(repo)
+        if j["target"] == "oracle/targets/GW1/010000.yaml"
+    ]
+    assert len(jobs) == suite_plan.SHARDS_PER_TARGET
+    all_runs = [tok for j in jobs for tok in j["runs"].split()]
+    assert sorted(all_runs) == [
+        "alpha:each",
+        "beta:each",
+        "c1:each",
+        "c2:each",
+        "c3:each",
+        "c4:0",
+    ]
+
+
 @pytest.mark.parametrize(
     ("changed", "want"),
     [

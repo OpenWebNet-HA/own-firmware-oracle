@@ -789,6 +789,37 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
     assert run.main(args_keep) == 0
     assert keep_dir.exists()
 
+    # Test with --sysroot: first call populates sysroot, second call reuses it
+    shared_sysroot = tmp_path / "shared_sysroot"
+    stage_calls: list[Path | None] = []
+
+    def track_stage(sp, img, work, *, sandboxed=True, sysroot=None):
+        stage_calls.append(sysroot)
+        dest = sysroot or (work / "sysroot")
+        dest.mkdir(parents=True, exist_ok=True)
+        return run.stage.Staged(dest, 1, 0, 0)
+
+    monkeypatch.setattr(run, "stage_target", track_stage)
+    args_sysroot = [
+        "suite",
+        "oracle/targets/MH200N/010108.yaml",
+        str(cases_file),
+        "--image",
+        "img.zip",
+        "--sysroot",
+        str(shared_sysroot),
+        "-o",
+        str(out_file),
+    ]
+    assert run.main(args_sysroot) == 0
+    assert len(stage_calls) == 1
+    assert stage_calls[0] == shared_sysroot.resolve()
+    assert shared_sysroot.is_dir()
+
+    # Second call with existing shared_sysroot does not call stage_target again
+    assert run.main(args_sysroot) == 0
+    assert len(stage_calls) == 1
+
 
 def test_cmd_suite_annotates_capped_idle_waits(monkeypatch, tmp_path, capsys):
     spec = _dummy_spec()
@@ -1723,11 +1754,13 @@ def test_reexec_suite_in_sandbox(monkeypatch, tmp_path):
     assert code == 0
     assert mock_run.called
 
-    # When keep is None, tempdir is used
+    # When keep is None, tempdir is used, and sysroot is forwarded
     args.keep = None
     args.out = None
+    args.sysroot = str(tmp_path / "sysroot")
     code2 = run.reexec_suite_in_sandbox(args, spec, suite)
     assert code2 == 0
+    assert "--sysroot" in mock_run.call_args[0][0]
 
 
 def test_qemu_target_connect_sessions_failure(monkeypatch, tmp_path):

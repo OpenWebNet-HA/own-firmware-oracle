@@ -35,6 +35,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from collections import Counter
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -65,6 +66,8 @@ INPUT_KEYS = (
 )
 RESET = re.compile(r"^(each|0|batch-[1-9][0-9]*)$")
 CASE_SUFFIXES = (".cases", ".seq")
+SHARDS_PER_TARGET = 2
+MIN_RUNS_TO_SHARD = 6
 # A change under these paths can alter any verdict: re-check everything.
 GLOBAL_TRIGGERS = (
     "oracle/",
@@ -167,13 +170,36 @@ def touched(root: Path, changed: list[str]) -> set[Pair] | None:
     return pairs
 
 
+def _run_weight(case_file: Path, reset: str) -> int:
+    steps = sum(
+        1
+        for ln in case_file.read_text(encoding="ascii").splitlines()
+        if ln.strip() and not ln.lstrip().startswith((";", "#"))
+    )
+    return max(1, steps) * (2 if reset == "each" else 1)
+
+
+def _shard_runs(runs: list[tuple[str, str]], names: dict[str, Path]) -> list[list[str]]:
+    """Split a target's suites into balanced shards when the list is long."""
+    if len(runs) < MIN_RUNS_TO_SHARD:
+        return [[f"{s}:{r}" for s, r in runs]]
+    bins: list[list[tuple[str, str]]] = [[] for _ in range(SHARDS_PER_TARGET)]
+    loads = [0] * SHARDS_PER_TARGET
+    weighted = sorted(runs, key=lambda sr: (-_run_weight(names[sr[0]], sr[1]), sr[0]))
+    for s, r in weighted:
+        idx = min(range(SHARDS_PER_TARGET), key=lambda i: loads[i])
+        bins[idx].append((s, r))
+        loads[idx] += _run_weight(names[s], r)
+    return [[f"{s}:{r}" for s, r in sorted(b)] for b in bins]
+
+
 def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
-    """One matrix item per target: every case file runs on every target."""
+    """Matrix items per target (sharded when a target runs many suites)."""
     names = suites(root)
     jobs: list[dict[str, str]] = []
     for product, version in targets(root):
         fallback = default_reset(root, product, version)
-        runs: list[str] = []
+        runs: list[tuple[str, str]] = []
         for suite in names:
             if scope is not None and (product, version, suite) not in scope:
                 continue
@@ -183,15 +209,16 @@ def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
                 if committed.is_file()
                 else fallback
             )
-            runs.append(f"{suite}:{reset}")
+            runs.append((suite, reset))
         if runs:
-            jobs.append(
-                {
-                    "catalog": f"catalog/{product}/{version}.yaml",
-                    "target": f"oracle/targets/{product}/{version}.yaml",
-                    "runs": " ".join(runs),
-                }
-            )
+            for shard in _shard_runs(runs, names):
+                jobs.append(
+                    {
+                        "catalog": f"catalog/{product}/{version}.yaml",
+                        "target": f"oracle/targets/{product}/{version}.yaml",
+                        "runs": " ".join(shard),
+                    }
+                )
     return jobs
 
 
@@ -285,64 +312,73 @@ def run_target(
         "| --- | --- | --- |",
     ]
     details: list[str] = []
-    for suite, reset in parse_runs(runs, root):
-        rel = Path("results") / product / version / "oracle" / "full" / f"{suite}.tsv"
-        produced = out_dir / rel
-        produced.parent.mkdir(parents=True, exist_ok=True)
-        case = str(names[suite].relative_to(root))
-
-        def run_once(out: Path, case: str = case, reset: str = reset) -> bool:
-            argv = [
-                sys.executable, "-m", "oracle.run", "suite", target, case,
-                "--image", image, "--reset", reset, "-o", str(out),
-            ]  # fmt: skip
-            return runner(argv) == 0 and out.is_file()
-
-        if not run_once(produced):
-            failures += 1
-            rows.append(f"| {suite} | {reset} | **run failed** |")
-            print(f"::error::{product} {version} {suite}: oracle.run failed")
-            produced.unlink(missing_ok=True)
-            continue
-        committed = root / rel
-        v = verdict(committed, produced)
-        # (old, new, label) of the diff that explains a failure
-        evidence: tuple[Path, Path, str] | None = None
-        if v == "regressed":
-            evidence = (committed, produced, "re-run")
-        elif v in ("new", "stale"):
-            # A result only enters results/ if it reproduces: run it again.
-            again = produced.with_name(produced.name + ".again")
-            if not run_once(again):
-                again.write_text("", encoding="ascii")
-            if again.read_bytes() != produced.read_bytes():
-                v, evidence = "unstable", (produced, again, "second run")
-            else:
-                again.unlink()
-        rows.append(f"| {suite} | {reset} | {f'**{v}**' if evidence else v} |")
-        if v == "same":
-            produced.unlink()
-        if evidence is not None:
-            failures += 1
-            old, new, label = evidence
-            diff = list(
-                difflib.unified_diff(
-                    old.read_text(encoding="ascii").splitlines(),
-                    new.read_text(encoding="ascii").splitlines(),
-                    str(rel),
-                    label,
-                    lineterm="",
-                )
+    with tempfile.TemporaryDirectory(
+        prefix="own-sysroot-", ignore_cleanup_errors=True
+    ) as tmp_sysroot:
+        sysroot = Path(tmp_sysroot).resolve() / "sysroot"
+        for suite, reset in parse_runs(runs, root):
+            rel = (
+                Path("results") / product / version / "oracle" / "full" / f"{suite}.tsv"
             )
-            _keep_evidence(evidence_dir, rel, old, new, label, "\n".join(diff) + "\n")
-            details += [f"#### `{rel}` {v}", "```diff", *diff[:200], "```"]
-            why = {
-                "regressed": "same inputs, different verdicts",
-                "unstable": "two runs with the same inputs disagree",
-            }[v]
-            print(f"::error file={rel}::{why} (diff in the job summary)")
-            produced.unlink(missing_ok=True)
-            new.unlink(missing_ok=True)
+            produced = out_dir / rel
+            produced.parent.mkdir(parents=True, exist_ok=True)
+            case = str(names[suite].relative_to(root))
+
+            def run_once(out: Path, case: str = case, reset: str = reset) -> bool:
+                argv = [
+                    sys.executable, "-m", "oracle.run", "suite", target, case,
+                    "--image", image, "--reset", reset, "-o", str(out),
+                    "--sysroot", str(sysroot),
+                ]  # fmt: skip
+                return runner(argv) == 0 and out.is_file()
+
+            if not run_once(produced):
+                failures += 1
+                rows.append(f"| {suite} | {reset} | **run failed** |")
+                print(f"::error::{product} {version} {suite}: oracle.run failed")
+                produced.unlink(missing_ok=True)
+                continue
+            committed = root / rel
+            v = verdict(committed, produced)
+            # (old, new, label) of the diff that explains a failure
+            evidence: tuple[Path, Path, str] | None = None
+            if v == "regressed":
+                evidence = (committed, produced, "re-run")
+            elif v in ("new", "stale"):
+                # A result only enters results/ if it reproduces: run it again.
+                again = produced.with_name(produced.name + ".again")
+                if not run_once(again):
+                    again.write_text("", encoding="ascii")
+                if again.read_bytes() != produced.read_bytes():
+                    v, evidence = "unstable", (produced, again, "second run")
+                else:
+                    again.unlink()
+            rows.append(f"| {suite} | {reset} | {f'**{v}**' if evidence else v} |")
+            if v == "same":
+                produced.unlink()
+            if evidence is not None:
+                failures += 1
+                old, new, label = evidence
+                diff = list(
+                    difflib.unified_diff(
+                        old.read_text(encoding="ascii").splitlines(),
+                        new.read_text(encoding="ascii").splitlines(),
+                        str(rel),
+                        label,
+                        lineterm="",
+                    )
+                )
+                _keep_evidence(
+                    evidence_dir, rel, old, new, label, "\n".join(diff) + "\n"
+                )
+                details += [f"#### `{rel}` {v}", "```diff", *diff[:200], "```"]
+                why = {
+                    "regressed": "same inputs, different verdicts",
+                    "unstable": "two runs with the same inputs disagree",
+                }[v]
+                print(f"::error file={rel}::{why} (diff in the job summary)")
+                produced.unlink(missing_ok=True)
+                new.unlink(missing_ok=True)
     _summary([*rows, "", *details])
     return 1 if failures else 0
 
