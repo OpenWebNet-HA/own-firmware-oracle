@@ -1,0 +1,43 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# harness=full
+# target_sha256=539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=lights-area0
+# suite_sha256=71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1*0##	ack	out	bus:24 30 34 42 31 30 30 31 35 30 30 0d
+down	*#1*00##	nack	silent	-
+down	*#1*0001##	nack	silent	-
+down	*#1*0002##	nack	silent	-
+down	*#1*0002#4#01##	nack	silent	-
+down	*#1*0010##	nack	silent	-
+down	*#1*0010#4#01##	nack	silent	-
+down	*#1*0015##	nack	silent	-
+down	*#1*02##	nack	silent	-
+down	*#1*2##	ack	out	bus:24 30 34 42 33 30 32 31 35 30 30 0d
+down	*1*0*0001##	nack	silent	-
+down	*1*0*0002##	nack	silent	-
+down	*1*0*0010##	nack	silent	-
+down	*1*0*0015##	nack	silent	-
+down	*1*0*02##	nack	silent	-
+down	*1*0*2##	ack	out	bus:24 30 34 42 33 30 32 31 32 30 31 0d | own:*1*0*2##
+down	*1*1*0##	ack	out	bus:24 30 34 42 31 30 30 31 32 30 30 0d | own:*1*1*0##
+down	*1*1*00##	nack	silent	-
+down	*1*1*0001##	nack	silent	-
+down	*1*1*0002##	nack	silent	-
+down	*1*1*0002#4#01##	nack	silent	-
+down	*1*1*0010##	nack	silent	-
+down	*1*1*0010#4#01##	nack	silent	-
+down	*1*1*0015##	nack	silent	-
+down	*1*1*02##	nack	silent	-
+down	*1*1*02#4#01##	nack	silent	-
+down	*1*1*2##	ack	out	bus:24 30 34 42 33 30 32 31 32 30 30 0d | own:*1*1*2##
+down	*1*1*2#4#01##	ack	out	bus:24 30 36 45 43 30 31 30 30 30 30 42 33 30 32 31 32 30 30 0d | own:*1*1*2#4#01##

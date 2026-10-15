@@ -1,0 +1,74 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# program=bt_processi
+# target_sha256=3f2a6b3e213ebdcfc80f45c7f6323afcdc3c18ae0976df9ebe644c350222b0b0
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=5
+# oracle_version=3
+kind	detail	result
+bind	inet:0.0.0.0:30001	ok
+bind	inet:0.0.0.0:30003	ok
+bind	inet:0.0.0.0:30004	ok
+bind	inet:0.0.0.0:30005	ok
+bind	inet:0.0.0.0:30006	ok
+bind	inet:0.0.0.0:30013	ok
+bind	inet:0.0.0.0:30016	ok
+bind	inet:0.0.0.0:40001	ok
+bind	inet:0.0.0.0:40003	ok
+bind	inet:0.0.0.0:40004	ok
+bind	inet:0.0.0.0:40005	ok
+bind	inet:0.0.0.0:40006	ok
+bind	inet:0.0.0.0:40013	ok
+bind	inet:0.0.0.0:40016	ok
+connect	inet:127.0.0.1:20001	ECONNREFUSED
+connect	inet:127.0.0.1:40001	ok
+connect	inet:127.0.0.1:40003	ok
+connect	inet:127.0.0.1:40004	ok
+connect	inet:127.0.0.1:40005	ok
+connect	inet:127.0.0.1:40006	ok
+connect	inet:127.0.0.1:40013	ok
+connect	inet:127.0.0.1:40016	ok
+connect	inet:127.0.0.1:40017	ECONNREFUSED
+execve	/bin/sh	ok
+exit	running	timeout
+ioctl	/dev/ttyPIC TCFLSH	ok
+ioctl	/dev/ttyPIC TCGETS	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+ioctl	fd TCGETS	ENOTTY
+listen	inet:0.0.0.0:30001	ok
+listen	inet:0.0.0.0:30003	ok
+listen	inet:0.0.0.0:30004	ok
+listen	inet:0.0.0.0:30005	ok
+listen	inet:0.0.0.0:30006	ok
+listen	inet:0.0.0.0:30013	ok
+listen	inet:0.0.0.0:30016	ok
+listen	inet:0.0.0.0:40001	ok
+listen	inet:0.0.0.0:40003	ok
+listen	inet:0.0.0.0:40004	ok
+listen	inet:0.0.0.0:40005	ok
+listen	inet:0.0.0.0:40006	ok
+listen	inet:0.0.0.0:40013	ok
+listen	inet:0.0.0.0:40016	ok
+open	/dev/nvram O_RDONLY|O_DSYNC	ENOENT
+open	/dev/nvram O_RDWR|O_DSYNC	ENOENT
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/dev/wd O_WRONLY|O_DSYNC	ENOENT
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/etc/resolv.conf O_RDWR|O_CREAT|O_TRUNC	ok
+open	/home/bticino/sp/dbfiles_ws.xml O_RDONLY	ok
+open	/proc/sys/dev/btweb/hw_version O_RDONLY	ENOENT
+open	/var/name O_RDONLY	ok
+open	/var/name O_RDWR|O_CREAT|O_TRUNC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_alarm O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_device O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_difson O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_energia O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_luci O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_termo O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_vct O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/bticino/bt_wd/openserver O_WRONLY|O_CREAT|O_TRUNC	ENOENT
+open	/var/tmp/flag/eth_down O_RDONLY	ENOENT
+write	/dev/ttyPIC	$24\x0d

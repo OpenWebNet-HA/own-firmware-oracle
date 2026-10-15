@@ -5,7 +5,8 @@ Reads an oracle TSV (results/<product>/<version>/oracle/<harness>/<suite>.tsv)
 and writes results/<product>/<version>/checks/<suite>.tsv with two extra columns:
   * ownd: OWNd's parse of each own: output (type name or unparsed / error), or
           EMPTY ('-') if no own: output was emitted;
-  * live: agree <evidence_id> / diverge <evidence_id> / unchecked.
+  * live: agree <evidence_id> / agree_bus <evidence_id> / diverge <evidence_id> /
+          unchecked.
 
 It is a separate file so an OWNd bump or a new live capture never invalidates
 the oracle TSV itself.
@@ -31,6 +32,7 @@ COLUMNS_OUT = COLUMNS_IN + COLUMNS_EXTRA
 
 OUTPUT_SEP = " | "
 EMPTY = "-"
+SIGNAL_FRAMES = ("*#*1##", "*#*0##")
 
 HEADER_RE = re.compile(r"^#\s*([A-Za-z0-9_]+)=(.*)$")
 
@@ -91,33 +93,23 @@ def _models_for_gateway(gw_model: str | None) -> tuple[str, ...]:
         models.append("MH200N")
     elif gw_model == "MH200N":
         models.append("MH200")
+    elif gw_model == "H4890":
+        models.append("H4684")
+    elif gw_model == "H4684":
+        models.append("H4890")
     return tuple(models)
 
 
-def _load_evidence_item(sub: Path) -> list[EvidenceItem]:
-    manifest_path = sub / "manifest.json"
-    frames_path = sub / "frames.jsonl"
-    if not manifest_path.is_file() or not frames_path.is_file():
-        return []
-
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    evidence_id = str(manifest.get("evidence_id", sub.name))
-    models = _models_for_gateway(manifest.get("environment", {}).get("gateway_model"))
-
+def _pairs_to_items(
+    evidence_id: str,
+    models: tuple[str, ...],
+    records: list[tuple[str, str]],
+) -> list[EvidenceItem]:
     items: list[EvidenceItem] = []
     tx_input: str | None = None
     rx_outputs: list[str] = []
 
-    for raw_line in frames_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        record = json.loads(line)
-        direction = record.get("dir")
-        raw = record.get("raw")
-        if not raw:
-            continue
-
+    for direction, raw in records:
         if direction == "tx":
             if tx_input is not None:
                 items.append(
@@ -128,10 +120,10 @@ def _load_evidence_item(sub: Path) -> list[EvidenceItem]:
                         rx_outputs=tuple(rx_outputs),
                     )
                 )
-            tx_input = str(raw)
+            tx_input = raw
             rx_outputs = []
-        elif direction == "rx" and tx_input is not None:
-            rx_outputs.append(str(raw))
+        elif direction == "rx" and tx_input is not None and raw not in SIGNAL_FRAMES:
+            rx_outputs.append(raw)
 
     if tx_input is not None:
         items.append(
@@ -145,6 +137,30 @@ def _load_evidence_item(sub: Path) -> list[EvidenceItem]:
     return items
 
 
+def _load_evidence_item(sub: Path) -> list[EvidenceItem]:
+    manifest_path = sub / "manifest.json"
+    frames_path = sub / "frames.jsonl"
+    if not manifest_path.is_file() or not frames_path.is_file():
+        return []
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    evidence_id = str(manifest.get("evidence_id", sub.name))
+    models = _models_for_gateway(manifest.get("environment", {}).get("gateway_model"))
+
+    records: list[tuple[str, str]] = []
+    for raw_line in frames_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        record = json.loads(line)
+        direction = record.get("dir")
+        raw = record.get("raw")
+        if raw and direction in ("tx", "rx"):
+            records.append((str(direction), str(raw)))
+
+    return _pairs_to_items(evidence_id, models, records)
+
+
 def load_evidence(evidence_dir: Path) -> list[EvidenceItem]:
     """Load evidence items from an Encyclopedia evidence directory."""
     items: list[EvidenceItem] = []
@@ -154,6 +170,51 @@ def load_evidence(evidence_dir: Path) -> list[EvidenceItem]:
     for sub in sorted(evidence_dir.iterdir()):
         if sub.is_dir():
             items.extend(_load_evidence_item(sub))
+    return items
+
+
+def _load_trace_file(trace_path: Path) -> list[EvidenceItem]:
+    try:
+        payload = json.loads(trace_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, dict):
+        return []
+
+    gw_obj = payload.get("gateway")
+    gw_model = gw_obj.get("model") if isinstance(gw_obj, dict) else None
+    raw_frames = payload.get("frames")
+    if not isinstance(raw_frames, list):
+        data_obj = payload.get("data")
+        if isinstance(data_obj, dict):
+            prof = data_obj.get("gateway_profile")
+            if isinstance(prof, dict) and not gw_model:
+                gw_model = prof.get("model_name")
+            bm = data_obj.get("bus_monitor")
+            if isinstance(bm, dict):
+                raw_frames = bm.get("recent_frames")
+    if not isinstance(raw_frames, list):
+        return []
+
+    models = _models_for_gateway(str(gw_model) if gw_model else None)
+    records: list[tuple[str, str]] = []
+    for entry in raw_frames:
+        if isinstance(entry, dict):
+            direction = entry.get("direction")
+            raw = entry.get("raw")
+            if raw and direction in ("tx", "rx"):
+                records.append((str(direction), str(raw)))
+
+    return _pairs_to_items(trace_path.stem, models, records)
+
+
+def load_trace_evidence(traces_dir: Path) -> list[EvidenceItem]:
+    """Load EvidenceItems from a directory of MyHOME JSON trace/diagnostic files."""
+    if not traces_dir.is_dir():
+        return []
+    items: list[EvidenceItem] = []
+    for json_file in sorted(traces_dir.rglob("*.json")):
+        items.extend(_load_trace_file(json_file))
     return items
 
 
@@ -170,6 +231,7 @@ def match_live(
     output_val: str,
     evidence_items: list[EvidenceItem],
     product: str | None = None,
+    verdict: str | None = None,
 ) -> str:
     """Compare an oracle row against loaded live evidence."""
     if direction != "down":
@@ -183,6 +245,8 @@ def match_live(
         if item.tx_input == input_val:
             if list(item.rx_outputs) == oracle_own:
                 return f"agree {item.evidence_id}"
+            if verdict == "out" and not oracle_own:
+                return f"agree_bus {item.evidence_id}"
             return f"diverge {item.evidence_id}"
 
     return "unchecked"
@@ -244,7 +308,14 @@ def check_content(
             continue
         direction, in_val, reply, verdict, output = cells[: len(COLUMNS_IN)]
         ownd_col = parse_ownd_column(output)
-        live_col = match_live(direction, in_val, output, evidence, product=product)
+        live_col = match_live(
+            direction,
+            in_val,
+            output,
+            evidence,
+            product=product,
+            verdict=verdict,
+        )
         out_rows.append(
             "\t".join([direction, in_val, reply, verdict, output, ownd_col, live_col])
         )
@@ -307,6 +378,12 @@ def main() -> None:
         help="path to OpenWebNet-Encyclopedia evidence directory",
     )
     ap.add_argument(
+        "--traces-dir",
+        type=Path,
+        default=None,
+        help="path to MyHOME JSON traces directory",
+    )
+    ap.add_argument(
         "--out",
         "-o",
         type=Path,
@@ -327,6 +404,8 @@ def main() -> None:
 
     ev_dir = args.evidence_dir or find_default_evidence_dir(ROOT)
     evidence_items = load_evidence(ev_dir) if ev_dir else []
+    if args.traces_dir:
+        evidence_items.extend(load_trace_evidence(args.traces_dir))
 
     targets = _collect_targets(args.paths, all_flag=args.all)
     if not targets:

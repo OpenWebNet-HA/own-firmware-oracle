@@ -1,0 +1,18 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# harness=full
+# target_sha256=539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-valve
+# suite_sha256=d9ee737015eefa43db2093d8a059e278aeaff08e4fcec133a314addc7e5a79bf
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#4*1*19##	nack	out	bus:24 30 34 39 39 30 31 33 30 31 33 0d
+down	*#4*40*19##	nack	out	bus:24 30 34 39 39 32 38 33 30 31 33 0d
+down	*#4*41*19##	nack	out	bus:24 30 34 39 39 32 39 33 30 31 33 0d

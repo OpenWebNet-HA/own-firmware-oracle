@@ -75,18 +75,12 @@ programs:
     sha256: "57e0c1f7598b394ddb103b7863e3e6e83aaff04132ba1656e80cf0fee01d13a6"
     role: translator
     port: 40006
-  # scenario management / task manager -- WHO 17
-  bt_taskmanager:
-    path: home/bticino/bin/bt_taskmanager
-    sha256: "c25ceaf015b4fe7f7554b67468546765f4dcbabeb8859a877b8a49a5da2408a2"
-    role: translator
-    port: 40017
 
 # What the device's boot sets up before bt_processi starts the programs.
 runtime:
   cwd: /home/bticino
   env:
-    LD_LIBRARY_PATH: /home/bticino/lib
+    LD_LIBRARY_PATH: /home/bticino/lib:/lib
   devices:
     /dev/ttyPIC: pty
   stack_config: home/bticino/cfg/stack_open.xml
