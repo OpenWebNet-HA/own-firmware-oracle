@@ -81,6 +81,11 @@ def test_pic_responder():
     assert resp.respond(b"$150500FF\r") == [b"$00\r"]
     assert resp.respond(b"$1600\r") == [b"$00\r"]
     assert resp.respond(b"$0331001200\r") == [b"$19\r"]
+    assert resp.respond(b"$0374001500\r") == [
+        b"$19\r",
+        b"$17B874120E\r",
+        b"$18D274010489FBFFF7\r",
+    ]
     assert resp.respond(b"$04B7011300\r") == [b"$00\r"]
     assert resp.respond(b"$05010203\r") == [b"$00\r"]
     assert resp.respond(b"$06D13101420D0D0100\r") == [b"$00\r"]
@@ -95,6 +100,11 @@ def test_pic_responder():
     assert resp.respond(b"$02802\r") == [b"$0280000\r"]
     assert resp.respond(b"$0020000\r") == [b"$000\r"]
     assert resp.respond(b"$00331001200\r") == [b"$019\r"]
+    assert resp.respond(b"$00374001500\r") == [
+        b"$019\r",
+        b"$017B874120E\r",
+        b"$018D274010489FBFFF7\r",
+    ]
     assert resp.respond(b"$004B7011300\r") == [b"$000\r"]
     assert resp.respond(b"$005010203\r") == [b"$000\r"]
     assert resp.respond(b"$006D13101420D0D0100\r") == [b"$000\r"]

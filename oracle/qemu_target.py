@@ -395,6 +395,7 @@ class QemuTarget:
         self._bus_mark: int = 0
         self._cmd_sock: socket.socket | None = None
         self._cmd_buf: bytearray = bytearray()
+        self._cmd_events: list[str] = []
         self._open_port: int | None = None
         self._ev_sock: socket.socket | None = None
         self._ev_buf: bytearray = bytearray()
@@ -744,7 +745,7 @@ class QemuTarget:
         if frame == NACK:
             self._reply = "nack"
             return True
-        self._own_events.append(frame)
+        self._cmd_events.append(frame)
         return False
 
     def _recover_cmd_session(self) -> None:
@@ -767,7 +768,7 @@ class QemuTarget:
             return
         try:
             mark = self.bus.mark()
-            seen_events = len(self._own_events)
+            seen_events = len(self._cmd_events) + len(self._own_events)
             self._cmd_sock.sendall(frame.encode("ascii"))
             self._cmd_buf.clear()
             start = time.monotonic()
@@ -781,7 +782,7 @@ class QemuTarget:
                     # a cold qemu-user start: keep waiting, but never past the
                     # hard cap. A silent firmware is a genuine "-" right away.
                     busy = bool(self.bus.gateway_frames(mark)) or (
-                        len(self._own_events) > seen_events
+                        len(self._cmd_events) + len(self._own_events) > seen_events
                     )
                     if not busy or now >= hard_deadline:
                         break
@@ -827,7 +828,8 @@ class QemuTarget:
 
     def take_own(self) -> list[str]:
         self._pump_own()
-        out, self._own_events = self._own_events, []
+        out = list(dict.fromkeys([*self._cmd_events, *self._own_events]))
+        self._cmd_events, self._own_events = [], []
         return out
 
     def take_bus(self) -> list[bytes]:
