@@ -139,9 +139,9 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
         "layers": "Ext2, Zip",
         "census_desc": "Legacy DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
-            "Legacy DIN scenario programmer (`openserver`, `scsserver`, "
+            "Legacy DIN scenario programmer (`bt_processi`, `openserver`, `scsserver`, "
             "`bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, "
-            "`bt_alarm`, `bt_vct`, `bt_taskmanager` — {suites} suites)"
+            "`bt_alarm`, `bt_vct` — {suites} suites)"
         ),
     },
     "MH200N": {
@@ -150,8 +150,8 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
         "census_desc": "DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
             "DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, "
-            "`bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia` — "
-            "{suites} suites)"
+            "`bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_supervisione`, "
+            "`bt_energia`, `bt_alarm` — {suites} suites)"
         ),
     },
     "MyHomeServer1": {
