@@ -1,0 +1,98 @@
+# Oracle target: MH200 firmware 2.1.2. Every program is pinned by path and
+# sha256 to results/MH200/020102/manifest.tsv (oracle/target.py checks it).
+product: MH200
+version: "020102"
+
+# Manifest prefixes overlaid in order (later wins): the rootfs, then the
+# application zip that the device unpacks over it.
+sysroot:
+  - "MH200_020102.zip!MH200_020102.fwz!MH200_rel_2_1_2.zip!MH200_rel_2_1_2/btweb_only.gz~gunzip:"
+  - "MH200_020102.zip!MH200_020102.fwz!MH200_rel_2_1_2.zip!MH200_rel_2_1_2/btweb_app.zip!"
+
+bus_device: /dev/ttyPIC
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts p0..pN of cfg/stack_open.xml <bt_processi>
+  bt_processi:
+    path: home/bticino/bin/bt_processi
+    sha256: "3f2a6b3e213ebdcfc80f45c7f6323afcdc3c18ae0976df9ebe644c350222b0b0"
+    role: supervisor
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583"
+    role: own_server
+    port: 20000
+  # p1: owns /dev/ttyPIC (stack_open.xml) and serves the translators on
+  # TCP 20001 (<scsserver><port>; the translators' <port_scs>)
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "ff49feebdaaad64b4cdcc61b625b3fba002637086c7b0de7397968627da98106"
+    role: bus_server
+    port: 20001
+  # lights, scenarios, CEN -- WHO 1
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "f4a2d6945f94476e26e0a653e173da7fb9ddd5709b211dd44ec9471001052fb7"
+    role: translator
+    port: 40001
+  # diagnostics, clock -- WHO 13 / 1013
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "5b7752b38f8081337a6c243705c72b0f470722c76f20863571bd73eafccb0767"
+    role: translator
+    port: 40013
+  # thermoregulation -- WHO 4
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "33ddcc24da367192b303202314f0c9ec82bf9280da44045a2983a137a0c1d4f9"
+    role: translator
+    port: 40004
+  # energy management / load control -- WHO 3
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "de17bdd79a7dbcd594f3910a6ecf5ffcb4908f710971fcaa1de0e800ebf201d2"
+    role: translator
+    port: 40003
+  # sound diffusion -- WHO 16 / 1016
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "151d8b6b59bcaee3f75830ff468c43a99f94321db3cba846415fc5e72a85978f"
+    role: translator
+    port: 40016
+  # burglar alarm & auxiliary -- WHO 5 & WHO 9
+  bt_alarm:
+    path: home/bticino/bin/bt_alarm
+    sha256: "95e55e8a9a68a7f7f1efb11bbdb98f63b5142a1ac65553c710e256a78743dfe8"
+    role: translator
+    port: 40005
+  # video door entry / intercom -- WHO 6 & WHO 7
+  bt_vct:
+    path: home/bticino/bin/bt_vct
+    sha256: "57e0c1f7598b394ddb103b7863e3e6e83aaff04132ba1656e80cf0fee01d13a6"
+    role: translator
+    port: 40006
+  # scenario management / task manager -- WHO 17
+  bt_taskmanager:
+    path: home/bticino/bin/bt_taskmanager
+    sha256: "c25ceaf015b4fe7f7554b67468546765f4dcbabeb8859a877b8a49a5da2408a2"
+    role: translator
+    port: 40017
+
+# What the device's boot sets up before bt_processi starts the programs.
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /home/bticino/lib
+  devices:
+    /dev/ttyPIC: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.4.19"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full
