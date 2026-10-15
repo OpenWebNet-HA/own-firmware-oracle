@@ -52,7 +52,12 @@ import unpack  # noqa: E402
 
 
 def stage_target(
-    spec: target.TargetSpec, image: Path, work: Path, *, sandboxed: bool = True
+    spec: target.TargetSpec,
+    image: Path,
+    work: Path,
+    *,
+    sandboxed: bool = True,
+    sysroot: Path | None = None,
 ) -> stage.Staged:
     """Verify the wrapper, walk it with phase 1's walker, stage the sysroot."""
     entry = schema.load(ROOT / "catalog" / spec.product / f"{spec.version}.yaml")
@@ -74,7 +79,7 @@ def stage_target(
             sink=sink,
         )
 
-    return stage.stage(spec, manifest, work / "sysroot", walk)
+    return stage.stage(spec, manifest, sysroot or (work / "sysroot"), walk)
 
 
 @dataclass
@@ -322,8 +327,9 @@ def reexec_suite_in_sandbox(
                 )
             ).resolve()
 
+        sysroot_arg = getattr(args, "sysroot", None)
         py_bin = Path(sys.executable).resolve()
-        ro_binds = (
+        ro_binds: tuple[Path, ...] = (
             ROOT,
             py_bin.parent,
             py_bin.parent.parent,
@@ -333,6 +339,7 @@ def reexec_suite_in_sandbox(
             Path(args.image).resolve().parent,
             Path(args.target).resolve().parent,
             Path(args.suite).resolve().parent,
+            *((Path(sysroot_arg).resolve(),) if sysroot_arg else ()),
         )
         rw_binds = (out_target.parent,)
         sub_cmd = [
@@ -352,6 +359,7 @@ def reexec_suite_in_sandbox(
             str(out_target),
             "--keep",
             str(work),
+            *(["--sysroot", str(Path(sysroot_arg).resolve())] if sysroot_arg else []),
         ]
         extra_env = {
             "PATH": f"{py_bin.parent}:/usr/bin:/bin",
@@ -411,6 +419,23 @@ def cmd_suite(args: argparse.Namespace) -> int:
     suite = cases.load(Path(args.suite))
     main_prog = validate_harness(spec, args.harness)
     restart_every = parse_reset(args.reset)
+    sysroot_arg = getattr(args, "sysroot", None)
+    if sysroot_arg and not Path(sysroot_arg).exists():
+        with tempfile.TemporaryDirectory(
+            prefix="own-stage-", ignore_cleanup_errors=True
+        ) as stage_tmp:
+            staged = stage_target(
+                spec,
+                Path(args.image),
+                Path(stage_tmp).resolve(),
+                sandboxed=not args.no_sandbox,
+                sysroot=Path(sysroot_arg).resolve(),
+            )
+            print(
+                f"staged {staged.files} files, {staged.links} links, "
+                f"{staged.dirs} empty dirs",
+                file=sys.stderr,
+            )
 
     if not args.no_sandbox and not (
         sandbox.is_net_isolated() or os.environ.get("ORACLE_IN_SANDBOX")
@@ -429,21 +454,25 @@ def cmd_suite(args: argparse.Namespace) -> int:
                     )
                 )
             ).resolve()
-        stage_work = work / "stage"
-        staged = stage_target(
-            spec, Path(args.image), stage_work, sandboxed=not args.no_sandbox
-        )
-        print(
-            f"staged {staged.files} files, {staged.links} links, "
-            f"{staged.dirs} empty dirs",
-            file=sys.stderr,
-        )
+        if sysroot_arg:
+            staged_root = Path(sysroot_arg).resolve()
+        else:
+            stage_work = work / "stage"
+            staged = stage_target(
+                spec, Path(args.image), stage_work, sandboxed=not args.no_sandbox
+            )
+            print(
+                f"staged {staged.files} files, {staged.links} links, "
+                f"{staged.dirs} empty dirs",
+                file=sys.stderr,
+            )
+            staged_root = staged.root
         with qemu_target.QemuTarget(
             spec,
             Path(args.image),
             work,
             harness=args.harness,
-            staged_sysroot=staged.root,
+            staged_sysroot=staged_root,
             sandboxed=not args.no_sandbox,
         ) as tgt:
             rows = driver.run_suite(tgt, suite, restart_every=restart_every)
@@ -505,6 +534,10 @@ def main(argv: list[str] | None = None) -> int:
         help="reset policy: each (default), batch-N, or 0 (never)",
     )
     s.add_argument("--keep", help="stage into this NEW dir; keep it")
+    s.add_argument(
+        "--sysroot",
+        help="reuse (or populate) this staged baseline sysroot across runs",
+    )
     s.add_argument(
         "--no-sandbox",
         action="store_true",

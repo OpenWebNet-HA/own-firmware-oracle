@@ -91,7 +91,7 @@ def touched_catalog_entries(root: Path, changed_files: list[str]) -> set[str] | 
                 touched.add(cat.relative_to(root).as_posix())
         elif p.startswith("results/"):
             parts = Path(p).parts
-            if len(parts) >= 3:
+            if len(parts) == 4 and parts[3] == "manifest.tsv":
                 prod, ver = parts[1], parts[2]
                 cat = root / "catalog" / prod / f"{ver}.yaml"
                 if cat.is_file():

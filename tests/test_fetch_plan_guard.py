@@ -345,7 +345,15 @@ def test_touched_catalog_entries_handles_global_triggers_and_specific_paths(tmp_
     res_path = "results/MH200N/010108/manifest.tsv"
     assert plan.touched_catalog_entries(tmp_path, [res_path]) == {cat_rel}
 
-    # Results path with fewer than 3 parts (e.g. results/mcp_index.json)
+    # Oracle suite results under results/<prod>/<ver>/oracle/ do NOT trigger reproduce
+    assert (
+        plan.touched_catalog_entries(
+            tmp_path, ["results/MH200N/010108/oracle/full/what19.tsv"]
+        )
+        == set()
+    )
+
+    # Results path with fewer than 4 parts (e.g. results/mcp_index.json)
     assert plan.touched_catalog_entries(tmp_path, ["results/mcp_index.json"]) == set()
 
     # Results path without corresponding catalog entry
