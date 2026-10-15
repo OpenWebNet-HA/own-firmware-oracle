@@ -273,19 +273,19 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 <!-- FLEET_TABLE_START -->
 | Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact | Emulation Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Zip | `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **MH200** | `020102` (2.1.2) | Linux ARMv4 `oabi` | 279 | Ext2, Zip | `openserver`, `scsserver`, `bt_luci` | Pending Emulation (Phase 2 target defined) |
-| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `stackopen` (serial `/dev/ttyS1`), `bt_vct`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | CramFS, Zip | `bt_processi`, `openserver`, `bt_vct` (serial `/dev/ttyPIC`, DSP `/dev/dsp1`) | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **MH200** | `020102` (2.1.2) | Linux ARMv4 `oabi` | 279 | Ext2, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, `bt_alarm`, `bt_vct`, `bt_taskmanager` | Pending Emulation (Phase 2 target defined) |
+| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | JFFS2, CramFS, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_difson`, `coso`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | SquashFS, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_device`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | CramFS, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 21 suites, full parity) |
 | **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) | Pending Emulation (Bare-metal MCU — zero matrix value) |
 | **MH201** | `030644` (3.6.44) | Bare-metal ARM Cortex-M3 (STM32F217) | 3 | Monolithic `.bin` | Flash image `MH201_3_6_44_signed.bin` (502 KB, CMX-RTX, no OS) | Pending Emulation (Bare-metal MCU — zero matrix value) |
-| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | Server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso`) | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | OPEN-BACnet gateway stack (`bacclient`, `ebacgw`, `scsserver`, `bt_device`, `bt_termo`) | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | Hospitality / hotel room gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`) | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | Hotel scenario programmer gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso`) | **Emulated** (Phase 2 — 21 suites, full parity) |
-| **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm`) | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, SquashFS, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | JFFS2, Zip | `bt_daemon`, `bacclient`, `ebacgw`, `scsserver`, `bt_device`, `bt_termo` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | SquashFS, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, SquashFS, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 21 suites, full parity) |
+| **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` | **Emulated** (Phase 2 — 21 suites, full parity) |
 | **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
 | **3550** | `030020` (3.0.20) | Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`) | 5 | Zip, ZipCrypto, Motorola S-record | 99-zone central unit firmware (`3550_030020.mot`, no OS) | Static analysis only (QEMU has no M16C target) |
 <!-- FLEET_TABLE_END -->
@@ -507,14 +507,14 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **Video Door Entry & Intercom (WHO 8)**: `intercom-ts10.cases` verified on MyHomeServer1, MH202, MH200N, and F454 ([`findings/MyHomeServer1/intercom-ts10.md`](findings/MyHomeServer1/intercom-ts10.md)). Confirms subsystem boundary isolation across automation gateways (MHS1, MH200N, MH202) versus Audio/Video routing on F454.
 <!-- STATUS_PHASE2F_START -->
 - **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 10 active gateways under QEMU user emulation, achieving **full matrix parity across all 21 standard test suites (210 complete suite TSVs)**:
-  - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver` — 21 suites).
+  - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia` — 21 suites).
   - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018 — 21 suites).
   - **F454** (`020051`): Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial PTY `/dev/ttyS1`, `bt_vct`, `openserver`, `scsserver` — 21 suites).
   - **MH202** (`010024`): Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` — 21 suites).
   - **F459** (`020105`): Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` — 21 suites).
   - **F453AV** (`030014`): Legacy DIN audio/video gateway (`openserver`, `bt_vct`, `bt_processi` with `/dev/dsp1` audio DSP and `/dev/ttyPIC` PTY under ARMv4 OABI — 21 suites).
-  - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 21 suites).
-  - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on `/dev/ttyRPMSG30` PTY — 21 suites).
+  - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 21 suites).
+  - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 21 suites).
   - **F450** (`020010`): OPEN-BACnet gateway (`bacclient`, `ebacgw` on its factory BACnet plant, `scsserver`, `bt_device`, `bt_termo` — 21 suites).
   - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 21 suites).
 <!-- STATUS_PHASE2F_END -->
