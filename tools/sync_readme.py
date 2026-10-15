@@ -137,29 +137,26 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "MH200": {
         "arch": "Linux ARMv4 `oabi`",
         "layers": "Ext2, Zip",
-        "daemons": "`openserver`, `scsserver`, `bt_luci`",
         "census_desc": "Legacy DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
-            "Legacy DIN scenario programmer (`openserver`, `scsserver` —"
-            " {suites} suites)"
+            "Legacy DIN scenario programmer (`openserver`, `scsserver`, "
+            "`bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, "
+            "`bt_alarm`, `bt_vct`, `bt_taskmanager` — {suites} suites)"
         ),
     },
     "MH200N": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "U-Boot, Ext2, Zip",
-        "daemons": "`openserver`, `scsserver`",
         "census_desc": "DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
-            "DIN scenario programmer (`openserver`, `scsserver` — {suites} suites)"
+            "DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, "
+            "`bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia` — "
+            "{suites} suites)"
         ),
     },
     "MyHomeServer1": {
         "arch": "Linux ARMv7 `eabi5`",
         "layers": "U-Boot, Ext4, Zip",
-        "daemons": (
-            "`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, "
-            "`bt_supervisione`, `coso`"
-        ),
         "census_desc": "Modern Linux gateway & IoT bridge",
         "phase2f_desc": (
             "Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, "
@@ -170,10 +167,6 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "F454": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "JFFS2, CramFS, Zip",
-        "daemons": (
-            "`bt_daemon`, `stackopen` (serial `/dev/ttyS1`), `bt_vct`, "
-            "`openserver`, `scsserver`"
-        ),
         "census_desc": "Web server audio/video DIN gateway",
         "phase2f_desc": (
             "Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial "
@@ -183,10 +176,6 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "MH202": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "SquashFS, Zip",
-        "daemons": (
-            "`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, "
-            "`bt_supervisione`, `openserver`, `scsserver`"
-        ),
         "census_desc": "Advanced scenario programmer & BACnet gateway",
         "phase2f_desc": (
             "Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, "
@@ -197,10 +186,6 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "F453AV": {
         "arch": "Linux ARMv4 `oabi`",
         "layers": "CramFS, Zip",
-        "daemons": (
-            "`bt_processi`, `openserver`, `bt_vct` (serial `/dev/ttyPIC`, "
-            "DSP `/dev/dsp1`)"
-        ),
         "census_desc": "DIN audio/video web server (ARMv4 OABI)",
         "phase2f_desc": (
             "Legacy DIN audio/video gateway (`openserver`, `bt_vct`, `bt_processi` "
@@ -237,24 +222,16 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "F461": {
         "arch": "Linux AArch64 (ARM64)",
         "layers": "Ext4, SquashFS, Zip",
-        "daemons": (
-            "Server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, "
-            "`bt_termo`, `bt_multi`, `bt_energia`, `coso`)"
-        ),
         "census_desc": "Server gateway stack (AArch64 / ARM64)",
         "phase2f_desc": (
             "Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, "
-            "`bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on "
-            "`/dev/ttyRPMSG30` PTY — {suites} suites)"
+            "`bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` "
+            "on `/dev/ttyRPMSG30` PTY — {suites} suites)"
         ),
     },
     "F450": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "JFFS2, Zip",
-        "daemons": (
-            "OPEN-BACnet gateway stack (`bacclient`, `ebacgw`, `scsserver`, "
-            "`bt_device`, `bt_termo`)"
-        ),
         "census_desc": "IP interface gateway (OPEN-BACnet)",
         "census_emulation_note": (
             "Emulated — {suites} suites, BACnet side on the firmware's own "
@@ -268,10 +245,6 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "F459": {
         "arch": "Linux ARMv5 `eabi5`",
         "layers": "SquashFS, Zip",
-        "daemons": (
-            "Hospitality / hotel room gateway stack (`openserver`, `scsserver`, "
-            "`bt_luci`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`)"
-        ),
         "census_desc": "Hotel / hospitality driver manager gateway",
         "phase2f_desc": (
             "Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, "
@@ -282,26 +255,17 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "F460": {
         "arch": "Linux AArch64 (ARM64)",
         "layers": "Ext4, SquashFS, Zip",
-        "daemons": (
-            "Hotel scenario programmer gateway stack (`openserver`, `scsserver`, "
-            "`bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso`)"
-        ),
         "census_desc": "Hotel scenario programmer gateway (AArch64 / ARM64)",
         "phase2f_desc": (
             "Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, "
-            "`bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `coso` on "
-            "`/dev/ttyRPMSG30` PTY — {suites} suites)"
+            "`bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, "
+            "`coso` on `/dev/ttyRPMSG30` PTY — {suites} suites)"
         ),
     },
     "H4684": {
         "title": "Colour Touch Screen",
         "arch": "Linux ARMv4 `oabi`",
         "layers": "Ext2, Gzip, Zip",
-        "daemons": (
-            "Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, "
-            "`bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, "
-            "`bt_energia`, `bt_alarm`)"
-        ),
         "phase2f_desc": (
             "Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, "
             "`bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, "
