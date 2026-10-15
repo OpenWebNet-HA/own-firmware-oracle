@@ -86,3 +86,44 @@ Across all 58 cases, MyHomeServer1 (hosting the `bt_multi` sound translator daem
 | **Status Query (Amp)**| `*#22*3#1#1*12##` | `nack` | `$049501818F\r` | `nack` | `$049501818F\r` (*+ PIC probe*) |
 | **Query (Balance)** | `*#22*3#1#1*17##` | **-** (timeout)| `$06D101183308000000\r` | `nack` | `$06D101183308000000\r` |
 | **Follow Me Routing**| `*22*35#4#0#7*3#0#0##`| `nack` | 3 frames (`$04A1...` `$0490...`) | `nack` | 3 frames (*interleaved PIC*) |
+
+---
+
+## 4. Gateway Firmware (`bt_multi`) Disassembly Findings
+
+Static binary reverse engineering of the `bt_multi` sound diffusion daemon across `MyHomeServer1` (`028206`, ARM32 ELF) and `F454` (`020051`, ARM32 ELF) uncovered the low-level firmware mechanics:
+
+### 1. Dimension 10 RDS Station Name Assembly (`0x0be90..0x0c200` in MHS1, `0x13420..0x13784` in F454)
+- **Protocol Structure**: The RDS Program Service (`PS`) station name is strictly **8 characters** (`8` decimal ASCII byte codes).
+- **SCS Continuous Flux Assembly (`s2o`)**: The F500 FM tuner transmits RDS data across the SCS bus in 3 continuous flux telegrams (`$06D...35...`):
+  1. *Start Frame (`$06D...3501C002<C0>`)`: Clears the 1024-byte static buffer, formats the single byte `<C0>` as `%i*` (1st character), and sets `active_rds = 1`.
+  2. *Middle Frame (`$06D...35<C1><C2><C3><C4>`)`: Formats 4 bytes as `"%i*%i*%i*%i*"` (4 characters) and appends to the buffer.
+  3. *End Frame (`$06D...35<C5><C6><C7>04` with `0x04` EOT)*: Formats 3 bytes as `"%i*%i*%i"` (3 characters), appends to buffer, emits `*#22*<where>*10*<c0>*...*<c7>##` to the OpenWebNet TCP session, and clears `active_rds = 0`.
+- **OpenWebNet to SCS (`o2s`)**: In the reverse direction (`0x19f5c..0x19fac`), `bt_multi` loops `i = 0..7` extracting exactly 8 decimal values, and fragments them into the identical 3-telegram SCS sequence (`1 + 4 + 3 = 8` characters).
+
+### 2. Dimension 5 & 11 Tuner Frequency Formula (`0x091c0..0x09400` in MHS1, `0x10e74..0x113b4` in F454)
+- Incoming SCS tuner frequency frames `$06D...3302<band><station><H3><H2><H1><H0>` encode frequency as a 16-bit word `raw`:
+  $$\text{steps} = \frac{\text{raw} - 6960}{4}$$
+  $$\text{freq}_{\text{10kHz}} = \text{steps} \times 5 + 8700$$
+- Units emitted on OpenWebNet are **10 kHz**:
+  - `87.50 MHz` $\rightarrow$ `8750`
+  - `101.50 MHz` $\rightarrow$ `10150`
+  - `107.00 MHz` $\rightarrow$ `10700`
+- The leading `1` in `*#22*WHERE*5*1*<FREQ>##` and `*#22*WHERE*11*1*<FREQ>*<PRESET>##` is the hardcoded **Frequency Band ID** (`1 = FM`).
+
+### 3. WHAT 35 (`ON_ON_SOURCE`) Routing Syntax (`0x24c90` in MHS1, `0x2a158` in F454)
+- WHAT 35 accepts 3 `#`-separated parameters: `*22*35#<mm_type>#<area>#<source>*<target_where>##`
+  - `<mm_type>`: Media routing type (`4 = Stereo`, `1 = Mono`, `10 = Standby`).
+  - `<area>`: Audio distribution channel / matrix area (typically `1`, or `0` for general broadcast).
+  - `<source>`: Audio source ID (`1..9`, e.g. `1` for AUX 1, `7` for FM Tuner).
+- `bt_multi` automatically synthesizes an atomic 3-step sequence on the SCS bus:
+  1. `*22*0#<mm_type>#<area>*6##` $\rightarrow$ `$04A10F81<area><mm_nibble>` (disconnect existing sources from area).
+  2. `*22*1#<mm_type>#<area>*2#<source>##` $\rightarrow$ `$04900<source>8F<area><mm_nibble>` (connect source to matrix area).
+  3. `*22*1#<mm_type>#<area>*<target_where>##` $\rightarrow$ `$04900<P>8<A><area><mm_nibble>` (power on target amplifier).
+
+### 4. WHAT 31 & WHAT 32 Real Functionality (`0x11330..0x11420` in MHS1)
+- While the TS10 UI stack labeled them as Track Navigation in early headers:
+  - `*22*31*<where>##` is internally logged as `"Start RDS Open"`, emitting `$06D...3501410400` to activate continuous RDS streaming.
+  - `*22*32*<where>##` is internally logged as `"Stop RDS Open"`, emitting `$06D...3501420400` to stop RDS streaming.
+  - `*22*33#<preset>*<where>##` is `"Store tuned frequency on station"`.
+
