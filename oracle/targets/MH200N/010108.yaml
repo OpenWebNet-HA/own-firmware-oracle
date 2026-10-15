@@ -58,6 +58,21 @@ programs:
     path: home/bticino/bin/bt_energia
     sha256: "b916f796972ea794aab16e2ed312b37403ec3e08895247388da72651d1d7344f"
     role: translator
+  # sound diffusion -- WHO 16 / 1016 (stack_open.xml client_02)
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "447e8f8e87b9ee366624ebcc201d7c7dda36b75725cee88489e6335fb7a68d33"
+    role: translator
+  # multimedia / sound diffusion -- WHO 22 / 1022 (stack_open.xml client_09)
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "787b1137c8c1fb80a79b1257694e3fde558dec6613cdc5cd02a9fd937ef20121"
+    role: translator
+  # burglar alarm & auxiliary -- WHO 5 & WHO 9 (stack_open.xml client_03)
+  bt_alarm:
+    path: home/bticino/bin/bt_alarm
+    sha256: "6dac4222a799911c287e68e49b8f8317127fafecdd78d9863f72c2bbefa2f174"
+    role: translator
 
 # What the device's boot sets up before bt_processi starts the programs. Each
 # value cites the image (paths inside the staged sysroot); nothing is guessed

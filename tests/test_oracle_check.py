@@ -85,6 +85,8 @@ def test_models_for_gateway():
     assert check._models_for_gateway(None) == ()
     assert check._models_for_gateway("MH200") == ("MH200", "MH200N")
     assert check._models_for_gateway("MH200N") == ("MH200N", "MH200")
+    assert check._models_for_gateway("H4890") == ("H4890", "H4684")
+    assert check._models_for_gateway("H4684") == ("H4684", "H4890")
     assert check._models_for_gateway("MyHomeServer1") == ("MyHomeServer1",)
 
 
@@ -102,6 +104,7 @@ def test_load_evidence(tmp_path: Path):
     frames = [
         {"dir": "tx", "raw": "*#1*74##"},
         {"dir": "rx", "raw": "*1*19*74##"},
+        {"dir": "rx", "raw": "*#*1##"},
         {"dir": "rx", "raw": "*#1001*74*11*111110111111111111110111##"},
         {"dir": "tx", "raw": "*#1*99*1##"},
         {"dir": "rx", "raw": "*#1*99*1*200*2##"},
@@ -139,6 +142,65 @@ def test_load_evidence(tmp_path: Path):
     assert check.load_evidence(tmp_path) == items
 
 
+def test_load_trace_evidence(tmp_path: Path):
+    assert check.load_trace_evidence(tmp_path / "missing") == []
+
+    # 1. Standard <myhome-bus-card> trace JSON
+    t1 = tmp_path / "trace1.json"
+    t1.write_text(
+        json.dumps(
+            {
+                "gateway": {"model": "MH200N"},
+                "frames": [
+                    {"direction": "tx", "raw": "*#13**16##"},
+                    {"direction": "rx", "raw": "*#13**16*1*1*8##"},
+                    {"direction": "rx", "raw": "*#*1##"},
+                    "not-a-dict",
+                    {"direction": "tx", "raw": ""},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    # 2. Home Assistant diagnostic JSON format
+    t2 = tmp_path / "diag1.json"
+    t2.write_text(
+        json.dumps(
+            {
+                "data": {
+                    "gateway_profile": {"model_name": "F461"},
+                    "bus_monitor": {
+                        "recent_frames": [
+                            {"direction": "tx", "raw": "*#1*31##"},
+                            {"direction": "rx", "raw": "*1*1*31##"},
+                        ]
+                    },
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    # 3. Invalid / non-trace JSON files
+    (tmp_path / "bad.json").write_text("{broken", encoding="utf-8")
+    (tmp_path / "list.json").write_text("[1, 2]", encoding="utf-8")
+    (tmp_path / "nof.json").write_text(
+        json.dumps({"data": {"gateway_profile": "str", "bus_monitor": "str"}}),
+        encoding="utf-8",
+    )
+    (tmp_path / "nodata.json").write_text(json.dumps({"other": 1}), encoding="utf-8")
+
+    items = check.load_trace_evidence(tmp_path)
+    assert len(items) == 2
+    by_id = {i.evidence_id: i for i in items}
+    assert by_id["trace1"].gateway_models == ("MH200N", "MH200")
+    assert by_id["trace1"].tx_input == "*#13**16##"
+    assert by_id["trace1"].rx_outputs == ("*#13**16*1*1*8##",)
+    assert by_id["diag1"].gateway_models == ("F461",)
+    assert by_id["diag1"].tx_input == "*#1*31##"
+
+
 def test_find_default_evidence_dir(tmp_path: Path):
     root = tmp_path / "repo"
     root.mkdir()
@@ -170,6 +232,19 @@ def test_match_live():
     assert (
         check.match_live("down", "*#1*74##", "own:*1*19*74##", [item], product="MH200N")
         == "agree EVID-1"
+    )
+
+    # Bus-forwarded output (no own: frames emitted in simulated bus) -> agree_bus
+    assert (
+        check.match_live(
+            "down",
+            "*#1*74##",
+            "bus:24 30 33 0d",
+            [item],
+            product="MH200N",
+            verdict="out",
+        )
+        == "agree_bus EVID-1"
     )
 
     # Divergent output -> diverge
@@ -291,9 +366,13 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         "down\t*1*1*31##\tack\tout\tbus:24 0d\n",
         encoding="ascii",
     )
+    traces_dir = tmp_path / "traces"
+    traces_dir.mkdir()
 
     with patch("check.ROOT", tmp_path):
-        monkeypatch.setattr("sys.argv", ["check.py", str(in_file)])
+        monkeypatch.setattr(
+            "sys.argv", ["check.py", str(in_file), "--traces-dir", str(traces_dir)]
+        )
         check.main()
         captured = capsys.readouterr()
         assert "wrote" in captured.out

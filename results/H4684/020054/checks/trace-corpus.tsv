@@ -1,0 +1,82 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=trace-corpus
+# suite_sha256=257febf011e6cfd2f0fe081228b4d7976776ffd2c2c39c7d5bc751a1f9e1ff3c
+# oracle_version=3
+# ownd_version=2.0.0-b10
+direction	input	reply	verdict	output	ownd	live
+down	*#1*0*12##	nack	silent	-	-	unchecked
+down	*#1*0012*14##	nack	silent	-	-	unchecked
+down	*#1*25#4#02*#1*101*0##	ack	out	bus:24 30 36 44 31 32 35 32 31 34 32 30 44 30 44 30 31 30 30 0d	-	unchecked
+down	*#1*25#4#02*#12*240*87*80##	nack	silent	-	-	unchecked
+down	*#1*25#4#02*#14*153##	nack	silent	-	-	unchecked
+down	*#1*31##	nack	out	bus:24 30 33 33 31 30 30 31 35 30 30 0d	-	unchecked
+down	*#1*31*#4*130*0##	nack	silent	-	-	unchecked
+down	*#1*31*1##	nack	out	bus:24 30 36 44 31 33 31 30 31 34 33 30 44 30 30 30 30 30 30 0d	-	unchecked
+down	*#1*31*4##	nack	silent	-	-	unchecked
+down	*#1*65*#2*2*0*0##	ack	out	bus:24 30 36 44 31 36 35 30 31 34 32 30 36 30 32 30 30 30 30 0d	-	unchecked
+down	*#1001*74##	nack	silent	-	-	unchecked
+down	*#1013*0##	nack	silent	-	-	unchecked
+down	*#1013*0*1##	ack	out	own:*#1013**1*19##	OWNGatewayDiagnosticEvent	unchecked
+down	*#13**15##	ack	out	own:*#13**15*13##	OWNGatewayEvent	unchecked
+down	*#13**16##	ack	out	own:*#13**16*2*0*54##	OWNGatewayEvent	unchecked
+down	*#13**23##	ack	out	own:*#13**23*2*0*5##	OWNGatewayEvent	unchecked
+down	*#13**24##	ack	out	own:*#13**24*3*0*0##	OWNGatewayEvent	unchecked
+down	*#16*0##	nack	silent	-	-	unchecked
+down	*#16*101##	nack	silent	-	-	unchecked
+down	*#16*101*#6*0*96200##	ack	out	bus:24 30 36 44 31 30 31 46 38 33 32 30 32 30 46 31 45 31 30 0d	-	unchecked
+down	*#16*21*1##	ack	out	bus:24 30 34 39 35 30 31 38 32 30 30 0d	-	unchecked
+down	*#16*21*5##	ack	out	bus:24 30 34 39 35 30 31 38 32 38 46 0d	-	unchecked
+down	*#18*51*#1200#1*125##	nack	silent	-	-	unchecked
+down	*#18*51*1200##	nack	silent	-	-	unchecked
+down	*#18*71#0*51##	nack	silent	-	-	unchecked
+down	*#2*0##	ack	out	bus:24 30 34 42 31 30 30 31 35 30 30 0d	-	unchecked
+down	*#2*0#4#02##	ack	out	bus:24 30 36 45 34 30 32 30 30 30 30 42 31 30 30 31 35 30 30 0d	-	unchecked
+down	*#2*11#4#02##	nack	out	bus:24 30 36 45 34 30 32 30 30 30 30 31 31 30 30 31 35 30 30 0d	-	unchecked
+down	*#2*11#4#02*10##	nack	silent	-	-	unchecked
+down	*#2*31##	nack	out	bus:24 30 33 33 31 30 30 31 35 30 30 0d	-	unchecked
+down	*#2*31*#11#001#1*40##	nack	silent	-	-	unchecked
+down	*#2*31*#11#001*40##	nack	silent	-	-	unchecked
+down	*#2*31*10##	nack	silent	-	-	unchecked
+down	*#25*21##	nack	silent	-	-	unchecked
+down	*#4*#0##	nack	out	bus:24 30 34 39 39 30 30 33 30 43 30 0d	-	unchecked
+down	*#4*#0*14##	nack	silent	-	-	unchecked
+down	*#4*0##	nack	silent	-	-	unchecked
+down	*#4*1##	nack	out	bus:24 30 34 39 39 30 31 33 30 30 30 0d | bus:24 30 34 39 39 30 31 33 30 31 32 0d | bus:24 30 34 39 39 30 31 33 30 30 45 0d | bus:24 30 34 39 39 30 31 33 30 30 44 0d	-	unchecked
+down	*#4*1#1*20##	nack	silent	-	-	unchecked
+down	*#4*1*#14*0200*1##	nack	silent	-	-	unchecked
+down	*#4*1*11##	nack	silent	-	-	unchecked
+down	*#4*1*12##	nack	out	bus:24 30 34 39 39 30 31 33 30 31 32 0d	-	unchecked
+down	*#4*1*13##	nack	out	bus:24 30 34 39 39 30 31 33 30 30 44 0d	-	unchecked
+down	*#4*1*14##	nack	out	bus:24 30 34 39 39 30 31 33 30 30 45 0d	-	unchecked
+down	*#4*105*15##	nack	silent	-	-	unchecked
+down	*#5*#1##	ack	out	own:*5*11*#1##	OWNAlarmEvent	unchecked
+down	*#5*0##	ack	out	bus:24 30 36 44 31 43 31 30 34 30 33 42 42 30 30 30 30 30 30 0d | own:*5*1*## | own:*5*9*## | own:*5*10*## | own:*5*6*## | own:*5*11*#1## | own:*5*11*#2## | own:*5*11*#3## | own:*5*11*#4## | own:*5*11*#5## | own:*5*11*#6## | own:*5*11*#7## | own:*5*11*#8##	OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent | OWNAlarmEvent	unchecked
+down	*#9*0##	ack	out	own:*9*0*0##	OWNAuxEvent	unchecked
+down	*#9*1##	ack	out	own:*9*0*1##	OWNAuxEvent	unchecked
+down	*1*0*25#4#02##	ack	out	bus:24 30 36 45 34 30 32 30 30 30 30 32 35 30 30 31 32 30 31 0d	-	unchecked
+down	*1*3*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 32 44 0d	-	unchecked
+down	*14*0*32##	ack	out	bus:24 30 33 33 32 30 30 31 31 30 30 0d	-	unchecked
+down	*14*1*32##	ack	out	bus:24 30 33 33 32 30 30 31 30 30 30 0d	-	unchecked
+down	*16*0*21##	nack	silent	-	-	unchecked
+down	*16*1002*21##	ack	out	bus:24 30 34 39 34 30 31 38 32 30 32 0d	-	unchecked
+down	*16*13*21##	ack	out	bus:24 30 34 39 31 30 31 38 32 32 33 0d	-	unchecked
+down	*16*3*21##	ack	out	bus:24 30 34 39 30 30 31 38 46 32 33 0d | bus:24 30 34 39 30 30 31 38 32 32 33 0d	-	unchecked
+down	*2*0*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 41 0d	-	unchecked
+down	*2*1*11#4#02##	ack	out	bus:24 30 36 45 34 30 32 30 30 30 30 31 31 30 30 31 32 30 41 0d | bus:24 30 36 45 34 30 32 30 30 30 30 31 31 30 30 31 32 30 38 0d	-	unchecked
+down	*2*1*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 41 0d | bus:24 30 33 33 31 30 30 31 32 30 38 0d	-	unchecked
+down	*2*11#1#001*31##	nack	silent	-	-	unchecked
+down	*2*12#1#001*31##	nack	silent	-	-	unchecked
+down	*2*2*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 41 0d | bus:24 30 33 33 31 30 30 31 32 30 39 0d	-	unchecked
+down	*25*11#0*11##	nack	silent	-	-	unchecked
+down	*9*0*1##	nack	silent	-	-	unchecked
+down	*9*1*1##	nack	silent	-	-	unchecked

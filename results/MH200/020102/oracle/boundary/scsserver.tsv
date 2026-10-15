@@ -1,0 +1,18 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# program=scsserver
+# target_sha256=ff49feebdaaad64b4cdcc61b625b3fba002637086c7b0de7397968627da98106
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=5
+# oracle_version=3
+kind	detail	result
+exit	running	timeout
+ioctl	/dev/ttyPIC TCFLSH	ok
+ioctl	/dev/ttyPIC TCGETS	ok
+ioctl	/dev/ttyPIC TCSETS iflag=IGNPAR|IXON|IXOFF cflag=B38400,CS8,CREAD|CLOCAL	ok
+open	/dev/ttyPIC O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ENOENT
+write	/dev/ttyPIC	$24\x0d

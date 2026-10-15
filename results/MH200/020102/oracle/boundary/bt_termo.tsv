@@ -1,0 +1,19 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# program=bt_termo
+# target_sha256=33ddcc24da367192b303202314f0c9ec82bf9280da44045a2983a137a0c1d4f9
+# emulator=qemu-arm-8.2.2
+# kernel_release=2.4.19
+# window_s=5
+# oracle_version=3
+kind	detail	result
+bind	inet:0.0.0.0:30004	ok
+bind	inet:0.0.0.0:40004	ok
+connect	inet:127.0.0.1:20001	ECONNREFUSED
+exit	running	timeout
+listen	inet:0.0.0.0:30004	ok
+listen	inet:0.0.0.0:40004	ok
+open	/etc/ld.so.preload O_RDONLY	ENOENT
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ENOENT
+open	/var/tmp/bticino/bt_wd/bt_termo O_WRONLY|O_CREAT|O_TRUNC	ENOENT

@@ -1,0 +1,81 @@
+# product=F450
+# version=020010
+# image_sha256=9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da
+# harness=full
+# target_sha256=e5bd026f22d56f40b697b55d1f0865aed4bbeb2aafbeafc1b1d53e6ca9fe1ec4
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=trace-corpus
+# suite_sha256=257febf011e6cfd2f0fe081228b4d7976776ffd2c2c39c7d5bc751a1f9e1ff3c
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1*0*12##	nack	crash	-
+down	*#1*0012*14##	nack	crash	-
+down	*#1*25#4#02*#1*101*0##	nack	crash	-
+down	*#1*25#4#02*#12*240*87*80##	nack	crash	-
+down	*#1*25#4#02*#14*153##	nack	crash	-
+down	*#1*31##	nack	crash	-
+down	*#1*31*#4*130*0##	nack	crash	-
+down	*#1*31*1##	nack	crash	-
+down	*#1*31*4##	nack	crash	-
+down	*#1*65*#2*2*0*0##	nack	crash	-
+down	*#1001*74##	nack	crash	-
+down	*#1013*0##	nack	crash	-
+down	*#1013*0*1##	ack	crash	own:*#1013**1*0*0*0*0##
+down	*#13**15##	ack	crash	own:*#13**15*200##
+down	*#13**16##	ack	crash	own:*#13**16*2*0*10##
+down	*#13**23##	ack	crash	own:*#13**23*2*6*32##
+down	*#13**24##	ack	crash	own:*#13**24*##
+down	*#16*0##	nack	crash	-
+down	*#16*101##	nack	crash	-
+down	*#16*101*#6*0*96200##	nack	crash	-
+down	*#16*21*1##	nack	crash	-
+down	*#16*21*5##	nack	crash	-
+down	*#18*51*#1200#1*125##	nack	crash	-
+down	*#18*51*1200##	nack	crash	-
+down	*#18*71#0*51##	nack	crash	-
+down	*#2*0##	nack	crash	-
+down	*#2*0#4#02##	nack	crash	-
+down	*#2*11#4#02##	nack	crash	-
+down	*#2*11#4#02*10##	nack	crash	-
+down	*#2*31##	nack	crash	-
+down	*#2*31*#11#001#1*40##	nack	crash	-
+down	*#2*31*#11#001*40##	nack	crash	-
+down	*#2*31*10##	nack	crash	-
+down	*#25*21##	nack	crash	-
+down	*#4*#0##	nack	crash	bus:24 30 34 39 39 30 30 33 30 43 30 0d
+down	*#4*#0*14##	nack	crash	-
+down	*#4*0##	nack	crash	-
+down	*#4*1##	nack	crash	bus:24 30 34 39 39 30 31 33 30 30 30 0d | bus:24 30 34 39 39 30 31 33 30 31 32 0d | bus:24 30 34 39 39 30 31 33 30 30 45 0d | bus:24 30 34 39 39 30 31 33 30 30 44 0d
+down	*#4*1#1*20##	nack	crash	bus:24 30 34 39 39 38 31 33 31 31 30 0d
+down	*#4*1*#14*0200*1##	ack	crash	bus:24 30 34 39 30 30 31 33 30 32 38 0d
+down	*#4*1*11##	nack	crash	bus:24 30 34 39 39 30 31 33 30 30 42 0d
+down	*#4*1*12##	nack	crash	bus:24 30 34 39 39 30 31 33 30 31 32 0d
+down	*#4*1*13##	nack	crash	bus:24 30 34 39 39 30 31 33 30 30 44 0d
+down	*#4*1*14##	nack	crash	bus:24 30 34 39 39 30 31 33 30 30 45 0d
+down	*#4*105*15##	nack	crash	bus:24 30 36 44 31 30 35 31 33 30 33 32 31 30 30 30 30 30 30 0d
+down	*#5*#1##	nack	crash	-
+down	*#5*0##	nack	crash	-
+down	*#9*0##	nack	crash	-
+down	*#9*1##	nack	crash	-
+down	*1*0*25#4#02##	nack	crash	-
+down	*1*3*31##	nack	crash	-
+down	*14*0*32##	nack	crash	-
+down	*14*1*32##	nack	crash	-
+down	*16*0*21##	nack	crash	-
+down	*16*1002*21##	nack	crash	-
+down	*16*13*21##	nack	crash	-
+down	*16*3*21##	nack	crash	-
+down	*2*0*31##	nack	crash	-
+down	*2*1*11#4#02##	nack	crash	-
+down	*2*1*31##	nack	crash	-
+down	*2*11#1#001*31##	nack	crash	-
+down	*2*12#1#001*31##	nack	crash	-
+down	*2*2*31##	nack	crash	-
+down	*25*11#0*11##	nack	crash	-
+down	*9*0*1##	nack	crash	-
+down	*9*1*1##	nack	crash	-

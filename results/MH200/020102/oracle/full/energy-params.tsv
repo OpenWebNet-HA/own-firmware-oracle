@@ -1,0 +1,20 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# harness=full
+# target_sha256=539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=energy-params
+# suite_sha256=964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#18*51*51##	nack	silent	-
+down	*#18*51*511#10#1##	nack	silent	-
+down	*#18*51*511#10#2##	nack	silent	-
+down	*#18*51*52##	nack	silent	-
+down	*#18*51*52#26#9##	nack	silent	-

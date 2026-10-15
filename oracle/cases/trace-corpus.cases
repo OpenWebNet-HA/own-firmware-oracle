@@ -1,0 +1,83 @@
+; Real-World Trace Corpus Validation Suite
+; Canonical downstream (tx) commands, status requests, and dimension queries
+; harvested from 105+ production gateway traces in MyHOME and OpenWebNet-Encyclopedia.
+; Plant-specific WHERE addresses are normalized to canonical synthetic addresses
+; (31, 21, 51, 1, 101, 25#4#02, 11#4#02) to preserve privacy.
+
+; 1. WHO 1 Lighting & Dimmer Queries / Commands
+down *#1*31##
+down *#1*31*1##
+down *#1*31*4##
+down *#1*0012*14##
+down *#1*0*12##
+down *#1*31*#4*130*0##
+down *#1*65*#2*2*0*0##
+down *1*3*31##
+down *1*0*25#4#02##
+down *#1*25#4#02*#1*101*0##
+down *#1*25#4#02*#12*240*87*80##
+down *#1*25#4#02*#14*153##
+
+; 2. WHO 2 Automation / Shutter & Venetian Positioning
+down *#2*0##
+down *#2*31##
+down *#2*31*10##
+down *#2*31*#11#001*40##
+down *#2*31*#11#001#1*40##
+down *2*0*31##
+down *2*1*31##
+down *2*2*31##
+down *2*11#1#001*31##
+down *2*12#1#001*31##
+down *#2*0#4#02##
+down *#2*11#4#02##
+down *#2*11#4#02*10##
+down *2*1*11#4#02##
+
+; 3. WHO 4 Thermoregulation Scans & Zone Queries
+down *#4*0##
+down *#4*#0##
+down *#4*#0*14##
+down *#4*1##
+down *#4*1*11##
+down *#4*1*12##
+down *#4*1*13##
+down *#4*1*14##
+down *#4*1#1*20##
+down *#4*1*#14*0200*1##
+down *#4*105*15##
+
+; 4. WHO 5 Burglar Alarm & WHO 9 Auxiliary
+down *#5*0##
+down *#5*#1##
+down *#9*0##
+down *#9*1##
+down *9*0*1##
+down *9*1*1##
+
+; 5. WHO 13 Gateway Management & WHO 1001 / WHO 1013 Diagnostics
+down *#13**15##
+down *#13**16##
+down *#13**23##
+down *#13**24##
+down *#1013*0##
+down *#1013*0*1##
+down *#1001*74##
+
+; 6. WHO 14 Actuator Lock, WHO 16 Sound, WHO 18 Energy, WHO 25 CEN+
+down *14*0*32##
+down *14*1*32##
+down *#16*0##
+down *#16*101##
+down *#16*21*1##
+down *#16*21*5##
+down *#16*101*#6*0*96200##
+down *16*0*21##
+down *16*3*21##
+down *16*13*21##
+down *16*1002*21##
+down *#18*51*1200##
+down *#18*51*#1200#1*125##
+down *#18*71#0*51##
+down *#25*21##
+down *25*11#0*11##

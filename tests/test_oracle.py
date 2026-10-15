@@ -332,6 +332,9 @@ def test_committed_mh200n_target_matches_the_manifest():
         "bt_termo",
         "bt_supervisione",
         "bt_energia",
+        "bt_difson",
+        "bt_multi",
+        "bt_alarm",
     }
     assert spec.programs["bt_luci"].layer.endswith("btweb_app.zip!")
     assert spec.arch == "arm"
