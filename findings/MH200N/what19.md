@@ -31,13 +31,14 @@ Oracle test suite `oracle/cases/what19.cases` stimulates a status query on WHERE
 ```tsv
 # results/MH200N/010108/oracle/full/what19.tsv
 direction	input	reply	verdict	output
-down	*#1*74##	-	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##
+down	*#1*74##	ack	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##
 ```
 
 Check run against `results/MH200N/010108/checks/what19.tsv`:
-- **Oracle output**: Emits OpenWebNet lighting event `*1*19*74##` and diagnostic event `*#1001*74*11*111110111111111111110111##`.
+- **Oracle output**: Emits OpenWebNet lighting event `*1*19*74##` (with command `ack` `*#*1##`) and diagnostic event `*#1001*74*11*111110111111111111110111##`.
 - **OWNd classifier**: `OWNLightingEvent | OWNEvent`.
 - **Live correlation**: `agree EVID-MH200-WHAT19-FAULT`.
+- **Fleet-wide parity**: Across the emulated gateway fleet, `MH200N` (`010108`), `MyHomeServer1` (`028206`), `F453AV` (`030014`), `F459` (`020105`), `F460` (`020012`), and `F461` (`020011`) emit both `own:*1*19*74##` (`ack`) and `own:*#1001*74*11*111110111111111111110111##`, while `F454` (`020051`) and `H4684` (`020054`) emit `own:*1*19*74##` (`ack`).
 
 ---
 
@@ -51,8 +52,8 @@ On the physical gateway:
 
 ### 3.2 Translation of Status in `bt_luci`
 When a status inquiry `*#1*WHERE##` is issued:
-- The gateway sends standard SCS write request `$03...` to the bus.
-- The actuator returns a standard lighting status frame.
+- The gateway sends standard SCS write request `$0374001500\r` (or `$00374001500\r` on 3-digit RPMsg PIC gateways `F460`/`F461`) to the bus.
+- The actuator returns a standard lighting status frame (`$17B874120E\r`, or `$017B874120E\r` on 3-digit RPMsg PIC gateways).
 - Inside `bt_luci`, incoming SCS status messages are parsed by the lighting status handler. The handler evaluates the status character token in the payload:
   - Byte `'0'` (`0x30`) -> Maps to `WHAT 1` (Standard ON).
   - Byte `'1'` (`0x31`) -> Maps to `WHAT 0` (Standard OFF).
@@ -63,9 +64,9 @@ When a status inquiry `*#1*WHERE##` is issued:
 Because byte `'E'` denotes an internal fault / error state in the SCS lighting actuator specification, `WHAT 19` is the gateway's direct representation of that error status.
 
 ### 3.3 Autodiagnostic Co-occurrence (`bt_device` / `libdiag.so`)
-Simultaneously, a physical actuator encountering an anomaly condition reports its internal diagnostic telemetry via extended SCS telegrams (such as telegram type `D2S8E`):
+Simultaneously, a physical actuator encountering an anomaly condition reports its internal diagnostic telemetry via extended SCS telegrams (registered under key `D2S89` in `libdiag.so.0.0`'s `s2o_selfDiagnosticsA`, e.g. `$18D274010489FBFFF7\r` or `$018D274010489FBFFF7\r`):
 - `bt_device` receives the extended frame from `scsserver`.
-- Diagnostic translation in `libdiag.so` extracts the 24-bit diagnostic bitmask from the extended frame payload.
+- Diagnostic translation in `libdiag.so` (`s2o_selfDiagnosticsA`) extracts the 24-bit diagnostic bitmask (`FBFFF7` -> `111110111111111111110111`) from the extended frame payload and resolves the lighting target address via `OPN_LightWhereTransl::where`.
 - The subsystem emits the autodiagnostic dimension frame:
   ```text
   *#1001*WHERE*11*<bitmask>##

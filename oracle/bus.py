@@ -315,6 +315,8 @@ class PicResponder:
             return [b"$000\r"]
         if frame.startswith(b"$003"):
             answers = [b"$019\r"]
+            if frame.startswith(b"$00374001500"):
+                answers.extend([b"$017B874120E\r", b"$018D274010489FBFFF7\r"])
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
@@ -363,6 +365,8 @@ class PicResponder:
             return answers
         if frame.startswith(b"$03"):
             answers = [b"$19\r"]
+            if frame.startswith(b"$0374001500"):
+                answers.extend([b"$17B874120E\r", b"$18D274010489FBFFF7\r"])
             if not isinstance(self.inner, Silent):
                 answers.extend(self.inner.respond(frame))
             return answers
