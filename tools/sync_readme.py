@@ -328,15 +328,6 @@ KNOWN_EXCLUDED_HARDWARE = [
         ),
     ),
     (
-        "F453",
-        ["F453"],
-        "Enhanced Web Server DIN",
-        (
-            "Pre-Audio/Video version, replaced by F453AV. No separate public "
-            "firmware download package exists."
-        ),
-    ),
-    (
         "F458 / 003599",
         ["F458", "003599"],
         "IP Server",

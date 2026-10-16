@@ -51,11 +51,10 @@ Every step is verifiable with standard commands and produces deterministic artif
 
 1. Unpack the image layers and generate the manifest:
    ```bash
-   python tools/unpack.py catalog/<Product>/<Version>.yaml "$IMG" \
-     -o results/<Product>/<Version>/manifest.tsv
+   python tools/unpack.py catalog/<Product>/<Version>.yaml --image "$IMG"
    ```
-2. Verify that the unpacker identifies all container and filesystem formats (zip, fwz, tar, ext2/3/4, cramfs, squashfs, gunzip).
-   **Done when:** `results/<Product>/<Version>/manifest.tsv` exists, listing every file, symlink, and directory with SHA-256 and size.
+2. Verify that the unpacker identifies all container and filesystem formats (zip, fwz, tar, ext4, cramfs, squashfs, gunzip).
+   **Done when:** `results/<Product>/<Version>/manifest.tsv` and `summary.json` exist, listing every file, symlink, and directory with SHA-256 and size.
 
 ### Step 3: Coverage Gate
 

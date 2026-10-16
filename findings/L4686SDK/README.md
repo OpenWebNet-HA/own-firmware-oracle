@@ -10,7 +10,7 @@ Emulation boundary: [`findings/L4686SDK/emulation-strategy.md`](emulation-strate
 
 | Layer | Name | Size | SHA-256 |
 | --- | --- | --- | --- |
-| Public download (`homesystems-legrandgroup.com` `fileId=58107.23188.24810.50670` & bundled in `MyHOME_Suite_030538.exe`) | `4686SDK_012001.fwz` (unencrypted ZIP) | 63,169 | `381b75d99ab0b6ef91fe2fd1105685f97da65aa7f695d78b48e21b8f9518bd23` |
+| Public download (`homesystems-legrandgroup.com` `fileId=58107.23188.33633.4751` & bundled in `MyHOME_Suite_030538.exe`) | `4686SDK_012001.fwz` (unencrypted ZIP) | 63,169 | `381b75d99ab0b6ef91fe2fd1105685f97da65aa7f695d78b48e21b8f9518bd23` |
 | Metadata manifest | `info.txt` | 359 | `79fb80148c574fb2d3808f749c63770c1fb337f9f100d3e7854852b3427066d5` |
 | Flash image | `4686SDK_012001.HEX` (Microchip PIC18 Intel HEX) | 170,921 | `9a0ab0e45c3172735f34b4f8be1770c11dd3108bc70a1101c4496b95fdc01d3c` |
 
