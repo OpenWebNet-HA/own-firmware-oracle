@@ -1,0 +1,19 @@
+# product=F453
+# version=010100
+# image_sha256=da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626
+# harness=full
+# target_sha256=590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-actuator
+# suite_sha256=7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a
+# oracle_version=3
+# ownd_version=2.0.0-b10
+direction	input	reply	verdict	output	ownd	live
+down	*#4*#0*20##	nack	out	bus:24 30 34 42 39 30 30 33 30 31 30 0d	-	unchecked
+down	*#4*1#1*20##	nack	out	bus:24 30 34 39 39 38 31 33 31 31 30 0d	-	unchecked
+down	*#4*1*20##	nack	silent	-	-	unchecked

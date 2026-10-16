@@ -14,4 +14,4 @@
 # oracle_version=3
 # ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#1*74##	ack	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##	OWNLightingEvent | OWNEvent	agree EVID-MH200-WHAT19-FAULT
+down	*#1*74##	ack	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##	OWNLightingEvent | OWNEvent	agree EVID-MH200-WHAT19-FAULT [cross:MH200@2.1.0]

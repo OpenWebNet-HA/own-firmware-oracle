@@ -1,0 +1,24 @@
+# product=F453
+# version=010100
+# image_sha256=da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626
+# harness=full
+# target_sha256=590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=scenario-who17
+# suite_sha256=5fb7b3c9f78c27a9a2e1df82aab408f0bbf4a4d4fa478cd575cd5b5f71e60390
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#17##	nack	silent	-
+down	*#17*0##	nack	silent	-
+down	*#17*1##	nack	silent	-
+down	*#17*1*40##	nack	silent	-
+down	*#17*1*41##	nack	silent	-
+down	*17*1*1##	nack	silent	-
+down	*17*2*1##	nack	silent	-
+down	*17*3*1##	nack	silent	-
+down	*17*4*1##	nack	silent	-

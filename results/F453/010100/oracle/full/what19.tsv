@@ -1,0 +1,16 @@
+# product=F453
+# version=010100
+# image_sha256=da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626
+# harness=full
+# target_sha256=590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=what19
+# suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1*74##	ack	out	bus:24 30 33 37 34 30 30 31 35 30 30 0d | own:*1*19*74## | own:*#1001*74*11*111110111111111111110111##

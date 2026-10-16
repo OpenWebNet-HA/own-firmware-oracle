@@ -1,0 +1,34 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+#
+# The BTicino L4686SDK / L4686/USB is the official SCS-to-USB and RS232
+# OpenWebNet serial interface ("FW INTERFACCIA OPEN-SCS"). The .fwz archive is
+# unencrypted and holds a Microchip PIC18 Intel HEX image (4686SDK_012001.HEX)
+# and info.txt. Bare-metal, no OS: catalogued for hashes, layers and static
+# OpenWebNet-to-SCS translation tables.
+product: L4686SDK
+article: "4686SDK"         # [ARTICOLO1] from the vendor info.txt (also L4686/USB)
+version: "012001"          # firmware 1.20.1 (4686SDK_012001.HEX)
+name: "L4686SDK / L4686/USB OpenWebNet Serial/USB Interface"
+
+wrapper:
+  filename: 4686SDK_012001.fwz
+  size: 63169
+  sha256: "381b75d99ab0b6ef91fe2fd1105685f97da65aa7f695d78b48e21b8f9518bd23"
+  encrypted: false
+  sources:
+    - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=4686SDK_012001.fwz&fileId=58107.23188.33633.4751"
+
+image:
+  filename: 4686SDK_012001.fwz
+  size: 63169
+  sha256: "381b75d99ab0b6ef91fe2fd1105685f97da65aa7f695d78b48e21b8f9518bd23"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to L4686SDK
+    - "4686SDK"
+    - "bticino"
+
+status: unpackable

@@ -1,0 +1,49 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+product: F453
+article: "F453"            # [ARTICOLO1] from vendor Info.txt (6-DIN Web Server)
+version: "010100"          # firmware 1.1.0 ([FW_VER] in Info.txt)
+name: "F453 Enhanced Web Server 6 DIN"
+
+wrapper:
+  filename: WS_6DIN_010100.fwz
+  size: 11781988
+  sha256: "da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626"
+  sources:
+    # Extracted from official vendor MyHOME_Suite 3.5.38 installer package
+    # (MyHOME_Suite_030538.exe, default/resTargetDir4/devices/912_2.0_BT/cfgRestore/WS_6DIN_010100.fwz);
+    # archived into project R2 storage.
+    - r2: "sha256/da/02/da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626"
+
+image:
+  filename: WS_6DIN_010100.fwz
+  size: 11781988
+  sha256: "da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626"
+
+password_scheme:
+  candidates:
+    - "$PRODUCT"         # expands to F453 (opens WS_6DIN_010100.fwz)
+    - "F453"
+    - "WS_6DIN"
+    - "bticino"          # opens WS_6DIN_rel_1_1_0.zip and btweb_app.zip
+
+# Flash map, lifted verbatim from the image's own Info_Rel.txt (16 MB mapping).
+flash:
+  machine: WS_6DIN
+  size_mb: 16
+  layout:
+    conf:             { offset: "0x40000",  size: "0x60000" }
+    conf_copy:        { offset: "0xa0000",  size: "0x60000" }
+    kernel:           { offset: "0x100000", size: "0x100000" }
+    btweb_only:       { offset: "0x200000", size: "0x580000" }
+    btweb_appl:       { offset: "0x780000", size: "0x1e0000" }
+    btweb_appl_copy:  { offset: "0x960000", size: "0x20000" }
+    kernel1:          { offset: "0x9c0000", size: "0x100000" }
+    btweb_only1:      { offset: "0xac0000", size: "0x400000" }
+    btweb_ext:        { offset: "0xec0000", size: "0x100000" }
+
+limits:
+  max_expand_mib: 4096
+
+status: unpackable

@@ -32,8 +32,9 @@ pip install -r requirements/oracle.txt -r requirements/dev.txt
 # 1. Fetch and SHA-256 verify the official MH200N 1.1.8 firmware archive (~4 MB):
 IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml)
 
-# 2. Verify that unpacking matches the committed manifest.tsv:
-python tools/unpack.py catalog/MH200N/010108.yaml --image "$IMG" --check
+# 2. Unpack and verify that the output matches the committed manifest.tsv:
+python tools/unpack.py catalog/MH200N/010108.yaml "$IMG" -o /tmp/mh200n-manifest.tsv
+diff -u results/MH200N/010108/manifest.tsv /tmp/mh200n-manifest.tsv
 
 # 3. Run the lights-level suite against the emulated MH200N daemon stack:
 python -m oracle.run suite \
