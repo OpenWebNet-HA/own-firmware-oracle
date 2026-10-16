@@ -2074,3 +2074,94 @@ def test_qemu_target_f450_uses_its_own_bacnet_service(tmp_path):
     tgt._start_soap_server()
     assert tgt._soap_server is None
     assert tgt._soap_thread is None
+
+
+def test_prune_boot_exited_translators_preserves_alive_and_catches_step_crash(
+    monkeypatch, tmp_path
+):
+    spec = _dummy_spec()
+    coso = target.Program(
+        "coso",
+        "home/bticino/bin/coso",
+        "4" * 64,
+        "fs:",
+        role="translator",
+    )
+    spec = dataclasses.replace(spec, programs={**spec.programs, "coso": coso})
+    fake_bus = bus.Bus(
+        port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
+    )
+    tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+    )
+    monkeypatch.setattr(tgt, "_copy_sysroot", lambda: None)
+    monkeypatch.setattr(run, "open_devices", lambda rt: [])
+    monkeypatch.setattr(tgt, "_active_clients", lambda: {"bt_luci", "coso"})
+    monkeypatch.setattr(
+        qemu_target,
+        "read_ports_from_stack_open",
+        lambda p: {"scsserver": 20001, "openserver": 20000},
+    )
+    monkeypatch.setattr(qemu_target, "port_is_free", lambda port: True)
+    monkeypatch.setattr(
+        qemu_target, "wait_tcp_port", lambda port, timeout, on_poll: True
+    )
+    monkeypatch.setattr(tgt, "_connect_sessions", lambda port: None)
+
+    procs = {
+        "scsserver": MagicMock(poll=MagicMock(return_value=None)),
+        "openserver": MagicMock(poll=MagicMock(return_value=None)),
+        "bt_luci": MagicMock(poll=MagicMock(return_value=None)),
+        "coso": MagicMock(poll=MagicMock(return_value=1)),
+    }
+    monkeypatch.setattr(
+        tgt, "_start_program", lambda name, dev_map, trace_dir: procs[name]
+    )
+
+    tgt.restart()
+    assert "coso" not in tgt._procs
+    assert "bt_luci" in tgt._procs
+    assert tgt.alive() is True
+
+    # If a surviving translator crashes during a subsequent step, alive() is False
+    procs["bt_luci"].poll.return_value = -11
+    assert tgt.alive() is False
+
+    # Translator that is still alive at 0.5s and exits DURING settle() causes
+    # _restart_once to prune it and re-run settle() for the surviving daemons
+    procs["bt_luci"].poll.return_value = None
+    coso_alive = True
+    procs["coso"] = MagicMock(
+        poll=MagicMock(side_effect=lambda: None if coso_alive else 1)
+    )
+    settle_calls: list[float | None] = []
+    orig_settle = tgt.settle
+
+    def tracking_settle(idle_max: float | None = None) -> bool:
+        nonlocal coso_alive
+        settle_calls.append(idle_max)
+        coso_alive = False
+        return orig_settle(idle_max=idle_max)
+
+    monkeypatch.setattr(tgt, "settle", tracking_settle)
+    tgt.restart()
+    assert settle_calls == [tgt.start_idle_max, tgt.start_idle_max]
+    assert "coso" not in tgt._procs
+    assert tgt.alive() is True
+
+    # Unit harness never prunes its single target translator
+    unit_tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w",
+        harness="unit:coso",
+        staged_sysroot=tmp_path,
+        bus_instance=fake_bus,
+    )
+    unit_tgt._procs = {"coso": MagicMock(poll=MagicMock(return_value=1))}
+    assert unit_tgt._prune_boot_exited_translators() is False
+    assert "coso" in unit_tgt._procs

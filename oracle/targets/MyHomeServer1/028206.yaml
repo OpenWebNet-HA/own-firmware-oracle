@@ -96,3 +96,7 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "Requires /sys/firmware/devicetree/base/model ('Ticino LInDa board'); scsserver communicates on /dev/ttymxc2."
+

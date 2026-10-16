@@ -81,3 +81,8 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "Scenario controller stack (no bt_luci or bt_termo); scsserver emits periodic $24\\r PIC status polls on /dev/ttyS1."
+  - "coso exits during boot (ENOENT on /home/bticino/cfg/coso_plugins/thermo_stm in the factory image); QemuTarget prunes boot-exited translators so surviving daemons are monitored normally."
+

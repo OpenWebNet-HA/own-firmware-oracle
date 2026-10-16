@@ -203,8 +203,8 @@ def test_touched(repo: Path, changed: list[str], want: set | None) -> None:
 def test_verdicts(repo: Path, tmp_path: Path) -> None:
     committed = _tsv(repo, "GW1", "010000", "alpha")
     produced = tmp_path / "p.tsv"
-    assert suite_plan.verdict(repo / "missing.tsv", committed) == "new"
     produced.write_bytes(committed.read_bytes())
+    assert suite_plan.verdict(repo / "missing.tsv", produced) == "new"
     assert suite_plan.verdict(committed, produced) == "same"
     produced.write_text(
         committed.read_text().replace("suite_sha256=v", "suite_sha256=w")
@@ -212,6 +212,52 @@ def test_verdicts(repo: Path, tmp_path: Path) -> None:
     assert suite_plan.verdict(committed, produced) == "stale"
     produced.write_text(committed.read_text().replace("\tack\t", "\tnack\t"))
     assert suite_plan.verdict(committed, produced) == "regressed"
+
+
+def test_count_crashes_and_judge_crash_gate(repo: Path, tmp_path: Path) -> None:
+    sample = (
+        "# product=GW1\n"
+        "\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*21##\tack\tcrash\t-\n"
+        "down\t*1*0*21##\tack\tout\t-\n"
+        "short\tline\n"
+    )
+    assert suite_plan.count_crashes(sample) == (1, 3)
+
+    # 1. 100% crash on new suite -> crash_regressed (unless allow_crash_increase)
+    all_crash = (
+        "# product=GW1\n"
+        "# oracle_version=3\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*21##\tack\tcrash\t-\n"
+    )
+    assert suite_plan.judge(None, all_crash) == "crash_regressed"
+    assert suite_plan.judge(None, all_crash, allow_crash_increase=True) == "new"
+    assert suite_plan.judge(all_crash, all_crash) == "crash_regressed"
+    assert suite_plan.judge(all_crash, all_crash, allow_crash_increase=True) == "same"
+
+    # 2. Crash increase across stale oracle_version bump -> crash_regressed
+    old_clean = (
+        "# product=GW1\n"
+        "# oracle_version=1\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*21##\tack\tout\t-\n"
+        "down\t*1*0*21##\tack\tout\t-\n"
+    )
+    new_partial_crash = (
+        "# product=GW1\n"
+        "# oracle_version=3\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*21##\tack\tcrash\t-\n"
+        "down\t*1*0*21##\tack\tout\t-\n"
+    )
+    assert suite_plan.judge(old_clean, new_partial_crash) == "crash_regressed"
+    assert (
+        suite_plan.judge(old_clean, new_partial_crash, allow_crash_increase=True)
+        == "stale"
+    )
+    assert suite_plan._parse_header_str("# product=GW1\n") == {"product": "GW1"}
 
 
 @pytest.mark.parametrize(
@@ -262,6 +308,16 @@ def _fake_runner(
             text = text.replace("image_sha256=v", "image_sha256=new")
         if mode == "regressed":
             text = text.replace("\tack\t", "\tnack\t")
+        if mode == "crash-stale":
+            text = text.replace("image_sha256=v", "image_sha256=new").replace(
+                "\tout", "\tcrash\t-"
+            )
+        if mode == "crash-new":
+            text = (
+                "# suite=x\n"
+                "direction\tinput\treply\tverdict\toutput\n"
+                "down\t*1*1*21##\tack\tcrash\t-\n"
+            )
         if mode == "flaky" and again:
             text += "row seen only on the second run\n"
         out.write_text(text)
@@ -277,6 +333,8 @@ def _fake_runner(
         ("new", 0, True, "| alpha | each | new |"),
         ("stale", 0, True, "| alpha | each | stale |"),
         ("regressed", 1, False, "| alpha | each | **regressed** |"),
+        ("crash-stale", 1, False, "| alpha | each | **crash_regressed** |"),
+        ("crash-new", 1, False, "| alpha | each | **crash_regressed** |"),
         ("fail", 1, False, "| alpha | each | **run failed** |"),
         ("silent", 1, False, "| alpha | each | **run failed** |"),
         ("flaky", 1, False, "| alpha | each | **unstable** |"),
@@ -286,7 +344,7 @@ def _fake_runner(
 def test_run_target(
     repo, tmp_path, monkeypatch, capsys, mode, rc, kept, summary
 ) -> None:
-    if mode not in ("new", "flaky", "second-fails"):
+    if mode not in ("new", "flaky", "second-fails", "crash-new"):
         _tsv(repo, "GW1", "010000", "alpha")
     step = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(step))
@@ -312,8 +370,12 @@ def test_run_target(
     assert produced.is_file() is kept
     text = step.read_text()
     assert "### GW1 010000" in text
+    assert "| suite | reset | verdict | duration |" in text
     assert summary in text
+    assert "Total runtime:" in text
     assert not list(out.rglob("*.again"))  # the second run never lingers
+    if mode == "stale":
+        assert "header-only refresh" in text
     if mode == "regressed":
         assert "```diff" in text
         assert "+down\t*1*1*21##\tnack\tout" in text
@@ -321,11 +383,31 @@ def test_run_target(
             "::error file=results/GW1/010000/oracle/full/alpha.tsv::"
             in capsys.readouterr().out
         )
+    if mode in ("crash-stale", "crash-new"):
+        assert "**Crash regression**: `0 -> 1 / 1`" in text
+        err_prefix = (
+            "::error title=suite crash regression,"
+            "file=results/GW1/010000/oracle/full/alpha.tsv::"
+        )
+        assert err_prefix in capsys.readouterr().out
     if mode == "flaky":
         assert "+row seen only on the second run" in text
         assert "two runs with the same inputs disagree" in capsys.readouterr().out
     if mode in ("new", "stale"):
         assert len(seen) == 2  # produced results are run twice
+
+
+def test_plan_smoke_mode_and_custom_shards(repo: Path) -> None:
+    cases = repo / "oracle" / "cases"
+    (cases / "lights-level.cases").write_text("down *1*1*21##\n")
+    # In smoke mode with scope=None, only SMOKE_SUITES are scheduled
+    smoke_jobs = suite_plan.plan(repo, None, mode="smoke")
+    assert all(j["runs"] == "lights-level:each" for j in smoke_jobs)
+    # With max_shards=1, even >=6 suites stay in 1 shard
+    for idx in range(6):
+        (cases / f"s{idx}.cases").write_text("down *1*1*21##\n")
+    unsharded = suite_plan.plan(repo, None, mode="full", max_shards=1)
+    assert len(unsharded) == 2
 
 
 @pytest.mark.parametrize(
@@ -405,8 +487,9 @@ def test_main_passes_evidence_through(repo, tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(suite_plan, "ROOT", repo)
     seen = {}
 
-    def fake_run_target(*args):
+    def fake_run_target(*args, **kwargs):
         seen["evidence"] = args[-1]
+        seen["allow_crash_increase"] = kwargs.get("allow_crash_increase")
         return 0
 
     monkeypatch.setattr(suite_plan, "run_target", fake_run_target)
@@ -415,10 +498,12 @@ def test_main_passes_evidence_through(repo, tmp_path, monkeypatch) -> None:
             "--run", "--target", "oracle/targets/GW1/010000.yaml",
             "--image", "/i", "--runs", "alpha:each", "--out", str(tmp_path),
             "--evidence", str(tmp_path / "ev"),
+            "--allow-crash-increase",
         ]
     )  # fmt: skip
     assert rc == 0
     assert seen["evidence"] == tmp_path / "ev"
+    assert seen["allow_crash_increase"] is True
 
 
 def test_run_target_without_a_step_summary(repo, tmp_path, monkeypatch) -> None:

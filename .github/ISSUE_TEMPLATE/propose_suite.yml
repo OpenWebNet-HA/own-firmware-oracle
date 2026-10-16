@@ -1,0 +1,43 @@
+name: Propose a Protocol Test Suite (.cases)
+description: Propose OpenWebNet or SCS bus frames to run across all emulated gateways in CI (no local QEMU required).
+title: "[Suite]: "
+labels: ["suite-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose a new `.cases` or `.seq` suite to run against the 11 emulated BTicino/Legrand gateways in CI. You do not need firmware images or QEMU installed locally.
+  - type: input
+    id: suite_name
+    attributes:
+      label: Proposed Suite Name
+      description: Plain ASCII identifier for `oracle/cases/<name>.cases`
+      placeholder: "e.g., thermo-probes or cen-plus-press"
+    validations:
+      required: true
+  - type: input
+    id: who_subsystem
+    attributes:
+      label: WHO Subsystem(s)
+      description: Affected OpenWebNet WHO values
+      placeholder: "e.g., WHO=4 (Thermoregulation)"
+    validations:
+      required: true
+  - type: textarea
+    id: frames
+    attributes:
+      label: Proposed Steps (.cases format)
+      description: One `down <openwebnet_frame>` or `up <hex_bytes>` per line
+      placeholder: |
+        ; Query zone 1 temperature
+        down *#4*1*0##
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Protocol Question & Downstream Consumer
+      description: What protocol question does this suite answer for OpenWebNet-Encyclopedia, openwebnet-mcp, or OWNd/MyHOME?
+    validations:
+      required: true

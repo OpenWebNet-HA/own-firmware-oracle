@@ -50,6 +50,15 @@ on:
   schedule:
     - cron: "0 5 * * 1"  # weekly, after oracle.yml and reproduce.yml
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Suite execution scope (full or smoke)"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - smoke
 permissions:
   contents: read
 concurrency:
@@ -75,12 +84,14 @@ jobs:
       - id: plan
         env:
           BASE_REF: ${{ github.base_ref }}
+          SUITE_MODE: ${{ inputs.mode || 'full' }}
         run: |
           if [ -n "$BASE_REF" ]; then
-            python tools/suite_plan.py --emit-matrix --diff-base "origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+            python tools/suite_plan.py --emit-matrix --mode "$SUITE_MODE" --diff-base "origin/$BASE_REF" >> "$GITHUB_OUTPUT"
           else
-            python tools/suite_plan.py --emit-matrix >> "$GITHUB_OUTPUT"
+            python tools/suite_plan.py --emit-matrix --mode "$SUITE_MODE" >> "$GITHUB_OUTPUT"
           fi
+
 
   run:
     needs: plan
@@ -187,7 +198,10 @@ jobs:
         run: |
           python tools/mcp_index.py
           python tools/sync_readme.py
+          python tools/verdict_diff.py --base HEAD --head WORKTREE >> "$GITHUB_STEP_SUMMARY"
+          python tools/compare.py divergences >> "$GITHUB_STEP_SUMMARY"
           python3 tools/guard.py
+
       # The org does not let Actions open pull requests, so the job only
       # pushes the branch; open the PR from oracle/update-suites by hand.
       - name: push suite results to oracle/update-suites

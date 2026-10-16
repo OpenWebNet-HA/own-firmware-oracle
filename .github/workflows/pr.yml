@@ -91,6 +91,14 @@ jobs:
       - name: coverage summary
         if: always() && matrix.python == '3.12'
         run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+      - name: semantic verdict diff summary
+        if: github.event_name == 'pull_request' && matrix.python == '3.12'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF"
+          python tools/verdict_diff.py --base "origin/$BASE_REF" --head HEAD >> "$GITHUB_STEP_SUMMARY"
+
 
   dependency-review:
     # New or bumped Python deps / actions with known advisories fail the PR.

@@ -116,3 +116,8 @@ boundary:
   # 127.0.0.1:1234 and serves its own on 1235. Both run as firmware, on the
   # plant database above (findings/F450/bacnet-plant-database.md); the
   # harness's SOAP mock is no longer used for this target.
+
+quirks:
+  - "Bridges OpenWebNet via bacclient and ebacgw against the factory BACnet plant database (SOAP_PORT = 1234)."
+  - "bt_termo exits during boot when factory stack_open.xml has working_mode 0; QemuTarget prunes boot-exited translators so bacclient, ebacgw, scsserver, and bt_device remain monitored."
+

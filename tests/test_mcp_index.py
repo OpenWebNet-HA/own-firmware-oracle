@@ -364,8 +364,19 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         captured = capsys.readouterr()
         assert "does not exist" in captured.err
 
-        # 4. Check run fails when out differs
-        out_file.write_text('{"out": "of date"}\n', encoding="utf-8")
+        # 4. Check run fails when out differs (valid schema, outdated content)
+        outdated = mcp_index.build_index(res_dir, catalog_dir=cat_dir, root=tmp_path)
+        outdated["gateways"].append(  # type: ignore[union-attr]
+            {
+                "image_sha256": "x",
+                "product": "EXTRA",
+                "status": "catalogued",
+                "suites": [],
+                "target_sha256": "",
+                "version": "010000",
+            }
+        )
+        out_file.write_text(mcp_index.format_index_json(outdated), encoding="utf-8")
         monkeypatch.setattr(
             "sys.argv",
             [
@@ -380,6 +391,15 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         assert mcp_index.main() == 1
         captured = capsys.readouterr()
         assert "is out of date" in captured.err
+
+        # 4a. Check run fails on invalid JSON or schema errors
+        out_file.write_text("{corrupt", encoding="utf-8")
+        assert mcp_index.main() == 1
+        assert "invalid JSON" in capsys.readouterr().err
+
+        out_file.write_text('{"format_version": "9.9.9"}\n', encoding="utf-8")
+        assert mcp_index.main() == 1
+        assert "format_version" in capsys.readouterr().err
 
         # 4b. Check run fails when build_index raises ValueError
         with patch("mcp_index.build_index", side_effect=ValueError("conflicting hash")):
@@ -432,3 +452,53 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
         assert "catalogued" in captured.out
         assert "[emulated]" in captured.out
         assert "[catalogued]" in captured.out
+
+
+def test_validate_index_data() -> None:
+    # Non-dict verdicts returns early
+    errs1 = mcp_index.validate_index_data(
+        {
+            "format_version": "2.0",
+            "schema_version": "2.0",
+            "generator": "other",
+            "gateways": "not-a-list",
+            "verdicts": "not-a-dict",
+        }
+    )
+    assert any("format_version" in e for e in errs1)
+    assert any("schema_version" in e for e in errs1)
+    assert any("generator" in e for e in errs1)
+    assert any("gateways must be a list" in e for e in errs1)
+    assert any("verdicts must be a dict" in e for e in errs1)
+
+    # Bad gateway items and bad verdict items + hash mismatch
+    errs2 = mcp_index.validate_index_data(
+        {
+            "format_version": "1.0.0",
+            "schema_version": "1.1.0",
+            "generator": "own-firmware-oracle",
+            "total_unique_inputs": 99,
+            "verdicts_sha256": "bad_sha",
+            "gateways": [
+                {"product": "incomplete"},
+                {
+                    "image_sha256": "",
+                    "product": "X",
+                    "status": "invalid_status",
+                    "suites": [],
+                    "target_sha256": "",
+                    "version": "1",
+                },
+            ],
+            "verdicts": {
+                "*1*0*21##": [],
+                "*1*1*21##": [{"bad": "entry"}],
+            },
+        }
+    )
+    assert any("gateways[0] missing required keys" in e for e in errs2)
+    assert any("gateways[1] invalid status" in e for e in errs2)
+    assert any("total_unique_inputs" in e for e in errs2)
+    assert any("must be a non-empty list" in e for e in errs2)
+    assert any("entry missing required keys" in e for e in errs2)
+    assert any("verdicts_sha256 mismatch" in e for e in errs2)

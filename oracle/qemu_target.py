@@ -734,9 +734,43 @@ class QemuTarget:
         while time.monotonic() < deadline:
             self.bus.pump()
             time.sleep(0.02)
+        self._prune_boot_exited_translators()
         self.settle(idle_max=self.start_idle_max)
+        while self._prune_boot_exited_translators():
+            self.settle(idle_max=self.start_idle_max)
         self.take_bus()
         self.take_own()
+
+    def _prune_boot_exited_translators(self) -> bool:
+        """Drop translator daemons that exited during boot bring-up.
+
+        Some firmware images include translator daemons in stack_open.xml that
+        exit cleanly or abort during boot when optional plant files or working
+        modes are absent in factory configuration (e.g. coso on MH202 missing
+        thermo_stm, or bt_termo on F450 with working_mode 0). Pruning only
+        role=='translator' daemons that exited during _restart_once() keeps
+        bus_server and own_server mandatory while allowing surviving daemons to
+        settle and be monitored for crashes on subsequent steps.
+        """
+        if not self.harness.startswith("full"):
+            return False
+        exited = [
+            name
+            for name, proc in self._procs.items()
+            if (prog := self.spec.programs.get(name)) is not None
+            and prog.role == "translator"
+            and proc.poll() is not None
+        ]
+        for name in exited:
+            rc = self._procs[name].poll()
+            logger.debug(
+                "%s translator %s exited during boot (rc=%s); pruning from active set",
+                self.spec.product,
+                name,
+                rc,
+            )
+            del self._procs[name]
+        return bool(exited)
 
     def _handle_cmd_frame(self, frame: str) -> bool:
         if frame == BANNER:
