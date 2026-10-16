@@ -63,6 +63,7 @@ runtime:
   dirs:
     - /var/volatile/tmp
     - /var/volatile/tmp/flags
+    - /var/volatile/tmp/upnp
     - /var/volatile/log
     - /var/volatile/tmp/bticino/bt_wd
     - /var/tmp/cfg
@@ -119,5 +120,6 @@ boundary:
 
 quirks:
   - "Bridges OpenWebNet via bacclient and ebacgw against the factory BACnet plant database (SOAP_PORT = 1234)."
-  - "bt_termo exits during boot when factory stack_open.xml has working_mode 0; QemuTarget prunes boot-exited translators so bacclient, ebacgw, scsserver, and bt_device remain monitored."
+  - "bacclient links libbt_upnp.so.1.0 and writes /var/tmp/upnp/upnp_table.xml shortly after startup; /var/volatile/tmp/upnp must exist on the tmpfs mount or bacclient dereferences a NULL FILE* and segfaults."
+
 

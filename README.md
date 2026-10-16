@@ -85,7 +85,7 @@ Proposed, in order of effort:
 
 <!-- MCP_METRICS_START -->
 1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
-   index at `results/mcp_index.json` (509 unique frames, 5,948 verdicts across 11
+   index at `results/mcp_index.json` (509 unique frames, 5,956 verdicts across 11
    active gateway emulators). The MCP stays offline and read-only; it consumes
    this generated corpus like it does for the Machine KB.
 <!-- MCP_METRICS_END -->
@@ -534,7 +534,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 22 suites).
 <!-- STATUS_PHASE2F_END -->
 <!-- STATUS_PHASE3_START -->
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **509 unique OpenWebNet frames** across **22 test suites** and **11 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **5,948 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **509 unique OpenWebNet frames** across **22 test suites** and **11 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **5,956 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
 <!-- STATUS_PHASE3_END -->
 
 ## License

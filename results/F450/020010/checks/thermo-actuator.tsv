@@ -14,6 +14,6 @@
 # oracle_version=3
 # ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#4*#0*20##	nack	crash	bus:24 30 34 42 39 30 30 33 30 31 30 0d	-	unchecked
-down	*#4*1#1*20##	nack	crash	bus:24 30 34 39 39 38 31 33 31 31 30 0d	-	unchecked
-down	*#4*1*20##	nack	crash	bus:24 30 34 41 39 30 31 33 30 31 30 0d	-	unchecked
+down	*#4*#0*20##	nack	out	bus:24 30 34 42 39 30 30 33 30 31 30 0d	-	unchecked
+down	*#4*1#1*20##	nack	out	bus:24 30 34 39 39 38 31 33 31 31 30 0d	-	unchecked
+down	*#4*1*20##	nack	out	bus:24 30 34 41 39 30 31 33 30 31 30 0d	-	unchecked

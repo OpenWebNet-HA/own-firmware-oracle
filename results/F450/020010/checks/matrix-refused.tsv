@@ -14,14 +14,14 @@
 # oracle_version=3
 # ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#1*1*#1*20##	nack	crash	-	-	unchecked
-down	*#18*51*52##	nack	crash	-	-	unchecked
-down	*#2*1*#1*50##	nack	crash	-	-	unchecked
-down	*15*01#1*0001##	nack	crash	-	-	unchecked
-down	*15*01#2*0001##	nack	crash	-	-	unchecked
-down	*15*01#3*0001##	nack	crash	-	-	unchecked
-down	*15*01*0001##	nack	crash	-	-	unchecked
-down	*2*1*21#4#1##	nack	crash	-	-	unchecked
-down	*25*21*0001##	nack	crash	-	-	unchecked
-down	*25*22*0001##	nack	crash	-	-	unchecked
-down	*25*23*0001##	nack	crash	-	-	unchecked
+down	*#1*1*#1*20##	nack	silent	-	-	unchecked
+down	*#18*51*52##	nack	silent	-	-	unchecked
+down	*#2*1*#1*50##	nack	silent	-	-	unchecked
+down	*15*01#1*0001##	nack	silent	-	-	unchecked
+down	*15*01#2*0001##	nack	silent	-	-	unchecked
+down	*15*01#3*0001##	nack	silent	-	-	unchecked
+down	*15*01*0001##	nack	silent	-	-	unchecked
+down	*2*1*21#4#1##	nack	silent	-	-	unchecked
+down	*25*21*0001##	nack	silent	-	-	unchecked
+down	*25*22*0001##	nack	silent	-	-	unchecked
+down	*25*23*0001##	nack	silent	-	-	unchecked

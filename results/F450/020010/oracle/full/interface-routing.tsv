@@ -13,7 +13,7 @@
 # suite_sha256=a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968
 # oracle_version=3
 direction	input	reply	verdict	output
-down	*0*1*31#4#01##	nack	crash	-
-down	*0*1*31#4#02##	nack	crash	-
-down	*14*0*31#4#01##	nack	crash	-
-down	*14*0*31#4#02##	nack	crash	-
+down	*0*1*31#4#01##	nack	silent	-
+down	*0*1*31#4#02##	nack	silent	-
+down	*14*0*31#4#01##	nack	silent	-
+down	*14*0*31#4#02##	nack	silent	-

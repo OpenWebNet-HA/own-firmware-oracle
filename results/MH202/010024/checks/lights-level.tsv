@@ -14,14 +14,14 @@
 # oracle_version=3
 # ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#1*0*#1*100*0##	ack	crash	bus:24 30 36 44 32 30 30 30 31 34 32 30 44 30 44 30 30 30 30 0d | own:*#1*0*#1*100*0## | own:*#1*0*#13*2*100*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
-down	*#1*31*#1*100*0##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 30 30 0d | own:*#1*31*#1*100*0## | own:*#1*31*#13*2*100*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
-down	*#1*31*#1*100*255##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 46 46 0d | own:*#1*31*#1*100*255## | own:*#1*31*#13*2*100*255*0##	OWNLightingCommand | OWNLightingCommand	unchecked
-down	*#1*31*#1*100*5##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 30 35 0d | own:*#1*31*#1*100*5## | own:*#1*31*#13*2*100*5*0##	OWNLightingCommand | OWNLightingCommand	unchecked
-down	*#1*31*#1*101*0##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d | own:*#1*31*#1*101*0## | own:*#1*31*#13*2*101*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
-down	*1*0#0*31##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d | own:*1*0#0*31## | own:*#1*31*#13*0*100**0## | own:*#1*31*#4*100*0##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
-down	*1*0#1*31##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d | own:*1*0#1*31## | own:*#1*31*#13*0*100*1*0## | own:*#1*31*#4*100*1##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
-down	*1*0#255*31##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d | own:*1*0#255*31## | own:*#1*31*#13*0*100*255*0## | own:*#1*31*#4*100*255##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
-down	*1*0#5*31##	ack	crash	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d | own:*1*0#5*31## | own:*#1*31*#13*0*100*5*0## | own:*#1*31*#4*100*5##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
-down	*1*0*31##	ack	crash	bus:24 30 33 33 31 30 30 31 32 30 31 0d | own:*1*1000#0*31##	OWNLightingEvent	unchecked
-down	*1*1*31##	ack	crash	bus:24 30 33 33 31 30 30 31 32 30 30 0d | own:*1*1000#1*31##	OWNLightingEvent	unchecked
+down	*#1*0*#1*100*0##	ack	out	bus:24 30 36 44 32 30 30 30 31 34 32 30 44 30 44 30 30 30 30 0d | own:*#1*0*#1*100*0## | own:*#1*0*#13*2*100*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
+down	*#1*31*#1*100*0##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 30 30 0d | own:*#1*31*#1*100*0## | own:*#1*31*#13*2*100*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
+down	*#1*31*#1*100*255##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 46 46 0d | own:*#1*31*#1*100*255## | own:*#1*31*#13*2*100*255*0##	OWNLightingCommand | OWNLightingCommand	unchecked
+down	*#1*31*#1*100*5##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 30 30 35 0d | own:*#1*31*#1*100*5## | own:*#1*31*#13*2*100*5*0##	OWNLightingCommand | OWNLightingCommand	unchecked
+down	*#1*31*#1*101*0##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d | own:*#1*31*#1*101*0## | own:*#1*31*#13*2*101*0*0##	OWNLightingCommand | OWNLightingCommand	unchecked
+down	*1*0#0*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d | own:*1*0#0*31## | own:*#1*31*#13*0*100**0## | own:*#1*31*#4*100*0##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
+down	*1*0#1*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d | own:*1*0#1*31## | own:*#1*31*#13*0*100*1*0## | own:*#1*31*#4*100*1##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
+down	*1*0#255*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d | own:*1*0#255*31## | own:*#1*31*#13*0*100*255*0## | own:*#1*31*#4*100*255##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
+down	*1*0#5*31##	ack	out	bus:24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d | own:*1*0#5*31## | own:*#1*31*#13*0*100*5*0## | own:*#1*31*#4*100*5##	OWNLightingEvent | OWNLightingCommand | OWNLightingCommand	unchecked
+down	*1*0*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 31 0d | own:*1*1000#0*31##	OWNLightingEvent	unchecked
+down	*1*1*31##	ack	out	bus:24 30 33 33 31 30 30 31 32 30 30 0d | own:*1*1000#1*31##	OWNLightingEvent	unchecked

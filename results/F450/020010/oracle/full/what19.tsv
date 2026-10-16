@@ -13,4 +13,4 @@
 # suite_sha256=f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4
 # oracle_version=3
 direction	input	reply	verdict	output
-down	*#1*74##	nack	crash	-
+down	*#1*74##	nack	silent	-
