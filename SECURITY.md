@@ -3,8 +3,10 @@
 ## Reporting a vulnerability
 
 Please **don't** open a public issue. Report it privately instead, through the
-repository's **Security → Report a vulnerability** form (GitHub private vulnerability
-reporting). We'll acknowledge it and keep you updated until a fix is released.
+repository's [**Security → Report a vulnerability**](https://github.com/OpenWebNet-HA/own-firmware-oracle/security/advisories/new)
+form (GitHub private vulnerability reporting). We will acknowledge receipt within
+7 days and coordinate disclosure with you until a fix is released (typically within
+90 days).
 
 This applies in particular to:
 
