@@ -6,10 +6,12 @@ the logic around them -- verification, fall-through, cache reuse, matrices.
 
 import hashlib
 import io
+import struct
 import subprocess
 import sys
 import types
 import urllib.request
+import zlib
 from http.client import HTTPMessage
 from pathlib import Path
 
@@ -220,6 +222,109 @@ def test_a_redirect_to_another_vendor_url_is_followed():
     assert new.full_url == VENDOR + "?mirror=2"
 
 
+def _make_cookfs_archive() -> bytes:
+    page0 = b"\x00partA"
+    page1 = b"\x01" + zlib.compress(b"partB")[2:-4]
+    pages = [page0, page1]
+    page_sizes = [len(p) for p in pages]
+
+    def _entry_bytes(
+        name: str, blocks: list[tuple[int, int, int]] | None, children: bytes = b""
+    ) -> bytes:
+        nb = name.encode("utf-8")
+        hdr = struct.pack(">B", len(nb)) + nb + b"\x00"
+        if blocks is None:
+            return hdr + struct.pack(">qi", 0, -1) + children
+        body = b"".join(struct.pack(">III", pg, off, sz) for pg, off, sz in blocks)
+        return hdr + struct.pack(">qi", 0, len(blocks)) + body
+
+    dir_children = (
+        struct.pack(">I", 2)
+        + _entry_bytes("fw.fwz", [(0, 0, 5)])
+        + _entry_bytes("fw.fwz___bitrockBigFile1", [(1, 0, 5)])
+    )
+    root_tree = (
+        struct.pack(">I", 2)
+        + _entry_bytes("root.txt", [(0, 0, 5)])
+        + _entry_bytes("dir", None, dir_children)
+    )
+    raw_idx = b"CFS2.200" + root_tree
+    comp_idx = b"\x00" + raw_idx
+    pg_table = b"\x00" * (len(pages) * 16) + struct.pack(f">{len(pages)}I", *page_sizes)
+    footer = struct.pack(">IIB", len(comp_idx), len(pages), 0) + b"CFS0002"
+    return b"MZ-stub" + b"".join(pages) + pg_table + comp_idx + footer
+
+
+def _install_range_opener(
+    monkeypatch, archive: bytes, *, omit_content_range: bool = False
+) -> None:
+    class Resp(io.BytesIO):
+        def __init__(self, data: bytes, cr: str | None) -> None:
+            super().__init__(data)
+            self.headers = HTTPMessage()
+            if cr is not None:
+                self.headers["Content-Range"] = cr
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.close()
+
+    class Opener:
+        def open(self, req, timeout):
+            rng = req.get_header("Range")
+            start_s, end_s = rng.removeprefix("bytes=").split("-")
+            start, end = int(start_s), int(end_s)
+            chunk = archive[start : end + 1]
+            cr = None if omit_content_range else f"bytes {start}-{end}/{len(archive)}"
+            return Resp(chunk, cr)
+
+    monkeypatch.setattr(
+        fwfetch.urllib.request, "build_opener", lambda *_handlers: Opener()
+    )
+
+
+def test_fetch_vendor_cookfs_extracts_split_member_via_http_range(
+    tmp_path, monkeypatch
+):
+    archive = _make_cookfs_archive()
+    _install_range_opener(monkeypatch, archive)
+    url = "https://assets.legrand.com/Install.exe#cookfs=dir/fw.fwz"
+    dest = tmp_path / "fw.fwz"
+    fwfetch._fetch_vendor(url, dest, 10)
+    assert dest.read_bytes() == b"partApartB"
+
+    # Also test without a limit (limit=None branch)
+    dest2 = tmp_path / "fw2.fwz"
+    fwfetch._fetch_vendor(url, dest2)
+    assert dest2.read_bytes() == b"partApartB"
+
+    # Limit exceeded raises Mismatch before downloading data pages
+    with pytest.raises(fwfetch.Mismatch, match="more than 4 bytes"):
+        fwfetch._fetch_vendor(url, tmp_path / "over.fwz", 4)
+
+    # Missing member in Cookfs index raises Mismatch
+    with pytest.raises(fwfetch.Mismatch, match="Cookfs member not found"):
+        fwfetch._fetch_vendor(
+            "https://assets.legrand.com/Install.exe#cookfs=dir/missing.fwz",
+            tmp_path / "missing.fwz",
+        )
+
+
+def test_fetch_vendor_cookfs_rejects_bad_archive_or_missing_range(
+    tmp_path, monkeypatch
+):
+    url = "https://assets.legrand.com/Install.exe#cookfs=dir/fw.fwz"
+    _install_range_opener(monkeypatch, b"not a cookfs archive")
+    with pytest.raises(fwfetch.Mismatch, match="CFS0002 footer not found"):
+        fwfetch._fetch_vendor(url, tmp_path / "out")
+
+    _install_range_opener(monkeypatch, _make_cookfs_archive(), omit_content_range=True)
+    with pytest.raises(fwfetch.Mismatch, match="missing Content-Range"):
+        fwfetch._fetch_vendor(url, tmp_path / "out")
+
+
 def test_fetch_r2_reads_the_bucket_from_the_environment(tmp_path, monkeypatch):
     calls: dict = {}
 
@@ -260,7 +365,8 @@ def test_fwfetch_main_prints_the_cache_path(tmp_path, cache, monkeypatch, capsys
 # --- plan: what gets rebuilt, what gets re-checked ---------------------------
 
 
-def test_reproducible_means_fresh_and_publicly_fetchable(tmp_path):
+def test_reproducible_means_fresh_and_publicly_fetchable(tmp_path, monkeypatch):
+    monkeypatch.delenv("R2_ENDPOINT", raising=False)
     results = tmp_path / "results"
     cat = _catalog(tmp_path)
     assert plan.is_reproducible(cat, results) is False  # no manifest: stale
@@ -271,6 +377,8 @@ def test_reproducible_means_fresh_and_publicly_fetchable(tmp_path):
 
     r2_only = _catalog(tmp_path, sources="    - r2: 'firmware/sha256/x.zip'\n")
     assert plan.is_reproducible(r2_only, results) is False  # needs secrets
+    monkeypatch.setenv("R2_ENDPOINT", "https://r2.example")
+    assert plan.is_reproducible(r2_only, results) is True
 
 
 def _plan(monkeypatch, capsys, *args: str) -> str:
@@ -515,6 +623,14 @@ def _with(**changes: object) -> dict:
         (_with(status="blocked"), "needs a blocked_reason"),
         (_with(status="blocked", blocked_reason="  "), "needs a blocked_reason"),
         (_with(blocked_reason="stray"), "only allowed with status: blocked"),
+        (
+            _with(wrapper__sources=[{"vendor": VENDOR + "#other=x"}]),
+            "must be cookfs=<plain path>",
+        ),
+        (
+            _with(wrapper__sources=[{"vendor": VENDOR + "#cookfs=../evil"}]),
+            "must be cookfs=<plain path>",
+        ),
     ],
 )
 def test_schema_rejects(entry, match):
@@ -524,6 +640,10 @@ def test_schema_rejects(entry, match):
 
 def test_schema_accepts_the_valid_fixture():
     assert schema.validate(_valid(), CAT_PATH)["product"] == "MH200N"
+    cookfs_entry = _with(
+        wrapper__sources=[{"vendor": VENDOR + "#cookfs=default/dir/fw.fwz"}]
+    )
+    assert schema.validate(cookfs_entry, CAT_PATH)["product"] == "MH200N"
 
 
 def test_schema_accepts_a_blocked_entry_with_a_reason():

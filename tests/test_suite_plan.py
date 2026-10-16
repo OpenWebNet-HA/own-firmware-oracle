@@ -90,9 +90,16 @@ def repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_inventory(repo: Path) -> None:
+def test_inventory(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("R2_ENDPOINT", raising=False)
     assert list(suite_plan.suites(repo)) == ["alpha", "beta"]
     assert suite_plan.targets(repo) == [("GW1", "010000"), ("GW2", "020000")]
+    monkeypatch.setenv("R2_ENDPOINT", "https://r2.example")
+    assert suite_plan.targets(repo) == [
+        ("GW1", "010000"),
+        ("GW2", "020000"),
+        ("R2ONLY", "010000"),
+    ]
 
 
 def test_header_stops_at_the_first_data_line(repo: Path) -> None:

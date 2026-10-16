@@ -111,7 +111,9 @@ def suites(root: Path) -> dict[str, Path]:
 
 
 def targets(root: Path) -> list[tuple[str, str]]:
-    """Emulated targets whose image anyone can fetch (no R2 secrets)."""
+    """Emulated targets whose image can be fetched (public vendor URL, or R2
+    when R2_ENDPOINT is configured in the environment)."""
+    has_r2 = bool(os.environ.get("R2_ENDPOINT"))
     found: list[tuple[str, str]] = []
     for spec in sorted((root / "oracle" / "targets").glob("*/*.yaml")):
         product, version = spec.parent.name, spec.stem
@@ -119,8 +121,11 @@ def targets(root: Path) -> list[tuple[str, str]]:
         if not catalog.is_file():
             continue
         entry = load(catalog)
-        public = any("vendor" in s for s in entry["wrapper"].get("sources", []))
-        if public and not is_blocked(entry):
+        fetchable = any(
+            "vendor" in s or ("r2" in s and has_r2)
+            for s in entry["wrapper"].get("sources", [])
+        )
+        if fetchable and not is_blocked(entry):
             found.append((product, version))
     return found
 

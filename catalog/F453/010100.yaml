@@ -11,9 +11,10 @@ wrapper:
   size: 11781988
   sha256: "da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626"
   sources:
-    # Extracted from official vendor MyHOME_Suite 3.5.38 installer package
-    # (MyHOME_Suite_030538.exe, default/resTargetDir4/devices/912_2.0_BT/cfgRestore/WS_6DIN_010100.fwz);
-    # archived into project R2 storage.
+    # Extracted via HTTP Range from the Cookfs archive inside the official
+    # vendor MyHOME_Suite 3.5.38 installer package; archived into project R2
+    # storage as fallback.
+    - vendor: "https://assets.legrand.com/pim/AUTRE/MyHOME_Suite_030538.exe#cookfs=default/resTargetDir4/devices/912_2.0_BT/cfgRestore/WS_6DIN_010100.fwz"
     - r2: "sha256/da/02/da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626"
 
 image:

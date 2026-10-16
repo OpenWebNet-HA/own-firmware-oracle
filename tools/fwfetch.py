@@ -21,8 +21,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import struct
 import sys
 import urllib.request
+import zlib
 from http.client import HTTPMessage
 from pathlib import Path
 from typing import IO
@@ -77,11 +79,121 @@ class _VendorRedirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def _cookfs_page(raw: bytes) -> bytes:
+    return raw[1:] if raw[0] == 0 else zlib.decompress(raw[1:], -15)
+
+
+def _walk_cookfs_index(
+    dec_idx: bytes, pos: int = 8, prefix: str = ""
+) -> tuple[dict[str, list[tuple[int, int, int]]], int]:
+    (num_children,) = struct.unpack_from(">I", dec_idx, pos)
+    pos += 4
+    out: dict[str, list[tuple[int, int, int]]] = {}
+    for _ in range(num_children):
+        nlen = dec_idx[pos]
+        pos += 1
+        name = dec_idx[pos : pos + nlen].decode("utf-8", "replace")
+        pos += nlen + 1
+        full = f"{prefix}/{name}" if prefix else name
+        _mtime, num_blocks = struct.unpack_from(">qi", dec_idx, pos)
+        pos += 12
+        if num_blocks == -1:
+            sub, pos = _walk_cookfs_index(dec_idx, pos, full)
+            out.update(sub)
+        else:
+            blocks: list[tuple[int, int, int]] = []
+            for _b in range(num_blocks):
+                pg, off, sz = struct.unpack_from(">III", dec_idx, pos)
+                pos += 12
+                blocks.append((pg, off, sz))
+            out[full] = blocks
+    return out, pos
+
+
+def _fetch_vendor_cookfs(
+    url: str, member: str, dest: Path, limit: int | None = None
+) -> None:
+    """Extract `member` (and any `___bitrockBigFile<N>` splits) from a remote
+    BitRock InstallBuilder Cookfs (`CFS0002`) archive via HTTP Range."""
+    opener = urllib.request.build_opener(_VendorRedirects)
+
+    def get_range(start: int, length: int) -> tuple[bytes, int]:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "own-firmware-oracle/1",
+                "Range": f"bytes={start}-{start + length - 1}",
+            },
+        )
+        with opener.open(req, timeout=120) as resp:
+            cr = resp.headers.get("Content-Range", "")
+            if "/" not in cr:
+                raise Mismatch("missing Content-Range header")
+            return resp.read(), int(cr.rsplit("/", 1)[1])
+
+    _, total_size = get_range(0, 1)
+    tail_len = min(total_size, 4 * 1024 * 1024)
+    tail, _ = get_range(total_size - tail_len, tail_len)
+    sig_pos = tail.rfind(b"CFS0002")
+    if sig_pos < 9:
+        raise Mismatch("CFS0002 footer not found")
+    cfs_end = total_size - tail_len + sig_pos + 7
+    idx_size, num_pages, _comp = struct.unpack_from(">IIB", tail, sig_pos - 9)
+    idx_off = cfs_end - 16 - idx_size
+    pg_table_off = idx_off - num_pages * 20
+
+    meta_bytes, _ = get_range(pg_table_off, num_pages * 20 + idx_size)
+    page_sizes = list(struct.unpack_from(f">{num_pages}I", meta_bytes, num_pages * 16))
+    dec_idx = _cookfs_page(meta_bytes[num_pages * 20 :])
+    files, _ = _walk_cookfs_index(dec_idx)
+    if member not in files:
+        raise Mismatch(f"Cookfs member not found: {member}")
+
+    part_keys = [member]
+    part_idx = 1
+    while f"{member}___bitrockBigFile{part_idx}" in files:
+        part_keys.append(f"{member}___bitrockBigFile{part_idx}")
+        part_idx += 1
+
+    all_blocks = [b for k in part_keys for b in files[k]]
+    total_out = sum(sz for _pg, _off, sz in all_blocks)
+    if limit is not None and total_out > limit:
+        raise Mismatch(f"size mismatch: more than {limit} bytes")
+
+    page_offsets: list[int] = []
+    cur = pg_table_off - sum(page_sizes)
+    for sz in page_sizes:
+        page_offsets.append(cur)
+        cur += sz
+
+    needed_pages = sorted({pg for pg, _off, _sz in all_blocks})
+    span_start = page_offsets[needed_pages[0]]
+    span_end = page_offsets[needed_pages[-1]] + page_sizes[needed_pages[-1]]
+    raw_span, _ = get_range(span_start, span_end - span_start)
+    decoded_pages = {
+        pg: _cookfs_page(
+            raw_span[
+                page_offsets[pg] - span_start : page_offsets[pg]
+                - span_start
+                + page_sizes[pg]
+            ]
+        )
+        for pg in needed_pages
+    }
+    with dest.open("wb") as out:
+        for pg, off, sz in all_blocks:
+            out.write(decoded_pages[pg][off : off + sz])
+
+
 def _fetch_vendor(url: str, dest: Path, limit: int | None = None) -> None:
     """Download `url` to `dest`, stopping as soon as more than `limit` bytes
     arrive. Some vendor checkout links send no Content-Length, so the catalog
     size is the only bound on a wrong or endless body."""
     schema.check_vendor_url(url)
+    base_url, sep, frag = url.partition("#")
+    if sep:
+        _fetch_vendor_cookfs(base_url, frag.removeprefix("cookfs="), dest, limit)
+        return
     opener = urllib.request.build_opener(_VendorRedirects)
     req = urllib.request.Request(url, headers={"User-Agent": "own-firmware-oracle/1"})
     written = 0
