@@ -77,15 +77,17 @@ Addresses formatted as `1N` (e.g. `11` for line 1):
 - **Read Status Mask (Dim 250)**: `*#18*11*250##` emits `$06D101023310100000\r`.
 
 ### 3.5. WHO 3 (Load Management / F421)
-WHO 3 is handled by `bt_energia` (available on MH202, omitted on MyHomeServer1):
-- `*#3*#1##` / `*#3*#2##` (priority line status): Emits `$03AA001614\r`.
-- `*#3*10*0##` (all central unit 10 measurements): Emits 4 successive bus frames (`...1613`, `...1612`, `...1610`, `...1611`).
-- `*#3*10*1##` (instantaneous power): Emits `$03AA001613\r`.
-- `*#3*10*2##` (voltage): Emits `$03AA001612\r`.
-- `*#3*10*3##` (current): Emits 2 frames (`$03AA001610\r` and `$03AA001611\r`).
-- `*#3*10*4##` (power factor): Emits 4 frames (`$03AA001606\r` through `...1609\r`).
-- `*3*2*#1##` (force priority 1 load): Emits `$04B7011300\r`.
-- `*3*2*#2##` (force priority 2 load): Emits `$04B7021300\r`.
+WHO 3 is handled by `bt_energia` (v2.0.2, `2003-05-08`; available on MH202, MH200N, MH200, F453AV, F454, F459, and H4684; omitted on MyHomeServer1, F450, F460, and F461). Dimension semantics and register widths are verified against both the official [`WHO 3` specification v1.0.0](https://archive.openwebnet-ha.org/sha256/4f/68/4f685a6ee3b16e6a7994a338186687bcea1dabba74dc5d24d22a07becb24dea1.pdf) (`OpenWebNet_Community_6_powermanagement_v1_0_0_EN.doc`, 2006-08-30, Section 1.3 p. 4 and Sections 1.4.4–1.4.8 pp. 6–7; summarised in the [OpenWebNet Encyclopedia](https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/blob/main/functional/who-3-load-management/README.md#measurement-dimension-values)) and the `bt_energia` ARM binary (`0x00b140` outbound register polling via jump table at `0x00b3e0`, and `0x00a63c`..`0x00b024` inbound `$031900<REG>` + `$031A00<HH>` decoding via `htod` into `%d` unsigned integers):
+- `*#3*#1##` / `*#3*#2##` (priority line status): Emits `$03AA001614\r` (`0x00b374`).
+- `*#3*10*0##` (all central unit 10 measurements, `T*C*P*E`): Emits 8 successive bus frames (`$03AA001613\r`, `$03AA001612\r`, `$03AA001610\r`, `$03AA001611\r`, `$03AA001606\r`..`$03AA001609\r` at `0x00b3f4`) and formats `sprintf(buf, "*#3*10*0*%s*%s*%s*%s##", T, C, P, E)` (`0x00aa24`).
+- `*#3*10*1##` (**voltage `T` in V**): Emits `$03AA001613\r` (1 byte, 8-bit unsigned int `0..255`, `0x00b674` / `0x00af2c` -> `*#3*10*1*%d##`).
+- `*#3*10*2##` (**current `C` in A**): Emits `$03AA001612\r` (1 byte, 8-bit unsigned int `0..255`, `0x00b6f4` / `0x00ae7c` -> `*#3*10*2*%d##`).
+- `*#3*10*3##` (**power `P` in W**): Emits 2 frames (`$03AA001610\r` and `$03AA001611\r`; 2 bytes, 16-bit unsigned int `0..65535`, `0x00b774` / `0x00ad88` -> `*#3*10*3*%d##`).
+- `*#3*10*4##` (**energy `E`**): Emits 4 frames (`$03AA001606\r` through `$03AA001609\r`; 4 bytes, 32-bit integer counter, `0x00b830` / `0x00ac34` -> `*#3*10*4*%d##`).
+- `*3*2*#1##` (force priority 1 load): Emits `$04B7011300\r` (`0x00b244`).
+- `*3*2*#2##` (force priority 2 load): Emits `$04B7021300\r` (`0x00b244`).
+- `*#3*0##` (general status request): Refused (`nack` / `silent`) because `bt_energia` (`0x00b91c` / `0x00b998`) checks `strcmp(frame, "*#3*##")` and `strcmp(frame, "*#3##")` (matching `WHO_3.pdf` Section 1.4.2, p. 5) rather than `*#3*0##`.
+- **Bus Reply Timeout (`4.0 s`)**: Unlike `*3*2*#N##` (which returns `0` from `0x00b140` and is immediately ACKed), `*#3*#N##` and `*#3*10*D##` return `1` from `0x00b140` and wait in the `select()` loop for the F421 central unit to answer on the SCS bus before sending `*#*1##` (`0x00b030`). When no F421 responds within `4.0` seconds (`difftime` comparison against `0x4010000000000000` at `0x009c58`), `bt_energia` sends `*#*0##` (`Extract_OpenKO` at `0x009cf8`).
 
 ---
 
@@ -119,10 +121,10 @@ WHO 3 is handled by `bt_energia` (available on MH202, omitted on MyHomeServer1):
 | **Actuator Cancel Force** | `*18*74*71#0##` | `nack` / `$06D1B1123270020000\r` | `ack` / `$06D1B1123270020000\r` | `nack` (silent) |
 | **Actuator Reset Total 1** | `*18*75#1*71#0##` | `nack` / `$06D1B1123270040100\r` | `ack` / `$06D1B1123270040100\r` | `nack` (silent) |
 | **Actuator Reset Total 2** | `*18*75#2*71#0##` | `nack` / `$06D1B1123270040200\r` | `ack` / `$06D1B1123270040200\r` | `nack` (silent) |
-| **WHO 3 CU Power** | `*#3*10*1##` | `nack` (silent) | `-` / `$03AA001613\r` | `nack` (silent) |
-| **WHO 3 CU Voltage** | `*#3*10*2##` | `nack` (silent) | `-` / `$03AA001612\r` | `nack` (silent) |
-| **WHO 3 CU Current** | `*#3*10*3##` | `nack` (silent) | `-` / `$03AA001610\r` + `...1611\r` | `nack` (silent) |
-| **WHO 3 CU Power Factor** | `*#3*10*4##` | `nack` (silent) | `-` / 4 frames (`...1606`..`1609`) | `nack` (silent) |
+| **WHO 3 CU Voltage (Dim 1)** | `*#3*10*1##` | `nack` (silent) | `-` / `$03AA001613\r` | `nack` (silent) |
+| **WHO 3 CU Current (Dim 2)** | `*#3*10*2##` | `nack` (silent) | `-` / `$03AA001612\r` | `nack` (silent) |
+| **WHO 3 CU Power (Dim 3)** | `*#3*10*3##` | `nack` (silent) | `-` / `$03AA001610\r` + `...1611\r` | `nack` (silent) |
+| **WHO 3 CU Energy (Dim 4)** | `*#3*10*4##` | `nack` (silent) | `-` / 4 frames (`...1606`..`1609`) | `nack` (silent) |
 | **WHO 3 Force Load 1** | `*3*2*#1##` | `nack` (silent) | `ack` / `$04B7011300\r` | `nack` (silent) |
 | **WHO 3 Force Load 2** | `*3*2*#2##` | `nack` (silent) | `ack` / `$04B7021300\r` | `nack` (silent) |
 
