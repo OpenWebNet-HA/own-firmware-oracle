@@ -66,6 +66,7 @@ FLEET_ORDER = [
     "F454",
     "MH202",
     "F453AV",
+    "F453",
     "F455",
     "MH201",
     "F461",
@@ -73,6 +74,7 @@ FLEET_ORDER = [
     "F459",
     "F460",
     "H4684",
+    "L4686SDK",
     "L4561N",
     "3550",
 ]
@@ -85,6 +87,7 @@ STANDALONE_GATEWAYS = [
     "MH202",
     "F459",
     "F453AV",
+    "F453",
     "F460",
     "F461",
     "F450",
@@ -99,6 +102,7 @@ PHASE1_ORDER = [
     "F454",
     "MH202",
     "F453AV",
+    "F453",
     "F455",
     "MH201",
     "F461",
@@ -110,6 +114,7 @@ PHASE1_ORDER = [
 NO_LINUX_ORDER = [
     "F455",
     "MH201",
+    "L4686SDK",
     "L4561N",
     "3550",
 ]
@@ -122,6 +127,7 @@ EMULATED_ORDER = [
     "MH202",
     "F459",
     "F453AV",
+    "F453",
     "F460",
     "F461",
     "F450",
@@ -129,14 +135,14 @@ EMULATED_ORDER = [
 ]
 
 # Known hardware categorization sets
-KNOWN_AUXILIARY_PRODUCTS = {"H4684", "L4561N", "3550"}
-KNOWN_NO_LINUX_PRODUCTS = {"F455", "MH201", "L4561N", "3550"}
+KNOWN_AUXILIARY_PRODUCTS = {"H4684", "L4686SDK", "L4561N", "3550"}
+KNOWN_NO_LINUX_PRODUCTS = {"F455", "MH201", "L4686SDK", "L4561N", "3550"}
 
 # Curated metadata dictionary for historical / published models
 GATEWAY_METADATA: dict[str, dict[str, str]] = {
     "MH200": {
         "arch": "Linux ARMv4 `oabi`",
-        "layers": "Ext2, Zip",
+        "layers": "Ext2, Gzip, Zip",
         "census_desc": "Legacy DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
             "Legacy DIN scenario programmer (`bt_processi`, `openserver`, `scsserver`, "
@@ -146,7 +152,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "MH200N": {
         "arch": "Linux ARMv5 `eabi5`",
-        "layers": "U-Boot, Ext2, Zip",
+        "layers": "U-Boot, Ext2, Gzip, Zip",
         "census_desc": "DIN scenario programmer & OpenWebNet gateway",
         "phase2f_desc": (
             "DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, "
@@ -156,7 +162,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "MyHomeServer1": {
         "arch": "Linux ARMv7 `eabi5`",
-        "layers": "U-Boot, Ext4, Zip",
+        "layers": "U-Boot, Ext4, Gzip, Zip",
         "census_desc": "Modern Linux gateway & IoT bridge",
         "phase2f_desc": (
             "Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, "
@@ -166,7 +172,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F454": {
         "arch": "Linux ARMv5 `eabi5`",
-        "layers": "JFFS2, CramFS, Zip",
+        "layers": "U-Boot, Ext3, Gzip, Zip",
         "census_desc": "Web server audio/video DIN gateway",
         "phase2f_desc": (
             "Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial "
@@ -175,7 +181,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "MH202": {
         "arch": "Linux ARMv5 `eabi5`",
-        "layers": "SquashFS, Zip",
+        "layers": "U-Boot, Ext3, Gzip, Zip",
         "census_desc": "Advanced scenario programmer & BACnet gateway",
         "phase2f_desc": (
             "Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, "
@@ -185,7 +191,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F453AV": {
         "arch": "Linux ARMv4 `oabi`",
-        "layers": "CramFS, Zip",
+        "layers": "U-Boot, Ext2, Gzip, Zip",
         "census_desc": "DIN audio/video web server (ARMv4 OABI)",
         "phase2f_desc": (
             "Legacy DIN audio/video gateway (`openserver`, `bt_vct`, `bt_processi` "
@@ -193,9 +199,20 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
             "{suites} suites)"
         ),
     },
+    "F453": {
+        "arch": "Linux ARMv4 `oabi`",
+        "layers": "U-Boot, Ext2, Gzip, Zip",
+        "census_desc": "DIN web server 6-module gateway (ARMv4 OABI)",
+        "phase2f_desc": (
+            "Legacy 6-module DIN web server (`openserver`, `scsserver`, `bt_luci`, "
+            "`bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, "
+            "`bt_energia`, `bt_supervisione`, `bt_alarm` with `/dev/dsp1` and "
+            "`/dev/ttyPIC` PTY under ARMv4 OABI — {suites} suites)"
+        ),
+    },
     "F455": {
         "arch": "Bare-metal ARM Cortex-M",
-        "layers": "Monolithic `.bin`",
+        "layers": "Zip, Monolithic `.bin`",
         "daemons": "Flash image `F455_1_1_2.bin` (301 KB, no OS)",
         "pending_status": "Pending Emulation (Bare-metal MCU — zero matrix value)",
         "census_desc": "Basic OpenWebNet IP interface (bare-metal ARM Cortex-M)",
@@ -207,7 +224,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "MH201": {
         "arch": "Bare-metal ARM Cortex-M3 (STM32F217)",
-        "layers": "Monolithic `.bin`",
+        "layers": "Zip, Monolithic `.bin`",
         "daemons": "Flash image `MH201_3_6_44_signed.bin` (502 KB, CMX-RTX, no OS)",
         "pending_status": "Pending Emulation (Bare-metal MCU — zero matrix value)",
         "census_desc": (
@@ -221,7 +238,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F461": {
         "arch": "Linux AArch64 (ARM64)",
-        "layers": "Ext4, SquashFS, Zip",
+        "layers": "Ext4, Gzip, Zip",
         "census_desc": "Server gateway stack (AArch64 / ARM64)",
         "phase2f_desc": (
             "Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, "
@@ -231,7 +248,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F450": {
         "arch": "Linux ARMv5 `eabi5`",
-        "layers": "JFFS2, Zip",
+        "layers": "U-Boot, Ext3, Gzip, Zip",
         "census_desc": "IP interface gateway (OPEN-BACnet)",
         "census_emulation_note": (
             "Emulated — {suites} suites, BACnet side on the firmware's own "
@@ -244,7 +261,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F459": {
         "arch": "Linux ARMv5 `eabi5`",
-        "layers": "SquashFS, Zip",
+        "layers": "U-Boot, Ext3, Gzip, Zip",
         "census_desc": "Hotel / hospitality driver manager gateway",
         "phase2f_desc": (
             "Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, "
@@ -254,7 +271,7 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "F460": {
         "arch": "Linux AArch64 (ARM64)",
-        "layers": "Ext4, SquashFS, Zip",
+        "layers": "Ext4, Gzip, Zip",
         "census_desc": "Hotel scenario programmer gateway (AArch64 / ARM64)",
         "phase2f_desc": (
             "Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, "
@@ -270,6 +287,15 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
             "Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, "
             "`bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, "
             "`bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — {suites} suites)"
+        ),
+    },
+    "L4686SDK": {
+        "title": "OpenWebNet USB & RS-232 Interface",
+        "arch": "Bare-metal Microchip PIC18 (`0x000000`-`0x00EDDD`)",
+        "layers": "Zip, Intel HEX",
+        "daemons": "OpenWebNet-to-SCS serial translator (`4686SDK_012001.HEX`, no OS)",
+        "pending_status": (
+            "Static analysis only (PIC18 serial/USB translator — no TCP/IP stack)"
         ),
     },
     "L4561N": {
@@ -299,15 +325,6 @@ KNOWN_EXCLUDED_HARDWARE = [
             "Discontinued early 2000s hardware. Firmware was stored in masked "
             "ROM / EEPROM; no firmware update packages were ever "
             "published for download."
-        ),
-    ),
-    (
-        "F453",
-        ["F453"],
-        "Enhanced Web Server DIN",
-        (
-            "Pre-Audio/Video version, replaced by F453AV. No separate public "
-            "firmware download package exists."
         ),
     ),
     (
@@ -393,6 +410,16 @@ KNOWN_EXCLUDED_HARDWARE = [
         (
             "Hardware radio bridge; firmware is embedded radio stack without "
             "standalone OpenWebNet daemon."
+        ),
+    ),
+    (
+        "3578 / 088328",
+        ["3578", "088328"],
+        "OpenWebNet ZigBee USB Stick",
+        (
+            "Telegesis ETRX2USB / Silicon Labs EM250 wireless dongle; no "
+            "standalone firmware package published on Home Systems or bundled in "
+            "MyHOME_Suite."
         ),
     ),
     (
@@ -605,34 +632,38 @@ def infer_architecture_from_manifest(manifest_path: Path) -> str:
     return "Embedded Architecture"
 
 
+def _detect_ext_version(paths_str: str) -> str:
+    """Return Ext4, Ext3, or Ext2 based on container filenames."""
+    for ver in ("4", "3"):
+        if f"ext{ver}" in paths_str:
+            return f"Ext{ver}"
+    return "Ext2"
+
+
 def infer_layers_from_manifest(manifest_path: Path) -> str:
     """Infer container and archive layer types from manifest."""
     rows = parse_manifest_file(manifest_path)
-    types = {r[1] for r in rows}
-    paths_str = " ".join(r[0] for r in rows).lower()
+    container_rows = [r for r in rows if ":/" not in r[0]]
+    types = {r[1] for r in container_rows} | {
+        r[1] for r in rows if r[1] in ("ext-fs", "squashfs", "cramfs")
+    }
+    paths_str = " ".join(r[0] for r in container_rows).lower()
 
-    layers: list[str] = []
-    if "uImage" in types:
-        layers.append("U-Boot")
-    if "jffs2" in paths_str:
-        layers.append("JFFS2")
-    if "ext-fs" in types:
-        layers.append("Ext4" if "ext4" in paths_str else "Ext2")
-    if "squashfs" in paths_str or "squashfs" in types:
-        layers.append("SquashFS")
-    if "cramfs" in paths_str or "cramfs" in types:
-        layers.append("CramFS")
-    if "gzip" in types:
-        layers.append("Gzip")
-    if "tar" in types:
-        layers.append("Tar")
-    if "zip" in types:
-        layers.append("Zip")
-    if any(r[0].lower().endswith(".hex") for r in rows):
-        layers.append("Intel HEX")
+    checks = [
+        ("uImage" in types, "U-Boot"),
+        ("jffs2" in paths_str, "JFFS2"),
+        ("ext-fs" in types, _detect_ext_version(paths_str)),
+        ("squashfs" in paths_str or "squashfs" in types, "SquashFS"),
+        ("cramfs" in paths_str or "cramfs" in types, "CramFS"),
+        ("gzip" in types, "Gzip"),
+        ("tar" in types, "Tar"),
+        ("zip" in types, "Zip"),
+        (any(r[0].lower().endswith(".hex") for r in container_rows), "Intel HEX"),
+    ]
+    layers = [label for matched, label in checks if matched]
 
     if not layers:
-        if any(r[0].lower().endswith(".bin") for r in rows):
+        if any(r[0].lower().endswith(".bin") for r in container_rows):
             return "Monolithic `.bin`"
         return "Standard Container"
 
@@ -789,7 +820,9 @@ def _format_auxiliary_note(
     total_packages: int,
 ) -> str:
     """Format auxiliary hardware note at end of census block."""
-    ordered_aux = order_products(aux_entries.keys(), ["H4684", "L4561N", "3550"])
+    ordered_aux = order_products(
+        aux_entries.keys(), ["H4684", "L4686SDK", "L4561N", "3550"]
+    )
     if not ordered_aux:
         return (
             "*(Note: Auxiliary hardware (touch screen, bus interface, temperature "

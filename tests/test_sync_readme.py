@@ -307,6 +307,15 @@ def test_infer_layers_from_manifest(tmp_path: Path):
         == "U-Boot, JFFS2, Ext4, SquashFS, CramFS, Gzip, Tar, Zip"
     )
 
+    # Ext3 (and ensure leaf paths inside ':/' do not trigger false container types)
+    m = make_manifest(
+        [
+            ("rootfs.ext3", "ext-fs"),
+            ("rootfs.ext3:/sbin/mkfs.jffs2", "ELF/ARM/exec/32le/eabi5"),
+        ]
+    )
+    assert sync_readme.infer_layers_from_manifest(m) == "Ext3"
+
     # Ext2
     m = make_manifest([("rootfs.ext2", "ext-fs")])
     assert sync_readme.infer_layers_from_manifest(m) == "Ext2"

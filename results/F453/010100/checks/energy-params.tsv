@@ -1,0 +1,21 @@
+# product=F453
+# version=010100
+# image_sha256=da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626
+# harness=full
+# target_sha256=590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=energy-params
+# suite_sha256=964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2
+# oracle_version=3
+# ownd_version=2.0.0-b10
+direction	input	reply	verdict	output	ownd	live
+down	*#18*51*51##	ack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d	-	unchecked
+down	*#18*51*511#10#1##	nack	silent	-	-	unchecked
+down	*#18*51*511#10#2##	nack	silent	-	-	unchecked
+down	*#18*51*52##	ack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 30 30 30 30 0d	-	unchecked
+down	*#18*51*52#26#9##	ack	out	bus:24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d	-	unchecked

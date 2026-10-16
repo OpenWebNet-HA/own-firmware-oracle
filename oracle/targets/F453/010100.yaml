@@ -1,0 +1,122 @@
+# Oracle target: F453 firmware 1.1.0. Every program is pinned by path and
+# sha256 to results/F453/010100/manifest.tsv (oracle/target.py checks it).
+product: F453
+version: "010100"
+
+# Manifest prefixes for the root filesystem and application overlay:
+sysroot:
+  - "WS_6DIN_010100.fwz!WS_6DIN_rel_1_1_0.zip!WS_6DIN_rel_1_1_0/ubtweb_only_recovery.gz~payload~gunzip:"
+  - "WS_6DIN_010100.fwz!WS_6DIN_rel_1_1_0.zip!WS_6DIN_rel_1_1_0/btweb_app.zip!"
+
+bus_device: /dev/ttyPIC
+bus_framer: line
+bus_responder: pic
+own_auth: none
+
+programs:
+  # supervisor: starts daemons defined in cfg/stack_open.xml
+  bt_processi:
+    path: home/bticino/bin/bt_processi
+    sha256: "255e0a1db17b5c4c532e4aeff3f23271a60f3b1553806cf7b992dd3020f64f25"
+    role: supervisor
+
+  # p0: the OpenWebNet server
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78"
+    role: own_server
+    port: 20000
+
+  # p1: owns /dev/ttyPIC and serves translators on TCP 20001
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "28a692fd27cf0ca83ff4ed2dd096d6fef915d7586d8fd062d2992cea981622da"
+    role: bus_server
+    port: 20001
+
+  # lights, scenarios, CEN
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "1f8d6e18490b1266a506109ab3084f31cdbc7fe35966bd11a9c4d6d804e42b9d"
+    role: translator
+    port: 40001
+
+  # diagnostics, clock
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "f93d4dc7edff2c0789a23f151ddb369fddedff51cd79dd79b7263b09a4eea28d"
+    role: translator
+    port: 40013
+
+  # thermo
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "b28d02b1ec8ac565bc23c6c621d2b1d4a791c67c8f2bc2c1924e671198f6590f"
+    role: translator
+    port: 40004
+
+  # sound diffusion
+  bt_difson:
+    path: home/bticino/bin/bt_difson
+    sha256: "0fa292b8db6d804319ff25625b89b9bca6a99abb59e2643c8149bdb613025231"
+    role: translator
+    port: 40016
+
+  # multimedia / sound
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "b30dcfa4036fbf17a8cd3c3f913d7c5cd0c1da79f3edb28a49ecdad45f66f887"
+    role: translator
+    port: 40022
+
+  # video door entry / intercom
+  bt_vct:
+    path: home/bticino/bin/bt_vct
+    sha256: "bcbc9fdeb78034491438b7e67ba8004d337c70064326536f91bbbc42ebfafdbd"
+    role: translator
+    port: 40006
+
+  # energy
+  bt_energia:
+    path: home/bticino/bin/bt_energia
+    sha256: "a38055799e843379566f1f6abeead5397f94ac5c3ebf74a0789ef8034533d6ae"
+    role: translator
+    port: 40003
+
+  # supervision
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "507165d034c672777ae2f755588bd78cd5ac03aaf6ffb0189f30f5437154fe3c"
+    role: translator
+    port: 40018
+
+  # burglar alarm & auxiliary -- WHO 5 & WHO 9
+  bt_alarm:
+    path: home/bticino/bin/bt_alarm
+    sha256: "fbf30ea0beca728cdb8f3868bd37a62cdcf96456f9cb9c614a73b8faa3004c80"
+    role: translator
+    port: 40005
+
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /lib:/usr/lib:/home/bticino/lib
+  tmpfs:
+    - /var/tmp
+  dirs:
+    - /var/tmp/bticino/bt_wd
+    - /var/tmp/run/bticino
+    - /var/run
+  devices:
+    /dev/ttyPIC: pty
+    /dev/dsp1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "2.4.19"
+
+boundary:
+  status: discovered
+  bus: pty
+  own: full
+
+quirks:
+  - "ARMv4/v5 OABI userland (QEMU_UNAME=2.4.19); TIOCMGET on virtual PTY returns ENOTTY (modem control lines absent on PTY)."
