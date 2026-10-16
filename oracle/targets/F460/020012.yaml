@@ -101,3 +101,7 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "AArch64 userland communicating over simulated RPMsg PTY /dev/ttyRPMSG30 with 3-digit $003... framing."
+

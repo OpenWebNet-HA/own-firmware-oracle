@@ -14,15 +14,15 @@
 # oracle_version=3
 # ownd_version=2.0.0-b10
 direction	input	reply	verdict	output	ownd	live
-down	*#4*#0#2*#11*1##	nack	crash	-	-	unchecked
-down	*#4*#0*#11*1##	nack	crash	-	-	unchecked
-down	*#4*#1*#11*1##	nack	crash	-	-	unchecked
-down	*#4*1*#11*0##	ack	crash	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
-down	*#4*1*#11*1##	ack	crash	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
-down	*#4*1*#11*2##	ack	crash	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
-down	*#4*1*#11*3##	ack	crash	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked
-down	*#4*1*#11*4##	nack	crash	-	-	unchecked
-down	*#4*99*#11*0##	ack	crash	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
-down	*#4*99*#11*1##	ack	crash	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
-down	*#4*99*#11*2##	ack	crash	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
-down	*#4*99*#11*3##	ack	crash	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked
+down	*#4*#0#2*#11*1##	nack	silent	-	-	unchecked
+down	*#4*#0*#11*1##	nack	silent	-	-	unchecked
+down	*#4*#1*#11*1##	nack	silent	-	-	unchecked
+down	*#4*1*#11*0##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*1##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*2##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*3##	ack	out	bus:24 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*4##	nack	silent	-	-	unchecked
+down	*#4*99*#11*0##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*1##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*2##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*3##	ack	out	bus:24 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked

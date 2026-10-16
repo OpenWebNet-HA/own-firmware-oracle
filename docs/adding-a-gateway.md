@@ -39,28 +39,28 @@ Every step is verifiable with standard commands and produces deterministic artif
 
 ### Step 1: Catalog & Fetch
 
-1. Add the product and version entry to `catalog.tsv`:
-   - Specify product name (e.g., `F454`), version string (e.g., `020051`), source URL, SHA-256 hash, and wrapper format (`zip`, `fwz`, `tar.gz`).
+1. Add the product and version entry to `catalog/<Product>/<Version>.yaml`:
+   - Specify product name (e.g., `F454`), version string (e.g., `"020051"`), source URL, SHA-256 hash, and wrapper filename.
 2. Run the fetch tool:
    ```bash
-   python -m fetch --product <Product> --version <Version>
+   IMG=$(python tools/fwfetch.py catalog/<Product>/<Version>.yaml)
    ```
-   **Done when:** The downloaded archive in `~/.cache/own-fw/` matches the expected SHA-256.
+   **Done when:** The downloaded archive matches the expected SHA-256 and `fwfetch.py` prints its local path.
 
 ### Step 2: Unpack & Manifest
 
 1. Unpack the image layers and generate the manifest:
    ```bash
-   python -m unpack ~/.cache/own-fw/sha256/<hash>.<ext> -o results/<Product>/<Version>/manifest.tsv
+   python tools/unpack.py catalog/<Product>/<Version>.yaml --image "$IMG"
    ```
 2. Verify that the unpacker identifies all container and filesystem formats (zip, fwz, tar, ext4, cramfs, squashfs, gunzip).
-   **Done when:** `results/<Product>/<Version>/manifest.tsv` exists, listing every file, symlink, and directory with SHA-256 and size.
+   **Done when:** `results/<Product>/<Version>/manifest.tsv` and `summary.json` exist, listing every file, symlink, and directory with SHA-256 and size.
 
 ### Step 3: Coverage Gate
 
 1. Verify that unpacking is complete and lossless:
    ```bash
-   python -m tools.guard
+   python tools/guard.py
    ```
    **Done when:** All files are accounted for and no unextracted binary blobs or untracked payload residues remain.
 
@@ -140,7 +140,11 @@ python -m oracle.run discover oracle/targets/<Product>/<Version>.yaml \
 
 ### Step 8: Cross-Gateway Comparison & Findings
 
-1. Diff the resulting test records against existing gateways (e.g. MH200N vs new gateway):
+1. Diff the resulting test records against existing gateways using `tools/compare.py`:
+   ```bash
+   python tools/compare.py divergences --suite lights-level
+   python tools/compare.py matrix --suite lights-level
+   ```
    - Compare input OpenWebNet frames and generated SCS bus frames.
    - Note discrepancies, supported dimensions, NACK behaviors, or lighting levels.
 2. If discrepancies or bugs in firmware are observed, document them in `findings/<Product>/`.
@@ -151,7 +155,8 @@ python -m oracle.run discover oracle/targets/<Product>/<Version>.yaml \
 
 Before opening a pull request for a new gateway:
 - **Test suite:** `pytest tests --cov=oracle --cov=tools --cov-branch` must report **100.00% statement and branch coverage** (`fail_under = 100`).
-- **Linter:** `ruff check .` must pass with zero warnings.
+- **Linter:** `ruff check .` and `ruff format --check .` must pass with zero warnings.
 - **Type checker:** `mypy --strict oracle tools` must pass with zero issues.
-- **Security & clean repo:** `python -m tools.guard` must pass (no raw binaries or decompiled code).
+- **Security & clean repo:** `python tools/guard.py`, `python tools/mcp_index.py --check`, and `python tools/sync_readme.py --check` must pass.
 - **Git operations:** All git commands (`git add`, `git commit`, `git push`) must be run directly from Windows PowerShell.
+

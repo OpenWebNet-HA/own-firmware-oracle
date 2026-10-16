@@ -1,0 +1,44 @@
+name: Report a Cross-Gateway or Live-Hardware Divergence
+description: Document a protocol divergence between gateway models or between QEMU emulation and physical hardware.
+title: "[Divergence]: "
+labels: ["divergence"]
+body:
+  - type: input
+    id: frame
+    attributes:
+      label: OpenWebNet Frame or SCS Bus Frame
+      placeholder: "e.g., *1*19*11## or $0493018114\\r"
+    validations:
+      required: true
+  - type: input
+    id: gateways
+    attributes:
+      label: Gateways Compared
+      placeholder: "e.g., MyHomeServer1 (028206) vs MH200N (010108) vs Physical F454"
+    validations:
+      required: true
+  - type: dropdown
+    id: epistemic_status
+    attributes:
+      label: Epistemic Status of Evidence
+      options:
+        - firmware_observed (Emulated in QEMU oracle)
+        - experimentally_confirmed (Captured on live physical hardware)
+        - cross_tier_divergence (Emulated oracle differs from physical hardware)
+    validations:
+      required: true
+  - type: textarea
+    id: observed_behaviour
+    attributes:
+      label: Observed Verdicts & Bus Output
+      description: Paste output from `python tools/compare.py frame "<frame>"` or `python tools/check.py --report`
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Downstream Impact (Encyclopedia / openwebnet-mcp / OWNd / MyHOME)
+      description: How should parsers, documentation, or gateway pre-flight warnings handle this behaviour?
+    validations:
+      required: false

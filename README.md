@@ -85,7 +85,7 @@ Proposed, in order of effort:
 
 <!-- MCP_METRICS_START -->
 1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
-   index at `results/mcp_index.json` (509 unique frames, 5,948 verdicts across 11
+   index at `results/mcp_index.json` (509 unique frames, 5,956 verdicts across 11
    active gateway emulators). The MCP stays offline and read-only; it consumes
    this generated corpus like it does for the Machine KB.
 <!-- MCP_METRICS_END -->
@@ -365,16 +365,18 @@ Detailed technical findings documents with exact bytecode citations, cryptograph
 
 ## How to Use: Concrete Examples
 
+See [`docs/quickstart.md`](docs/quickstart.md) for the `< 10 minute` local setup and how to propose new `.cases` suites without running QEMU locally, [`docs/adding-a-gateway.md`](docs/adding-a-gateway.md) for onboarding new gateways, and [`docs/mcp-index-contract.md`](docs/mcp-index-contract.md) for the `mcp_index.json` schema contract.
+
 ### 1. Materializing & Unpacking a Firmware Image
 
 Download the official vendor archive and unpack it into a deterministic filesystem manifest:
 
 ```bash
 # A) Fetch and verify the vendor archive by SHA-256:
-python tools/fwfetch.py catalog/MH200N/010108.yaml
+IMG=$(python tools/fwfetch.py catalog/MH200N/010108.yaml)
 
 # B) Unpack container layers (Zip, U-Boot, Ext2/4, SquashFS, CramFS) into manifest.tsv:
-python tools/unpack.py catalog/MH200N/010108.yaml -o results/MH200N/010108/manifest.tsv
+python tools/unpack.py catalog/MH200N/010108.yaml --image "$IMG" --check
 
 # C) Verify the workspace remains clean of raw binaries or NUL leaks:
 python tools/guard.py
@@ -395,28 +397,28 @@ pytest tests --cov=tools --cov=oracle --cov-report=term-missing
 
 ### 3. Running Emulated Oracle Test Suites (`oracle.run`)
 
-Run a `.cases` test suite against an emulated gateway daemon under `qemu-arm`:
+Run a `.cases` test suite against an emulated gateway daemon under `qemu-user`:
 
 ```bash
 # A) Run the lights-level suite against the emulated MH200N openserver:
 python -m oracle.run suite \
-  --product MH200N \
-  --version 010108 \
-  --suite oracle/cases/lights-level.cases \
+  oracle/targets/MH200N/010108.yaml \
+  oracle/cases/lights-level.cases \
+  --image "$IMG" \
   -o results/MH200N/010108/oracle/full/lights-level.tsv
 
 # B) Run the TS10 sound suite on F454 (serial PTY translation to SCS):
 python -m oracle.run suite \
-  --product F454 \
-  --version 020051 \
-  --suite oracle/cases/sound-who22.cases \
+  oracle/targets/F454/020051.yaml \
+  oracle/cases/sound-who22.cases \
+  --image "$IMG_F454" \
   -o results/F454/020051/oracle/full/sound-who22.tsv
 
 # C) Run the TS10 energy suite on MH202 (multi-daemon stack):
 python -m oracle.run suite \
-  --product MH202 \
-  --version 010024 \
-  --suite oracle/cases/energy-ts10.cases \
+  oracle/targets/MH202/010024.yaml \
+  oracle/cases/energy-ts10.cases \
+  --image "$IMG_MH202" \
   -o results/MH202/010024/oracle/full/energy-ts10.tsv
 
 # The generated TSV contains deterministic rows:
@@ -425,16 +427,28 @@ python -m oracle.run suite \
 # down         *#1*31*#1*100*0##  nack     silent     -
 ```
 
-### 4. Regression & Verification Checks (`tools/check.py`)
-
-Validate that emulated outputs match expected protocol behavior:
+### 4. Cross-Gateway Comparison, Semantic Diff, Live Canary & Evidence Export
 
 ```bash
-# Check MH200N against the lights-level evaluation expectations:
-python tools/check.py --product MH200N --version 010108 --suite lights-level
+# Compare a single frame across all emulated gateways (with decoded SCS bytes):
+python tools/compare.py frame "*1*1*31##"
 
-# Check MyHomeServer1 heating audit cases:
-python tools/check.py --product MyHomeServer1 --version 028206 --suite ownd-pr82-heating
+# List all cross-gateway divergences for a suite or render a gateway x frame matrix:
+python tools/compare.py divergences --suite sound-who22
+python tools/compare.py matrix --suite lights-level
+
+# Summarize behavioural verdict changes across a PR or git range:
+python tools/verdict_diff.py --base origin/main --head HEAD
+
+# Check oracle outputs against OWNd parser & live hardware traces:
+python tools/check.py --all --report
+
+# Validate or execute the read-only live hardware canary suite:
+python tools/live_probe.py --suite oracle/canary/canary-live.cases --validate-only
+
+# Export an oracle TSV into a schema-valid OpenWebNet-Encyclopedia evidence bundle:
+python tools/export_evidence.py results/MH200N/010108/oracle/full/what19.tsv \
+  --out-dir /tmp/cap-mh200n-what19-20261015 --date 2026-10-15
 ```
 
 ### 5. Querying the Cross-Firmware Verdict Index (`results/mcp_index.json`)
@@ -442,7 +456,7 @@ python tools/check.py --product MyHomeServer1 --version 028206 --suite ownd-pr82
 The cross-firmware MCP index (`schema_version: "1.1.0"`) provides hash-pinned answers for AI assistants and parsers without needing to run emulators. Gateways are indexed with status `"emulated"` (verdicts present) or `"catalogued"` (fleet inventory entry, empty `target_sha256`, `suites: []`). The canonical `verdicts_sha256` digest covers the sorted verdicts map, ensuring deterministic answer integrity.
 
 ```bash
-# Check that the index matches all current oracle TSVs:
+# Check that the index matches all current oracle TSVs and passes schema validation:
 python tools/mcp_index.py --check
 ```
 
@@ -520,7 +534,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 22 suites).
 <!-- STATUS_PHASE2F_END -->
 <!-- STATUS_PHASE3_START -->
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **509 unique OpenWebNet frames** across **22 test suites** and **11 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **5,948 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **509 unique OpenWebNet frames** across **22 test suites** and **11 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F460, F461, F450, H4684), delivering **5,956 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
 <!-- STATUS_PHASE3_END -->
 
 ## License

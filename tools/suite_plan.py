@@ -36,11 +36,13 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections import Counter
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import verdict_diff
 from plan import git_changed_files
 from schema import NAME, is_blocked, load
 
@@ -68,6 +70,12 @@ RESET = re.compile(r"^(each|0|batch-[1-9][0-9]*)$")
 CASE_SUFFIXES = (".cases", ".seq")
 SHARDS_PER_TARGET = 2
 MIN_RUNS_TO_SHARD = 6
+SMOKE_SUITES: tuple[str, ...] = (
+    "lights-level",
+    "what19",
+    "ownd-pr82-heating",
+    "sound-who22",
+)
 # A change under these paths can alter any verdict: re-check everything.
 GLOBAL_TRIGGERS = (
     "oracle/",
@@ -179,21 +187,31 @@ def _run_weight(case_file: Path, reset: str) -> int:
     return max(1, steps) * (2 if reset == "each" else 1)
 
 
-def _shard_runs(runs: list[tuple[str, str]], names: dict[str, Path]) -> list[list[str]]:
+def _shard_runs(
+    runs: list[tuple[str, str]],
+    names: dict[str, Path],
+    max_shards: int = SHARDS_PER_TARGET,
+) -> list[list[str]]:
     """Split a target's suites into balanced shards when the list is long."""
-    if len(runs) < MIN_RUNS_TO_SHARD:
+    if max_shards <= 1 or len(runs) < MIN_RUNS_TO_SHARD:
         return [[f"{s}:{r}" for s, r in runs]]
-    bins: list[list[tuple[str, str]]] = [[] for _ in range(SHARDS_PER_TARGET)]
-    loads = [0] * SHARDS_PER_TARGET
+    bins: list[list[tuple[str, str]]] = [[] for _ in range(max_shards)]
+    loads = [0] * max_shards
     weighted = sorted(runs, key=lambda sr: (-_run_weight(names[sr[0]], sr[1]), sr[0]))
     for s, r in weighted:
-        idx = min(range(SHARDS_PER_TARGET), key=lambda i: loads[i])
+        idx = min(range(max_shards), key=lambda i: loads[i])
         bins[idx].append((s, r))
         loads[idx] += _run_weight(names[s], r)
-    return [[f"{s}:{r}" for s, r in sorted(b)] for b in bins]
+    return [[f"{s}:{r}" for s, r in sorted(b)] for b in bins if b]
 
 
-def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
+def plan(
+    root: Path,
+    scope: set[Pair] | None = None,
+    *,
+    mode: str = "full",
+    max_shards: int = SHARDS_PER_TARGET,
+) -> list[dict[str, str]]:
     """Matrix items per target (sharded when a target runs many suites)."""
     names = suites(root)
     jobs: list[dict[str, str]] = []
@@ -201,7 +219,10 @@ def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
         fallback = default_reset(root, product, version)
         runs: list[tuple[str, str]] = []
         for suite in names:
-            if scope is not None and (product, version, suite) not in scope:
+            if scope is not None:
+                if (product, version, suite) not in scope:
+                    continue
+            elif mode == "smoke" and suite not in SMOKE_SUITES:
                 continue
             committed = result_file(root, product, version, suite)
             reset = (
@@ -211,7 +232,7 @@ def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
             )
             runs.append((suite, reset))
         if runs:
-            for shard in _shard_runs(runs, names):
+            for shard in _shard_runs(runs, names, max_shards=max_shards):
                 jobs.append(
                     {
                         "catalog": f"catalog/{product}/{version}.yaml",
@@ -222,15 +243,75 @@ def plan(root: Path, scope: set[Pair] | None = None) -> list[dict[str, str]]:
     return jobs
 
 
-def verdict(committed: Path, produced: Path) -> str:
-    if not committed.is_file():
-        return "new"
-    if committed.read_bytes() == produced.read_bytes():
+def count_crashes(content: str) -> tuple[int, int]:
+    """Return (crash_rows, total_data_rows) from an oracle suite TSV string."""
+    crash_rows = 0
+    total_rows = 0
+    cols_seen = False
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        cells = line.split("\t")
+        if not cols_seen and cells[0] == "direction":
+            cols_seen = True
+            continue
+        total_rows += 1
+        if len(cells) >= 4 and cells[3] == "crash":
+            crash_rows += 1
+    return crash_rows, total_rows
+
+
+def _parse_header_str(content: str) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for line in content.splitlines():
+        if not line.startswith("# "):
+            break
+        key, _, value = line[2:].partition("=")
+        out[key] = value
+    return out
+
+
+def judge(
+    existing: str | None,
+    produced: str,
+    *,
+    allow_crash_increase: bool = False,
+) -> str:
+    """Compare produced TSV string against existing (or None if new)."""
+    new_crashes, total_rows = count_crashes(produced)
+    if not allow_crash_increase:
+        old_crashes = count_crashes(existing)[0] if existing is not None else 0
+        if (total_rows > 0 and new_crashes == total_rows) or (
+            existing is not None and new_crashes > old_crashes
+        ):
+            return "crash_regressed"
+
+    if existing is not None and existing == produced:
         return "same"
-    old, new = header(committed), header(produced)
+    if existing is None:
+        return "new"
+    old, new = _parse_header_str(existing), _parse_header_str(produced)
     if any(old.get(k) != new.get(k) for k in INPUT_KEYS):
         return "stale"
     return "regressed"
+
+
+def verdict(
+    committed: Path,
+    produced: Path,
+    *,
+    allow_crash_increase: bool = False,
+) -> str:
+    existing_text = (
+        committed.read_text(encoding="ascii") if committed.is_file() else None
+    )
+    produced_text = produced.read_text(encoding="ascii")
+    return judge(
+        existing_text,
+        produced_text,
+        allow_crash_increase=allow_crash_increase,
+    )
 
 
 def _subprocess_runner(argv: Sequence[str]) -> int:
@@ -297,19 +378,22 @@ def run_target(
     out_dir: Path,
     runner: Runner = _subprocess_runner,
     evidence_dir: Path | None = None,
+    *,
+    allow_crash_increase: bool = False,
 ) -> int:
     """Run each suite on one target; keep only new and stale files in out_dir.
 
-    A failing comparison (regressed or unstable) is also kept, with its full
-    diff, under evidence_dir when one is given."""
+    A failing comparison (regressed, crash_regressed, or unstable) is also kept,
+    with its full diff, under evidence_dir when one is given."""
     product, version = parse_target(target)
     names = suites(root)
     failures = 0
+    total_start = time.monotonic()
     rows = [
         f"### {product} {version}",
         "",
-        "| suite | reset | verdict |",
-        "| --- | --- | --- |",
+        "| suite | reset | verdict | duration |",
+        "| --- | --- | --- | --- |",
     ]
     details: list[str] = []
     with tempfile.TemporaryDirectory(
@@ -332,18 +416,25 @@ def run_target(
                 ]  # fmt: skip
                 return runner(argv) == 0 and out.is_file()
 
+            t0 = time.monotonic()
             if not run_once(produced):
+                elapsed = time.monotonic() - t0
                 failures += 1
-                rows.append(f"| {suite} | {reset} | **run failed** |")
+                rows.append(f"| {suite} | {reset} | **run failed** | {elapsed:.1f}s |")
                 print(f"::error::{product} {version} {suite}: oracle.run failed")
                 produced.unlink(missing_ok=True)
                 continue
             committed = root / rel
-            v = verdict(committed, produced)
+            v = verdict(
+                committed,
+                produced,
+                allow_crash_increase=allow_crash_increase,
+            )
             # (old, new, label) of the diff that explains a failure
             evidence: tuple[Path, Path, str] | None = None
-            if v == "regressed":
-                evidence = (committed, produced, "re-run")
+            if v in ("regressed", "crash_regressed"):
+                old_side = committed if committed.is_file() else produced
+                evidence = (old_side, produced, "re-run")
             elif v in ("new", "stale"):
                 # A result only enters results/ if it reproduces: run it again.
                 again = produced.with_name(produced.name + ".again")
@@ -353,16 +444,33 @@ def run_target(
                     v, evidence = "unstable", (produced, again, "second run")
                 else:
                     again.unlink()
-            rows.append(f"| {suite} | {reset} | {f'**{v}**' if evidence else v} |")
+            elapsed = time.monotonic() - t0
+            rows.append(
+                f"| {suite} | {reset} | {f'**{v}**' if evidence else v} | "
+                f"{elapsed:.1f}s |"
+            )
+            if v == "stale" and evidence is None:
+                sem = verdict_diff.summarize_tsv_pair(
+                    committed.read_text(encoding="ascii"),
+                    produced.read_text(encoding="ascii"),
+                    str(rel),
+                )
+                details += [f"#### `{rel}` stale", *sem]
             if v == "same":
                 produced.unlink()
             if evidence is not None:
                 failures += 1
                 old, new, label = evidence
+                old_text = (
+                    old.read_text(encoding="ascii")
+                    if old != new and old.is_file()
+                    else ""
+                )
+                new_text = new.read_text(encoding="ascii")
                 diff = list(
                     difflib.unified_diff(
-                        old.read_text(encoding="ascii").splitlines(),
-                        new.read_text(encoding="ascii").splitlines(),
+                        old_text.splitlines(),
+                        new_text.splitlines(),
                         str(rel),
                         label,
                         lineterm="",
@@ -371,14 +479,47 @@ def run_target(
                 _keep_evidence(
                     evidence_dir, rel, old, new, label, "\n".join(diff) + "\n"
                 )
-                details += [f"#### `{rel}` {v}", "```diff", *diff[:200], "```"]
-                why = {
-                    "regressed": "same inputs, different verdicts",
-                    "unstable": "two runs with the same inputs disagree",
-                }[v]
-                print(f"::error file={rel}::{why} (diff in the job summary)")
+                sem_lines = (
+                    verdict_diff.summarize_tsv_pair(old_text, new_text, str(rel))
+                    if v in ("regressed", "crash_regressed") and old_text
+                    else []
+                )
+                if v == "crash_regressed":
+                    old_c = count_crashes(old_text)[0] if old_text else 0
+                    new_c, tot_r = count_crashes(new_text)
+                    crash_msg = (
+                        f"{product} {version} {suite}: crash verdicts "
+                        f"{old_c} -> {new_c} / {tot_r}"
+                    )
+                    details += [
+                        f"#### `{rel}` {v}",
+                        f"- **Crash regression**: `{old_c} -> {new_c} / {tot_r}`",
+                        *sem_lines,
+                        "```diff",
+                        *diff[:200],
+                        "```",
+                    ]
+                    print(
+                        f"::error title=suite crash regression,file={rel}::"
+                        f"{crash_msg} (diff in the job summary)"
+                    )
+                else:
+                    details += [
+                        f"#### `{rel}` {v}",
+                        *sem_lines,
+                        "```diff",
+                        *diff[:200],
+                        "```",
+                    ]
+                    why = {
+                        "regressed": "same inputs, different verdicts",
+                        "unstable": "two runs with the same inputs disagree",
+                    }[v]
+                    print(f"::error file={rel}::{why} (diff in the job summary)")
                 produced.unlink(missing_ok=True)
                 new.unlink(missing_ok=True)
+    total_elapsed = time.monotonic() - total_start
+    rows.extend(["", f"Total runtime: {total_elapsed:.1f}s"])
     _summary([*rows, "", *details])
     return 1 if failures else 0
 
@@ -388,6 +529,18 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
     ap.add_argument("--emit-matrix", action="store_true")
     ap.add_argument("--diff-base", metavar="REF")
     ap.add_argument("--changed-files", nargs="*", metavar="PATH")
+    ap.add_argument(
+        "--mode",
+        choices=("full", "smoke"),
+        default="full",
+        help="matrix scope when global triggers fire (default: full)",
+    )
+    ap.add_argument(
+        "--shards",
+        type=int,
+        default=SHARDS_PER_TARGET,
+        help=f"maximum shards per target (default: {SHARDS_PER_TARGET})",
+    )
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--target")
     ap.add_argument("--image")
@@ -397,6 +550,11 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
         "--evidence",
         type=Path,
         help="keep both runs and the full diff of a failing suite here",
+    )
+    ap.add_argument(
+        "--allow-crash-increase",
+        action="store_true",
+        help="allow suites where crash verdicts increase or reach 100%%",
     )
     args = ap.parse_args(argv)
 
@@ -408,15 +566,25 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
             files = git_changed_files(args.diff_base, ROOT)
             if files is not None:
                 scope = touched(ROOT, files)
-        print("matrix=" + json.dumps(plan(ROOT, scope)))
+        print(
+            "matrix="
+            + json.dumps(plan(ROOT, scope, mode=args.mode, max_shards=args.shards))
+        )
         return 0
     if args.run:
         if not (args.target and args.image and args.runs and args.out):
             ap.error("--run needs --target, --image, --runs and --out")
         return run_target(
-            ROOT, args.target, args.image, args.runs, args.out, runner, args.evidence
+            ROOT,
+            args.target,
+            args.image,
+            args.runs,
+            args.out,
+            runner,
+            args.evidence,
+            allow_crash_increase=args.allow_crash_increase,
         )
-    for job in plan(ROOT):
+    for job in plan(ROOT, mode=args.mode, max_shards=args.shards):
         print(f"{job['target']}: {job['runs']}")
     return 0
 

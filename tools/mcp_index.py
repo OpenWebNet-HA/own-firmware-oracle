@@ -318,6 +318,87 @@ def format_index_json(index_data: dict[str, object]) -> str:
     return json.dumps(index_data, indent=2, sort_keys=True) + "\n"
 
 
+REQUIRED_GATEWAY_KEYS = {
+    "image_sha256",
+    "product",
+    "status",
+    "suites",
+    "target_sha256",
+    "version",
+}
+
+REQUIRED_VERDICT_KEYS = {
+    "bus_frames",
+    "direction",
+    "emitted_own",
+    "image_sha256",
+    "line_number",
+    "product",
+    "reply",
+    "source_tsv",
+    "suite",
+    "suite_sha256",
+    "target_sha256",
+    "verdict",
+    "version",
+}
+
+
+def validate_index_data(data: dict[str, object]) -> list[str]:
+    """Validate mcp_index.json schema 1.1.0 contract and verdicts_sha256 integrity."""
+    errors: list[str] = []
+    if data.get("format_version") != "1.0.0":
+        errors.append(
+            f"format_version must be '1.0.0', got {data.get('format_version')!r}"
+        )
+    if data.get("schema_version") != "1.1.0":
+        errors.append(
+            f"schema_version must be '1.1.0', got {data.get('schema_version')!r}"
+        )
+    if data.get("generator") != "own-firmware-oracle":
+        errors.append(
+            f"generator must be 'own-firmware-oracle', got {data.get('generator')!r}"
+        )
+
+    gateways = data.get("gateways")
+    if not isinstance(gateways, list):
+        errors.append("gateways must be a list")
+    else:
+        for idx, gw in enumerate(gateways):
+            if not isinstance(gw, dict) or not REQUIRED_GATEWAY_KEYS.issubset(gw):
+                errors.append(f"gateways[{idx}] missing required keys")
+            elif gw.get("status") not in ("emulated", "catalogued"):
+                errors.append(f"gateways[{idx}] invalid status {gw.get('status')!r}")
+
+    verdicts = data.get("verdicts")
+    if not isinstance(verdicts, dict):
+        errors.append("verdicts must be a dict")
+        return errors
+
+    if data.get("total_unique_inputs") != len(verdicts):
+        errors.append(
+            f"total_unique_inputs ({data.get('total_unique_inputs')}) "
+            f"!= len(verdicts) ({len(verdicts)})"
+        )
+
+    for frame, entries in verdicts.items():
+        if not isinstance(entries, list) or not entries:
+            errors.append(f"verdicts[{frame!r}] must be a non-empty list")
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict) or not REQUIRED_VERDICT_KEYS.issubset(entry):
+                errors.append(f"verdicts[{frame!r}] entry missing required keys")
+
+    canonical = json.dumps(verdicts, sort_keys=True, separators=(",", ":"))
+    computed_sha = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if data.get("verdicts_sha256") != computed_sha:
+        errors.append(
+            f"verdicts_sha256 mismatch: expected {computed_sha}, "
+            f"got {data.get('verdicts_sha256')!r}"
+        )
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Build deterministic, hash-pinned verdict index for openwebnet-mcp."
@@ -374,6 +455,20 @@ def main(argv: list[str] | None = None) -> int:
             print(f"mcp_index: ERROR - {args.out} does not exist", file=sys.stderr)
             return 1
         current = args.out.read_text(encoding="utf-8")
+        try:
+            current_obj = json.loads(current)
+        except json.JSONDecodeError as exc:
+            print(f"mcp_index: ERROR - {args.out} invalid JSON: {exc}", file=sys.stderr)
+            return 1
+        schema_errors = (
+            validate_index_data(current_obj)
+            if isinstance(current_obj, dict)
+            else ["root JSON must be an object"]
+        )
+        if schema_errors:
+            for err in schema_errors:
+                print(f"mcp_index: ERROR - {err}", file=sys.stderr)
+            return 1
         if current != rendered:
             print(
                 f"mcp_index: ERROR - {args.out} is out of date; re-run without --check",

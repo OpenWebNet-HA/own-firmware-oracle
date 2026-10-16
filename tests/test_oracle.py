@@ -709,3 +709,32 @@ def test_target_spec_sqlite_validation(tmp_path):
         match=r"runtime\.sqlite\[/cfg/db\]: content must be a string",
     ):
         target.load(spec, results)
+
+
+def test_target_spec_quirks_validation(tmp_path):
+    ok_prog = (
+        f'  a: {{path: bin/a, sha256: "{"b" * 64}", role: translator, port: 8080}}'
+    )
+    spec, results = _write_target(
+        tmp_path / "q1",
+        ok_prog,
+        extra='quirks:\n  - "ARMv4 OABI userland"\n',
+    )
+    loaded = target.load(spec, results)
+    assert loaded.quirks == ("ARMv4 OABI userland",)
+
+    for idx, bad_extra in enumerate(
+        (
+            "quirks: not_a_list\n",
+            'quirks:\n  - ""\n',
+            'quirks:\n  - "non-ascii \u00e9"\n',
+            "quirks:\n  - 123\n",
+        ),
+        start=2,
+    ):
+        spec, results = _write_target(tmp_path / f"q{idx}", ok_prog, extra=bad_extra)
+        with pytest.raises(
+            target.TargetError,
+            match="quirks must be a list of non-empty ASCII strings",
+        ):
+            target.load(spec, results)

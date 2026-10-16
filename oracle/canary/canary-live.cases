@@ -1,0 +1,13 @@
+; Read-only hardware canary suite for tools/live_probe.py
+; Safe to run against any production gateway (status & dimension reads only)
+down  *#1*0##
+down  *#1*21##
+down  *#1*74##
+down  *#4*1*0##
+down  *#4*1*14##
+down  *#13**0##
+down  *#13**1##
+down  *#13**15##
+down  *#13**16##
+down  *#22*3#1#1*1##
+down  *#25*21##

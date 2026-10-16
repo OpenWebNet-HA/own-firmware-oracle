@@ -101,3 +101,7 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "scsserver emits periodic $24\\r PIC status polls on /dev/ttyS1."
+

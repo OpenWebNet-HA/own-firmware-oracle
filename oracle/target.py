@@ -123,6 +123,7 @@ class TargetSpec:
     bus_framer: str = "line"
     bus_responder: str = "pic"
     own_auth: str = "none"
+    quirks: tuple[str, ...] = ()
 
     @property
     def ready(self) -> bool:
@@ -224,6 +225,14 @@ def _check_boundary(boundary: object) -> dict[str, str]:
 def _str_list(raw: object, label: str) -> tuple[str, ...]:
     if not isinstance(raw, list) or not all(isinstance(x, str) for x in raw):
         raise TargetError(f"{label} must be a list of strings")
+    return tuple(raw)
+
+
+def _quirks(raw: object, path: Path) -> tuple[str, ...]:
+    if not isinstance(raw, list) or not all(
+        isinstance(x, str) and bool(x.strip()) and x.isascii() for x in raw
+    ):
+        raise TargetError(f"{path}: quirks must be a list of non-empty ASCII strings")
     return tuple(raw)
 
 
@@ -440,6 +449,8 @@ def load(path: Path, results_root: Path) -> TargetSpec:
             f"{path}: own_auth must be one of {sorted(AUTH_SCHEMES)}, got {own_auth!r}"
         )
 
+    quirks = _quirks(data.get("quirks", []), path)
+
     return TargetSpec(
         product=product,
         version=version,
@@ -453,4 +464,5 @@ def load(path: Path, results_root: Path) -> TargetSpec:
         bus_framer=bus_framer,
         bus_responder=bus_responder,
         own_auth=own_auth,
+        quirks=quirks,
     )

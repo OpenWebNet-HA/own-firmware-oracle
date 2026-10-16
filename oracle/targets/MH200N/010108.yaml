@@ -109,3 +109,7 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "ARMv4/v5 OABI userland (QEMU_UNAME=2.4.19); TIOCMGET on virtual PTY returns ENOTTY (modem control lines absent on PTY)."
+

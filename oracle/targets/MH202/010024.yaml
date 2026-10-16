@@ -60,6 +60,8 @@ runtime:
   dirs:
     - /var/volatile/tmp
     - /var/volatile/tmp/flags
+    - /var/volatile/tmp/upnp
+    - /var/volatile/tmp/bticino/bt_wd
     - /var/volatile/log
   links:
     /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
@@ -81,3 +83,9 @@ boundary:
   status: discovered
   bus: pty
   own: full
+
+quirks:
+  - "Scenario controller stack (no bt_luci or bt_termo); scsserver emits periodic $24\\r PIC status polls on /dev/ttyS1."
+  - "openserver links libbt_upnp.so.1.0 and writes /var/tmp/upnp/upnp_table.xml shortly after startup; /var/volatile/tmp/upnp must exist on the tmpfs mount or openserver dereferences a NULL FILE* and segfaults."
+
+
