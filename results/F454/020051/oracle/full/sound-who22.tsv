@@ -10,11 +10,15 @@
 # responder=pic
 # settle_ms=3000
 # suite=sound-who22
-# suite_sha256=7bab0812ef6d61cec6c73eb0bde20c34ac0ba377c5bd562b4e13cb5645a5b942
+# suite_sha256=13f067249aa7173cfd71cda982bca09f8db6926f7db3276f60826785bb1a620a
 # oracle_version=3
 direction	input	reply	verdict	output
+down	*#22*2#1*#10*82*65*68*73*79*32*32*32##	nack	silent	-
+down	*#22*2#1*#11*1*10150*5##	ack	out	bus:24 30 36 44 31 30 31 46 38 33 32 30 32 30 35 31 46 42 38 0d
+down	*#22*2#1*#5*1*10150##	ack	out	bus:24 30 36 44 31 30 31 46 38 33 32 30 32 30 46 31 46 42 38 0d
 down	*#22*2#1*#6*33##	ack	out	bus:24 30 34 39 33 30 31 38 46 44 31 0d
 down	*#22*2#1*#6*7##	ack	out	bus:24 30 34 39 33 30 31 38 46 43 36 0d
+down	*#22*2#1*10##	nack	silent	-
 down	*#22*2#1*13##	nack	out	bus:24 30 36 44 31 30 31 46 38 33 33 30 33 30 30 30 30 30 30 0d
 down	*#22*2#1*5##	nack	out	bus:24 30 34 39 35 30 31 38 46 41 30 0d
 down	*#22*2#1*6##	nack	out	bus:24 30 34 39 35 30 31 38 46 43 30 0d
