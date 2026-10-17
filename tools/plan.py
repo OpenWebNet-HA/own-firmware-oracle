@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from collections.abc import Callable
@@ -60,7 +61,8 @@ def is_stale(catalog: Path, results_root: Path) -> bool:
 
 
 def is_reproducible(catalog: Path, results_root: Path) -> bool:
-    """A fresh manifest whose image anyone can fetch: no R2 secrets needed.
+    """A fresh manifest whose image can be fetched (public vendor URL, or R2
+    when R2_ENDPOINT is configured in the environment).
 
     Stale entries are left out on purpose; their manifest is SUPPOSED to change
     and oracle.yml rebuilds it. Blocked entries have no manifest to re-check.
@@ -68,8 +70,12 @@ def is_reproducible(catalog: Path, results_root: Path) -> bool:
     entry = load(catalog)
     if is_blocked(entry):
         return False
-    public = any("vendor" in s for s in entry["wrapper"].get("sources", []))
-    return public and not is_stale(catalog, results_root)
+    has_r2 = bool(os.environ.get("R2_ENDPOINT"))
+    fetchable = any(
+        "vendor" in s or ("r2" in s and has_r2)
+        for s in entry["wrapper"].get("sources", [])
+    )
+    return fetchable and not is_stale(catalog, results_root)
 
 
 def touched_catalog_entries(root: Path, changed_files: list[str]) -> set[str] | None:

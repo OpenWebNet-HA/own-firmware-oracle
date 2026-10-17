@@ -34,12 +34,15 @@ R2_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 # the rest (flash map, notes) is free-form YAML.
 CatalogEntry = dict[str, Any]
 
-# Hosts the vendor firmware is actually published on (BTicino / Legrand).
+# Hosts the vendor firmware is actually published on (BTicino / Legrand /
+# GitHub user-attachments).
 VENDOR_HOSTS = {
     "www.bticino.be",
     "assets.legrand.com",
     "homesystems-legrandgroup.com",
     "www.homesystems-legrandgroup.com",
+    "github.com",
+    "objects.githubusercontent.com",
 }
 
 
@@ -50,6 +53,16 @@ def check_vendor_url(url: str) -> None:
         raise ValueError(f"vendor URL must be https://, got {url!r}")
     if parts.hostname not in VENDOR_HOSTS:
         raise ValueError(f"vendor host {parts.hostname!r} is not allow-listed")
+    if parts.fragment:
+        member = parts.fragment.removeprefix("cookfs=")
+        if (
+            not parts.fragment.startswith("cookfs=")
+            or not R2_KEY.match(member)
+            or ".." in member
+        ):
+            raise ValueError(
+                f"vendor URL fragment {parts.fragment!r} must be cookfs=<plain path>"
+            )
 
 
 def _name(value: object, field: str) -> str:
