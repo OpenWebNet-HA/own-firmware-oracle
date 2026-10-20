@@ -246,6 +246,46 @@ def test_sandbox_jail_makes_the_sysroot_root(tmp_path):
     assert _opt(plain, "--bind") == [(str(tmp_path), "/")]
 
 
+def test_sandbox_ordered_dir_mounts(tmp_path):
+    assert isinstance(sandbox._tmpfs_reverses_readdir(tmp_path), bool)
+    assert sandbox._tmpfs_reverses_readdir(tmp_path / "missing") is False
+
+    sysroot = tmp_path / "sysroot"
+    libcoso = sysroot / "home" / "bticino" / "libcoso"
+    libcoso.mkdir(parents=True)
+    # Empty plugin dir produces no tmpfs or bind mounts
+    assert sandbox._ordered_dir_mounts(sysroot, reverse=False) == []
+
+    b_so = libcoso / "libplug_b.so"
+    a_so = libcoso / "libplug_a.so"
+    b_so.write_bytes(b"b")
+    a_so.write_bytes(b"a")
+    (libcoso / "subdir").mkdir()
+
+    assert sandbox._ordered_dir_mounts(sysroot, reverse=False) == [
+        "--tmpfs",
+        "/home/bticino/libcoso",
+        "--bind",
+        str(a_so),
+        "/home/bticino/libcoso/libplug_a.so",
+        "--bind",
+        str(b_so),
+        "/home/bticino/libcoso/libplug_b.so",
+    ]
+    assert sandbox._ordered_dir_mounts(sysroot, reverse=True) == [
+        "--tmpfs",
+        "/home/bticino/libcoso",
+        "--bind",
+        str(b_so),
+        "/home/bticino/libcoso/libplug_b.so",
+        "--bind",
+        str(a_so),
+        "/home/bticino/libcoso/libplug_a.so",
+    ]
+    argv = sandbox.jail(sysroot, ["/bin/sh"])
+    assert ("/home/bticino/libcoso",) in _opt(argv, "--tmpfs")
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

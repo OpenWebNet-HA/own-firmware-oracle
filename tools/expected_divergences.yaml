@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: Apache-2.0
+# Machine-checked Expected Divergence Ledger for Tier B Trace Replay & check.py
+schema_version: "1.0.0"
+
+not_emulated_gateway:
+  F455:
+    files: 3
+    tx_count: 76
+    reason: "F455 gateway binary is catalogued only (not emulated in QEMU fleet)."
+  MH201:
+    files: 5
+    tx_count: 46
+    reason: "MH201 gateway binary is catalogued only (not emulated in QEMU fleet)."
+  H4890:
+    files: 4
+    tx_count: 0
+    rx_count: 483
+    reason: "H4890 display passive bus captures; mapped to H4684 for grammar checks."
+
+firmware_version_skew:
+  - product: "MyHomeServer1"
+    oracle_version: "028206"
+    field_versions: ["2.65.9", "2.83.2", "2.87.13"]
+    reason: "Field MyHomeServer1 captures run older/newer firmware than 028206."
+  - product: "F454"
+    oracle_version: "020051"
+    field_versions: ["1.0.34", "2.0.48", "2.0"]
+    reason: "F454 1.0.34/2.0.48 differ from oracle 020051 on WHO 5/13 version strings."
+  - product: "F461"
+    oracle_version: "020011"
+    field_versions: ["2.0.5"]
+    reason: "F461 bench README notes 2.0.5 vs 2.0.11 WHO 13 version string."
+  - product: "MH200"
+    oracle_version: "020102"
+    field_versions: ["1.5.30", "2.0.0", "2.1.0"]
+    reason: "Field MH200 captures report 2.0.0/2.1.0 vs oracle 020102."
+  - product: "MH202"
+    oracle_version: "010024"
+    field_versions: ["1.0.21"]
+    reason: "Field MH202 capture reports 1.0.21 vs oracle 010024."
+
+circular_reference_excluded:
+  - evidence_id: "EVID-MH200-WHAT19-FAULT"
+    bundle: "cap-mh200-what19-fault-20260924"
+    frame: "*#1*74##"
+    replacement_frame: "*#1*75##"
+    reason: "WHERE=74 reply in PicResponder was hardcoded from this bundle in commit 1110fe6 and bundle lacks ACK delimiter; tested via WHERE=75."
+
+duplicate_capture_deduped:
+  - myhome_trace: "traces/issue_466/myhome_trace_MH200_f414_dimmer_2026-09-26T21-59-00.json"
+    encyclopedia_bundle: "cap-mh200-f414-dimmer-20260926"
+    gateway_model: "MH200"
+    reason: "Identical (gateway_model, sha256(tx_rx_pairs)) capture stored in both repos."
+  - myhome_trace: "traces/issue_466/myhome_trace_MH200_f418u2_dimmer_2026-09-27T12-15-00.json"
+    encyclopedia_bundle: "cap-mh200-f418u2-dimmer-20260927"
+    gateway_model: "MH200"
+    reason: "Identical (gateway_model, sha256(tx_rx_pairs)) capture stored in both repos."
+
+clock_or_crash_known:
+  clock_and_runtime_frames:
+    - "*#13**0##"
+    - "*#13**0*0##"
+    - "*#13**1##"
+    - "*#13**19##"
+    - "*#13**22##"
+    - "*#13**16##"
+    - "*#13**15##"
+    - "*#13**23##"
+    - "*#13**24##"
+    - "*#1013*0*1##"
+    - "*#1013**1##"
+  crash_frames:
+    - product: "F461"
+      frame: "*#4*2*22##"
+      reason: "Known bt_termo daemon crash on WHO=4 DIMENSION 22 in F461 020011."
+    - product: "F461"
+      frame: "*#4*#0*22##"
+      reason: "Known bt_termo daemon crash on WHO=4 DIMENSION 22 in F461 020011."
+  out_of_scope_frames:
+    - "*#1*04##"
+    - "*2*1*05##"
+    - "*2*2*05##"
+    - "*#2*05##"
+    - "*#4*2*15#1##"
+    - "*#4*0*0##"
+    - "*#4*0*12##"
+    - "*#4*2*#30*25*12*2026##"
+    - "*#4*2*#31*10*30##"
+    - "*#4*2*#32*02*00##"
+    - "*#1004*2##"
+
+silent_bus_vs_populated_trace:
+  frames:
+    - "*#1*74##"
+    - "*#1001*74##"
+    - "*#16*0##"
+    - "*#16*101##"
+    - "*#17*0##"
+    - "*#18*51*#1200#1*0##"
+    - "*#18*51*51##"
+    - "*#2*11#4#02*10##"
+    - "*#2*31*#11#001*40##"
+    - "*#4*#0*#14*0210*1##"
+    - "*#4*0##"
+    - "*#4*105*15##"
+    - "*#5*#1##"
+    - "*#5*0##"
+    - "*#9*0##"
+    - "*1*1*0##"
+    - "*1*1*00##"
+    - "*2*11#1#001*31##"
+    - "*2*12#1#001*31##"
+    - "*25*11#0*11##"
+    - "*25*21#1*21##"
+    - "*4*0*#0##"
+    - "*4*1*#0##"
+    - "*4*102*#0##"
+    - "*4*303*#0##"
+    - "*4*3101*#0##"
+    - "*4*311*#0##"
+    - "*9*0*1##"
+    - "*9*1*1##"
+

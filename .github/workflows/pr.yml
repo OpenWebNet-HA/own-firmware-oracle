@@ -83,6 +83,8 @@ jobs:
         run: python tools/guard.py
       - name: mcp index check
         run: python tools/mcp_index.py --check
+      - name: plant index check
+        run: python tools/plant_index.py --check
       - name: sync readme check
         run: python tools/sync_readme.py --check
       # fail_under in pyproject.toml is the coverage ratchet.

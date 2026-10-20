@@ -297,14 +297,24 @@ class PicResponder:
         self,
         version: str = "010108",
         inner: Responder | None = None,
+        pace_2digit_ms: float = 25.0,
     ) -> None:
         self.version = version
         self.inner = inner or Silent()
+        self.pace_2digit_ms = pace_2digit_ms
+        self._deferred: list[bytes] = []
+        self._next_emit_ms: float = 0.0
         self.name = (
             "pic" if isinstance(self.inner, Silent) else f"pic:{self.inner.name}"
         )
 
+    def _is_2digit_v8(self) -> bool:
+        if len(self.version) == 6 and self.version.isdigit():
+            return int(self.version[2:4]) > 27 and int(self.version[4:6]) > 0
+        return False
+
     def _respond_3digit(self, frame: bytes) -> list[bytes] | None:
+        is_plant = self.inner.name.startswith("plant:")
         if frame.startswith(b"$024"):
             return [f"$025{self.version.zfill(8)}\r".encode("ascii")]
         if frame.startswith(b"$026"):
@@ -314,12 +324,17 @@ class PicResponder:
         if frame.startswith(b"$002"):
             return [b"$000\r"]
         if frame.startswith(b"$003"):
-            answers = [b"$019\r"]
-            if frame.startswith(b"$00374001500"):
-                answers.extend([b"$017B874120E\r", b"$018D274010489FBFFF7\r"])
-            if not isinstance(self.inner, Silent):
-                answers.extend(self.inner.respond(frame))
-            return answers
+            if not is_plant:
+                answers = [b"$019\r"]
+                if isinstance(self.inner, Silent) and frame.startswith(b"$00374001500"):
+                    answers.extend([b"$017B874120E\r", b"$018D274010489FBFFF7\r"])
+                return answers + self.inner.respond(frame)
+            inner_ans = self.inner.respond(frame)
+            has_dev_fn = getattr(self.inner, "has_p2p_device", None)
+            has_dev = bool(has_dev_fn(frame)) if callable(has_dev_fn) else False
+            if inner_ans or has_dev:
+                return [b"$00800\r", *inner_ans]
+            return [b"$019\r"]
         if any(
             frame.startswith(p)
             for p in (
@@ -333,13 +348,33 @@ class PicResponder:
                 b"$053",
             )
         ):
-            answers = [b"$000\r"]
-            if not isinstance(self.inner, Silent):
-                answers.extend(self.inner.respond(frame))
-            return answers
+            if not is_plant:
+                return [b"$000\r", *self.inner.respond(frame)]
+            inner_ans = self.inner.respond(frame)
+            stripped = frame.rstrip(b"\r\n")
+            is_tx_ack_only = (
+                frame.startswith(b"$004")
+                or frame.startswith((b"$006D1A", b"$006D1B"))
+                or (
+                    frame.startswith(b"$006EC")
+                    and stripped.endswith((b"001000", b"001100"))
+                )
+            )
+            if inner_ans or is_tx_ack_only:
+                return [b"$00800\r", *inner_ans]
+            return [b"$000\r"]
         return None
 
+    def _queue_2digit(self, ack: bytes, inner_ans: list[bytes]) -> list[bytes]:
+        if not inner_ans:
+            return [ack]
+        if self.pace_2digit_ms <= 0 or not self.inner.name.startswith("plant:"):
+            return [ack, *inner_ans]
+        self._deferred.extend(inner_ans)
+        return [ack]
+
     def _respond_2digit(self, frame: bytes) -> list[bytes] | None:
+        is_plant = self.inner.name.startswith("plant:")
         if frame.startswith(b"$24"):
             return [f"$25{self.version}\r".encode("ascii")]
         if frame.startswith(b"$26"):
@@ -359,18 +394,59 @@ class PicResponder:
                 b"$53",
             )
         ):
-            answers = [b"$00\r"]
-            if not isinstance(self.inner, Silent):
-                answers.extend(self.inner.respond(frame))
-            return answers
+            if not is_plant:
+                return [b"$00\r", *self.inner.respond(frame)]
+            inner_ans = self.inner.respond(frame)
+            ack = (
+                b"$08\r"
+                if (inner_ans or frame.startswith(b"$04")) and self._is_2digit_v8()
+                else b"$00\r"
+            )
+            return self._queue_2digit(ack, inner_ans)
         if frame.startswith(b"$03"):
-            answers = [b"$19\r"]
-            if frame.startswith(b"$0374001500"):
-                answers.extend([b"$17B874120E\r", b"$18D274010489FBFFF7\r"])
-            if not isinstance(self.inner, Silent):
-                answers.extend(self.inner.respond(frame))
-            return answers
+            if not is_plant:
+                answers = [b"$19\r"]
+                if isinstance(self.inner, Silent) and frame.startswith(b"$0374001500"):
+                    answers.extend([b"$17B874120E\r", b"$18D274010489FBFFF7\r"])
+                return answers + self.inner.respond(frame)
+            inner_ans = self.inner.respond(frame)
+            has_dev_fn = getattr(self.inner, "has_p2p_device", None)
+            has_dev = bool(has_dev_fn(frame)) if callable(has_dev_fn) else False
+            ack = (
+                b"$08\r"
+                if (inner_ans or has_dev) and self._is_2digit_v8()
+                else b"$19\r"
+            )
+            return self._queue_2digit(ack, inner_ans)
         return None
+
+    def reset(self) -> None:
+        self._deferred.clear()
+        self._next_emit_ms = 0.0
+        reset_fn = getattr(self.inner, "reset", None)
+        if callable(reset_fn):
+            reset_fn()
+
+    def tick(self, now_ms: float) -> list[bytes]:
+        tick_fn = getattr(self.inner, "tick", None)
+        if callable(tick_fn):
+            inner_tick: list[bytes] = tick_fn(now_ms)
+            if inner_tick:
+                if self.pace_2digit_ms > 0 and self._is_2digit_v8():
+                    self._deferred.extend(inner_tick)
+                else:
+                    return inner_tick
+        if self._deferred:
+            if self._next_emit_ms == 0.0:
+                self._next_emit_ms = now_ms + self.pace_2digit_ms
+                return []
+            if now_ms >= self._next_emit_ms:
+                frame = self._deferred.pop(0)
+                self._next_emit_ms = (
+                    now_ms + self.pace_2digit_ms if self._deferred else 0.0
+                )
+                return [frame]
+        return []
 
     def respond(self, frame: bytes) -> list[bytes]:
         res_3d = self._respond_3digit(frame)
@@ -416,11 +492,21 @@ class Bus:
                 self._append(DEVICE, answer)
                 self.port.write(answer)
 
+    def _tick(self, now_ms: float) -> bool:
+        tick_fn = getattr(self.responder, "tick", None)
+        tick_frames: list[bytes] = tick_fn(now_ms) if callable(tick_fn) else []
+        for answer in tick_frames:
+            self._append(DEVICE, answer)
+            self.port.write(answer)
+        return bool(tick_frames)
+
     def pump(self) -> bool:
         """Move whatever is waiting; True if the firmware wrote anything."""
         data = self.port.read()
-        self._accept(self.framer.feed(data, self.clock.now_ms()))
-        return bool(data)
+        now_ms = self.clock.now_ms()
+        self._accept(self.framer.feed(data, now_ms))
+        ticked = self._tick(now_ms)
+        return bool(data) or ticked
 
     def settle(
         self,
@@ -449,6 +535,9 @@ class Bus:
 
     def gateway_frames(self, since: int) -> list[bytes]:
         return [f.data for f in self.log[since:] if f.source == GATEWAY]
+
+    def device_frames(self, since: int) -> list[bytes]:
+        return [f.data for f in self.log[since:] if f.source == DEVICE]
 
 
 def get_framer(name: str) -> Framer:
@@ -482,6 +571,19 @@ def get_responder(
         return SoundSourceResponder(source_id=2)
     if name == "pic:sound_source":
         return PicResponder(version=version, inner=SoundSourceResponder(source_id=2))
+    if name.startswith("plant:"):
+        from oracle.plant.responder import PlantResponder  # noqa: PLC0415
+
+        fixture = name.split(":", 1)[1]
+        return PlantResponder.from_fixture(fixture, version=version)
+    if name.startswith("pic:plant:"):
+        from oracle.plant.responder import PlantResponder  # noqa: PLC0415
+
+        fixture = name.split(":", 2)[2]
+        return PicResponder(
+            version=version,
+            inner=PlantResponder.from_fixture(fixture, version=version),
+        )
     if name.startswith("ack:"):
         parts = name.split(":")
         if len(parts) == 2:

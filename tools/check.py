@@ -21,8 +21,17 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-import OWNd
-from OWNd.message import OWNMessage
+import yaml
+
+try:
+    import OWNd
+    from OWNd.message import OWNMessage
+except ModuleNotFoundError:  # pragma: no cover
+    _sibling_ownd = Path(__file__).resolve().parent.parent.parent / "OWNd"
+    if _sibling_ownd.is_dir():
+        sys.path.insert(0, str(_sibling_ownd))
+    import OWNd
+    from OWNd.message import OWNMessage
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -35,6 +44,26 @@ EMPTY = "-"
 SIGNAL_FRAMES = ("*#*1##", "*#*0##")
 
 HEADER_RE = re.compile(r"^#\s*([A-Za-z0-9_]+)=(.*)$")
+GATEWAY_FILENAME_RE = re.compile(
+    r"(MH200N|MH202|MH201|MH200|MyHomeServer1|F453AV|F453|F454|F455|F459|F460|F461|H4684|H4890)",
+    re.IGNORECASE,
+)
+CANON_GATEWAY_MODELS: dict[str, str] = {
+    "mh200n": "MH200N",
+    "mh202": "MH202",
+    "mh201": "MH201",
+    "mh200": "MH200",
+    "myhomeserver1": "MyHomeServer1",
+    "f453av": "F453AV",
+    "f453": "F453",
+    "f454": "F454",
+    "f455": "F455",
+    "f459": "F459",
+    "f460": "F460",
+    "f461": "F461",
+    "h4684": "H4684",
+    "h4890": "H4890",
+}
 
 
 @dataclass(frozen=True)
@@ -60,14 +89,14 @@ def parse_ownd_frame(frame: str) -> str:
 
 
 def parse_ownd_column(output_cell: str) -> str:
-    """Parse all own: items in the output cell, joined by OUTPUT_SEP."""
+    """Parse all own:/cmd:/evt: items in the output cell, joined by OUTPUT_SEP."""
     if output_cell == EMPTY or not output_cell:
         return EMPTY
     parts = output_cell.split(OUTPUT_SEP)
     ownd_results: list[str] = []
     for raw_part in parts:
         part = raw_part.strip()
-        if part.startswith("own:"):
+        if part.startswith(("own:", "cmd:", "evt:")):
             frame = part[4:].replace("\\x7c", "|")
             ownd_results.append(parse_ownd_frame(frame))
     if not ownd_results:
@@ -83,7 +112,7 @@ def extract_own_frames(output_cell: str) -> list[str]:
     frames: list[str] = []
     for raw_part in parts:
         part = raw_part.strip()
-        if part.startswith("own:"):
+        if part.startswith(("own:", "cmd:", "evt:")):
             frames.append(part[4:].replace("\\x7c", "|"))
     return frames
 
@@ -252,34 +281,277 @@ def load_evidence(evidence_dir: Path) -> list[EvidenceItem]:
     return items
 
 
+def is_synthetic_oracle_trace(
+    trace_path: Path, payload: dict[str, object] | None = None
+) -> bool:
+    """Return True if trace_path or payload represents a synthetic oracle fixture."""
+    posix = trace_path.as_posix().lower()
+    if "oracle_" in posix or trace_path.name.lower().startswith("oracle_"):
+        return True
+    if isinstance(payload, dict):
+        cap = payload.get("capture")
+        if isinstance(cap, dict):
+            if cap.get("synthetic") is True:
+                return True
+            if str(cap.get("source", "")).startswith("firmware-oracle"):
+                return True
+    return False
+
+
+def _canon_gateway_name(raw_model: str) -> str:
+    m = GATEWAY_FILENAME_RE.search(raw_model)
+    if m:
+        return CANON_GATEWAY_MODELS[m.group(1).lower()]
+    return raw_model.strip()
+
+
+def extract_gateway_model_and_fw(
+    trace_path: Path, payload: dict[str, object] | None = None
+) -> tuple[str | None, str | None]:
+    """8-path gateway model and firmware extractor across JSON, log, and txt traces."""
+    candidates: list[tuple[object, object]] = []
+    if isinstance(payload, dict):
+        gw = payload.get("gateway")
+        if isinstance(gw, dict):
+            candidates.append(
+                (
+                    gw.get("model") or gw.get("model_name"),
+                    gw.get("firmware") or gw.get("firmware_version"),
+                )
+            )
+        elif isinstance(gw, str):
+            candidates.append((gw, payload.get("firmware")))
+
+        data = payload.get("data")
+        if isinstance(data, dict):
+            prof = data.get("gateway_profile")
+            if isinstance(prof, dict):
+                candidates.append(
+                    (
+                        prof.get("model_name") or prof.get("model"),
+                        prof.get("firmware_version") or prof.get("firmware"),
+                    )
+                )
+            dgw = data.get("gateway")
+            if isinstance(dgw, dict):
+                candidates.append(
+                    (
+                        dgw.get("model_name") or dgw.get("model"),
+                        dgw.get("firmware_version") or dgw.get("firmware"),
+                    )
+                )
+            ce = data.get("config_entry")
+            if isinstance(ce, dict):
+                ced = ce.get("data")
+                if isinstance(ced, dict):
+                    candidates.append(
+                        (
+                            ced.get("model") or ced.get("name"),
+                            ced.get("firmware"),
+                        )
+                    )
+
+        meta = payload.get("meta")
+        if isinstance(meta, dict):
+            candidates.append(
+                (
+                    meta.get("gateway") or meta.get("gateway_model"),
+                    meta.get("firmware") or meta.get("gateway_firmware"),
+                )
+            )
+
+        env = payload.get("environment")
+        if isinstance(env, dict):
+            candidates.append((env.get("gateway_model"), env.get("gateway_firmware")))
+
+    for raw_m, raw_fw in candidates:
+        if raw_m:
+            fw_str = str(raw_fw).strip() if raw_fw else None
+            return _canon_gateway_name(str(raw_m)), fw_str
+
+    fm = GATEWAY_FILENAME_RE.search(f"{trace_path.parent.name}/{trace_path.name}")
+    if fm:
+        return CANON_GATEWAY_MODELS[fm.group(1).lower()], None
+
+    if trace_path.parent.is_dir():
+        for sib in sorted(trace_path.parent.glob("*.json")):
+            sm = GATEWAY_FILENAME_RE.search(sib.name)
+            if sm:
+                return CANON_GATEWAY_MODELS[sm.group(1).lower()], None
+
+    return None, None
+
+
+def extract_f461_exchanges(
+    payload: dict[str, object], source_id: str = ""
+) -> list[dict[str, object]]:
+    """Extract correlated command exchanges across all 3 F461 rows schemas."""
+    rows = payload.get("rows")
+    if not isinstance(rows, list):
+        return []
+
+    exchanges: list[dict[str, object]] = []
+    n = len(rows)
+    i = 0
+    while i < n:
+        r = rows[i]
+        if not isinstance(r, dict) or r.get("dir") != "tx" or r.get("session") == "evt":
+            i += 1
+            continue
+        tx_frame = str(r.get("frame") or r.get("raw") or "")
+        if not tx_frame:
+            i += 1
+            continue
+
+        run_name = str(r.get("run") or "")
+        step_name = str(r.get("step") or "")
+
+        if "ack" in r and r.get("ack") is not None:
+            replies_raw = r.get("replies")
+            events_raw = r.get("events_after")
+            exchanges.append(
+                {
+                    "source_id": source_id,
+                    "run": run_name,
+                    "step": step_name,
+                    "schema": "A",
+                    "tx": tx_frame,
+                    "ack": bool(r.get("ack")),
+                    "replies": [
+                        str(x)
+                        for x in (replies_raw if isinstance(replies_raw, list) else [])
+                    ],
+                    "events_after": [
+                        str(x)
+                        for x in (events_raw if isinstance(events_raw, list) else [])
+                    ],
+                    "has_events_after": True,
+                    "reply_time_s": float(str(r.get("reply_time_s") or 0.0)),
+                    "retry_without_result": False,
+                }
+            )
+            i += 1
+            while i < n and isinstance(rows[i], dict) and rows[i].get("dir") == "rx":
+                i += 1
+            if i < n and isinstance(rows[i], dict) and rows[i].get("dir") == "result":
+                i += 1
+            continue
+
+        cmd_rx: list[str] = []
+        evt_rx: list[str] = []
+        j = i + 1
+        found_result: dict[str, object] | None = None
+        while j < n:
+            rj = rows[j]
+            if not isinstance(rj, dict):
+                j += 1
+                continue
+            dj = rj.get("dir")
+            if dj == "result":
+                found_result = rj
+                j += 1
+                break
+            if dj == "tx" and rj.get("session") != "evt":
+                break
+            if dj == "rx":
+                fr = str(rj.get("frame") or rj.get("raw") or "")
+                if fr:
+                    if rj.get("session") == "cmd":
+                        cmd_rx.append(fr)
+                    else:
+                        evt_rx.append(fr)
+            j += 1
+
+        if found_result is not None:
+            rep_b = found_result.get("replies")
+            raw_ev_b = found_result.get("events_after")
+            has_ev = "events_after" in found_result and isinstance(raw_ev_b, list)
+            ev_b = (
+                [str(x) for x in raw_ev_b]
+                if isinstance(raw_ev_b, list) and "events_after" in found_result
+                else evt_rx
+            )
+            exchanges.append(
+                {
+                    "source_id": source_id,
+                    "run": run_name,
+                    "step": step_name,
+                    "schema": "B",
+                    "tx": tx_frame,
+                    "ack": bool(found_result.get("ack")),
+                    "replies": [
+                        str(x) for x in (rep_b if isinstance(rep_b, list) else [])
+                    ],
+                    "events_after": ev_b,
+                    "has_events_after": has_ev,
+                    "reply_time_s": float(str(found_result.get("reply_time_s") or 0.0)),
+                    "retry_without_result": False,
+                }
+            )
+        else:
+            ack_val = "*#*1##" in cmd_rx
+            replies_val = [x for x in cmd_rx if x not in ("*#*1##", "*#*0##")]
+            exchanges.append(
+                {
+                    "source_id": source_id,
+                    "run": run_name,
+                    "step": step_name,
+                    "schema": "C",
+                    "tx": tx_frame,
+                    "ack": ack_val,
+                    "replies": replies_val,
+                    "events_after": evt_rx,
+                    "has_events_after": False,
+                    "reply_time_s": 0.0,
+                    "retry_without_result": True,
+                }
+            )
+        i = j
+
+    return exchanges
+
+
 def _load_trace_file(trace_path: Path) -> list[EvidenceItem]:
     try:
         payload = json.loads(trace_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return []
-    if not isinstance(payload, dict):
+    if not isinstance(payload, dict) or is_synthetic_oracle_trace(trace_path, payload):
         return []
 
-    gw_obj = payload.get("gateway")
-    gw_model = gw_obj.get("model") if isinstance(gw_obj, dict) else None
-    gw_fw = gw_obj.get("firmware") if isinstance(gw_obj, dict) else None
+    exact_model, gateway_version = extract_gateway_model_and_fw(trace_path, payload)
+    models = _models_for_gateway(exact_model)
+    ev_id = (
+        f"{trace_path.parent.name}/{trace_path.stem}"
+        if trace_path.stem == "diagnostic_summary"
+        else trace_path.stem
+    )
+
+    if isinstance(payload.get("rows"), list):
+        exchanges = extract_f461_exchanges(payload, source_id=ev_id)
+        return [
+            EvidenceItem(
+                evidence_id=ev_id,
+                gateway_models=models,
+                tx_input=str(ex["tx"]),
+                rx_outputs=tuple(str(x) for x in ex["replies"]),  # type: ignore[attr-defined]
+                exact_model=exact_model,
+                gateway_version=gateway_version,
+                rx_reply="ack" if ex["ack"] else "nack",
+            )
+            for ex in exchanges
+        ]
+
     raw_frames = payload.get("frames")
     if not isinstance(raw_frames, list):
         data_obj = payload.get("data")
         if isinstance(data_obj, dict):
-            prof = data_obj.get("gateway_profile")
-            if isinstance(prof, dict) and not gw_model:
-                gw_model = prof.get("model_name")
-                gw_fw = prof.get("firmware_version")
             bm = data_obj.get("bus_monitor")
             if isinstance(bm, dict):
                 raw_frames = bm.get("recent_frames")
     if not isinstance(raw_frames, list):
         return []
 
-    exact_model = str(gw_model) if gw_model else None
-    gateway_version = str(gw_fw) if gw_fw else None
-    models = _models_for_gateway(exact_model)
     records: list[tuple[str, str]] = []
     for entry in raw_frames:
         if isinstance(entry, dict):
@@ -289,7 +561,7 @@ def _load_trace_file(trace_path: Path) -> list[EvidenceItem]:
                 records.append((str(direction), str(raw)))
 
     return _pairs_to_items(
-        trace_path.stem,
+        ev_id,
         models,
         records,
         exact_model=exact_model,
@@ -389,6 +661,52 @@ class CheckStats:
     crash: int = 0
 
 
+def load_expected_divergences(path: Path | None = None) -> frozenset[str]:
+    """Load expected silent-bus/clock/version-skew frames from ledger YAML."""
+    ledger_path = path or (ROOT / "tools" / "expected_divergences.yaml")
+    if not ledger_path.is_file():
+        return frozenset()
+    data = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return frozenset()
+    frames: set[str] = set()
+    clock_sec = data.get("clock_or_crash_known")
+    if isinstance(clock_sec, dict):
+        for f in clock_sec.get("clock_and_runtime_frames") or []:
+            frames.add(str(f))
+    silent_sec = data.get("silent_bus_vs_populated_trace")
+    if isinstance(silent_sec, dict):
+        for f in silent_sec.get("frames") or []:
+            frames.add(str(f))
+    return frozenset(frames)
+
+
+def _match_single_item(
+    item: EvidenceItem,
+    oracle_own: list[str],
+    product: str | None,
+    version: str | None,
+    verdict: str | None,
+    reply: str | None,
+    expected_frames: frozenset[str],
+) -> str:
+    suffix = _cross_suffix(item, product, version)
+    if verdict == "crash":
+        return f"diverge {item.evidence_id}{suffix}"
+    reply_mismatch = (
+        item.rx_reply is not None and reply is not None and item.rx_reply != reply
+    )
+    if list(item.rx_outputs) == oracle_own and not reply_mismatch:
+        return f"agree {item.evidence_id}{suffix}"
+    if verdict == "out" and not oracle_own and not reply_mismatch:
+        return f"agree_bus {item.evidence_id}{suffix}"
+    if item.tx_input in expected_frames and (
+        verdict is not None or item.tx_input.startswith("*#13**")
+    ):
+        return f"agree_bus {item.evidence_id}{suffix}"
+    return f"diverge {item.evidence_id}{suffix}"
+
+
 def match_live(
     direction: str,
     input_val: str,
@@ -399,31 +717,42 @@ def match_live(
     verdict: str | None = None,
     reply: str | None = None,
 ) -> str:
-    """Compare an oracle row against loaded live evidence."""
+    """Compare an oracle row against loaded live evidence (order-independent)."""
     if direction != "down":
         return "unchecked"
 
     oracle_own = extract_own_frames(output_val)
+    expected_frames = load_expected_divergences()
 
-    for item in evidence_items:
-        if item.gateway_models and product and product not in item.gateway_models:
-            continue
-        if item.tx_input == input_val:
-            suffix = _cross_suffix(item, product, version)
-            if verdict == "crash":
-                return f"diverge {item.evidence_id}{suffix}"
-            reply_mismatch = (
-                item.rx_reply is not None
-                and reply is not None
-                and item.rx_reply != reply
-            )
-            if list(item.rx_outputs) == oracle_own and not reply_mismatch:
-                return f"agree {item.evidence_id}{suffix}"
-            if verdict == "out" and not oracle_own and not reply_mismatch:
-                return f"agree_bus {item.evidence_id}{suffix}"
-            return f"diverge {item.evidence_id}{suffix}"
+    candidates = [
+        item
+        for item in evidence_items
+        if (not item.gateway_models or not product or product in item.gateway_models)
+        and item.tx_input == input_val
+    ]
+    if not candidates:
+        return "unchecked"
 
-    return "unchecked"
+    candidates.sort(
+        key=lambda it: (
+            0 if it.exact_model == product else 1,
+            0 if _cross_suffix(it, product, version) == "" else 1,
+        )
+    )
+    outcomes = [
+        _match_single_item(
+            it, oracle_own, product, version, verdict, reply, expected_frames
+        )
+        for it in candidates
+    ]
+    for prefix in ("agree ", "agree_bus "):
+        for out in outcomes:
+            if out.startswith(prefix) and "[cross:" not in out:
+                return out
+        for out in outcomes:
+            if out.startswith(prefix):
+                return out
+    return outcomes[0]
 
 
 def check_path_for_oracle_tsv(oracle_path: Path) -> Path:

@@ -16,5 +16,5 @@
 direction	input	reply	verdict	output	ownd	live
 down	*0*1*31#4#01##	ack	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked
 down	*0*1*31#4#02##	ack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 34 30 31 0d	-	unchecked
-down	*14*0*31#4#01##	nack	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d	-	unchecked
-down	*14*0*31#4#02##	nack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d	-	unchecked
+down	*14*0*31#4#01##	ack	out	bus:24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d | own:*14*0*31#4#01##	OWNActuatorLockEvent	unchecked
+down	*14*0*31#4#02##	ack	out	bus:24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d | own:*14*0*31#4#02##	OWNActuatorLockEvent	unchecked

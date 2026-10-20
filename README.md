@@ -27,16 +27,28 @@ The pipeline is a means. These are the ends:
 
 ### What the oracle can and cannot tell you
 
-Read this before using any result for any of the goals.
+Read this before using any result for any of the goals. The oracle supports two
+execution modes:
+
+- **Stateless Gateway Mode (`harness=full`)**: Emulates the gateway's OpenWebNet
+  and SCS translator daemons against a stateless PIC serial ACK stub (`PicResponder`).
+- **Closed-Loop Gateway + Virtual Plant Mode (`harness=plant:<fixture>`, [`oracle/plant/`](oracle/plant/))**:
+  Connects the emulated gateway firmware (`openserver`, `scsserver`, `bt_luci`,
+  `coso`, `bt_termo`, `bt_energia`) to a stateful virtual SCS plant
+  (`PlantResponder`) over the simulated 2-wire SCS bus, producing **complete
+  end-to-end virtual traces** (`bus:` outbound, `bus_rx:` inbound device replies,
+  `cmd:` command-session replies, `evt:` event-session broadcasts, and
+  transactional `ack` / `nack` outcomes).
 
 | It can answer | It cannot answer |
 |---|---|
-| Does the gateway ACK or NACK this OpenWebNet frame? | What a device does with the bus frame (the bus side is a simulated PIC; the plant is absent) |
-| Which bus frame(s) does it emit, byte for byte? | What a bit in a device-set mask means (WHO 1001 DIM 11: the actuator sets it, the gateway only translates it) |
-| Which OpenWebNet frame comes out for a bus frame I inject (`up`)? | Anything about a gateway whose image we have not catalogued |
-| Does gateway A differ from gateway B for the same input? | Whether a *silent* run means "refused" (a missing reply proves nothing; an emitted frame does) |
+| Does the gateway ACK or NACK this OpenWebNet frame (both with a stateless PIC stub and against a populated/unpopulated virtual plant)? | Physical electrical characteristics or analog bus timing of a live 2-wire SCS line |
+| Which bus frame(s) does the gateway emit (`bus:`), and which inbound device telegrams (`bus_rx:`) does the virtual plant return, byte for byte? | Undocumented actuator-internal bitmasks not yet captured from hardware (unless modeled in the plant fixture, e.g. `WHO 1001 DIM 11` fault channels) |
+| Which OpenWebNet replies (`cmd:`) and event broadcasts (`evt:`) come out across sequential multi-step state transitions (`.seq` virtual traces)? | Anything about a gateway whose image we have not catalogued |
+| Does gateway A differ from gateway B for the same input or the same virtual plant topology? | Whether a *silent* run in stateless mode (`harness=full`) means "refused" (use `harness=plant:<fixture>` to test closed-loop device replies and unpopulated NACKs) |
 
-Every row is a fact about **one image**. The same frame gave different answers
+Every row is a fact about **one image** (and, in closed-loop mode, **one pinned
+plant fixture**). The same frame gave different answers
 on MH200N 1.1.8 and MyHomeServer1 2.82.06 (compare
 `results/*/*/oracle/full/lights-level.tsv`), so a result never transfers to
 another product or firmware without its own row. When evidence disagrees the
@@ -161,14 +173,135 @@ repeatable test source that needs no plant:
    leave the machine; `tools/guard.py` enforces it. That is what makes the
    results publishable and the project safe to share.
 
+## Closed-Loop Gateway + Virtual Plant: Reproducing Full Virtual Traces
+
+Originally, the firmware oracle emulated only the **gateway translator stack** (`openserver`, `scsserver`, `bt_luci`, `coso`, `bt_termo`, `bt_energia`) attached to a stateless PIC serial ACK stub (`PicResponder`). That answered *what the gateway emits on the SCS bus for an OpenWebNet input*, or *what OpenWebNet frame comes out for a single injected bus telegram*, but the physical plant was absent: status queries (`*#1*06##`) had no device to answer them, commands did not mutate actuator state across steps, and unpopulated addresses could not be distinguished from populated ones.
+
+With **[`oracle/plant/`](oracle/plant/)**, the oracle now combines **real emulated gateway firmware** with a **stateful virtual SCS plant** in a closed loop (`harness=plant:<fixture>`, `responder=pic:plant:<fixture>`), allowing us to execute and reproduce **complete end-to-end virtual traces** without physical hardware.
+
+### How the Closed-Loop Gateway + Plant Pipeline Works
+
+```
+OpenWebNet Client (TCP 20000: Command + Event Sessions)
+        │  down: *1*1*06##, *#1*06##, *#4*2##, *#2*1#4#02##
+        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ Emulated Gateway Firmware (QEMU user-mode + bubblewrap jail)      │
+│   openserver ◄──► bt_luci / coso / bt_termo / bt_energia          │
+│                         │                                         │
+│                         ▼                                         │
+│                     scsserver                                     │
+└─────────────────────────┬─────────────────────────────────────────┘
+        │                 │                 ▲
+        │ 1. Outbound     │ 2. PIC TX-ACK   │ 3. Inbound Device
+        │    bus:         │    bus_rx:      │    Telegrams (bus_rx:)
+        │    $003.. / $03 │    $00800\r /   │    $017B8.. / $17B8..
+        ▼                 │    $08\r / $19\r│    $018D2.. / $18E4..
+┌─────────────────────────┴─────────────────┴───────────────────────┐
+│ Virtual SCS Plant (`oracle/plant/` — `PicResponder(PlantResponder)`) │
+│   • Relays (`LightDevice`) + Group `DIMENSION 15` (`B5 <G> D0`)   │
+│   • Non-Linear Dimmers (`DimmerDevice`: `F414`, `F418U2` curves)  │
+│   • Shutters (`CoverDevice`: travel timers, `WHO=14` locks)       │
+│   • Sub-Bus Bridge (`F422` `#4#01` / `#4#02` `EC`/`E4` wrapping)  │
+│   • Climate (`ThermoZoneDevice`: 4-step `bt_termo` `KW4691`)      │
+│   • Energy (`EnergyMeterDevice` `F520`, `EnergyActuatorDevice`)   │
+│   • Fault Channels (`FaultChannel`: `WHAT=19` + `WHO=1001` mask)  │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+1. **Outbound Translation (`bus:`)**: The test driver sends an OpenWebNet frame (`down`) on TCP port 20000. The emulated gateway daemon translates it into an outbound PIC serial frame (`$03`/`$04`/`$06` on 2-digit UART gateways; `$003`/`$004`/`$006` on 3-digit RPMsg gateways).
+2. **PIC Handshake (`bus_rx:`)**: Reverse engineering of `f461/scsserver` and `myhomeserver1/scsserver` ([`findings/pic-inbound-protocol.md`](findings/pic-inbound-protocol.md)) established the exact PIC TX-outcome handshakes:
+   - **3-Digit RPMsg (`F460`, `F461`)**: `Richiesta_Invio_Frame` requires `$00800\r` (`esito_tx[3] == 0`) when a device acknowledges the bus telegram, or `$019\r` / `$000\r` on an unpopulated address (causing `scsserver` to retry 3 times and return `*01*00#` $\to$ OpenWebNet NACK `*#*0##` after ~2.06 s).
+   - **2-Digit UART (`MH200`, `MH200N`, `MyHomeServer1`, `H4684`)**: Legacy firmware (`fwrev <= 27`, e.g. `MH200` `020102` and `MH200N` `010108`) expects `$19\r` for `$03` and `$00\r` for `$04`/`$06`, whereas v8 PIC mode (`fwrev > 27`, e.g. `MyHomeServer1` `028206`) requires `$08\r`. Because `mhs1/scsserver` reads 20 bytes per `read()` syscall and discards bytes after the first `\r`, `PicResponder` paces 2-digit inbound device frames by `25.0 ms`.
+3. **Stateful Device Execution & Inbound Bus Reply (`bus_rx:`)**: `PlantResponder` decodes the SCS payload, updates the target device(s) in `PlantTopology`, and emits `$17<8hex>\r` / `$18<16hex>\r` (2-digit) or `$017<8hex>\r` / `$018<16hex>\r` (3-digit) back into `scsserver`.
+4. **Closed-Loop OpenWebNet Output (`cmd:` and `evt:`)**: The gateway's translator daemons decode the inbound device telegrams and emit command-session responses (`cmd:`), event-session broadcasts (`evt:`), and the final `ack` / `nack` (`reply`), all recorded deterministically in `results/<product>/<version>/oracle/plant-<fixture>/<suite>.tsv` and indexed in [`results/plant_index.json`](results/plant_index.json).
+
+> **Why Clean-Room Instead of `MyHomeSystemEmulator`?**
+> We audited the archived Qt4 C++ [`OpenWebNet-HA/MyHomeSystemEmulator`](https://github.com/OpenWebNet-HA/MyHomeSystemEmulator) (`4f93f44ee5ec`) against real gateway binaries and hardware captures ([`findings/vdk-emulator-audit.md`](findings/vdk-emulator-audit.md)). That repository never modeled the 2-wire SCS byte protocol (passing ASCII `OpenMsg` strings across `btscsbus.cpp`), emitted `*#*1##` ACKs directly from device plugins, lacked dimmer/thermostat/shutter state machines, failed to isolate `F422` sub-bus broadcasts, and mixed LGPL-2.1+ with unlicensed files. `oracle/plant/` is therefore implemented **100% clean-room under Apache-2.0** from firmware binary analysis and physical hardware captures.
+
+---
+
+### Concrete Examples of Reproduced Virtual Traces
+
+Using two hardware-pinned plant fixtures — [`oracle/plant/fixtures/f461-bench.yaml`](oracle/plant/fixtures/f461-bench.yaml) (modeling the physical `F461` test bench) and [`oracle/plant/fixtures/mh200-bench.yaml`](oracle/plant/fixtures/mh200-bench.yaml) (modeling the `MH200` hardware bench with `F414`/`F418U2` dimmers and `F422` sub-bus bridges) — the oracle reproduces multi-step real hardware captures as deterministic `.seq` virtual traces across `F461/020011`, `MH200/020102`, and `MyHomeServer1/028206`:
+
+#### Example 1: Stateful Relay Switching, Group `DIMENSION 15` Transitions & Unpopulated Address NACKs (`F461/020011`)
+
+From [`results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv`](results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv) (reproducing the `F461` physical bench captures from `2026-10-15`..`2026-10-19`):
+
+| Step | Input (`down`) | `reply` | Outbound Gateway Bus (`bus:`) | Inbound Virtual Plant (`bus_rx:`) | OpenWebNet Output (`cmd:` / `evt:`) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1. Initial poll | `*#1*06##` | `ack` | `$00306001500\r` | `$00800\r`, `$017B8061201\r` | `cmd:*1*0*06## \| evt:*1*0*06##` |
+| 2. Turn ON `06` | `*1*1*06##` | `ack` | `$00306001200\r` | `$00800\r`, `$017B8061200\r`, `$018D501013407000000\r` | `evt:*1*1*06## \| evt:*#1*#1*15*1##` |
+| 3. Poll after ON | `*#1*06##` | `ack` | `$00306001500\r` | `$00800\r`, `$017B8061200\r` | `cmd:*1*1*06## \| evt:*1*1*06##` |
+| 4. Turn OFF `06` | `*1*0*06##` | `ack` | `$00306001201\r` | `$00800\r`, `$017B8061201\r`, `$018D501013407000001\r` | `evt:*1*0*06## \| evt:*#1*#1*15*0##` |
+| 5. Group `#1` ON | `*1*1*#1##` | `ack` | `$004B5011200\r` | `$00800\r`, `$017B5011200\r`, `$017B8061200\r`, `$018D501013407000000\r`, `$017B8071200\r` | `evt:*1*1*#1## \| evt:*1*1*#1## \| evt:*1*1*06## \| evt:*#1*#1*15*1## \| evt:*1*1*07##` |
+| 6. Unpopulated `08` | `*#1*08##` | **`nack`** | `$00308001500\r` | `$019\r` *(no device ACK)* | *(none — `scsserver` retries 3× and NACKs)* |
+
+- **What this proves**: When relay `06` (a member of Group 1) switches from OFF to ON, the virtual plant emits both the point status (`$017B8061200\r`) and the extended group status frame (`$018D501013407000000\r`), which `f461/bt_luci` (`23scs_answer_group_status` at `0x443d0`) translates into `evt:*#1*#1*15*1##`. Conversely, querying unpopulated addresses (`*#1*08##`, `*#1*25##`, `*#1*50##`, `*#1*99##`) returns `$019\r`, reproducing the exact hardware `nack` timeout.
+
+#### Example 2: Shutter Pre-Move `STOP` & 4-Step `bt_termo` Climate Burst (`F461/020011` & `MyHomeServer1/028206`)
+
+Also in [`plant-f461-bench.tsv`](results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv) (and cross-verified on [`MyHomeServer1/028206`](results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv)):
+
+- **Motorized Shutter (`WHO=2`, `WHERE=05`)**:
+  - Input: `down *2*1*05##` (Move UP)
+  - Gateway `coso` emits **two** outbound SCS commands: pre-move `STOP` (`$0030500120A\r`) followed by `UP` (`$00305001208\r`).
+  - Virtual `CoverDevice` answers both (`$017B805120A\r`, `$017B8051208\r`), and the gateway emits the exact 4-frame hardware event sequence:
+    `evt:*2*1000#0*05## | evt:*2*0*05## | evt:*2*1000#1*05## | evt:*2*1*05##`
+- **4-Step Thermoregulation Zone Status Poll (`WHO=4`, `down *#4*2##`)**:
+  - Gateway `bt_termo` (`0xad60..0xae70`) issues 4 sequential SCS queries: `$00499023000\r` (temperature), `$00499023012\r` (mode + setpoint), `$0049902300E\r` (local setpoint), and `$0049902300D\r` (local offset).
+  - Virtual `ThermoZoneDevice` (`KW4691`) answers with `$017B40230F9\r` (`24.9 °C`), `$018D202030412F000F5\r` (`24.5 °C`, heating mode `1`), `$018D20203040E00F503\r`, and `$018D20203040D000000\r`.
+  - Gateway emits the exact 5-frame burst on both `cmd:` and `evt:`:
+    `*#4*2*0*0249## | *#4*2*12*0245*3## | *4*1*2## | *#4*2*14*0245*3## | *#4*2*13*00##`
+  - Querying actuator status `down *#4*2*20##` (`$004A9023010\r`) returns both actuator states (`$017B7823101\r`, `$017B7823220\r`), which `bt_termo` translates to `cmd:*#4*2#1*20*0## | evt:*#4*2#1*20*0## | evt:*#4*2#2*20*5##`.
+
+#### Example 3: Non-Linear Hardware Dimmers (`F414` & `F418U2`) & `WHAT=19` Fault Co-occurrence (`MH200/020102`)
+
+From [`results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv`](results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv) (reproducing Encyclopedia captures `cap-mh200-f414-dimmer-20260926`, `cap-mh200-f418u2-dimmer-20260927`, and `EVID-MH200-WHAT19-FAULT`):
+
+| Step | Input (`down`) | `reply` | Outbound Gateway Bus (`bus:`) | Inbound Virtual Plant (`bus_rx:`) | OpenWebNet Output (`cmd:` / `evt:`) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1. `F414` initial poll | `*#1*14##` | `ack` | `$0314001500\r` | `$19\r`, `$17B814129D\r` | `cmd:*1*10*14## \| evt:*1*10*14##` |
+| 2. `F414` set level 5 | `*1*5*14##` | `ack` | `$031400124D\r` | `$19\r`, `$17B814124D\r` | `evt:*1*5*14##` |
+| 3. `F414` `DIM 1` query | `*#1*14*1##` | `ack` | `$06D11401430D000000\r` | `$00\r`, `$18D21401440D003102\r` | `cmd:*#1*14*1*149*2## \| evt:*#1*14*1*149*2##` |
+| 4. `F418U2` set level 5 | `*1*5*62##` | `ack` | `$036200124D\r` | `$19\r`, `$17B862124D\r` | `evt:*1*5*62##` |
+| 5. `F418U2` poll after | `*#1*62##` | `ack` | `$0362001500\r` | `$19\r`, `$17B862124D\r` | `cmd:*1*5*62## \| evt:*1*5*62##` |
+| 6. Fault channel `75` | `*#1*75##` | `ack` | `$0375001500\r` | `$19\r`, `$17B875120E\r`, `$18D275010489FBFFF7\r` | `cmd:*1*19*75## \| evt:*1*19*75##` |
+
+#### Example 4: `F422` Sub-Bus Bridge Scope & Broadcast Isolation (`MH200/020102`)
+
+From [`results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv`](results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv) (reproducing Encyclopedia capture `cap-mh200-f422-scope-20260923` across `#4#01` and `#4#02`):
+
+- **Sub-Bus Area Status Poll (`down *#2*1#4#02##`)**:
+  - `MH200` wraps the Area 1 poll in an extended `EC` sub-bus telegram: `$06EC020000B3011500\r`.
+  - Virtual `F422` interface `#4#02` returns `E4`-wrapped status telegrams for all three sub-bus shutters (`$18E4020000B811120A\r`, `...B812120A\r`, `...B813120A\r`), which `MH200` translates into:
+    `cmd:*2*0*11#4#02## | cmd:*2*0*12#4#02## | cmd:*2*0*13#4#02##` (and matching `evt:` frames).
+- **Sub-Bus Area Command Blocked vs. Point-to-Point Allowed**:
+  - Area command `down *2*1*1#4#02##` emits `$06EC020000B301120A\r` + `$06EC020000B3011208\r`, receives PIC ACK `$00\r`, and produces **no sub-bus actuator movement**, matching the physical `F422` bridge hardware.
+  - Point-to-point command `down *2*1*11#4#02##` (`$06EC0200001100120A\r`, `$06EC02000011001208\r`) moves shutter `11#4#02` and emits `$18E4020000B811120A\r` + `$18E4020000B8111208\r` $\to$ `evt:*2*0*11#4#02## | evt:*2*1*11#4#02##`.
+- **Main-Bus Broadcast Isolation (`down *#1*0##`)**:
+  - General main-bus poll `$04B1001500\r` returns only main-bus devices (`21`, `14`, `99`, `62`, `63`) and never leaks sub-bus devices (`11#4#01` or `11#4#02..13#4#02`).
+
+#### Example 5: `F520` Energy Meter & Load Actuator Queries (`F461/020011`)
+
+From [`results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv`](results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv):
+
+- **Instantaneous Active Power (`down *#18*51*113##`)**:
+  - Outbound: `$006D1A10233001D0000\r` $\to$ Inbound: `$00800\r`, `$018D2A10234001D01C2\r` (`0x01C2` = `450 W`) $\to$ Output: `cmd:*#18*51*113*450## | evt:*#18*51*113*450##`.
+- **Two-Telegram Cumulative Energy Totals (`down *#18*51*51##` & `down *#18*51*54##`)**:
+  - Outbound: `$006D1A1023350150000\r` $\to$ Inbound two-frame `D2` sequence (`$018D2A1023581501500\r` + `$018D2A10235A001E240\r`) $\to$ Output: `cmd:*#18*51*51*123456## | evt:*#18*51*51*123456##`.
+- **Stop&Go / Energy Actuator Instantaneous Power (`down *#18*71#0*113##`)**:
+  - Outbound: `$006D1B11233001D0000\r` $\to$ Inbound: `$00800\r`, `$018D2B11234001D0078\r` (`0x0078` = `120 W`) $\to$ Output: `cmd:*#18*71#0*113*120## | evt:*#18*71#0*113*120##`.
+
 ## What is and isn't public here
 
 | Stage | Public on GitHub | Stays local |
 |---|---|---|
 | 0. Catalog | vendor URL, version, size, SHA-256 | the firmware image |
 | 1. Unpack | `tools/unpack.py` + `manifest.tsv` (path, type, CPU, SHA-256) | the extracted files |
-| 2. Oracle | emulator + simulated SCS bus (our code), input frame lists | — |
-| 3. Record | TSV: input frame → bus frame, firmware hash in the header | — |
+| 2. Oracle | emulator + simulated SCS bus & virtual plant (`oracle/plant/`), input frame lists | — |
+| 3. Record | TSV: input frame → bus / plant / OpenWebNet frames, firmware & plant hashes in header | — |
 | 4. Findings | `findings/<gateway>/*.md` pointing at TSV rows | decompiled C |
 
 **No vendor binary, disassembly or decompiled code is ever committed.**
@@ -183,19 +316,26 @@ tools/unpack.py                     layer-aware extractor  -> results/.../manife
 tools/plan.py                       which manifests are stale; result paths
 tools/suite_plan.py                 which emulated suite TSVs are missing, stale, or regressed
 tools/mcp_index.py                  build & verify results/mcp_index.json across the fleet
+tools/plant_index.py                build & verify results/plant_index.json for virtual plant suites
+tools/pic_spike.py                  closed-loop 2-digit / 3-digit PIC framing verification spike
 tools/compare.py                    cross-gateway frame comparison, divergences & matrices
 tools/verdict_diff.py               semantic verdict diff across git revisions / PRs
 tools/check.py                      OWNd parser & live capture conformance evaluator
+tools/expected_divergences.yaml     machine-checked ledger of expected live-trace divergences
 tools/live_probe.py                 read-only live hardware canary runner & validator
 tools/export_evidence.py            export oracle TSVs to Encyclopedia evidence bundles
 tools/sync_readme.py                automated README metrics & table anti-drift sentinel
 tools/guard.py                      refuse binaries / NUL bytes / oversized files
 oracle/                             emulator + simulated SCS bus (see docs/oracle-architecture.md)
   targets/<product>/<version>.yaml  programs to run, pinned to manifest rows
-  cases/*.cases|*.seq               input steps: down = OWN text, up = bus hex
+  cases/*.cases|*.seq               stateless input steps: down = OWN text, up = bus hex
+  plant/                            clean-room stateful virtual SCS plant & device state machines
+  plant/fixtures/*.yaml             pinned virtual plant topologies (f461-bench, mh200-bench)
+  plant_cases/*.seq                 closed-loop stateful virtual plant trace suites
   canary/canary-live.cases          read-only live hardware canary suite
-results/<product>/<version>/        manifest.tsv, boundary TSVs, oracle TSVs, check TSVs
+results/<product>/<version>/        manifest.tsv, boundary TSVs, oracle TSVs, plant TSVs, check TSVs
 results/mcp_index.json              hash-pinned cross-firmware verdict index (schema 1.1.0)
+results/plant_index.json            hash-pinned closed-loop virtual plant verdict index (schema 1.0.0)
 findings/<product>/*.md             conclusions pointing at TSV rows
 .github/workflows/                  CI, see below
 requirements/                       hash-locked CI dependencies
@@ -205,7 +345,7 @@ requirements/                       hash-locked CI dependencies
 
 | Workflow | When | What |
 |---|---|---|
-| `pr` | every PR, `main` | ruff, ruff format, mypy `--strict`, zizmor, actionlint + shellcheck; guard, `mcp_index.py --check`, `sync_readme.py --check`; pytest on Python 3.12–3.14 incl. a real-debugfs end-to-end test, coverage ratchet; `verdict_diff.py` PR summary; dependency review. `ci-ok` is the one check to require. |
+| `pr` | every PR, `main` | ruff, ruff format, mypy `--strict`, zizmor, actionlint + shellcheck; guard, `mcp_index.py --check`, `plant_index.py --check`, `sync_readme.py --check`; pytest on Python 3.12–3.14 incl. a real-debugfs end-to-end test, coverage ratchet; `verdict_diff.py` PR summary; dependency review. `ci-ok` is the one check to require. |
 | `reproduce` | PRs touching `tools/`, `catalog/`, `results/`; weekly | re-fetches every fresh, publicly downloadable image, re-runs `unpack`, fails on any byte of difference from `results/` |
 | `oracle` | `main`, weekly | rebuilds stale manifests (new image or `TOOL_VERSION`) and opens one results PR |
 | `suites` | PRs touching `oracle/`, `catalog/`, suite results; `main`, weekly | re-runs every emulated suite on every target under qemu-user (`tools/suite_plan.py`): fails when a re-run with the same inputs gives different verdicts, produces missing or stale results only if a second run reproduces them, and opens one results PR on `main`, and opens an issue when the weekly run regresses |
@@ -388,6 +528,8 @@ Detailed technical findings documents with exact bytecode citations, cryptograph
 | **OpenWebNet USB & RS-232 Interface** | WHO 0, 1, 2, 4, 5, 8, 13, 14, 15, 16, 18, 22, 25, 1001..1022 | L4686SDK (`012001`) | [**L4686SDK (`L4686/USB` / `3559`) PIC18 Static Analysis**](findings/L4686SDK/README.md) & [**Emulation Boundary**](findings/L4686SDK/emulation-strategy.md)<br>Static analysis of the Microchip PIC18 Intel HEX firmware (`4686SDK_012001.HEX`), documenting its `OPEN_SCS` memory map (`0x0000`–`0xEDDD`) and ROM lookup tables mapping ASCII OpenWebNet (`*...##`) directly to 2-wire SCS bus telegrams. |
 | **99-Zone Thermo Central Unit** | WHO 4 (Thermo) | 3550 (`030020`) | [**3550 Temperature Control Central Unit Static Analysis**](findings/3550/README.md)<br>Static analysis of the Mitsubishi M16C/60 Motorola S-record firmware (`3550_030020.mot`), documenting its memory map (`0x0E0000`–`0x0FFFFF`), `$`-framed SCS bus templates, and separate daily holiday vs. multi-day vacation tables. |
 | **Bare-Metal MCU & Bus Peripherals** | WHO 1, 2, 16, 17 | F455 (`010102`), MH201 (`030644`), L4561N (`040006`) | [**F455**](findings/F455/emulation-strategy.md), [**MH201**](findings/MH201/emulation-strategy.md) & [**L4561N Emulation Strategies**](findings/L4561N/emulation-strategy.md)<br>Hardware architecture and boundary cuts for the Cortex-M flash images (F455, MH201 CMX-RTX/LwIP) and Microchip PIC18 SCS stereo interface (`L4561N`, modeled on the virtual bus via `SoundSourceResponder`). |
+| **Inbound PIC / RPMsg Serial Framing** | WHO 1, 2, 4, 14, 18, 1001 | F461 (`020011`), MyHomeServer1 (`028206`), MH200 (`020102`), MH200N (`010108`) | [**Inbound PIC / RPMsg Serial Framing Protocol (`scsserver`)**](findings/pic-inbound-protocol.md)<br>Binary reverse engineering and live QEMU closed-loop spike (`tools/pic_spike.py`) establishing the 3-digit RPMsg (`$00800\r` TX-ACK + `$017`/`$018`) and 2-digit UART (`$19\r`/`$00\r`/`$08\r` TX-ACK + `$17`/`$18` with 25 ms read-buffer pacing) PIC handshakes. |
+| **VDK `MyHomeSystemEmulator` Audit & Clean-Room Plant** | WHO 1, 2, 4, 13, 14, 18, 1001 | MH200 (`020102`), MH200N (`010108`), F454 (`020051`), MyHomeServer1 (`028206`), F461 (`020011`) | [**Audit of Archived `MyHomeSystemEmulator` vs. Real Firmware & Hardware**](findings/vdk-emulator-audit.md)<br>Documents 10 architectural and protocol divergences in `MyHomeSystemEmulator@4f93f44ee5ec` (missing SCS byte framing, plugin-emitted ACKs, Area 0 bug, missing `DIM 15` group status, dimmers, shutters, `F422` isolation, and `WHO=4` thermo) and details the clean-room Apache-2.0 [`oracle/plant/`](oracle/plant/) implementation. |
 
 ---
 
@@ -417,8 +559,9 @@ python tools/guard.py
 # Check if any catalogued images or unpacked manifests are stale:
 python tools/plan.py
 
-# Check that README.md and results/mcp_index.json are in sync:
+# Check that README.md, results/mcp_index.json, and results/plant_index.json are in sync:
 python tools/mcp_index.py --check
+python tools/plant_index.py --check
 python tools/sync_readme.py --check
 
 # Enforce quality gates (ruff, mypy, test coverage):
@@ -519,6 +662,58 @@ for entry in index["verdicts"].get(target_frame, []):
     print(f"  Bus output: {entry['bus_frames']}")  # ['$0493018114\r' on MHS1 and F454]
 ```
 
+### 6. Running Closed-Loop Virtual Plant Traces & Querying `results/plant_index.json`
+
+Run a stateful `.seq` suite against an emulated gateway attached to a virtual SCS plant fixture (`f461-bench` or `mh200-bench`):
+
+```bash
+# A) Run the F461 bench sequence against emulated F461 (3-digit RPMsg PIC + f461-bench plant):
+python -m oracle.run suite \
+  oracle/targets/F461/020011.yaml \
+  oracle/plant_cases/plant-f461-bench.seq \
+  --image "$IMG_F461" \
+  --plant f461-bench \
+  -o results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv
+
+# B) Run the MH200 dimmer & F422 sub-bus suites against emulated MH200 (2-digit UART PIC + mh200-bench plant):
+python -m oracle.run suite \
+  oracle/targets/MH200/020102.yaml \
+  oracle/plant_cases/plant-mh200-bench.seq \
+  --image "$IMG_MH200" \
+  --plant mh200-bench \
+  -o results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv
+
+python -m oracle.run suite \
+  oracle/targets/MH200/020102.yaml \
+  oracle/plant_cases/plant-f422-subbus.seq \
+  --image "$IMG_MH200" \
+  --plant mh200-bench \
+  -o results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv
+
+# C) Rebuild or verify the hash-pinned virtual plant index:
+python tools/plant_index.py --check
+```
+
+Inspect closed-loop virtual traces in Python via `results/plant_index.json`:
+
+```python
+import json
+from pathlib import Path
+
+plant_index = json.loads(Path("results/plant_index.json").read_text(encoding="utf-8"))
+print(f"Plant suites: {plant_index['suites']}")
+print(f"Unique closed-loop inputs: {plant_index['total_unique_inputs']}")
+
+# Inspect the 4-step WHO=4 zone status burst on F461 + f461-bench:
+for entry in plant_index["verdicts"]["*#4*2##"]:
+    print(f"[{entry['product']} {entry['version']} / {entry['harness']}]")
+    print(f"  Reply:       {entry['reply']}")
+    print(f"  Bus TX:      {len(entry['bus_frames'])} frames")
+    print(f"  Plant RX:    {len(entry['bus_rx'])} frames")
+    print(f"  CMD replies: {entry['cmd_replies']}")
+    print(f"  EVT events:  {entry['evt_events']}")
+```
+
 ---
 
 ## Ground rules
@@ -572,6 +767,7 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
 - **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **509 unique OpenWebNet frames** across **22 test suites** and **12 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F453, F460, F461, F450, H4684), delivering **6,500 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4686SDK, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
 <!-- STATUS_PHASE3_END -->
 - **Phase 4: Cross-Gateway Analysis, Conformance & Anti-Drift Tooling.** Shipped offline analysis and verification tools (`tools/compare.py`, `tools/verdict_diff.py`, `tools/check.py`, `tools/live_probe.py`, `tools/export_evidence.py`, `tools/sync_readme.py`) with crash-awareness gates and automated CI step summaries.
+- **Phase 5: Closed-Loop Virtual SCS Plant & Full Virtual Trace Reproduction.** Shipped clean-room stateful virtual SCS plant (`oracle/plant/`), hardware-pinned plant fixtures (`f461-bench.yaml`, `mh200-bench.yaml`), and closed-loop `.seq` suites (`oracle/plant_cases/*.seq`) verified under QEMU across `F461/020011` (3-digit RPMsg PIC), `MH200/020102` (2-digit legacy PIC), and `MyHomeServer1/028206` (2-digit v8 PIC with 25 ms UART frame pacing). Indexed 48 unique closed-loop inputs across 6 plant suite TSVs in `results/plant_index.json` (`tools/plant_index.py --check`), documented the 2-digit/3-digit PIC inbound protocols ([`findings/pic-inbound-protocol.md`](findings/pic-inbound-protocol.md)), and published the 10-point architectural audit of the archived `MyHomeSystemEmulator` ([`findings/vdk-emulator-audit.md`](findings/vdk-emulator-audit.md)).
 
 ## License
 

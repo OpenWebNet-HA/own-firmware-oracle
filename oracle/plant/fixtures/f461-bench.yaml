@@ -1,0 +1,48 @@
+name: f461-bench
+gateway_product: F461
+gateway_version: "020011"
+lights:
+  "06":
+    bus_addr: 0x06
+    area: 0
+    group: 1
+    initial_what: 0
+  "07":
+    bus_addr: 0x07
+    area: 0
+    group: 1
+    initial_what: 0
+covers:
+  "05":
+    bus_addr: 0x05
+    area: 0
+    travel_time_ms: 5000
+    initial_what: 0
+thermo_zones:
+  2:
+    bus_addr: 0x02
+    initial_temp_deci: 249
+    initial_setpoint_deci: 245
+    initial_mode: 1
+    initial_function: 3
+    initial_offset: "00"
+    initial_valve_heating: 0
+    initial_valve_cooling: 5
+    actuators:
+      1: 0
+      2: 5
+energy_meters:
+  "51":
+    bus_addr: 0xA1
+    active_power_w: 450
+    total_energy_wh: 123456
+    current_month_wh: 12345
+    partial_energy_wh: 6789
+energy_actuators:
+  "71#0":
+    bus_addr: 0xB1
+    initial_state: 0
+    active_power_w: 120
+    total_energy_wh: 4500
+subbus_interfaces:
+  - 1

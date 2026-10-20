@@ -34,6 +34,7 @@ from typing import IO
 
 from oracle import (
     ORACLE_VERSION,
+    bus,
     cases,
     discover,
     driver,
@@ -283,12 +284,15 @@ def parse_reset(reset: str) -> int:
 def validate_harness(spec: target.TargetSpec, harness: str) -> str:
     if not record.HARNESS.fullmatch(harness):
         raise SystemExit(
-            f"invalid harness {harness!r}: must be 'full' or 'unit:<program>'"
+            f"invalid harness {harness!r}: must be 'full', 'unit:<program>', "
+            "or 'plant:<fixture>'"
         )
-    if harness == "full":
+    if harness == "full" or harness.startswith("plant:"):
         own_servers = [p for p in spec.programs.values() if p.role == "own_server"]
         if not own_servers and "openserver" not in spec.programs:
-            raise SystemExit("harness 'full' requires 'openserver' in target programs")
+            raise SystemExit(
+                f"harness {harness!r} requires 'openserver' in target programs"
+            )
         return own_servers[0].name if own_servers else "openserver"
     prog = harness[len("unit:") :]
     if prog not in spec.programs:
@@ -328,6 +332,11 @@ def reexec_suite_in_sandbox(
             ).resolve()
 
         sysroot_arg = getattr(args, "sysroot", None)
+        responder_arg = getattr(args, "responder", None)
+        raw_reset = getattr(args, "reset", None)
+        effective_reset = (
+            raw_reset if raw_reset is not None else ("0" if suite.ordered else "each")
+        )
         py_bin = Path(sys.executable).resolve()
         ro_binds: tuple[Path, ...] = (
             ROOT,
@@ -354,7 +363,8 @@ def reexec_suite_in_sandbox(
             "--harness",
             args.harness,
             "--reset",
-            args.reset,
+            effective_reset,
+            *(["--responder", str(responder_arg)] if responder_arg else []),
             "-o",
             str(out_target),
             "--keep",
@@ -413,12 +423,33 @@ def suite_path(spec: target.TargetSpec, harness: str, suite_name: str) -> Path:
     )
 
 
+def apply_plant_flag(args: argparse.Namespace) -> None:
+    plant_arg = getattr(args, "plant", None)
+    if plant_arg:
+        fixture_slug = Path(str(plant_arg)).stem
+        if getattr(args, "harness", "full") == "full":
+            args.harness = f"plant:{fixture_slug}"
+        if not getattr(args, "responder", None):
+            args.responder = f"pic:plant:{fixture_slug}"
+
+
 def cmd_suite(args: argparse.Namespace) -> int:
+    apply_plant_flag(args)
     spec = target.load(Path(args.target), ROOT / "results")
     spec.require_ready()
     suite = cases.load(Path(args.suite))
     main_prog = validate_harness(spec, args.harness)
-    restart_every = parse_reset(args.reset)
+    raw_reset = getattr(args, "reset", None)
+    effective_reset = (
+        raw_reset if raw_reset is not None else ("0" if suite.ordered else "each")
+    )
+    restart_every = parse_reset(effective_reset)
+    responder_arg = getattr(args, "responder", None)
+    custom_responder = (
+        bus.get_responder(str(responder_arg), version=spec.version)
+        if responder_arg
+        else None
+    )
     sysroot_arg = getattr(args, "sysroot", None)
     if sysroot_arg and not Path(sysroot_arg).exists():
         with tempfile.TemporaryDirectory(
@@ -474,6 +505,7 @@ def cmd_suite(args: argparse.Namespace) -> int:
             harness=args.harness,
             staged_sysroot=staged_root,
             sandboxed=not args.no_sandbox,
+            responder=custom_responder,
         ) as tgt:
             rows = driver.run_suite(tgt, suite, restart_every=restart_every)
             idle = tgt.idle_stats
@@ -491,7 +523,7 @@ def cmd_suite(args: argparse.Namespace) -> int:
                 spec,
                 args.harness,
                 spec.programs[main_prog].sha256,
-                args.reset,
+                effective_reset,
                 tgt.bus.framer.name,
                 tgt.bus.responder.name,
                 tgt.settle_ms,
@@ -529,9 +561,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     s.add_argument("--harness", default="full", help="default: full")
     s.add_argument(
+        "--plant",
+        default=None,
+        help=(
+            "closed-loop virtual plant fixture "
+            "(sets --harness plant:<name> and --responder pic:plant:<name>)"
+        ),
+    )
+    s.add_argument(
+        "--responder",
+        default=None,
+        help="override target bus_responder (e.g. pic:plant:f461-bench)",
+    )
+    s.add_argument(
         "--reset",
-        default="each",
-        help="reset policy: each (default), batch-N, or 0 (never)",
+        default=None,
+        help="reset policy: each (default for .cases), batch-N, or 0 (.seq)",
     )
     s.add_argument("--keep", help="stage into this NEW dir; keep it")
     s.add_argument(

@@ -1731,7 +1731,7 @@
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 20,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -2129,7 +2129,7 @@
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 22,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -46407,11 +46407,13 @@
           "24 30 36 45 43 30 32 30 30 30 30 32 35 30 30 31 32 30 31 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*1*1000#0*25#4#02##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 65,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/trace-corpus.tsv",
         "suite": "trace-corpus",
         "suite_sha256": "257febf011e6cfd2f0fe081228b4d7976776ffd2c2c39c7d5bc751a1f9e1ff3c",
@@ -47807,11 +47809,13 @@
           "24 30 36 45 43 30 31 30 30 30 30 30 32 30 30 31 32 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*1*1000#1*02#4#01##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 36,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -48207,11 +48211,13 @@
           "24 30 36 45 43 30 31 30 30 30 30 30 41 30 30 31 32 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*1*1000#1*0010#4#01##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 38,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -48811,11 +48817,13 @@
           "24 30 36 45 43 30 31 30 30 30 30 30 32 30 30 31 32 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*1*1000#1*02#4#01##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 41,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -49249,11 +49257,13 @@
           "24 30 36 45 43 30 31 30 30 30 30 42 33 30 32 31 32 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*1*1*2#4#01##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 43,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/lights-area0.tsv",
         "suite": "lights-area0",
         "suite_sha256": "71bc0493b1da27ca6ceaa2d796ec69e4e4d9f730513b8f6ab22a640bf2749ef3",
@@ -49865,11 +49875,13 @@
           "24 30 36 45 43 30 31 30 30 30 30 33 31 30 30 31 31 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*14*0*31#4#01##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 18,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/interface-routing.tsv",
         "suite": "interface-routing",
         "suite_sha256": "a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968",
@@ -50069,11 +50081,13 @@
           "24 30 36 45 43 30 32 30 30 30 30 33 31 30 30 31 31 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
+        "emitted_own": [
+          "*14*0*31#4#02##"
+        ],
         "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
         "line_number": 19,
         "product": "MH202",
-        "reply": "nack",
+        "reply": "ack",
         "source_tsv": "results/MH202/010024/oracle/full/interface-routing.tsv",
         "suite": "interface-routing",
         "suite_sha256": "a9a61928900628b6d4e03c40cfbda733ce060f3ad21463befb784e8c184a8968",
@@ -106978,5 +106992,5 @@
       }
     ]
   },
-  "verdicts_sha256": "ea37f1cae697ff1e834e83a6ea6e4123f5f6a176fe0bb10e7e577b90eb408ff6"
+  "verdicts_sha256": "2f64fe3349a33b0cdd77b045167351a2cc3d1cf655fce880d2c598381a314030"
 }
