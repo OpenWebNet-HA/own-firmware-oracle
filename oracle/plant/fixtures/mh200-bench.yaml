@@ -1,0 +1,140 @@
+name: mh200-bench
+gateway_product: MH200
+gateway_version: "020102"
+lights:
+  "21":
+    bus_addr: 0x21
+    area: 2
+    initial_what: 0
+  "0002#4#01":
+    bus_addr: 0x02
+    subbus: 1
+    area: 0
+    initial_what: 0
+  "11#4#01":
+    bus_addr: 0x11
+    subbus: 1
+    area: 1
+    initial_what: 0
+  "21#4#01":
+    bus_addr: 0x21
+    subbus: 1
+    area: 2
+    initial_what: 0
+  "31#4#01":
+    bus_addr: 0x31
+    subbus: 1
+    area: 3
+    initial_what: 0
+  "25#4#02":
+    bus_addr: 0x25
+    subbus: 2
+    area: 2
+    initial_what: 0
+  "31#4#02":
+    bus_addr: 0x31
+    subbus: 2
+    area: 3
+    initial_what: 0
+dimmers:
+  "14":
+    bus_addr: 0x14
+    model: F414
+    area: 1
+    initial_what: 10
+    initial_dim1_level: 200
+    initial_dim1_speed: 2
+    discrete_levels:
+      0: 100
+      1: 100
+      2: 119
+      3: 129
+      4: 139
+      5: 149
+      6: 159
+      7: 169
+      8: 163
+      9: 174
+      10: 200
+  "99":
+    bus_addr: 0x99
+    model: F414
+    area: 9
+    initial_what: 10
+    initial_dim1_level: 200
+    initial_dim1_speed: 2
+    discrete_levels:
+      0: 100
+      1: 100
+      2: 119
+      3: 129
+      4: 139
+      5: 149
+      6: 159
+      7: 169
+      8: 163
+      9: 174
+      10: 200
+  "62":
+    bus_addr: 0x62
+    model: F418U2
+    area: 6
+    initial_what: 10
+    initial_dim1_level: 200
+    initial_dim1_speed: 2
+    discrete_levels:
+      0: 100
+      1: 100
+      2: 110
+      3: 110
+      4: 120
+      5: 130
+      6: 140
+      7: 150
+      8: 160
+      9: 180
+      10: 200
+  "63":
+    bus_addr: 0x63
+    model: F418U2
+    area: 6
+    initial_what: 10
+    initial_dim1_level: 200
+    initial_dim1_speed: 2
+    discrete_levels:
+      0: 100
+      1: 100
+      2: 110
+      3: 110
+      4: 120
+      5: 130
+      6: 140
+      7: 150
+      8: 160
+      9: 180
+      10: 200
+covers:
+  "11#4#02":
+    bus_addr: 0x11
+    subbus: 2
+    area: 1
+    travel_time_ms: 60900
+    initial_what: 0
+  "12#4#02":
+    bus_addr: 0x12
+    subbus: 2
+    area: 1
+    travel_time_ms: 60900
+    initial_what: 0
+  "13#4#02":
+    bus_addr: 0x13
+    subbus: 2
+    area: 1
+    travel_time_ms: 60900
+    initial_what: 0
+fault_addresses:
+  - 0x74
+  - 0x75
+subbus_interfaces:
+  - 1
+  - 2

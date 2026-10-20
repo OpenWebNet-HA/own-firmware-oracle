@@ -44,7 +44,7 @@ HEADER_KEYS = (
     "oracle_version",
 )
 HEADER_VALUE = re.compile(r"[\x21-\x7e]+")
-HARNESS = re.compile(r"full|unit:[A-Za-z0-9][A-Za-z0-9._-]*")
+HARNESS = re.compile(r"full|(?:unit|plant):[A-Za-z0-9][A-Za-z0-9._-]*")
 
 # Like manifest.tsv, plus non-ASCII: one row stays one ASCII line whatever the
 # firmware emits.
@@ -92,7 +92,10 @@ class Row:
 
 def harness_dir(harness: str) -> str:
     if not HARNESS.fullmatch(harness):
-        raise ValueError(f"harness must be 'full' or 'unit:<program>', got {harness!r}")
+        raise ValueError(
+            "harness must be 'full', 'unit:<program>', or 'plant:<fixture>', "
+            f"got {harness!r}"
+        )
     return harness.replace(":", "-")
 
 

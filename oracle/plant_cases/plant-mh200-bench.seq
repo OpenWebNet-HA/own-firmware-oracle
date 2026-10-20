@@ -1,0 +1,19 @@
+; Closed-loop Tier A plant suite for mh200-bench topology
+; Exercises F414 (14), F418U2 (62, 63) including OFF status query,
+; relays (21, 22), and fault channels 74 and 75 (WHAT=19 + WHO=1001 mask).
+down  *#1*21##
+down  *1*1*21##
+down  *#1*21##
+down  *1*0*21##
+down  *#1*14##
+down  *1*5*14##
+down  *#1*14*1##
+down  *1*0*14##
+down  *#1*62##
+down  *1*5*62##
+down  *#1*62##
+down  *1*0*62##
+down  *#1*62##
+down  *#1*63##
+down  *#1*74##
+down  *#1*75##

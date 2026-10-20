@@ -1,0 +1,7 @@
+; Closed-loop Tier A plant suite for F520 energy meter on f461-bench
+; Exercises WHO=18 WHERE=51 (bus 0xA1) dimensions 113, 51, 54, and #1200#1*1.
+down  *#18*51*113##
+down  *#18*51*51##
+down  *#18*51*54##
+down  *#18*51*#1200#1*1##
+down  *#18*71#0*113##

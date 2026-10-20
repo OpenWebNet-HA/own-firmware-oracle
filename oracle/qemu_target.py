@@ -378,8 +378,11 @@ class QemuTarget:
         self._console_files: dict[str, IO[bytes]] = {}
         self._custom_bus = bus_instance
         self._framer = framer or bus.get_framer(spec.bus_framer)
+        default_resp = (
+            f"pic:{harness}" if harness.startswith("plant:") else spec.bus_responder
+        )
         self._responder = responder or bus.get_responder(
-            spec.bus_responder, version=spec.version
+            default_resp, version=spec.version
         )
 
         self.sysroot_base = staged_sysroot or (work_dir / "stage" / "sysroot")
@@ -393,6 +396,7 @@ class QemuTarget:
             else bus.Bus(bus.PtyPort(-1), self._framer, self._responder, self.clock)
         )
         self._bus_mark: int = 0
+        self._dev_bus_mark: int = 0
         self._cmd_sock: socket.socket | None = None
         self._cmd_buf: bytearray = bytearray()
         self._cmd_events: list[str] = []
@@ -671,6 +675,7 @@ class QemuTarget:
 
     def _restart_once(self) -> None:
         self._stop()
+        getattr(self._responder, "reset", lambda: None)()
         self._copy_sysroot()
         cfg_path = self.sysroot / self.spec.runtime.stack_config
         active = self._active_clients()
@@ -689,7 +694,7 @@ class QemuTarget:
         elif pty_dev is not None:
             pty_port = bus.PtyPort(pty_dev.master)
             self.bus = bus.Bus(pty_port, self._framer, self._responder, self.clock)
-        self._bus_mark = self.bus.mark()
+        self._bus_mark = self._dev_bus_mark = self.bus.mark()
 
         trace_dir = self.work_dir / "trace" if self.keep_trace else None
         if trace_dir is not None:
@@ -697,29 +702,22 @@ class QemuTarget:
 
         self._start_soap_server()
 
-        bus_servers = [
-            name
-            for name, prog in self.spec.programs.items()
-            if prog.role == "bus_server"
-        ]
-        for name in sorted(bus_servers):
+        for name in sorted(
+            n for n, p in self.spec.programs.items() if p.role == "bus_server"
+        ):
             prog = self.spec.programs[name]
-            server_port = prog.port or ports.get(name, 20001)
-            self._launch_daemon(name, server_port, dev_map, trace_dir)
+            self._launch_daemon(
+                name, prog.port or ports.get(name, 20001), dev_map, trace_dir
+            )
 
-        for name in sorted(active):
-            if name in self.spec.programs:
-                prog = self.spec.programs[name]
-                client_port = prog.port or ports.get(name)
-                self._launch_daemon(name, client_port, dev_map, trace_dir)
+        for name in sorted(active & self.spec.programs.keys()):
+            prog = self.spec.programs[name]
+            self._launch_daemon(name, prog.port or ports.get(name), dev_map, trace_dir)
 
-        if self.harness == "full":
-            own_servers = [
-                name
-                for name, prog in self.spec.programs.items()
-                if prog.role == "own_server"
-            ]
-            for name in sorted(own_servers):
+        if self.harness == "full" or self.harness.startswith("plant:"):
+            for name in sorted(
+                n for n, p in self.spec.programs.items() if p.role == "own_server"
+            ):
                 prog = self.spec.programs[name]
                 open_port = prog.port or ports.get(name, 20000)
                 self._launch_daemon(name, open_port, dev_map, trace_dir)
@@ -739,6 +737,7 @@ class QemuTarget:
         while self._prune_boot_exited_translators():
             self.settle(idle_max=self.start_idle_max)
         self.take_bus()
+        self.take_device_bus()
         self.take_own()
 
     def _prune_boot_exited_translators(self) -> bool:
@@ -752,7 +751,7 @@ class QemuTarget:
         bus_server and own_server mandatory while allowing surviving daemons to
         settle and be monitored for crashes on subsequent steps.
         """
-        if not self.harness.startswith("full"):
+        if not (self.harness.startswith("full") or self.harness.startswith("plant:")):
             return False
         exited = [
             name
@@ -866,9 +865,25 @@ class QemuTarget:
         self._cmd_events, self._own_events = [], []
         return out
 
+    def take_cmd_events(self) -> list[str]:
+        out = list(self._cmd_events)
+        self._cmd_events = []
+        return out
+
+    def take_ev_events(self) -> list[str]:
+        self._pump_own()
+        out = list(self._own_events)
+        self._own_events = []
+        return out
+
     def take_bus(self) -> list[bytes]:
         frames = self.bus.gateway_frames(self._bus_mark)
         self._bus_mark = self.bus.mark()
+        return frames
+
+    def take_device_bus(self) -> list[bytes]:
+        frames = self.bus.device_frames(self._dev_bus_mark)
+        self._dev_bus_mark = self.bus.mark()
         return frames
 
     def inject_bus(self, data: bytes) -> None:

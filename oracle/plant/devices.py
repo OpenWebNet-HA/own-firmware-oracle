@@ -1,0 +1,805 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Clean-room virtual SCS/OpenWebNet device state machines."""
+
+from __future__ import annotations
+
+from oracle.plant.models import (
+    CoverConfig,
+    DimmerConfig,
+    EnergyActuatorConfig,
+    EnergyMeterConfig,
+    LightConfig,
+    ScenarioConfig,
+    ThermoZoneConfig,
+)
+from oracle.plant.scs_codec import encode_extended_inbound, encode_short_inbound
+
+DEFAULT_F414_LEVELS: dict[int, int] = {
+    0: 100,
+    1: 100,
+    2: 119,
+    3: 129,
+    4: 139,
+    5: 149,
+    6: 159,
+    7: 169,
+    8: 163,
+    9: 174,
+    10: 200,
+}
+
+DEFAULT_F418U2_LEVELS: dict[int, int] = {
+    0: 100,
+    1: 100,
+    2: 110,
+    3: 110,
+    4: 120,
+    5: 130,
+    6: 140,
+    7: 150,
+    8: 160,
+    9: 180,
+    10: 200,
+}
+
+DEFAULT_FAULT_MASK: bytes = b"\x89\xfb\xff\xf7"
+
+
+THERMO_ACTUATOR_STATUS_BYTES: dict[int, int] = {
+    0: 0x01,
+    1: 0x00,
+    2: 0x10,
+    3: 0x11,
+    4: 0x12,
+    5: 0x20,
+    6: 0x21,
+    7: 0x22,
+    8: 0x23,
+    9: 0x2F,
+}
+
+
+class LightDevice:
+    """Clean-room relay light point (WHO=1, 14, e.g. F411/4)."""
+
+    def __init__(self, config: LightConfig) -> None:
+        self.config = config
+        self.what: int = config.initial_what
+        self.locked: bool = config.initial_locked
+
+    def reset(self) -> None:
+        """Reset relay state and lock flag to initial fixture values."""
+        self.what = self.config.initial_what
+        self.locked = self.config.initial_locked
+
+    def status_frame(self, *, digits: int) -> bytes:
+        """Encode current relay status as a short B8 inbound telegram."""
+        state_byte = 0x00 if self.what > 0 else 0x01
+        return encode_short_inbound(
+            0xB8,
+            self.config.bus_addr,
+            0x12,
+            state_byte,
+            digits=digits,
+            subbus=self.config.subbus,
+        )
+
+    def handle_short(
+        self,
+        b1: int,
+        b2: int,
+        b3: int,
+        *,
+        digits: int,
+    ) -> list[bytes]:
+        """Handle a 4-byte P2P command or status request addressed to this relay."""
+        if b1 != 0x00:
+            return []
+        if b2 == 0x15 and b3 == 0x00:
+            return [self.status_frame(digits=digits)]
+        if b2 == 0x11 and b3 == 0x00:
+            self.locked = True
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x11,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                )
+            ]
+        if b2 == 0x10 and b3 == 0x00:
+            self.locked = False
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x10,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                )
+            ]
+        if b2 == 0x12:
+            if self.locked:
+                return []
+            if b3 == 0x01:
+                self.what = 0
+                return [self.status_frame(digits=digits)]
+            if b3 == 0x00 or (b3 & 0x0F) == 0x0D:
+                self.what = 1
+                return [self.status_frame(digits=digits)]
+            if b3 == 0x03:
+                self.what = 0 if self.what > 0 else 1
+                return [self.status_frame(digits=digits)]
+            if b3 in (0x04, 0x86):
+                # WHAT=18 impulse: ON then immediately OFF
+                self.what = 1
+                on_frame = self.status_frame(digits=digits)
+                self.what = 0
+                off_frame = self.status_frame(digits=digits)
+                if self.config.group > 0 and self.config.subbus == 0:
+                    grp_on = encode_extended_inbound(
+                        bytes(
+                            [
+                                0xD5,
+                                self.config.group,
+                                0x01,
+                                0x34,
+                                0x07,
+                                0x00,
+                                0x00,
+                                0x00,
+                            ]
+                        ),
+                        digits=digits,
+                    )
+                    grp_off = encode_extended_inbound(
+                        bytes(
+                            [
+                                0xD5,
+                                self.config.group,
+                                0x01,
+                                0x34,
+                                0x07,
+                                0x00,
+                                0x00,
+                                0x01,
+                            ]
+                        ),
+                        digits=digits,
+                    )
+                    return [on_frame, grp_on, off_frame, grp_off]
+                return [on_frame, off_frame]
+        return []
+
+
+class DimmerDevice:
+    """Clean-room dimmer actuator (WHO=1, F414 / F418U2)."""
+
+    def __init__(self, config: DimmerConfig) -> None:
+        self.config = config
+        default_curve = (
+            DEFAULT_F418U2_LEVELS
+            if config.model.upper() == "F418U2"
+            else DEFAULT_F414_LEVELS
+        )
+        self.curve: dict[int, int] = {**default_curve, **config.discrete_levels}
+        self.what: int = config.initial_what
+        self.dim1_level: int = config.initial_dim1_level
+        self.dim1_speed: int = config.initial_dim1_speed
+        self.locked: bool = config.initial_locked
+
+    def reset(self) -> None:
+        """Reset dimmer state to initial fixture values."""
+        self.what = self.config.initial_what
+        self.dim1_level = self.config.initial_dim1_level
+        self.dim1_speed = self.config.initial_dim1_speed
+        self.locked = self.config.initial_locked
+
+    @staticmethod
+    def _level_to_what(dim1_level: int) -> int:
+        if dim1_level <= 100:
+            return 0
+        if dim1_level >= 195:
+            return 10
+        pct = dim1_level - 100
+        return max(2, min(10, (pct // 10) + 2))
+
+    def status_byte(self) -> int:
+        """Return the SCS B8 status byte for the current discrete WHAT step."""
+        if self.what <= 0:
+            return 0x01
+        if self.what == 1:
+            return 0x00
+        step = min(10, max(2, self.what))
+        return ((step - 1) << 4) | 0x0D
+
+    def status_frame(self, *, digits: int) -> bytes:
+        """Encode current coarse dimmer state as a short B8 inbound telegram."""
+        return encode_short_inbound(
+            0xB8,
+            self.config.bus_addr,
+            0x12,
+            self.status_byte(),
+            digits=digits,
+            subbus=self.config.subbus,
+        )
+
+    def handle_short(
+        self,
+        b1: int,
+        b2: int,
+        b3: int,
+        *,
+        digits: int,
+    ) -> list[bytes]:
+        """Handle a 4-byte P2P command or status request addressed to this dimmer."""
+        if b1 != 0x00:
+            return []
+        if b2 == 0x15 and b3 == 0x00:
+            return [self.status_frame(digits=digits)]
+        if b2 == 0x11 and b3 == 0x00:
+            self.locked = True
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x11,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                )
+            ]
+        if b2 == 0x10 and b3 == 0x00:
+            self.locked = False
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x10,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                )
+            ]
+        if b2 == 0x12:
+            if self.locked:
+                return []
+            if b3 == 0x01:
+                self.what = 0
+                self.dim1_level = 100
+                self.dim1_speed = 2
+                return [self.status_frame(digits=digits)]
+            if b3 == 0x00:
+                self.what = 1
+                self.dim1_level = self.curve.get(1, 100)
+                self.dim1_speed = 2
+                return [self.status_frame(digits=digits)]
+            if (b3 & 0x0F) == 0x0D:
+                hi = (b3 >> 4) & 0x0F
+                if 1 <= hi <= 9:
+                    self.what = hi + 1
+                    self.dim1_level = self.curve.get(self.what, 100 + hi * 10)
+                    self.dim1_speed = 2
+                    return [self.status_frame(digits=digits)]
+        return []
+
+    def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle an 8-byte D1 extended command or query addressed to this dimmer."""
+        b2 = payload[2]
+        op = payload[3]
+        sub = payload[4]
+        kind = payload[5]
+        val1 = payload[6]
+        val2 = payload[7]
+
+        if op == 0x42 and sub == 0x0D:
+            if kind == 0x0D:
+                # *#1*WHERE*#1*<level>*<speed>##
+                pct = max(0, min(100, val1))
+                self.dim1_level = 100 + pct
+                self.what = self._level_to_what(self.dim1_level)
+                reply_spd = 5 if val2 == 0 else val2
+                self.dim1_speed = 2 if val2 == 0 else val2
+                ans = bytes(
+                    [0xD2, self.config.bus_addr, b2, 0x44, 0x0D, 0x0D, pct, reply_spd]
+                )
+                return [encode_extended_inbound(ans, digits=digits)]
+            if kind == 0x01:
+                # *1*<what>#<speed>*WHERE##
+                pct = max(0, min(100, val1))
+                self.dim1_level = 100 + pct
+                self.what = self._level_to_what(self.dim1_level)
+                self.dim1_speed = 2 if val2 == 0 else val2
+                return [self.status_frame(digits=digits)]
+        if op == 0x43 and sub == 0x0D:
+            pct = max(0, min(100, self.dim1_level - 100))
+            if kind == 0x0D:
+                ans = bytes(
+                    [
+                        0xD2,
+                        self.config.bus_addr,
+                        b2,
+                        0x44,
+                        0x0D,
+                        0x0D,
+                        pct,
+                        self.dim1_speed,
+                    ]
+                )
+                return [encode_extended_inbound(ans, digits=digits)]
+            if kind == 0x00 and self.config.model.upper() != "F418U2":
+                ans = bytes(
+                    [
+                        0xD2,
+                        self.config.bus_addr,
+                        b2,
+                        0x44,
+                        0x0D,
+                        0x00,
+                        pct,
+                        self.dim1_speed,
+                    ]
+                )
+                return [encode_extended_inbound(ans, digits=digits)]
+        return []
+
+
+class CoverDevice:
+    """Clean-room roller shutter / automation actuator (WHO=2, 14, e.g. F411/2)."""
+
+    def __init__(self, config: CoverConfig) -> None:
+        self.config = config
+        self.what: int = config.initial_what
+        self.level: int = config.initial_level
+        self.locked: bool = config.initial_locked
+        self.move_until_ms: float | None = None
+
+    def reset(self) -> None:
+        """Reset shutter state, position, lock, and timer."""
+        self.what = self.config.initial_what
+        self.level = self.config.initial_level
+        self.locked = self.config.initial_locked
+        self.move_until_ms = None
+
+    def status_byte(self) -> int:
+        """Return the SCS B8 status byte (0A=stop, 08=up, 09=down)."""
+        if self.what == 1:
+            return 0x08
+        if self.what == 2:
+            return 0x09
+        return 0x0A
+
+    def status_frame(self, *, digits: int) -> bytes:
+        """Encode current shutter state as a short B8 inbound telegram."""
+        return encode_short_inbound(
+            0xB8,
+            self.config.bus_addr,
+            0x12,
+            self.status_byte(),
+            digits=digits,
+            subbus=self.config.subbus,
+        )
+
+    def handle_short(
+        self,
+        b1: int,
+        b2: int,
+        b3: int,
+        *,
+        digits: int,
+        now_ms: float = 0.0,
+    ) -> list[bytes]:
+        """Handle a 4-byte P2P command or status request addressed to this shutter."""
+        if b1 != 0x00:
+            return []
+        if b2 == 0x15 and b3 == 0x00:
+            return [self.status_frame(digits=digits)]
+        if b2 == 0x11 and b3 == 0x00:
+            self.locked = True
+            self.what = 0
+            self.move_until_ms = None
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x11,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                ),
+                self.status_frame(digits=digits),
+            ]
+        if b2 == 0x10 and b3 == 0x00:
+            self.locked = False
+            return [
+                encode_short_inbound(
+                    0xB8,
+                    self.config.bus_addr,
+                    0x10,
+                    0x00,
+                    digits=digits,
+                    subbus=self.config.subbus,
+                )
+            ]
+        if b2 == 0x12 and b3 in (0x08, 0x09, 0x0A):
+            if self.locked:
+                return []
+            if b3 == 0x0A:
+                self.what = 0
+                self.move_until_ms = None
+            elif b3 == 0x08:
+                self.what = 1
+                self.move_until_ms = now_ms + float(self.config.travel_time_ms)
+            else:
+                self.what = 2
+                self.move_until_ms = now_ms + float(self.config.travel_time_ms)
+            return [self.status_frame(digits=digits)]
+        return []
+
+    def tick(self, now_ms: float, *, digits: int) -> list[bytes]:
+        """Check whether timed shutter movement has completed at now_ms."""
+        if self.move_until_ms is not None and now_ms >= self.move_until_ms:
+            self.what = 0
+            self.move_until_ms = None
+            return [self.status_frame(digits=digits)]
+        return []
+
+
+class ThermoZoneDevice:
+    """Clean-room thermoregulation zone and probe simulator (WHO=4, KW4691)."""
+
+    def __init__(self, config: ThermoZoneConfig) -> None:
+        self.config = config
+        self.temp_deci: int = config.initial_temp_deci
+        self.setpoint_deci: int = config.initial_setpoint_deci
+        self.mode: int = config.initial_mode
+        self.function: int = config.initial_function
+        self.offset: str = config.initial_offset
+        self.valve_heating: int = config.initial_valve_heating
+        self.valve_cooling: int = config.initial_valve_cooling
+        self.actuator_status: int = config.initial_actuator_status
+        self.actuators: dict[int, int] = (
+            dict(config.actuators)
+            if config.actuators
+            else {1: config.initial_actuator_status}
+        )
+        self.fan_speed: int = config.initial_fan_speed
+
+    def reset(self) -> None:
+        """Reset zone state to initial fixture values."""
+        self.temp_deci = self.config.initial_temp_deci
+        self.setpoint_deci = self.config.initial_setpoint_deci
+        self.mode = self.config.initial_mode
+        self.function = self.config.initial_function
+        self.offset = self.config.initial_offset
+        self.valve_heating = self.config.initial_valve_heating
+        self.valve_cooling = self.config.initial_valve_cooling
+        self.actuator_status = self.config.initial_actuator_status
+        self.actuators = (
+            dict(self.config.actuators)
+            if self.config.actuators
+            else {1: self.config.initial_actuator_status}
+        )
+        self.fan_speed = self.config.initial_fan_speed
+
+    def _mode_byte(self) -> int:
+        if self.mode == 0:
+            return 0xF1
+        if self.mode == 102:
+            return 0xF2
+        if self.mode == 202:
+            return 0xF3
+        if self.mode == 303:
+            return 0xFF
+        if self.mode in {208, 2}:
+            return 0x12
+        if self.mode == 108:
+            return 0x10
+        return 0xF0
+
+    def handle_short(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle a 4-byte WHO=4 command or query."""
+        b0, b1, b2, b3 = payload[0], payload[1], payload[2], payload[3]
+
+        # Virtual probe write B4 <Z> 30 <temp>
+        if b0 == 0xB4 and b1 == self.config.bus_addr and b2 == 0x30:
+            self.temp_deci = b3
+            return []
+
+        # All actuators status query A9 <Z> 30 10 (*#4*Z*20##)
+        if b0 == 0xA9 and b1 == self.config.bus_addr and b2 == 0x30 and b3 == 0x10:
+            return [
+                encode_short_inbound(
+                    0xB7,
+                    0x80 + self.config.bus_addr,
+                    0x30 | (act_id & 0x0F),
+                    THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
+                    digits=digits,
+                )
+                for act_id, st in sorted(self.actuators.items())
+            ]
+
+        # Single actuator status query 99 <80+Z> 3<A> 10 (*#4*Z#A*20##)
+        if b0 == 0x99 and b1 == (0x80 + self.config.bus_addr) and b3 == 0x10:
+            act_id = b2 & 0x0F
+            if act_id in self.actuators:
+                st = self.actuators[act_id]
+                return [
+                    encode_short_inbound(
+                        0xB7,
+                        b1,
+                        0x30 | act_id,
+                        THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
+                        digits=digits,
+                    )
+                ]
+            return []
+
+        # Setpoint write 90/91/92 <Z> 3<m> <half_deg> (*#4*Z*#14*T*M##)
+        if (
+            b0 in (0x90, 0x91, 0x92)
+            and b1 == self.config.bus_addr
+            and (b2 & 0xF0) == 0x30
+        ):
+            return self._handle_setpoint_write(b0, b2, b3, digits=digits)
+
+        # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##)
+        if b0 == 0x93 and b1 == self.config.bus_addr and b2 == 0x30:
+            if b3 == 0x00:
+                self.mode = 1
+            elif b3 == 0x01:
+                self.mode = 0
+            elif b3 == 0x0F:
+                self.mode = 303
+            hi = (self.setpoint_deci >> 8) & 0xFF
+            lo = self.setpoint_deci & 0xFF
+            mb = self._mode_byte()
+            ans = bytes([0xD2, self.config.bus_addr, 0x03, 0x04, 0x12, mb, hi, lo])
+            return [encode_extended_inbound(ans, digits=digits)]
+
+        # Zone queries 99 <Z> 3<P> <dim>
+        if b0 == 0x99 and b1 == self.config.bus_addr and (b2 & 0xF0) == 0x30:
+            return self._handle_zone_query(b2 & 0x0F, b3, digits=digits)
+        return []
+
+    def _handle_setpoint_write(
+        self, b0: int, b2: int, b3: int, *, digits: int
+    ) -> list[bytes]:
+        self.setpoint_deci = b3 * 5
+        if b0 == 0x90:
+            self.mode = 1
+            self.function = ((b2 & 0x03) + 1) if (b2 & 0x03) < 3 else 3
+        elif b0 == 0x91:
+            self.mode = 0
+            self.function = 2
+        else:
+            self.function = 3
+        hi = (self.setpoint_deci >> 8) & 0xFF
+        lo = self.setpoint_deci & 0xFF
+        ans = bytes(
+            [0xD2, self.config.bus_addr, 0x03, 0x04, 0x0E, hi, lo, self.function]
+        )
+        return [encode_extended_inbound(ans, digits=digits)]
+
+    def _handle_zone_query(self, probe: int, b3: int, *, digits: int) -> list[bytes]:
+        if b3 == 0x00:
+            if probe == 0 or probe in self.config.probes:
+                hdr = 0xB5 if self.temp_deci >= 256 else 0xB4
+                return [
+                    encode_short_inbound(
+                        hdr,
+                        self.config.bus_addr,
+                        0x30 | probe,
+                        self.temp_deci & 0xFF,
+                        digits=digits,
+                    )
+                ]
+            return []
+        if probe != 0:
+            return []
+        hi = (self.setpoint_deci >> 8) & 0xFF
+        lo = self.setpoint_deci & 0xFF
+        addr = self.config.bus_addr
+        fs = self.fan_speed & 0xFF
+        replies: dict[int, bytes] = {
+            0x12: bytes([0xD2, addr, 0x03, 0x04, 0x12, self._mode_byte(), hi, lo]),
+            0x0E: bytes([0xD2, addr, 0x03, 0x04, 0x0E, hi, lo, self.function]),
+            0x0D: bytes([0xD2, addr, 0x03, 0x04, 0x0D, 0x00, 0x00, 0x00]),
+            0x13: bytes(
+                [
+                    0xD2,
+                    addr,
+                    0x03,
+                    0x04,
+                    0x13,
+                    0x1C + (self.valve_cooling & 0x0F),
+                    0x1C + (self.valve_heating & 0x0F),
+                    0x00,
+                ]
+            ),
+            0x0B: bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00]),
+        }
+        if b3 in replies:
+            return [encode_extended_inbound(replies[b3], digits=digits)]
+        return []
+
+    def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle an 8-byte D1 WHO=4 command or query."""
+        if (
+            payload[0] == 0xD1
+            and payload[1] == self.config.bus_addr
+            and payload[2] == 0x03
+            and payload[3] == 0x02
+            and payload[4] == 0x0B
+        ):
+            self.fan_speed = payload[5]
+            return [
+                encode_extended_inbound(
+                    bytes(
+                        [
+                            0xD2,
+                            self.config.bus_addr,
+                            0x03,
+                            0x04,
+                            0x0B,
+                            self.fan_speed,
+                            0x00,
+                            0x00,
+                        ]
+                    ),
+                    digits=digits,
+                )
+            ]
+        return []
+
+
+class EnergyMeterDevice:
+    """Clean-room F520 energy management meter (WHO=18, 5N -> A1..A9)."""
+
+    def __init__(self, config: EnergyMeterConfig) -> None:
+        self.config = config
+        self.active_power_w: int = config.active_power_w
+        self.total_energy_wh: int = config.total_energy_wh
+        self.current_month_wh: int = config.current_month_wh
+        self.partial_energy_wh: int = config.partial_energy_wh
+
+    def reset(self) -> None:
+        """Reset meter readings to initial fixture values."""
+        self.active_power_w = self.config.active_power_w
+        self.total_energy_wh = self.config.total_energy_wh
+        self.current_month_wh = self.config.current_month_wh
+        self.partial_energy_wh = self.config.partial_energy_wh
+
+    def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle an 8-byte D1 WHO=18 query or command."""
+        addr = self.config.bus_addr
+        if payload[0] != 0xD1 or payload[1] != addr or payload[2] != 0x02:
+            return []
+        op, p4, p5 = payload[3], payload[4], payload[5]
+        if (op == 0x33 and p4 == 0x00 and p5 == 0x1D) or (
+            op == 0x32 and p4 == 0x00 and p5 == 0x02 and payload[6] == 0x1D
+        ):
+            # *#18*5N*113## active power query or *#18*5N*#1200#1*<val>## toggle
+            w = self.active_power_w & 0xFFFF
+            ans = bytes([0xD2, addr, 0x02, 0x34, 0x00, 0x1D, (w >> 8) & 0xFF, w & 0xFF])
+            return [encode_extended_inbound(ans, digits=digits)]
+        if op == 0x33 and p4 == 0x50 and p5 in (0x15, 0x16, 0x17, 0x18):
+            val = (
+                self.total_energy_wh
+                if p5 == 0x15
+                else (self.current_month_wh if p5 == 0x17 else self.partial_energy_wh)
+            )
+            f1 = bytes([0xD2, addr, 0x02, 0x35, 0x81, 0x50, p5, 0x00])
+            f2 = bytes(
+                [
+                    0xD2,
+                    addr,
+                    0x02,
+                    0x35,
+                    0xA0,
+                    (val >> 16) & 0xFF,
+                    (val >> 8) & 0xFF,
+                    val & 0xFF,
+                ]
+            )
+            return [
+                encode_extended_inbound(f1, digits=digits),
+                encode_extended_inbound(f2, digits=digits),
+            ]
+        return []
+
+
+class EnergyActuatorDevice:
+    """Clean-room F522/F523 energy actuator (WHO=18, 7N#0 -> B1..B9)."""
+
+    def __init__(self, config: EnergyActuatorConfig) -> None:
+        self.config = config
+        self.state: int = config.initial_state
+        self.active_power_w: int = config.active_power_w
+        self.total_energy_wh: int = config.total_energy_wh
+
+    def reset(self) -> None:
+        """Reset energy actuator state to initial fixture values."""
+        self.state = self.config.initial_state
+        self.active_power_w = self.config.active_power_w
+        self.total_energy_wh = self.config.total_energy_wh
+
+    def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle an 8-byte D1 WHO=18 query or command on 7N#0."""
+        addr = self.config.bus_addr
+        if payload[0] != 0xD1 or payload[1] != addr or payload[2] != 0x12:
+            return []
+        op, p4, p5 = payload[3], payload[4], payload[5]
+        if op == 0x33 and p4 == 0x00 and p5 == 0x1D:
+            w = self.active_power_w & 0xFFFF
+            ans = bytes([0xD2, addr, 0x12, 0x34, 0x00, 0x1D, (w >> 8) & 0xFF, w & 0xFF])
+            return [encode_extended_inbound(ans, digits=digits)]
+        if op == 0x33 and p4 == 0x70 and p5 == 0x05:
+            ans = bytes([0xD2, addr, 0x12, 0x34, 0x70, 0x05, 0x00, self.state & 0xFF])
+            return [encode_extended_inbound(ans, digits=digits)]
+        if op == 0x31 and p4 == 0x70 and p5 in (0x00, 0x01):
+            self.state = p5
+            ans = bytes([0xD2, addr, 0x12, 0x34, 0x70, 0x05, 0x00, self.state & 0xFF])
+            return [encode_extended_inbound(ans, digits=digits)]
+        if op == 0x33 and p4 == 0x50 and p5 == 0x15:
+            val = self.total_energy_wh
+            f1 = bytes([0xD2, addr, 0x12, 0x35, 0x81, 0x50, 0x15, 0x00])
+            f2 = bytes(
+                [
+                    0xD2,
+                    addr,
+                    0x12,
+                    0x35,
+                    0xA0,
+                    (val >> 16) & 0xFF,
+                    (val >> 8) & 0xFF,
+                    val & 0xFF,
+                ]
+            )
+            return [
+                encode_extended_inbound(f1, digits=digits),
+                encode_extended_inbound(f2, digits=digits),
+            ]
+        return []
+
+
+class ScenarioDevice:
+    """Clean-room CEN (WHO=15) / CEN+ (WHO=25) scenario button module."""
+
+    def __init__(self, config: ScenarioConfig) -> None:
+        self.config = config
+
+    def reset(self) -> None:
+        """No mutable state for scenario pushbuttons."""
+
+
+class FaultChannel:
+    """Clean-room WHO=1 / WHO=1001 autodiagnostic fault channel (WHAT=19 + DIM 11)."""
+
+    def __init__(self, bus_addr: int, mask_bytes: bytes = DEFAULT_FAULT_MASK) -> None:
+        self.bus_addr = bus_addr
+        self.mask_bytes = mask_bytes
+
+    def handle_short(self, b1: int, b2: int, b3: int, *, digits: int) -> list[bytes]:
+        """Respond to status query 00 15 00 with B8 <addr> 12 0E + D2 <addr> 01 04."""
+        if b1 == 0x00 and b2 == 0x15 and b3 == 0x00:
+            short_ans = encode_short_inbound(
+                0xB8, self.bus_addr, 0x12, 0x0E, digits=digits
+            )
+            ext_ans = encode_extended_inbound(
+                bytes([0xD2, self.bus_addr, 0x01, 0x04, *self.mask_bytes[:4]]),
+                digits=digits,
+            )
+            return [short_ans, ext_ans]
+        return []
+
+
+RelayChannel = LightDevice
+DimmerChannel = DimmerDevice
+TimedShutter = CoverDevice
+ThermoZone = ThermoZoneDevice
+EnergyMeter = EnergyMeterDevice
+EnergyActuator = EnergyActuatorDevice

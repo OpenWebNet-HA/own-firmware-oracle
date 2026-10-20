@@ -1,0 +1,25 @@
+; Closed-loop Tier A plant suite for f461-bench topology
+; Exercises F411/4 relays (06, 07), Group 1, General 0, impulse WHAT=18,
+; WHO=14 lock/unlock, F411/2 shutter (05), KW4691 thermo zone 2, and unpopulated addresses.
+down  *#1*06##
+down  *1*1*06##
+down  *#1*06##
+down  *1*0*06##
+down  *1*1*#1##
+down  *1*0*0##
+down  *1*18*06##
+down  *14*0*06##
+down  *1*1*06##
+down  *14*1*06##
+down  *#2*05##
+down  *2*1*05##
+down  *2*0*05##
+down  *#4*2##
+down  *#4*2*0##
+down  *#4*2*12##
+down  *#4*2*14##
+down  *#4*2*20##
+down  *#1*08##
+down  *#1*25##
+down  *#1*50##
+down  *#1*99##

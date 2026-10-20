@@ -1,0 +1,13 @@
+; Closed-loop Tier A plant suite for F422 sub-bus #4#02 on mh200-bench
+; Exercises cap-mh200-f422-scope-20260923: sub-bus area status query,
+; sub-bus area movement no-op ACK, P2P sub-bus shutter movement, and broadcast isolation.
+down  *#2*1#4#02##
+down  *2*1*1#4#02##
+down  *#2*11#4#02##
+down  *2*1*11#4#02##
+down  *2*0*11#4#02##
+down  *#1*11#4#01##
+down  *1*1*11#4#01##
+down  *1*0*11#4#01##
+down  *#2*0##
+down  *#1*0##

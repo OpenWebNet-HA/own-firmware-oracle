@@ -40,6 +40,20 @@ class Target(Protocol):
 
 
 def _drain(target: Target) -> list[str]:
+    harness = getattr(target, "harness", "full")
+    if isinstance(harness, str) and harness.startswith("plant:"):
+        take_dev = getattr(target, "take_device_bus", None)
+        take_cmd = getattr(target, "take_cmd_events", None)
+        take_ev = getattr(target, "take_ev_events", None)
+        dev_frames: list[bytes] = take_dev() if callable(take_dev) else []
+        cmd_frames: list[str] = take_cmd() if callable(take_cmd) else []
+        ev_frames: list[str] = take_ev() if callable(take_ev) else target.take_own()
+        return (
+            [f"bus:{f.hex(' ')}" for f in target.take_bus()]
+            + [f"bus_rx:{f.hex(' ')}" for f in dev_frames]
+            + [f"cmd:{f}" for f in cmd_frames]
+            + [f"evt:{f}" for f in ev_frames]
+        )
     return [f"bus:{f.hex(' ')}" for f in target.take_bus()] + [
         f"own:{f}" for f in target.take_own()
     ]

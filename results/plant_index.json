@@ -1,0 +1,2752 @@
+{
+  "format_version": "1.0.0",
+  "generator": "own-firmware-oracle/plant_index",
+  "schema_version": "1.0.0",
+  "suites": [
+    "plant-energy-f520",
+    "plant-f422-subbus",
+    "plant-f461-bench",
+    "plant-mh200-bench"
+  ],
+  "total_unique_inputs": 48,
+  "verdicts": {
+    "*#1*0##": [
+      {
+        "bus_frames": [
+          "24 30 34 42 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d",
+          "24 31 37 42 38 31 34 31 32 39 44 0d",
+          "24 31 37 42 38 39 39 31 32 39 44 0d",
+          "24 31 37 42 38 36 32 31 32 39 44 0d",
+          "24 31 37 42 38 36 33 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*21##",
+          "*1*10*14##",
+          "*1*10*99##",
+          "*1*10*62##",
+          "*1*10*63##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##",
+          "*1*10*14##",
+          "*1*10*99##",
+          "*1*10*62##",
+          "*1*10*63##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 25,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*#1*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*06##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 16,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*1*1*06##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 18,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*06##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 16,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*1*1*06##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 18,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*08##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 38 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 34,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 38 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 34,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*11#4#01##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 31 30 30 30 30 31 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 31 30 30 30 30 42 38 31 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*11#4#01##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*11#4#01##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 21,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*#1*14##": [
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 31 34 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*14##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 20,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 31 34 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*14##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 20,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*14*1##": [
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 34 30 31 34 33 30 44 30 30 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 44 32 31 34 30 31 34 34 30 44 30 30 33 31 30 32 0d"
+        ],
+        "cmd_replies": [
+          "*#1*14*1*149*2##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#1*14*1*149*2##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 22,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 36 44 31 31 34 30 31 34 33 30 44 30 44 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 38 44 32 31 34 30 31 34 34 30 44 30 44 33 31 30 32 0d"
+        ],
+        "cmd_replies": [
+          "*#1*14*1*149*2##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#1*14*1*149*2##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 22,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*21##": [
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*21##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 16,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 32 31 31 32 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*1*1*21##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 18,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*21##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 16,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 32 31 31 32 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*1*1*21##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 18,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*25##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 32 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 35,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 35,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*50##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 35 30 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 36,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 35 30 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 36,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*62##": [
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 32 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 24,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 32 31 32 34 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*5*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 26,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 32 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 28,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 32 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 24,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 32 31 32 34 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*5*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 26,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 32 31 32 30 31 0d"
+        ],
+        "cmd_replies": [
+          "*1*0*62##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 28,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*63##": [
+      {
+        "bus_frames": [
+          "24 30 33 36 33 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 33 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*63##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*63##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 29,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 33 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 33 31 32 39 44 0d"
+        ],
+        "cmd_replies": [
+          "*1*10*63##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*10*63##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 29,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*74##": [
+      {
+        "bus_frames": [
+          "24 30 33 37 34 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 37 34 31 32 30 45 0d",
+          "24 31 38 44 32 37 34 30 31 30 34 38 39 46 42 46 46 46 37 0d"
+        ],
+        "cmd_replies": [
+          "*1*19*74##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*19*74##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 30,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 37 34 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 37 34 31 32 30 45 0d",
+          "24 31 38 44 32 37 34 30 31 30 34 38 39 46 42 46 46 46 37 0d"
+        ],
+        "cmd_replies": [
+          "*1*19*74##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*19*74##",
+          "*#1001*74*11*111110111111111111110111##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 30,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*75##": [
+      {
+        "bus_frames": [
+          "24 30 33 37 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 37 35 31 32 30 45 0d",
+          "24 31 38 44 32 37 35 30 31 30 34 38 39 46 42 46 46 46 37 0d"
+        ],
+        "cmd_replies": [
+          "*1*19*75##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*19*75##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 31,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 37 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 37 35 31 32 30 45 0d",
+          "24 31 38 44 32 37 35 30 31 30 34 38 39 46 42 46 46 46 37 0d"
+        ],
+        "cmd_replies": [
+          "*1*19*75##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*1*19*75##",
+          "*#1001*75*11*111110111111111111110111##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 31,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#1*99##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 39 39 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 37,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 39 39 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 37,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "nack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#18*51*#1200#1*1##": [
+      {
+        "bus_frames": [
+          "24 30 30 36 44 31 41 31 30 32 33 32 30 30 30 32 31 44 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 34 30 30 31 44 30 31 43 32 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*#18*51*113*450##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 19,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv",
+        "suite": "plant-energy-f520",
+        "suite_sha256": "3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      }
+    ],
+    "*#18*51*113##": [
+      {
+        "bus_frames": [
+          "24 30 30 36 44 31 41 31 30 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 34 30 30 31 44 30 31 43 32 0d"
+        ],
+        "cmd_replies": [
+          "*#18*51*113*450##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#18*51*113*450##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 16,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv",
+        "suite": "plant-energy-f520",
+        "suite_sha256": "3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      }
+    ],
+    "*#18*51*51##": [
+      {
+        "bus_frames": [
+          "24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 35 38 31 35 30 31 35 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 35 41 30 30 31 45 32 34 30 0d"
+        ],
+        "cmd_replies": [
+          "*#18*51*51*123456##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#18*51*51*123456##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 17,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv",
+        "suite": "plant-energy-f520",
+        "suite_sha256": "3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      }
+    ],
+    "*#18*51*54##": [
+      {
+        "bus_frames": [
+          "24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 38 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 35 38 31 35 30 31 38 30 30 0d",
+          "24 30 31 38 44 32 41 31 30 32 33 35 41 30 30 30 31 41 38 35 0d"
+        ],
+        "cmd_replies": [
+          "*#18*51*54*6789##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#18*51*54*6789##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 18,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv",
+        "suite": "plant-energy-f520",
+        "suite_sha256": "3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      }
+    ],
+    "*#18*71#0*113##": [
+      {
+        "bus_frames": [
+          "24 30 30 36 44 31 42 31 31 32 33 33 30 30 31 44 30 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 42 31 31 32 33 34 30 30 31 44 30 30 37 38 0d"
+        ],
+        "cmd_replies": [
+          "*#18*71#0*113*120##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#18*71#0*113*120##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 20,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-energy-f520.tsv",
+        "suite": "plant-energy-f520",
+        "suite_sha256": "3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      }
+    ],
+    "*#2*0##": [
+      {
+        "bus_frames": [
+          "24 30 34 42 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d",
+          "24 31 37 42 38 31 34 31 32 39 44 0d",
+          "24 31 37 42 38 39 39 31 32 39 44 0d",
+          "24 31 37 42 38 36 32 31 32 39 44 0d",
+          "24 31 37 42 38 36 33 31 32 39 44 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##",
+          "*1*10*14##",
+          "*1*10*99##",
+          "*1*10*62##",
+          "*1*10*63##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 24,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*#2*05##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 35 31 32 30 41 0d"
+        ],
+        "cmd_replies": [
+          "*2*0*05##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 26,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 35 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 35 31 32 30 41 0d"
+        ],
+        "cmd_replies": [
+          "*2*0*05##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 26,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#2*1#4#02##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 32 30 30 30 30 42 33 30 31 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 31 31 32 30 41 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 32 31 32 30 41 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 33 31 32 30 41 0d"
+        ],
+        "cmd_replies": [
+          "*2*0*11#4#02##",
+          "*2*0*12#4#02##",
+          "*2*0*13#4#02##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*11#4#02##",
+          "*2*0*12#4#02##",
+          "*2*0*13#4#02##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 16,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*#2*11#4#02##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 32 30 30 30 30 31 31 30 30 31 35 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 31 31 32 30 41 0d"
+        ],
+        "cmd_replies": [
+          "*2*0*11#4#02##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*11#4#02##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 18,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*#4*2##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 39 39 30 32 33 30 30 30 0d",
+          "24 30 30 34 39 39 30 32 33 30 31 32 0d",
+          "24 30 30 34 39 39 30 32 33 30 30 45 0d",
+          "24 30 30 34 39 39 30 32 33 30 30 44 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 34 30 32 33 30 46 39 0d",
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 30 32 30 33 30 34 31 32 46 30 30 30 46 35 0d",
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 30 32 30 33 30 34 30 45 30 30 46 35 30 33 0d",
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 30 32 30 33 30 34 30 44 30 30 30 30 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*0*0249##",
+          "*#4*2*12*0245*3##",
+          "*4*1*2##",
+          "*#4*2*14*0245*3##",
+          "*#4*2*13*00##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*0*0249##",
+          "*#4*2*12*0245*3##",
+          "*4*1*2##",
+          "*#4*2*14*0245*3##",
+          "*#4*2*13*00##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 29,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 30 32 33 30 30 30 0d",
+          "24 30 34 39 39 30 32 33 30 31 32 0d",
+          "24 30 34 39 39 30 32 33 30 30 45 0d",
+          "24 30 34 39 39 30 32 33 30 30 44 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 34 30 32 33 30 46 39 0d",
+          "24 30 38 0d",
+          "24 31 38 44 32 30 32 30 33 30 34 31 32 46 30 30 30 46 35 0d",
+          "24 30 38 0d",
+          "24 31 38 44 32 30 32 30 33 30 34 30 45 30 30 46 35 30 33 0d",
+          "24 30 38 0d",
+          "24 31 38 44 32 30 32 30 33 30 34 30 44 30 30 30 30 30 30 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*0*0249##",
+          "*#4*2*12*0245*3##",
+          "*4*1*2##",
+          "*#4*2*14*0245*3##",
+          "*#4*2*13*00##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*0*0249##",
+          "*#4*2*12*0245*3##",
+          "*4*1*2##",
+          "*#4*2*14*0245*3##",
+          "*#4*2*13*00##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 29,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*2*0##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 39 39 30 32 33 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 34 30 32 33 30 46 39 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*0*0249##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*0*0249##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 30,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 30 32 33 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 34 30 32 33 30 46 39 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*0*0249##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*0*0249##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 30,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*2*12##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 39 39 30 32 33 30 31 32 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 30 32 30 33 30 34 31 32 46 30 30 30 46 35 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*12*0245*3##",
+          "*4*1*2##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*12*0245*3##",
+          "*4*1*2##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 31,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 30 32 33 30 31 32 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 38 44 32 30 32 30 33 30 34 31 32 46 30 30 30 46 35 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*12*0245*3##",
+          "*4*1*2##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*12*0245*3##",
+          "*4*1*2##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 31,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*2*14##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 39 39 30 32 33 30 30 45 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 38 44 32 30 32 30 33 30 34 30 45 30 30 46 35 30 33 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*14*0245*3##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*14*0245*3##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 32,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 39 39 30 32 33 30 30 45 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 38 44 32 30 32 30 33 30 34 30 45 30 30 46 35 30 33 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2*14*0245*3##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2*14*0245*3##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 32,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*#4*2*20##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 41 39 30 32 33 30 31 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 37 38 32 33 31 30 31 0d",
+          "24 30 31 37 42 37 38 32 33 32 32 30 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2#1*20*0##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2#1*20*0##",
+          "*#4*2#2*20*5##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 33,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 41 39 30 32 33 30 31 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 37 38 32 33 31 30 31 0d",
+          "24 31 37 42 37 38 32 33 32 32 30 0d"
+        ],
+        "cmd_replies": [
+          "*#4*2#1*20*0##"
+        ],
+        "direction": "down",
+        "evt_events": [
+          "*#4*2#1*20*0##",
+          "*#4*2#2*20*5##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 33,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*0*0##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 42 31 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 31 30 30 31 32 30 31 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*0##",
+          "*1*0*0##",
+          "*#1*#1*15*0##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 21,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 42 31 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*0##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 21,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*0*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 31 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*06##",
+          "*#1*#1*15*0##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 19,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 31 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 19,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*0*11#4#01##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 31 30 30 30 30 31 31 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 31 30 30 30 30 42 38 31 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*11#4#01##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 23,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*1*0*14##": [
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 31 34 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 23,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 31 34 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 23,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*0*21##": [
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 19,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 32 31 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 19,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*0*62##": [
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 32 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 27,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 32 30 31 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 32 31 32 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*0*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 27,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*1*#1##": [
+      {
+        "bus_frames": [
+          "24 30 30 34 42 35 30 31 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 35 30 31 31 32 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d",
+          "24 30 31 37 42 38 30 37 31 32 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*#1##",
+          "*1*1*#1##",
+          "*1*1*06##",
+          "*#1*#1*15*1##",
+          "*1*1*07##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 20,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 34 42 35 30 31 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d",
+          "24 31 37 42 38 30 37 31 32 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*#1##",
+          "*1*1*06##",
+          "*1*1*07##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 20,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*1*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##",
+          "*#1*#1*15*1##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 17,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 24,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 17,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 24,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*1*11#4#01##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 31 30 30 30 30 31 31 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 31 30 30 30 30 42 38 31 31 31 32 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*11#4#01##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 22,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*1*1*21##": [
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 32 31 31 32 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 17,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 32 31 30 30 31 32 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 32 31 31 32 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*21##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 17,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*18*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 32 38 36 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 32 30 31 0d",
+          "24 30 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##",
+          "*#1*#1*15*1##",
+          "*1*0*06##",
+          "*#1*#1*15*0##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 22,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 32 38 36 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 32 30 30 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 30 0d",
+          "24 31 37 42 38 30 36 31 32 30 31 0d",
+          "24 31 38 44 35 30 31 30 31 33 34 30 37 30 30 30 30 30 31 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*1*06##",
+          "*1*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 22,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*5*14##": [
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 32 34 44 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 31 34 31 32 34 44 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 21,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 31 34 30 30 31 32 34 44 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 31 34 31 32 34 44 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*14##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 21,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*1*5*62##": [
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 32 34 44 0d"
+        ],
+        "bus_rx": [
+          "24 31 39 0d",
+          "24 31 37 42 38 36 32 31 32 34 44 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 25,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 36 32 30 30 31 32 34 44 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 36 32 31 32 34 44 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*1*5*62##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 25,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-mh200-bench/plant-mh200-bench.tsv",
+        "suite": "plant-mh200-bench",
+        "suite_sha256": "30e1d88dbd3b2b7c6309600377541838f1bb61b843679ffc11af378caa6ba776",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*14*0*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 31 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 31 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*14*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 23,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 31 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 31 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*14*0*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 23,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*14*1*06##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 36 30 30 31 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 36 31 30 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*14*1*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 25,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 36 30 30 31 30 30 30 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 36 31 30 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*14*1*06##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 25,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*2*0*05##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 35 30 30 31 32 30 41 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 35 31 32 30 41 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*1000#0*05##",
+          "*2*0*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 28,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 35 30 30 31 32 30 41 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 35 31 32 30 41 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*1000#0*05##",
+          "*2*0*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 28,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*2*0*11#4#02##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 32 30 30 30 30 31 31 30 30 31 32 30 41 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 31 31 32 30 41 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*11#4#02##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 20,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*2*1*05##": [
+      {
+        "bus_frames": [
+          "24 30 30 33 30 35 30 30 31 32 30 41 0d",
+          "24 30 30 33 30 35 30 30 31 32 30 38 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 35 31 32 30 41 0d",
+          "24 30 30 38 30 30 0d",
+          "24 30 31 37 42 38 30 35 31 32 30 38 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*1000#0*05##",
+          "*2*0*05##",
+          "*2*1000#1*05##",
+          "*2*1*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
+        "line_number": 27,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "F461",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/F461/020011/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428",
+        "verdict": "out",
+        "version": "020011"
+      },
+      {
+        "bus_frames": [
+          "24 30 33 30 35 30 30 31 32 30 41 0d",
+          "24 30 33 30 35 30 30 31 32 30 38 0d"
+        ],
+        "bus_rx": [
+          "24 30 38 0d",
+          "24 31 37 42 38 30 35 31 32 30 41 0d",
+          "24 30 38 0d",
+          "24 31 37 42 38 30 35 31 32 30 38 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*1000#0*05##",
+          "*2*0*05##",
+          "*2*1000#1*05##",
+          "*2*1*05##"
+        ],
+        "harness": "plant:f461-bench",
+        "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
+        "line_number": 27,
+        "plant_sha256": "fff82b0cb83d0f1656afedc3af2b409dd8620e7590467aaf9c017cb799906d23",
+        "product": "MyHomeServer1",
+        "reply": "ack",
+        "responder": "pic:plant:f461-bench",
+        "source_tsv": "results/MyHomeServer1/028206/oracle/plant-f461-bench/plant-f461-bench.tsv",
+        "suite": "plant-f461-bench",
+        "suite_sha256": "72851d51fa89ebd506b72c84c631c5699ab3af6a0c8cbcf63b93364f32ba6908",
+        "target_sha256": "5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856",
+        "verdict": "out",
+        "version": "028206"
+      }
+    ],
+    "*2*1*1#4#02##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 32 30 30 30 30 42 33 30 31 31 32 30 41 0d",
+          "24 30 36 45 43 30 32 30 30 30 30 42 33 30 31 31 32 30 38 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 30 30 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*1#4#02##",
+          "*2*1*1#4#02##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 17,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ],
+    "*2*1*11#4#02##": [
+      {
+        "bus_frames": [
+          "24 30 36 45 43 30 32 30 30 30 30 31 31 30 30 31 32 30 41 0d",
+          "24 30 36 45 43 30 32 30 30 30 30 31 31 30 30 31 32 30 38 0d"
+        ],
+        "bus_rx": [
+          "24 30 30 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 31 31 32 30 41 0d",
+          "24 30 30 0d",
+          "24 31 38 45 34 30 32 30 30 30 30 42 38 31 31 31 32 30 38 0d"
+        ],
+        "cmd_replies": [],
+        "direction": "down",
+        "evt_events": [
+          "*2*0*11#4#02##",
+          "*2*1*11#4#02##"
+        ],
+        "harness": "plant:mh200-bench",
+        "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
+        "line_number": 19,
+        "plant_sha256": "cd3ceb36e0fc87e022eb7cbac2733ae0a34bb5ab2ea55a36ad67b21dab7646f7",
+        "product": "MH200",
+        "reply": "ack",
+        "responder": "pic:plant:mh200-bench",
+        "source_tsv": "results/MH200/020102/oracle/plant-mh200-bench/plant-f422-subbus.tsv",
+        "suite": "plant-f422-subbus",
+        "suite_sha256": "5fb6939a7826576aa1ba2572ac9c71a297bc673558ce939534a3b4e902f51b36",
+        "target_sha256": "539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583",
+        "verdict": "out",
+        "version": "020102"
+      }
+    ]
+  },
+  "verdicts_sha256": "054d5a3e67bdcdfda3b7c0f8ecf5dfe77e94f698bd0721cce580e3fd04b70d61"
+}
