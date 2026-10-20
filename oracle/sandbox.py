@@ -21,8 +21,10 @@ inherits when it is started inside it.
 
 from __future__ import annotations
 
+import functools
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 BINFMT_DIR = Path("/proc/sys/fs/binfmt_misc")
@@ -30,6 +32,10 @@ BINFMT_DIR = Path("/proc/sys/fs/binfmt_misc")
 KERNEL_RELEASE = "2.4.19"
 # Read-only host paths for the driver jail; --ro-bind-try skips missing ones.
 HOST_RO = ("/usr", "/bin", "/lib", "/lib64", "/etc/alternatives", "/etc/ld.so.cache")
+# Plugin directories whose readdir() order determines coso's g_list_prepend
+# translation chain order; mounted on tmpfs in alphabetical readdir() order so
+# host ext4 dir_index hash seeds cannot alter plugin dispatch precedence.
+ORDERED_GUEST_DIRS = ("/home/bticino/libcoso", "/home/bticino/libcosoai")
 GUEST_PATH = re.compile(r"/[A-Za-z0-9_.+-]+(?:/[A-Za-z0-9_.+-]+)*")
 ENV_NAME = re.compile(r"[A-Z_][A-Z0-9_]*")
 QEMU_VERSION = re.compile(r"version (\d+(?:\.\d+)+)")
@@ -102,6 +108,43 @@ def _build_jail_env(
     return full_env, binds
 
 
+@functools.lru_cache(maxsize=4)
+def _tmpfs_reverses_readdir(shm: Path = Path("/dev/shm")) -> bool:
+    """True when the kernel's tmpfs returns getdents64() entries in reverse
+    creation order (Linux <6.6 and >=6.9 prepend to d_subdirs; 6.6-6.8
+    simple_offset_readdir returns creation order)."""
+    try:
+        with tempfile.TemporaryDirectory(dir=shm) as td:
+            p = Path(td)
+            (p / "0").touch()
+            (p / "1").touch()
+            return [c.name for c in p.iterdir()] == ["1", "0"]
+    except OSError:
+        return False
+
+
+def _ordered_dir_mounts(sysroot: Path, *, reverse: bool | None = None) -> list[str]:
+    """Mount plugin directories on tmpfs with files bound in alphabetical
+    readdir() order, matching the linear ext3 directory order in the image
+    regardless of the host ext4 filesystem's per-UUID dir_index hash seed."""
+    rev = _tmpfs_reverses_readdir() if reverse is None else reverse
+    mounts: list[str] = []
+    for guest_dir in ORDERED_GUEST_DIRS:
+        host_dir = sysroot / guest_dir.lstrip("/")
+        if not host_dir.is_dir():
+            continue
+        files = sorted(
+            (p for p in host_dir.iterdir() if p.is_file()),
+            key=lambda p: p.name,
+            reverse=rev,
+        )
+        if files:
+            mounts += ["--tmpfs", guest_dir]
+            for f in files:
+                mounts += ["--bind", str(f), f"{guest_dir}/{f.name}"]
+    return mounts
+
+
 def jail(
     sysroot: Path,
     argv: list[str],
@@ -151,6 +194,7 @@ def jail(
         out += ["--dir", guest_path(path)]
     for dest, target in sorted((links or {}).items()):
         out += ["--symlink", target, guest_path(dest)]
+    out += _ordered_dir_mounts(sysroot)
     out += [*binds, "--chdir", cwd, "--", *argv]
     return out
 

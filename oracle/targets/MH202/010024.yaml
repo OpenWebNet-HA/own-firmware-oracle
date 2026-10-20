@@ -87,5 +87,4 @@ boundary:
 quirks:
   - "Scenario controller stack (no bt_luci or bt_termo); scsserver emits periodic $24\\r PIC status polls on /dev/ttyS1."
   - "openserver links libbt_upnp.so.1.0 and writes /var/tmp/upnp/upnp_table.xml shortly after startup; /var/volatile/tmp/upnp must exist on the tmpfs mount or openserver dereferences a NULL FILE* and segfaults."
-
-
+  - "coso loads /home/bticino/libcoso/*.so in readdir() order via g_list_prepend; libplug_automation_tr.so mutates msg->frame_type from 11 to 9 in-place before rejecting non-WHO=2 extended #4#XX frames, so /home/bticino/libcoso must preserve the image's alphabetical directory order."
