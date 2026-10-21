@@ -1,0 +1,24 @@
+# product=F461
+# version=020011
+# image_sha256=cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b
+# harness=full
+# target_sha256=1ecabc82832aa3d341692ef5e4a426b1bc5804d2b2019520f3665358f1e33428
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock-readback
+# suite_sha256=4b1e35200b784de1ddc491dfb0944e21fcae2a5b79eaad1f5f1cda5fb568e9bf
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**#0*14*30*00*002##	ack	out	own:*#13**#0*14*30*00*002##
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**22##	ack	out	own:*#13**22*{H}*{M}*{S}*999*{W}*{D}*{MO}*{Y}##
+down	*#13**#22*14*30*00*102*03*21*10*2026##	ack	out	own:*#13**#22*14*30*00*102*03*21*10*2026##
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**1##	ack	out	own:*#13**1*{W}*{D}*{MO}*{Y}##
+down	*#13**#0*14*30*00*0530##	ack	out	own:*#13**#0*14*30*00*0530##
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##

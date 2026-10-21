@@ -1,0 +1,46 @@
+; WHO 13 gateway clock: date/time writes, reads and malformed T (time zone) fields.
+;
+; Grammar (Encyclopedia functional/who-13-integration-gateway/dimensions.md):
+;   DIMENSION 0   time      *#13**#0*H*M*S*T##
+;   DIMENSION 1   date      *#13**#1*W*D*M*Y##
+;   DIMENSION 22  date+time *#13**#22*H*M*S*T*W*D*M*Y##
+; T is a sign digit (0 = +, 1 = -) followed by a two-digit hour offset, so
+; only whole-hour offsets are expressible. OWNd 2.0.0b11 rejects non-hour
+; offsets client-side; this suite asks what the firmware does with them.
+;
+; Fixed values: Wednesday (W=03) 21 October 2026, 14:30:00. Every step runs
+; on a freshly started gateway (reset=each), so no write influences a read
+; here; who13-clock-readback.seq covers write-then-read.
+
+; --- reads ---------------------------------------------------------------
+down *#13**0##
+down *#13**1##
+down *#13**22##
+
+; --- DIMENSION 0 (time + zone) writes: valid whole-hour T ----------------
+down *#13**#0*14*30*00*000##
+down *#13**#0*14*30*00*001##
+down *#13**#0*14*30*00*002##
+down *#13**#0*14*30*00*102##
+
+; --- DIMENSION 1 (date) write ---------------------------------------------
+down *#13**#1*03*21*10*2026##
+
+; --- DIMENSION 22 (time + zone + date) writes: valid whole-hour T --------
+down *#13**#22*14*30*00*000*03*21*10*2026##
+down *#13**#22*14*30*00*001*03*21*10*2026##
+down *#13**#22*14*30*00*002*03*21*10*2026##
+down *#13**#22*14*30*00*102*03*21*10*2026##
+
+; --- T edge cases ---------------------------------------------------------
+; 999: what a live F461 2.0.11 answers to *#13**0##
+down *#13**#0*14*30*00*999##
+down *#13**#22*14*30*00*999*03*21*10*2026##
+; empty T: frame seen in MyHOME's F461 live trace
+down *#13**#0*22*50*00*##
+down *#13**#22*14*30*00**03*21*10*2026##
+; out of range: +24 h, -13 h, and a 4-digit +05:30 (Asia/Kolkata)
+down *#13**#0*14*30*00*124##
+down *#13**#0*14*30*00*013##
+down *#13**#0*14*30*00*0530##
+down *#13**#22*14*30*00*0530*03*21*10*2026##

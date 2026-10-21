@@ -1,0 +1,24 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock-readback
+# suite_sha256=4b1e35200b784de1ddc491dfb0944e21fcae2a5b79eaad1f5f1cda5fb568e9bf
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*##
+down	*#13**#0*14*30*00*002##	nack	crash	-
+down	*#13**0##	-	skipped	-
+down	*#13**22##	-	skipped	-
+down	*#13**#22*14*30*00*102*03*21*10*2026##	-	skipped	-
+down	*#13**0##	-	skipped	-
+down	*#13**1##	-	skipped	-
+down	*#13**#0*14*30*00*0530##	-	skipped	-
+down	*#13**0##	-	skipped	-

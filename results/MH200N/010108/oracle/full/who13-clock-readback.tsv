@@ -1,0 +1,24 @@
+# product=MH200N
+# version=010108
+# image_sha256=e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3
+# harness=full
+# target_sha256=4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock-readback
+# suite_sha256=4b1e35200b784de1ddc491dfb0944e21fcae2a5b79eaad1f5f1cda5fb568e9bf
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*##
+down	*#13**#0*14*30*00*002##	nack	crash	-
+down	*#13**0##	-	skipped	-
+down	*#13**22##	-	skipped	-
+down	*#13**#22*14*30*00*102*03*21*10*2026##	-	skipped	-
+down	*#13**0##	-	skipped	-
+down	*#13**1##	-	skipped	-
+down	*#13**#0*14*30*00*0530##	-	skipped	-
+down	*#13**0##	-	skipped	-

@@ -1,0 +1,35 @@
+# product=F454
+# version=020051
+# image_sha256=15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3
+# harness=full
+# target_sha256=73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock
+# suite_sha256=9df081fa5625e39f0b17beca5e5ac24a0ad4d8ddeb0c9356df3a2fd0119dde44
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**#0*14*30*00*000##	ack	silent	-
+down	*#13**#0*14*30*00*001##	ack	silent	-
+down	*#13**#0*14*30*00*002##	ack	silent	-
+down	*#13**#0*14*30*00*013##	ack	silent	-
+down	*#13**#0*14*30*00*0530##	nack	silent	-
+down	*#13**#0*14*30*00*102##	ack	silent	-
+down	*#13**#0*14*30*00*124##	ack	silent	-
+down	*#13**#0*14*30*00*999##	ack	silent	-
+down	*#13**#0*22*50*00*##	ack	silent	-
+down	*#13**#1*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00**03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*000*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*001*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*002*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*0530*03*21*10*2026##	nack	silent	-
+down	*#13**#22*14*30*00*102*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*999*03*21*10*2026##	ack	silent	-
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*001##
+down	*#13**1##	ack	out	own:*#13**1*{W}*{D}*{MO}*{Y}##
+down	*#13**22##	ack	out	own:*#13**22*{H}*{M}*{S}*001*{W}*{D}*{MO}*{Y}##

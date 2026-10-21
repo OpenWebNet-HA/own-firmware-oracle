@@ -1,0 +1,24 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock-readback
+# suite_sha256=4b1e35200b784de1ddc491dfb0944e21fcae2a5b79eaad1f5f1cda5fb568e9bf
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**#0*14*30*00*002##	-	silent	-
+down	*#13**0##	-	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**22##	ack	out	own:*#13**22*{H}*{M}*{S}*999*{W}*{D}*{MO}*{Y}##
+down	*#13**#22*14*30*00*102*03*21*10*2026##	ack	silent	-
+down	*#13**0##	ack	out	own:*#13**0*{H}*{M}*{S}*999##
+down	*#13**1##	ack	out	own:*#13**1*{W}*{D}*{MO}*{Y}##
+down	*#13**#0*14*30*00*0530##	-	silent	-
+down	*#13**0##	-	out	own:*#13**0*{H}*{M}*{S}*999##

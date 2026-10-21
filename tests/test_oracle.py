@@ -318,6 +318,62 @@ def test_driver_skips_the_rest_of_a_sequence_after_a_crash(tmp_path):
     assert [r.verdict for r in rows] == ["out", "crash", "skipped"]
 
 
+@pytest.mark.parametrize(
+    ("frame", "recorded"),
+    [
+        ("*#13**0*08*25*59*001##", "*#13**0*{H}*{M}*{S}*001##"),
+        ("*#13**0*08*25*59*999##", "*#13**0*{H}*{M}*{S}*999##"),
+        ("*#13**0*08*25*59*##", "*#13**0*{H}*{M}*{S}*##"),
+        ("*#13**1*03*21*10*2026##", "*#13**1*{W}*{D}*{MO}*{Y}##"),
+        (
+            "*#13**22*08*25*59*102*03*21*10*2026##",
+            "*#13**22*{H}*{M}*{S}*102*{W}*{D}*{MO}*{Y}##",
+        ),
+        # a short answer, an odd value and an extra field stay visible
+        ("*#13**0*08*25##", "*#13**0*{H}*{M}##"),
+        ("*#13**1*03*21*1a*2026*7##", "*#13**1*{W}*{D}*1a*{Y}*7##"),
+        # not a clock answer: untouched
+        ("*#13**15*200##", "*#13**15*200##"),
+        ("*#13**#0*14*30*00*002##", "*#13**#0*14*30*00*002##"),
+        ("*1*1*31##", "*1*1*31##"),
+    ],
+)
+def test_redact_clock_keeps_the_zone_and_the_shape(frame, recorded):
+    assert driver.redact_clock(frame) == recorded
+
+
+@pytest.mark.parametrize(
+    ("frame", "recorded"),
+    [
+        (b"$06D2000906083723FF\r", b"$06D2000906xxxxxxFF\r"),
+        (b"$06D2000906085400F0\r", b"$06D2000906xxxxxxF0\r"),
+        (b"$06D2000907213A2026\r", b"$06D2000907xxxxxxxx\r"),
+        (b"$006D2000906083723FF\r", b"$006D2000906xxxxxxFF\r"),
+        # not a clock telegram: untouched
+        (b"$06DC907F0489AFFAF9\r", b"$06DC907F0489AFFAF9\r"),
+        (b"$24\r", b"$24\r"),
+        (bytes.fromhex("a8 31 00 12 01 22 a3"), bytes.fromhex("a8 31 00 12 01 22 a3")),
+    ],
+)
+def test_redact_clock_bus_keeps_the_zone_byte(frame, recorded):
+    assert driver.redact_clock_bus(frame) == recorded
+
+
+def test_driver_records_clock_answers_redacted(tmp_path):
+    class ClockTarget(FakeTarget):
+        def send_own(self, frame):
+            self._own.append("*#13**0*08*25*59*001##")
+            self._bus.append(b"$06D2000906082559FF\r")
+            self._reply = "ack"
+
+    s = _suite(tmp_path, "s.cases", "down *#13**0##\n")
+    (row,) = driver.run_suite(ClockTarget(), s)
+    assert row.outputs == (
+        f"bus:{b'$06D2000906xxxxxxFF\r'.hex(' ')}",
+        "own:*#13**0*{H}*{M}*{S}*001##",
+    )
+
+
 # --- target ------------------------------------------------------------------
 
 
