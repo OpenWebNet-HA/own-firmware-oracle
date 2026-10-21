@@ -14,6 +14,14 @@ Schema version 1.1.0 changes:
   `target_sha256: ""` (indicating no emulated target binary was pinned, not a hash).
 - `verdicts_sha256` is the canonical SHA-256 fingerprint over the sorted
   `verdicts` mapping only; it does not cover fleet membership.
+
+Schema version 1.2.0 changes:
+- `gateways[]` entries record `reply_semantics`, what a `reply` in that gateway's
+  full suites can tell a consumer (findings/empty-bus-reply-semantics.md):
+  `"empty_bus_txack"` (F460/F461/MyHomeServer1: `nack` means no device acknowledged
+  on the empty bus; use `verdict`), `"pic_ack"` (the harness PIC sent the TX outcome
+  the firmware counts as success), `"unknown"`, or `""` for catalogued gateways.
+  The verdict entries are unchanged, so `verdicts_sha256` is too.
 """
 
 from __future__ import annotations
@@ -22,12 +30,21 @@ import argparse
 import hashlib
 import json
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from oracle import bus  # noqa: E402
+
+# What a full-suite `reply` means on a gateway (`gateways[].reply_semantics`).
+REPLY_EMPTY_BUS_TXACK = "empty_bus_txack"
+REPLY_PIC_ACK = "pic_ack"
+REPLY_UNKNOWN = "unknown"
+REPLY_SEMANTICS = frozenset({REPLY_EMPTY_BUS_TXACK, REPLY_PIC_ACK, REPLY_UNKNOWN})
 
 
 @dataclass(frozen=True)
@@ -55,6 +72,7 @@ class GatewayRecord:
     target_sha256: str
     suites: set[str]
     status: str = "catalogued"
+    responders: set[str] = field(default_factory=set)
 
 
 def parse_output_column(output_str: str) -> tuple[list[str], list[str]]:
@@ -148,6 +166,27 @@ def read_oracle_tsv(
         entries.append((inp, entry))
 
     return entries
+
+
+def reply_semantics(responders: set[str], target_yaml: Path) -> str:
+    """Classify what `reply` means in a gateway's full suites.
+
+    `empty_bus_txack`: the plain `pic` responder never sends the device TX-ACK this
+    firmware waits for (`bus.needs_device_txack`), so `nack` only means that no device
+    acknowledged on the empty bus and `verdict` shows whether the frame went out.
+    `pic_ack`: the `pic` responder sends the TX outcome this firmware counts as
+    success, so `reply` is the translator's own answer. `unknown`: no `responder=`
+    header, any other or mixed responder, or no target spec to classify it with.
+    """
+    if responders != {"pic"} or not target_yaml.is_file():
+        return REPLY_UNKNOWN
+    spec = yaml.safe_load(target_yaml.read_text(encoding="utf-8"))
+    if not isinstance(spec, dict):
+        return REPLY_UNKNOWN
+    bus_device = str(spec.get("bus_device", "/dev/ttyPIC"))
+    if bus.needs_device_txack(bus_device, str(spec.get("version", ""))):
+        return REPLY_EMPTY_BUS_TXACK
+    return REPLY_PIC_ACK
 
 
 def discover_catalog_gateways(
@@ -264,16 +303,29 @@ def build_index(
 
         if first_entry.suite:
             gateways_map[gw_key].suites.add(first_entry.suite)
+        responder = parse_header(tsv_path.read_text(encoding="utf-8").splitlines()).get(
+            "responder"
+        )
+        if responder:
+            gateways_map[gw_key].responders.add(responder)
 
         for inp, entry in items:
             if inp not in verdicts_map:
                 verdicts_map[inp] = []
             verdicts_map[inp].append(asdict(entry))
 
+    targets_dir = root / "oracle" / "targets"
     gateways_list = [
         {
             "image_sha256": gw.image_sha256,
             "product": gw.product,
+            "reply_semantics": (
+                reply_semantics(
+                    gw.responders, targets_dir / gw.product / f"{gw.version}.yaml"
+                )
+                if gw.status == "emulated"
+                else ""
+            ),
             "status": gw.status,
             "suites": sorted(gw.suites),
             "target_sha256": gw.target_sha256,
@@ -305,7 +357,7 @@ def build_index(
     return {
         "format_version": "1.0.0",
         "generator": "own-firmware-oracle",
-        "schema_version": "1.1.0",
+        "schema_version": "1.2.0",
         "verdicts_sha256": content_sha256,
         "total_unique_inputs": len(sorted_verdicts),
         "gateways": gateways_list,
@@ -321,6 +373,7 @@ def format_index_json(index_data: dict[str, object]) -> str:
 REQUIRED_GATEWAY_KEYS = {
     "image_sha256",
     "product",
+    "reply_semantics",
     "status",
     "suites",
     "target_sha256",
@@ -345,15 +398,15 @@ REQUIRED_VERDICT_KEYS = {
 
 
 def validate_index_data(data: dict[str, object]) -> list[str]:
-    """Validate mcp_index.json schema 1.1.0 contract and verdicts_sha256 integrity."""
+    """Validate mcp_index.json schema 1.2.0 contract and verdicts_sha256 integrity."""
     errors: list[str] = []
     if data.get("format_version") != "1.0.0":
         errors.append(
             f"format_version must be '1.0.0', got {data.get('format_version')!r}"
         )
-    if data.get("schema_version") != "1.1.0":
+    if data.get("schema_version") != "1.2.0":
         errors.append(
-            f"schema_version must be '1.1.0', got {data.get('schema_version')!r}"
+            f"schema_version must be '1.2.0', got {data.get('schema_version')!r}"
         )
     if data.get("generator") != "own-firmware-oracle":
         errors.append(
@@ -369,6 +422,13 @@ def validate_index_data(data: dict[str, object]) -> list[str]:
                 errors.append(f"gateways[{idx}] missing required keys")
             elif gw.get("status") not in ("emulated", "catalogued"):
                 errors.append(f"gateways[{idx}] invalid status {gw.get('status')!r}")
+            elif gw.get("reply_semantics") not in (
+                REPLY_SEMANTICS if gw.get("status") == "emulated" else {""}
+            ):
+                errors.append(
+                    f"gateways[{idx}] invalid reply_semantics "
+                    f"{gw.get('reply_semantics')!r} for status {gw.get('status')!r}"
+                )
 
     verdicts = data.get("verdicts")
     if not isinstance(verdicts, dict):

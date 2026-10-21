@@ -264,6 +264,29 @@ class SoundSourceResponder:
         return []
 
 
+def pic_v8_mode(version: str) -> bool:
+    """True when 2-digit scsserver runs this PIC version in v8 mode.
+
+    `Configure_MCU` parses `$25<hwrev><fwrev><fwrel>` and switches to v8 mode when
+    `fwrev > 27` and `fwrel > 0` (MyHomeServer1 028206); `Write()` then counts only
+    `$08\\r` as ACK PIC (findings/pic-inbound-protocol.md, section 2).
+    """
+    if len(version) == 6 and version.isdigit():
+        return int(version[2:4]) > 27 and int(version[4:6]) > 0
+    return False
+
+
+def needs_device_txack(bus_device: str, version: str) -> bool:
+    """True when scsserver reports ACK PIC only after a device acknowledged the frame.
+
+    3-digit RPMsg gateways (F460/F461 on /dev/ttyRPMSG*) need `$00800\\r`, 2-digit
+    gateways in v8 PIC mode need `$08\\r`. A `pic` responder with nothing behind it
+    sends neither, so on these targets every bus write ends in NAK PIC and openserver
+    answers NACK although the frame went out (findings/empty-bus-reply-semantics.md).
+    """
+    return bus_device.rsplit("/", 1)[-1].startswith("ttyRPMSG") or pic_v8_mode(version)
+
+
 class PicResponder:
     """Simulated PIC microcontroller answering firmware UART protocol commands.
 
@@ -309,9 +332,7 @@ class PicResponder:
         )
 
     def _is_2digit_v8(self) -> bool:
-        if len(self.version) == 6 and self.version.isdigit():
-            return int(self.version[2:4]) > 27 and int(self.version[4:6]) > 0
-        return False
+        return pic_v8_mode(self.version)
 
     def _respond_3digit(self, frame: bytes) -> list[bytes] | None:
         is_plant = self.inner.name.startswith("plant:")

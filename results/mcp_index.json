@@ -4,6 +4,7 @@
     {
       "image_sha256": "ef2e3ccd3e67842a8ad19d50e8cd1c54c58eb8c04308948ec12f84b8a1c7a471",
       "product": "3550",
+      "reply_semantics": "",
       "status": "catalogued",
       "suites": [],
       "target_sha256": "",
@@ -12,6 +13,7 @@
     {
       "image_sha256": "9e625012d3e8629bea15d608f7c1de160e971499a39f3fd86f0c68103da8b9da",
       "product": "F450",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -43,6 +45,7 @@
     {
       "image_sha256": "da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626",
       "product": "F453",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -74,6 +77,7 @@
     {
       "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
       "product": "F453AV",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -105,6 +109,7 @@
     {
       "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
       "product": "F454",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -136,6 +141,7 @@
     {
       "image_sha256": "cd99299fc729679b4eade46acda7bd4f5e619a0a9eac34a1f6a3b73b625a18f9",
       "product": "F455",
+      "reply_semantics": "",
       "status": "catalogued",
       "suites": [],
       "target_sha256": "",
@@ -144,6 +150,7 @@
     {
       "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
       "product": "F459",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -175,6 +182,7 @@
     {
       "image_sha256": "b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26",
       "product": "F460",
+      "reply_semantics": "empty_bus_txack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -206,6 +214,7 @@
     {
       "image_sha256": "cb6f3e9d875c14f74a0791d7f3f420ce9d4babadb4459c1250c6cba7e741af2b",
       "product": "F461",
+      "reply_semantics": "empty_bus_txack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -237,6 +246,7 @@
     {
       "image_sha256": "dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4",
       "product": "H4684",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -268,6 +278,7 @@
     {
       "image_sha256": "48b571e320295d01e41316810eafca57720e6a02c4f22ac196b057b0c2ca8a2c",
       "product": "L4561N",
+      "reply_semantics": "",
       "status": "catalogued",
       "suites": [],
       "target_sha256": "",
@@ -276,6 +287,7 @@
     {
       "image_sha256": "381b75d99ab0b6ef91fe2fd1105685f97da65aa7f695d78b48e21b8f9518bd23",
       "product": "L4686SDK",
+      "reply_semantics": "",
       "status": "catalogued",
       "suites": [],
       "target_sha256": "",
@@ -284,6 +296,7 @@
     {
       "image_sha256": "53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b",
       "product": "MH200",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -315,6 +328,7 @@
     {
       "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
       "product": "MH200N",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -346,6 +360,7 @@
     {
       "image_sha256": "8972720b01d17ce9cfa2bcf2e20b55a44e7b349acb56ed52cd8121fdfccf2f63",
       "product": "MH201",
+      "reply_semantics": "",
       "status": "catalogued",
       "suites": [],
       "target_sha256": "",
@@ -354,6 +369,7 @@
     {
       "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
       "product": "MH202",
+      "reply_semantics": "pic_ack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -385,6 +401,7 @@
     {
       "image_sha256": "aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7",
       "product": "MyHomeServer1",
+      "reply_semantics": "empty_bus_txack",
       "status": "emulated",
       "suites": [
         "energy-params",
@@ -415,7 +432,7 @@
     }
   ],
   "generator": "own-firmware-oracle",
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "total_unique_inputs": 509,
   "verdicts": {
     "*#1*0##": [
