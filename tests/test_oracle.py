@@ -342,6 +342,35 @@ def test_redact_clock_keeps_the_zone_and_the_shape(frame, recorded):
     assert driver.redact_clock(frame) == recorded
 
 
+# 2026-10-21 08:25:59 UTC
+NOW = 1792571159.0
+
+
+@pytest.mark.parametrize(
+    ("frame", "recorded"),
+    [
+        ("*#13**0*08*25*59*000##", "*#13**0*{UTC}*{M}*{S}*000##"),
+        # answered a few seconds before `now`
+        ("*#13**0*08*25*51*000##", "*#13**0*{UTC}*{M}*{S}*000##"),
+        ("*#13**0*10*26*02*002##", "*#13**0*{UTC+2}*{M}*{S}*002##"),
+        ("*#13**0*06*25*59*102##", "*#13**0*{UTC-2}*{M}*{S}*102##"),
+        ("*#13**0*13*55*59*0530##", "*#13**0*{UTC+5:30}*{M}*{S}*0530##"),
+        # across midnight
+        ("*#13**0*20*25*59*112##", "*#13**0*{UTC-12}*{M}*{S}*112##"),
+        (
+            "*#13**22*09*25*59*001*03*21*10*2026##",
+            "*#13**22*{UTC+1}*{M}*{S}*001*{W}*{D}*{MO}*{Y}##",
+        ),
+        # no time of day to compare: placeholders only
+        ("*#13**0*08*25##", "*#13**0*{H}*{M}##"),
+        ("*#13**0*08*2x*59*000##", "*#13**0*{H}*2x*{S}*000##"),
+        ("*#13**1*03*21*10*2026##", "*#13**1*{W}*{D}*{MO}*{Y}##"),
+    ],
+)
+def test_redact_clock_records_the_offset_from_utc(frame, recorded):
+    assert driver.redact_clock(frame, NOW) == recorded
+
+
 @pytest.mark.parametrize(
     ("frame", "recorded"),
     [
@@ -359,18 +388,19 @@ def test_redact_clock_bus_keeps_the_zone_byte(frame, recorded):
     assert driver.redact_clock_bus(frame) == recorded
 
 
-def test_driver_records_clock_answers_redacted(tmp_path):
+def test_driver_records_clock_answers_redacted(tmp_path, monkeypatch):
     class ClockTarget(FakeTarget):
         def send_own(self, frame):
-            self._own.append("*#13**0*08*25*59*001##")
+            self._own.append("*#13**0*09*25*59*001##")
             self._bus.append(b"$06D2000906082559FF\r")
             self._reply = "ack"
 
+    monkeypatch.setattr(driver.time, "time", lambda: NOW)
     s = _suite(tmp_path, "s.cases", "down *#13**0##\n")
     (row,) = driver.run_suite(ClockTarget(), s)
     assert row.outputs == (
         f"bus:{b'$06D2000906xxxxxxFF\r'.hex(' ')}",
-        "own:*#13**0*{H}*{M}*{S}*001##",
+        "own:*#13**0*{UTC+1}*{M}*{S}*001##",
     )
 
 

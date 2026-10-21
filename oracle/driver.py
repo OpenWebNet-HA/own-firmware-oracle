@@ -10,16 +10,19 @@ or as status response frames on the command side before ACK):
 
 The gateway clock is the emulated host's wall clock, which no two runs share
 (the jail cannot set it, so a clock write never changes it either). Its
-values are recorded as placeholders: in a WHO 13 time / date answer
-(*#13**0*{H}*{M}*{S}*001##), and as 'x' in the clock telegrams a 2-digit PIC
-gateway puts on the bus after a clock write ($06D2000906xxxxxxFF\\r). The
-time-zone field T or byte, an empty or non-numeric value and the field count
-stay verbatim: those are the firmware's facts.
+values are recorded as placeholders: in a WHO 13 time / date answer the time
+becomes the firmware's local offset from UTC, which is what a zone write can
+change (*#13**0*{UTC+2}*{M}*{S}*002##), and the date {W}*{D}*{MO}*{Y}; in
+the clock telegrams a 2-digit PIC gateway puts on the bus after a clock write
+the digits become 'x' ($06D2000906xxxxxxFF\\r). The time-zone field T or
+byte, an empty or non-numeric value and the field count stay verbatim: those
+are the firmware's facts.
 """
 
 from __future__ import annotations
 
 import re
+import time
 from typing import Protocol
 
 from oracle.cases import Step, Suite
@@ -39,17 +42,39 @@ CLOCK_TELEGRAMS = (
 )
 
 
-def redact_clock(frame: str) -> str:
-    """Replace the wall-clock digits of a WHO 13 DIMENSION 0 / 1 / 22 answer."""
+def utc_offset(hms: list[str], now: float) -> str | None:
+    """The gateway's time of day minus UTC `now`, to the quarter hour
+    ('UTC', 'UTC+2', 'UTC-5:30'), or None if hms is not three numbers. The
+    quarter hour absorbs the seconds between the answer and `now`."""
+    if len(hms) != 3 or not all(v.isdigit() for v in hms):
+        return None
+    local = int(hms[0]) * 3600 + int(hms[1]) * 60 + int(hms[2])
+    diff = (local - int(now) % 86400 + 43200) % 86400 - 43200  # [-12 h, 12 h)
+    quarters = round(diff / 900)
+    if quarters == 0:
+        return "UTC"
+    sign = "+" if quarters > 0 else "-"
+    hours, minutes = divmod(abs(quarters) * 15, 60)
+    return f"UTC{sign}{hours}" + (f":{minutes:02d}" if minutes else "")
+
+
+def redact_clock(frame: str, now: float | None = None) -> str:
+    """Replace the wall-clock values of a WHO 13 DIMENSION 0 / 1 / 22 answer;
+    given the UTC time `now`, the hour becomes the offset from UTC."""
     m = CLOCK_ANSWER.fullmatch(frame)
     if m is None:
         return frame
     names = CLOCK_FIELDS[m.group(1)]
     values = m.group(2).split("*")
+    offset = None
+    if now is not None and names[0] == "{H}":
+        offset = utc_offset(values[:3], now)
     for i, value in enumerate(values[: len(names)]):
         name = names[i]
         if name is not None and value.isdigit():
             values[i] = name
+    if offset is not None:
+        values[0] = "{" + offset + "}"
     return f"*#13**{m.group(1)}*{'*'.join(values)}##"
 
 
@@ -85,6 +110,7 @@ class Target(Protocol):
 
 
 def _drain(target: Target) -> list[str]:
+    now = time.time()
     harness = getattr(target, "harness", "full")
     if isinstance(harness, str) and harness.startswith("plant:"):
         take_dev = getattr(target, "take_device_bus", None)
@@ -96,11 +122,11 @@ def _drain(target: Target) -> list[str]:
         return (
             [f"bus:{redact_clock_bus(f).hex(' ')}" for f in target.take_bus()]
             + [f"bus_rx:{f.hex(' ')}" for f in dev_frames]
-            + [f"cmd:{redact_clock(f)}" for f in cmd_frames]
-            + [f"evt:{redact_clock(f)}" for f in ev_frames]
+            + [f"cmd:{redact_clock(f, now)}" for f in cmd_frames]
+            + [f"evt:{redact_clock(f, now)}" for f in ev_frames]
         )
     return [f"bus:{redact_clock_bus(f).hex(' ')}" for f in target.take_bus()] + [
-        f"own:{redact_clock(f)}" for f in target.take_own()
+        f"own:{redact_clock(f, now)}" for f in target.take_own()
     ]
 
 
