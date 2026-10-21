@@ -1,0 +1,12 @@
+; WHO 13 clock read-back: does a time-zone write change what the gateway
+; reports afterwards? One gateway start for the whole sequence (reset=0).
+; Values as in who13-clock.cases (Wednesday 21 October 2026, 14:30:00).
+down *#13**0##
+down *#13**#0*14*30*00*002##
+down *#13**0##
+down *#13**22##
+down *#13**#22*14*30*00*102*03*21*10*2026##
+down *#13**0##
+down *#13**1##
+down *#13**#0*14*30*00*0530##
+down *#13**0##

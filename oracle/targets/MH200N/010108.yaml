@@ -86,6 +86,13 @@ runtime:
     # The image has no ld.so.conf / ld.so.cache; the programs' libraries
     # (libcommon, libopenscs, ...) are only in /home/bticino/lib.
     LD_LIBRARY_PATH: /home/bticino/lib
+  files:
+    # The installation's configuration. bt_device opens it on a WHO 13 clock
+    # write and dereferences NULL when it is missing (findings/who13-clock.md).
+    # Only the element path of the factory conf.xml that this image's own
+    # recovery layer ships (ubtweb_only_recovery.gz, sha256 cc35abae...):
+    # no address, password or plant data.
+    /home/bticino/cfg/conf.xml: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<configuratore>\n<setup>\n<generale>\n<clock>\n<master>0</master>\n<dateformat>0</dateformat>\n</clock>\n</generale>\n</setup>\n</configuratore>\n"
   devices:
     # cfg/stack_open.xml <scsserver><serialchannel><device>
     /dev/ttyPIC: pty

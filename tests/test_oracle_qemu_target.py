@@ -1073,7 +1073,7 @@ def test_qemu_target_restart_branches(monkeypatch, tmp_path):
     assert tgt3._procs == {}
 
 
-def test_qemu_target_send_own_and_pump_branches():
+def test_qemu_target_send_own_and_pump_branches(caplog):
     spec = _dummy_spec()
     fake_bus = bus.Bus(
         port=MagicMock(), framer=bus.LineFramer(), responder=bus.Silent()
@@ -1092,14 +1092,20 @@ def test_qemu_target_send_own_and_pump_branches():
     mock_cmd.fileno.return_value = 42
     mock_cmd.recv.side_effect = [b"*1*", b""]
     tgt._cmd_sock = mock_cmd
-    with patch("select.select", return_value=([mock_cmd], [], [])):
+    with (
+        patch("select.select", return_value=([mock_cmd], [], [])),
+        caplog.at_level(logging.WARNING, logger="oracle.qemu_target"),
+    ):
         tgt.send_own("*1*1*31##")
     assert tgt.take_reply() == "-"
+    assert "command session closed after" in caplog.text
 
     # send_own: cmd sock raises OSError
     mock_cmd.sendall.side_effect = OSError("broken pipe")
-    tgt.send_own("*1*1*31##")
+    with caplog.at_level(logging.WARNING, logger="oracle.qemu_target"):
+        tgt.send_own("*1*1*31##")
     assert tgt.take_reply() == "-"
+    assert "command session error before a reply" in caplog.text
 
     # send_own: fileno < 0
     mock_cmd.fileno.return_value = -1
@@ -1210,30 +1216,35 @@ def test_send_own_waits_for_a_late_ack_while_the_firmware_is_busy(tmp_path):
         s2.close()
 
 
-def test_send_own_does_not_wait_for_a_silent_firmware(tmp_path):
+def test_send_own_does_not_wait_for_a_silent_firmware(tmp_path, caplog):
     """No bus or event activity: the reply is "-" at cmd_timeout, as before."""
     tgt, s1, s2 = _grace_target(
         tmp_path, busy=False, cmd_timeout=0.05, reply_grace=30.0
     )
     try:
         started = time.monotonic()
-        tgt.send_own("*1*1*31##")
+        with caplog.at_level(logging.DEBUG, logger="oracle.qemu_target"):
+            tgt.send_own("*1*1*31##")
         assert tgt.take_reply() == "-"
         assert time.monotonic() - started < 1.0
+        assert "no reply to *1*1*31##" in caplog.text
+        assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
     finally:
         s1.close()
         s2.close()
 
 
-def test_send_own_grace_is_capped(tmp_path):
+def test_send_own_grace_is_capped(tmp_path, caplog):
     """A busy firmware that never answers is waited for at most reply_grace."""
     tgt, s1, s2 = _grace_target(tmp_path, busy=True, cmd_timeout=0.05, reply_grace=0.3)
     try:
         started = time.monotonic()
-        tgt.send_own("*1*1*31##")
+        with caplog.at_level(logging.WARNING, logger="oracle.qemu_target"):
+            tgt.send_own("*1*1*31##")
         assert tgt.take_reply() == "-"
         elapsed = time.monotonic() - started
         assert 0.3 <= elapsed < 2.0
+        assert "no reply to *1*1*31## within" in caplog.text
     finally:
         s1.close()
         s2.close()

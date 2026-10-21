@@ -1,0 +1,35 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-clock
+# suite_sha256=9df081fa5625e39f0b17beca5e5ac24a0ad4d8ddeb0c9356df3a2fd0119dde44
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#13**#0*14*30*00*000##	-	silent	-
+down	*#13**#0*14*30*00*001##	-	silent	-
+down	*#13**#0*14*30*00*002##	-	silent	-
+down	*#13**#0*14*30*00*013##	-	silent	-
+down	*#13**#0*14*30*00*0530##	-	silent	-
+down	*#13**#0*14*30*00*102##	-	silent	-
+down	*#13**#0*14*30*00*124##	-	silent	-
+down	*#13**#0*14*30*00*999##	-	silent	-
+down	*#13**#0*22*50*00*##	-	silent	-
+down	*#13**#1*03*21*10*2026##	-	silent	-
+down	*#13**#22*14*30*00**03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*000*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*001*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*002*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*0530*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*102*03*21*10*2026##	ack	silent	-
+down	*#13**#22*14*30*00*999*03*21*10*2026##	ack	silent	-
+down	*#13**0##	ack	out	own:*#13**0*{UTC}*{M}*{S}*999##
+down	*#13**1##	ack	out	own:*#13**1*{W}*{D}*{MO}*{Y}##
+down	*#13**22##	ack	out	own:*#13**22*{UTC}*{M}*{S}*999*{W}*{D}*{MO}*{Y}##

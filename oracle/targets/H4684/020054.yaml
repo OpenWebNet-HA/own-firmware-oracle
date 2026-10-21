@@ -92,6 +92,13 @@ runtime:
     - /var/tmp/bticino/bt_wd
     - /var/tmp/run/bticino
     - /var/run
+  files:
+    # The installation's configuration. bt_device opens it on a WHO 13 clock
+    # write and dereferences NULL when it is missing (findings/who13-clock.md).
+    # This image ships none; the element path is the factory conf.xml of the
+    # same bt_processi family (MH200N 010108, F453 010100, F453AV 030014
+    # recovery layers, sha256 cc35abae...): no address, password or plant data.
+    /home/bticino/cfg/conf.xml: "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<configuratore>\n<setup>\n<generale>\n<clock>\n<master>0</master>\n<dateformat>0</dateformat>\n</clock>\n</generale>\n</setup>\n</configuratore>\n"
   devices:
     /dev/ttyPIC: pty
     /dev/dsp1: pty

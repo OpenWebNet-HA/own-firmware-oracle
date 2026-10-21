@@ -809,16 +809,10 @@ class QemuTarget:
             hard_deadline = deadline + self.reply_grace
             while True:
                 now = time.monotonic()
-                if now >= deadline:
-                    # No reply yet. A firmware that already put this command on
-                    # the bus (or emitted events) is alive and merely slow, e.g.
-                    # a cold qemu-user start: keep waiting, but never past the
-                    # hard cap. A silent firmware is a genuine "-" right away.
-                    busy = bool(self.bus.gateway_frames(mark)) or (
-                        len(self._cmd_events) + len(self._own_events) > seen_events
-                    )
-                    if not busy or now >= hard_deadline:
-                        break
+                if now >= deadline and self._stop_waiting(
+                    frame, now - start, now >= hard_deadline, mark, seen_events
+                ):
+                    break
                 self.bus.pump()
                 self._pump_own()
                 r, _, _ = select.select([self._cmd_sock], [], [], 0.01)
@@ -826,15 +820,52 @@ class QemuTarget:
                     continue
                 chunk = self._cmd_sock.recv(1024)
                 if not chunk:
+                    # A "-" for this reason is the harness losing the session,
+                    # not the firmware's answer: say so in the job log.
+                    logger.warning(
+                        "%s: command session closed after %.2f s, before a reply to %s",
+                        self.spec.product,
+                        time.monotonic() - start,
+                        frame,
+                    )
                     break
                 self._cmd_buf.extend(chunk)
                 for f in split_own(self._cmd_buf):
                     if self._handle_cmd_frame(f):
                         return
-        except (TimeoutError, OSError):
+        except (TimeoutError, OSError) as exc:
+            logger.warning(
+                "%s: command session error before a reply to %s: %r",
+                self.spec.product,
+                frame,
+                exc,
+            )
             self._reply = "-"
         finally:
             self._recover_cmd_session()
+
+    def _stop_waiting(
+        self, frame: str, waited: float, capped: bool, mark: int, seen_events: int
+    ) -> bool:
+        """No reply by cmd_timeout. A firmware that already put this command on
+        the bus (or emitted events) is alive and merely slow, e.g. a cold
+        qemu-user start: keep waiting, but never past the hard cap. A silent
+        firmware is a genuine "-" right away."""
+        busy = bool(self.bus.gateway_frames(mark)) or (
+            len(self._cmd_events) + len(self._own_events) > seen_events
+        )
+        if not busy:
+            logger.debug("%s: no reply to %s", self.spec.product, frame)
+            return True
+        if capped:
+            logger.warning(
+                "%s: no reply to %s within %.0f s although the firmware was busy",
+                self.spec.product,
+                frame,
+                waited,
+            )
+            return True
+        return False
 
     def take_reply(self) -> str:
         r, self._reply = self._reply, "-"
