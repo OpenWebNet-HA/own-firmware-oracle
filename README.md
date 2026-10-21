@@ -211,7 +211,7 @@ OpenWebNet Client (TCP 20000: Command + Event Sessions)
 
 1. **Outbound Translation (`bus:`)**: The test driver sends an OpenWebNet frame (`down`) on TCP port 20000. The emulated gateway daemon translates it into an outbound PIC serial frame (`$03`/`$04`/`$06` on 2-digit UART gateways; `$003`/`$004`/`$006` on 3-digit RPMsg gateways).
 2. **PIC Handshake (`bus_rx:`)**: Reverse engineering of `f461/scsserver` and `myhomeserver1/scsserver` ([`findings/pic-inbound-protocol.md`](findings/pic-inbound-protocol.md)) established the exact PIC TX-outcome handshakes:
-   - **3-Digit RPMsg (`F460`, `F461`)**: `Richiesta_Invio_Frame` requires `$00800\r` (`esito_tx[3] == 0`) when a device acknowledges the bus telegram, or `$019\r` / `$000\r` on an unpopulated address (causing `scsserver` to retry 3 times and return `*01*00#` $\to$ OpenWebNet NACK `*#*0##` after ~2.06 s).
+   - **3-Digit RPMsg (`F460`, `F461`)**: `Richiesta_Invio_Frame` requires `$00800\r` (`esito_tx[3] == 0`) when a device acknowledges the bus telegram, or `$019\r` / `$000\r` on an unpopulated address (causing `scsserver` to retry 3 times and return `*01*00#` $\to$ OpenWebNet NACK `*#*0##` after ~2.06 s). The `full` suites run on an empty bus, so on F460, F461 and MyHomeServer1 their `nack`/`out` rows mean "no device acknowledged", not "refused" ([`findings/empty-bus-reply-semantics.md`](findings/empty-bus-reply-semantics.md)).
    - **2-Digit UART (`MH200`, `MH200N`, `MyHomeServer1`, `H4684`)**: Legacy firmware (`fwrev <= 27`, e.g. `MH200` `020102` and `MH200N` `010108`) expects `$19\r` for `$03` and `$00\r` for `$04`/`$06`, whereas v8 PIC mode (`fwrev > 27`, e.g. `MyHomeServer1` `028206`) requires `$08\r`. Because `mhs1/scsserver` reads 20 bytes per `read()` syscall and discards bytes after the first `\r`, `PicResponder` paces 2-digit inbound device frames by `25.0 ms`.
 3. **Stateful Device Execution & Inbound Bus Reply (`bus_rx:`)**: `PlantResponder` decodes the SCS payload, updates the target device(s) in `PlantTopology`, and emits `$17<8hex>\r` / `$18<16hex>\r` (2-digit) or `$017<8hex>\r` / `$018<16hex>\r` (3-digit) back into `scsserver`.
 4. **Closed-Loop OpenWebNet Output (`cmd:` and `evt:`)**: The gateway's translator daemons decode the inbound device telegrams and emit command-session responses (`cmd:`), event-session broadcasts (`evt:`), and the final `ack` / `nack` (`reply`), all recorded deterministically in `results/<product>/<version>/oracle/plant-<fixture>/<suite>.tsv` and indexed in [`results/plant_index.json`](results/plant_index.json).
@@ -334,7 +334,7 @@ oracle/                             emulator + simulated SCS bus (see docs/oracl
   plant_cases/*.seq                 closed-loop stateful virtual plant trace suites
   canary/canary-live.cases          read-only live hardware canary suite
 results/<product>/<version>/        manifest.tsv, boundary TSVs, oracle TSVs, plant TSVs, check TSVs
-results/mcp_index.json              hash-pinned cross-firmware verdict index (schema 1.1.0)
+results/mcp_index.json              hash-pinned cross-firmware verdict index (schema 1.2.0)
 results/plant_index.json            hash-pinned closed-loop virtual plant verdict index (schema 1.0.0)
 findings/<product>/*.md             conclusions pointing at TSV rows
 .github/workflows/                  CI, see below
@@ -528,6 +528,7 @@ Detailed technical findings documents with exact bytecode citations, cryptograph
 | **OpenWebNet USB & RS-232 Interface** | WHO 0, 1, 2, 4, 5, 8, 13, 14, 15, 16, 18, 22, 25, 1001..1022 | L4686SDK (`012001`) | [**L4686SDK (`L4686/USB` / `3559`) PIC18 Static Analysis**](findings/L4686SDK/README.md) & [**Emulation Boundary**](findings/L4686SDK/emulation-strategy.md)<br>Static analysis of the Microchip PIC18 Intel HEX firmware (`4686SDK_012001.HEX`), documenting its `OPEN_SCS` memory map (`0x0000`–`0xEDDD`) and ROM lookup tables mapping ASCII OpenWebNet (`*...##`) directly to 2-wire SCS bus telegrams. |
 | **99-Zone Thermo Central Unit** | WHO 4 (Thermo) | 3550 (`030020`) | [**3550 Temperature Control Central Unit Static Analysis**](findings/3550/README.md)<br>Static analysis of the Mitsubishi M16C/60 Motorola S-record firmware (`3550_030020.mot`), documenting its memory map (`0x0E0000`–`0x0FFFFF`), `$`-framed SCS bus templates, and separate daily holiday vs. multi-day vacation tables. |
 | **Bare-Metal MCU & Bus Peripherals** | WHO 1, 2, 16, 17 | F455 (`010102`), MH201 (`030644`), L4561N (`040006`) | [**F455**](findings/F455/emulation-strategy.md), [**MH201**](findings/MH201/emulation-strategy.md) & [**L4561N Emulation Strategies**](findings/L4561N/emulation-strategy.md)<br>Hardware architecture and boundary cuts for the Cortex-M flash images (F455, MH201 CMX-RTX/LwIP) and Microchip PIC18 SCS stereo interface (`L4561N`, modeled on the virtual bus via `SoundSourceResponder`). |
+| **Empty-Bus `reply` Semantics** | All (bus writes) | F460 (`020012`), F461 (`020011`), MyHomeServer1 (`028206`) | [**Empty-Bus `reply` Semantics on F460 / F461 / MyHomeServer1**](findings/empty-bus-reply-semantics.md)<br>On these gateways a full-suite `nack` with `verdict=out` means no device TX-ACK (`$00800` / `$08`) on the empty bus, not a refusal (228 of 309 `out` rows each). Plant runs and live F461 2.0.11 traces ACK the same frames. `mcp_index.json` marks them `reply_semantics: "empty_bus_txack"`. |
 | **Inbound PIC / RPMsg Serial Framing** | WHO 1, 2, 4, 14, 18, 1001 | F461 (`020011`), MyHomeServer1 (`028206`), MH200 (`020102`), MH200N (`010108`) | [**Inbound PIC / RPMsg Serial Framing Protocol (`scsserver`)**](findings/pic-inbound-protocol.md)<br>Binary reverse engineering and live QEMU closed-loop spike (`tools/pic_spike.py`) establishing the 3-digit RPMsg (`$00800\r` TX-ACK + `$017`/`$018`) and 2-digit UART (`$19\r`/`$00\r`/`$08\r` TX-ACK + `$17`/`$18` with 25 ms read-buffer pacing) PIC handshakes. |
 | **VDK `MyHomeSystemEmulator` Audit & Clean-Room Plant** | WHO 1, 2, 4, 13, 14, 18, 1001 | MH200 (`020102`), MH200N (`010108`), F454 (`020051`), MyHomeServer1 (`028206`), F461 (`020011`) | [**Audit of Archived `MyHomeSystemEmulator` vs. Real Firmware & Hardware**](findings/vdk-emulator-audit.md)<br>Documents 10 architectural and protocol divergences in `MyHomeSystemEmulator@4f93f44ee5ec` (missing SCS byte framing, plugin-emitted ACKs, Area 0 bug, missing `DIM 15` group status, dimmers, shutters, `F422` isolation, and `WHO=4` thermo) and details the clean-room Apache-2.0 [`oracle/plant/`](oracle/plant/) implementation. |
 
@@ -629,7 +630,9 @@ python tools/export_evidence.py results/MH200N/010108/oracle/full/what19.tsv \
 
 ### 5. Querying the Cross-Firmware Verdict Index (`results/mcp_index.json`)
 
-The cross-firmware MCP index (`schema_version: "1.1.0"`) provides hash-pinned answers for AI assistants and parsers without needing to run emulators. Gateways are indexed with status `"emulated"` (verdicts present) or `"catalogued"` (fleet inventory entry, empty `target_sha256`, `suites: []`). The canonical `verdicts_sha256` digest covers the sorted verdicts map, ensuring deterministic answer integrity.
+The cross-firmware MCP index (`schema_version: "1.2.0"`) provides hash-pinned answers for AI assistants and parsers without needing to run emulators. Gateways are indexed with status `"emulated"` (verdicts present) or `"catalogued"` (fleet inventory entry, empty `target_sha256`, `suites: []`). The canonical `verdicts_sha256` digest covers the sorted verdicts map, ensuring deterministic answer integrity.
+
+Each gateway also carries `reply_semantics`. On F460, F461 and MyHomeServer1 it is `"empty_bus_txack"`: their full suites run on an empty bus, and that firmware NACKs every write no device acknowledges, so `reply: "nack"` with `verdict: "out"` means the frame **went out**, not that the gateway refused it. Use `verdict` there, and `results/plant_index.json` for populated-bus replies ([`findings/empty-bus-reply-semantics.md`](findings/empty-bus-reply-semantics.md)).
 
 ```bash
 # Check that the index matches all current oracle TSVs and passes schema validation:
@@ -647,7 +650,10 @@ index_path = Path("results/mcp_index.json")
 index = json.loads(index_path.read_text(encoding="utf-8"))
 print(f"Verdicts SHA-256: {index['verdicts_sha256']}")
 print(f"Indexed frames: {len(index['verdicts'])}")
-gateways = [f"{g['product']} {g['version']} [{g['status']}]" for g in index["gateways"]]
+gateways = [
+    f"{g['product']} {g['version']} [{g['status']}, {g['reply_semantics']}]"
+    for g in index["gateways"]
+]
 print(f"Gateways: {gateways}")
 
 # Lookup cross-gateway verdict for a sound volume command (WHO 22):

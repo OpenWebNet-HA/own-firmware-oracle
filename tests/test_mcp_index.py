@@ -125,13 +125,15 @@ def test_build_index(tmp_path: Path):
 
     index_data = mcp_index.build_index(res_dir, root=tmp_path)
     assert index_data["format_version"] == "1.0.0"
-    assert index_data["schema_version"] == "1.1.0"
+    assert index_data["schema_version"] == "1.2.0"
     assert index_data["total_unique_inputs"] == 1
     assert len(index_data["gateways"]) == 1
     gw = index_data["gateways"][0]
     assert gw["product"] == "MH200N"
     assert gw["status"] == "emulated"
     assert gw["suites"] == ["s1"]
+    # No responder= header and no target spec: nothing to classify the replies by.
+    assert gw["reply_semantics"] == "unknown"
     assert "*1*1*31##" in index_data["verdicts"]
     assert len(index_data["verdicts"]["*1*1*31##"]) == 2
 
@@ -217,6 +219,7 @@ def test_build_index_with_catalog(tmp_path: Path, capsys):
     assert gw_by_prod["F454"]["suites"] == []
     assert gw_by_prod["F454"]["image_sha256"] == "f454_img"
     assert gw_by_prod["F454"]["target_sha256"] == ""
+    assert gw_by_prod["F454"]["reply_semantics"] == ""
 
     assert "MH200N" in gw_by_prod
     assert gw_by_prod["MH200N"]["status"] == "emulated"
@@ -370,6 +373,7 @@ def test_main(tmp_path: Path, monkeypatch, capsys):
             {
                 "image_sha256": "x",
                 "product": "EXTRA",
+                "reply_semantics": "",
                 "status": "catalogued",
                 "suites": [],
                 "target_sha256": "",
@@ -475,7 +479,7 @@ def test_validate_index_data() -> None:
     errs2 = mcp_index.validate_index_data(
         {
             "format_version": "1.0.0",
-            "schema_version": "1.1.0",
+            "schema_version": "1.2.0",
             "generator": "own-firmware-oracle",
             "total_unique_inputs": 99,
             "verdicts_sha256": "bad_sha",
@@ -484,7 +488,26 @@ def test_validate_index_data() -> None:
                 {
                     "image_sha256": "",
                     "product": "X",
+                    "reply_semantics": "",
                     "status": "invalid_status",
+                    "suites": [],
+                    "target_sha256": "",
+                    "version": "1",
+                },
+                {
+                    "image_sha256": "",
+                    "product": "Y",
+                    "reply_semantics": "",
+                    "status": "emulated",
+                    "suites": [],
+                    "target_sha256": "",
+                    "version": "1",
+                },
+                {
+                    "image_sha256": "",
+                    "product": "Z",
+                    "reply_semantics": "pic_ack",
+                    "status": "catalogued",
                     "suites": [],
                     "target_sha256": "",
                     "version": "1",
@@ -498,7 +521,104 @@ def test_validate_index_data() -> None:
     )
     assert any("gateways[0] missing required keys" in e for e in errs2)
     assert any("gateways[1] invalid status" in e for e in errs2)
+    assert any("gateways[2] invalid reply_semantics ''" in e for e in errs2)
+    assert any("gateways[3] invalid reply_semantics 'pic_ack'" in e for e in errs2)
     assert any("total_unique_inputs" in e for e in errs2)
     assert any("must be a non-empty list" in e for e in errs2)
     assert any("entry missing required keys" in e for e in errs2)
     assert any("verdicts_sha256 mismatch" in e for e in errs2)
+
+
+def _target(root: Path, product: str, version: str, body: str) -> Path:
+    path = root / "oracle" / "targets" / product / f"{version}.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_reply_semantics(tmp_path: Path) -> None:
+    rpmsg = _target(
+        tmp_path, "F461", "020011", "version: '020011'\nbus_device: /dev/ttyRPMSG30\n"
+    )
+    v8 = _target(
+        tmp_path,
+        "MyHomeServer1",
+        "028206",
+        "version: '028206'\nbus_device: /dev/ttymxc2\n",
+    )
+    legacy = _target(tmp_path, "MH200N", "010108", "version: '010108'\n")
+    not_a_mapping = _target(tmp_path, "Odd", "1", "- item\n")
+
+    assert mcp_index.reply_semantics({"pic"}, rpmsg) == "empty_bus_txack"
+    assert mcp_index.reply_semantics({"pic"}, v8) == "empty_bus_txack"
+    # Default /dev/ttyPIC, legacy 2-digit PIC: $19 / $00 is the success outcome.
+    assert mcp_index.reply_semantics({"pic"}, legacy) == "pic_ack"
+    assert mcp_index.reply_semantics({"pic"}, not_a_mapping) == "unknown"
+    assert mcp_index.reply_semantics({"pic"}, tmp_path / "missing.yaml") == "unknown"
+    assert mcp_index.reply_semantics(set(), rpmsg) == "unknown"
+    assert mcp_index.reply_semantics({"pic:plant:f461-bench"}, rpmsg) == "unknown"
+    assert mcp_index.reply_semantics({"pic", "silent"}, rpmsg) == "unknown"
+
+
+def test_build_index_reply_semantics(tmp_path: Path) -> None:
+    _target(
+        tmp_path, "F461", "020011", "version: '020011'\nbus_device: /dev/ttyRPMSG30\n"
+    )
+    full_dir = tmp_path / "results" / "F461" / "020011" / "oracle" / "full"
+    full_dir.mkdir(parents=True)
+    (full_dir / "s1.tsv").write_text(
+        "# product=F461\n"
+        "# version=020011\n"
+        "# responder=pic\n"
+        "# suite=s1\n"
+        "direction\tinput\treply\tverdict\toutput\n"
+        "down\t*1*1*0##\tnack\tout\tbus:24 0d\n",
+        encoding="utf-8",
+    )
+
+    index_data = mcp_index.build_index(tmp_path / "results", root=tmp_path)
+    assert index_data["gateways"] == [
+        {
+            "image_sha256": "",
+            "product": "F461",
+            "reply_semantics": "empty_bus_txack",
+            "status": "emulated",
+            "suites": ["s1"],
+            "target_sha256": "",
+            "version": "020011",
+        }
+    ]
+    # The classification lives on the gateway; verdict entries stay as recorded.
+    assert "reply_semantics" not in index_data["verdicts"]["*1*1*0##"][0]
+
+
+def test_committed_index_reply_semantics() -> None:
+    """Pin which gateways' full-suite NACKs are empty-bus artefacts, with evidence.
+
+    findings/empty-bus-reply-semantics.md: the plain `pic` responder never gives
+    F460/F461 (3-digit RPMsg) a `$00800` or MyHomeServer1 028206 (2-digit v8) a `$08`,
+    so their full suites record `nack` for frames that went out. With the f461-bench
+    plant answering `$00800` / `$08`, the same kind of frame is ACKed.
+    """
+    index = json.loads((ROOT / "results" / "mcp_index.json").read_text("utf-8"))
+    by_gw = {g["product"]: g["reply_semantics"] for g in index["gateways"]}
+    assert sorted(p for p, sem in by_gw.items() if sem == "empty_bus_txack") == [
+        "F460",
+        "F461",
+        "MyHomeServer1",
+    ]
+
+    def replies(entries: list[dict], product: str) -> set[tuple[str, str]]:
+        return {(e["reply"], e["verdict"]) for e in entries if e["product"] == product}
+
+    full = index["verdicts"]
+    for product in ("F460", "F461", "MyHomeServer1"):
+        assert replies(full["*1*1*0##"], product) == {("nack", "out")}
+    assert replies(full["*1*1*0##"], "MH200N") == {("ack", "out")}
+
+    plant_index = ROOT / "results" / "plant_index.json"
+    plant = json.loads(plant_index.read_text("utf-8"))["verdicts"]
+    for product in ("F461", "MyHomeServer1"):
+        assert replies(plant["*1*0*0##"], product) == {("ack", "out")}
+        # An address the plant leaves unpopulated NACKs exactly like the empty bus.
+        assert replies(plant["*#1*08##"], product) == {("nack", "out")}

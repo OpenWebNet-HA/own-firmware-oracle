@@ -18,7 +18,7 @@ Phase 0 binary reverse engineering and live QEMU closed-loop execution (`tools/p
   - The loop terminates when `cmd` is in `{1, 7, 8}` (`0x37f8..0x380c`), and `Richiesta_Invio_Frame` sets `send_esito = 1` (`*01*01#` = `Client SCS: ACK PIC`) if and only if `esito_tx[3] == 0` (`0x3810: cmp w1, #0; cset w20, eq`).
 - **`parsing_serial_rx` (`0x41c0..0x46c0`)**:
   - `cmd == 8` (`$008<XX>\r`, `0x43a0..0x43c0`): parses `sscanf(buf, "08%02d", &esito_tx[3])`. Sending **`$00800\r`** sets `esito_tx[3] = 0` (`ACK PIC`).
-  - `cmd == 19` (`$019\r`) / `cmd == 0` (`$000\r`): leaves `esito_tx[3] == -1`, causing `Richiesta_Invio_Frame` to time out after 3 retries and return `*01*00#` (`NAK PIC`), which accurately models an unpopulated/unacknowledged bus address.
+  - `cmd == 19` (`$019\r`) / `cmd == 0` (`$000\r`): leaves `esito_tx[3] == -1`, causing `Richiesta_Invio_Frame` to time out after 3 retries and return `*01*00#` (`NAK PIC`), which accurately models an unpopulated/unacknowledged bus address. The plain `pic` responder of the `full` suites always answers this way, so their `nack`/`out` rows on F460/F461/MyHomeServer1 are empty-bus outcomes ([`empty-bus-reply-semantics.md`](empty-bus-reply-semantics.md)).
   - `cmd == 13` (`$013\r`): sets `tst_rst = 1` (MCU reset) — **must never be sent during normal operation**, as it triggers `Configure_MCU` re-initialization and drops translator sockets.
 
 ### Inbound Device Telegram Framing (3-Digit)

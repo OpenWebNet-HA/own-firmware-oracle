@@ -722,6 +722,16 @@ def test_own_plant_engine_comprehensive() -> None:
     assert mh_eng.step("*2*1*11#4#02##").ack_or_nack == "*#*1##"
 
 
+def test_needs_device_txack() -> None:
+    # 3-digit RPMsg (F460/F461) waits for $00800, 2-digit v8 (MHS1 028206) for $08.
+    assert bus.needs_device_txack("/dev/ttyRPMSG30", "020011") is True
+    assert bus.needs_device_txack("/dev/ttymxc2", "028206") is True
+    # Legacy 2-digit PIC (fwrev <= 27, or fwrel == 0) counts $19 / $00 as success.
+    assert bus.needs_device_txack("/dev/ttyPIC", "010108") is False
+    assert bus.needs_device_txack("/dev/ttyS1", "028200") is False
+    assert bus.pic_v8_mode("12") is False
+
+
 def test_bus_and_driver_plant_integration() -> None:
     assert bus.PicResponder(version="12")._is_2digit_v8() is False
     # PicResponder with PlantResponder (3-digit and 2-digit v8)
