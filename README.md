@@ -97,7 +97,7 @@ Shipped and active integrations:
 
 <!-- MCP_METRICS_START -->
 1. **Ship results as data.** (**Shipped**) Published a deterministic, hash-pinned
-   index at `results/mcp_index.json` (529 unique frames, 6,848 verdicts across 12
+   index at `results/mcp_index.json` (552 unique frames, 7,152 verdicts across 12
    active gateway emulators). The MCP stays offline and read-only; it consumes
    this generated corpus like it does for the Machine KB.
 <!-- MCP_METRICS_END -->
@@ -431,20 +431,20 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 <!-- FLEET_TABLE_START -->
 | Gateway | Firmware Version | System Architecture | Manifest Rows | Layer Types | Core Daemons / Firmware Artifact | Emulation Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia`, `bt_difson`, `bt_multi`, `bt_alarm` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **MH200** | `020102` (2.1.2) | Linux ARMv4 `oabi` | 279 | Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, `bt_alarm`, `bt_vct` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_difson`, `coso`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_device`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F453** | `010100` (1.1.0) | Linux ARMv4 `oabi` | 1,090 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione`, `bt_alarm` | **Emulated** (Phase 2 — 24 suites, full parity) |
+| **MH200N** | `010108` (1.1.8) | Linux ARMv5 `eabi5` | 879 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_supervisione`, `bt_energia`, `bt_difson`, `bt_multi`, `bt_alarm` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **MH200** | `020102` (2.1.2) | Linux ARMv4 `oabi` | 279 | Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, `bt_alarm`, `bt_vct` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **MyHomeServer1** | `028206` (2.82.6) | Linux ARMv7 `eabi5` | 56,602 | U-Boot, Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F454** | `020051` (2.0.51) | Linux ARMv5 `eabi5` | 5,413 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_difson`, `coso`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **MH202** | `010024` (1.0.24) | Linux ARMv5 `eabi5` | 10,343 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_device`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F453AV** | `030014` (3.0.14) | Linux ARMv4 `oabi` | 1,283 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F453** | `010100` (1.1.0) | Linux ARMv4 `oabi` | 1,090 | U-Boot, Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione`, `bt_alarm` | **Emulated** (Phase 2 — 25 suites, full parity) |
 | **F455** | `010102` (1.1.2) | Bare-metal ARM Cortex-M | 3 | Zip, Monolithic `.bin` | Flash image `F455_1_1_2.bin` (301 KB, no OS) | Pending Emulation (Bare-metal MCU — zero matrix value) |
 | **MH201** | `030644` (3.6.44) | Bare-metal ARM Cortex-M3 (STM32F217) | 3 | Zip, Monolithic `.bin` | Flash image `MH201_3_6_44_signed.bin` (502 KB, CMX-RTX, no OS) | Pending Emulation (Bare-metal MCU — zero matrix value) |
-| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `bacclient`, `ebacgw`, `scsserver`, `bt_device`, `bt_termo` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 24 suites, full parity) |
-| **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` | **Emulated** (Phase 2 — 24 suites, full parity) |
+| **F461** | `020011` (2.0.11) | Linux AArch64 (ARM64) | 15,517 | Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F450** | `020010` (2.0.10) | Linux ARMv5 `eabi5` | 4,322 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `bacclient`, `ebacgw`, `scsserver`, `bt_device`, `bt_termo` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F459** | `020105` (2.1.5) | Linux ARMv5 `eabi5` | 14,335 | U-Boot, Ext3, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **F460** | `020012` (2.0.12) | Linux AArch64 (ARM64) | 15,569 | Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` | **Emulated** (Phase 2 — 25 suites, full parity) |
+| **H4684** | `020054` (2.0.54) | Linux ARMv4 `oabi` | 225 | Ext2, Gzip, Zip | `bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` | **Emulated** (Phase 2 — 25 suites, full parity) |
 | **L4686SDK** | `012001` (1.20.1) | Bare-metal Microchip PIC18 (`0x000000`-`0x00EDDD`) | 3 | Zip, Intel HEX | OpenWebNet-to-SCS serial translator (`4686SDK_012001.HEX`, no OS) | Static analysis only (PIC18 serial/USB translator — no TCP/IP stack) |
 | **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
 | **3550** | `030020` (3.0.20) | Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`) | 5 | Zip, ZipCrypto, Motorola S-record | 99-zone central unit firmware (`3550_030020.mot`, no OS) | Static analysis only (QEMU has no M16C target) |
@@ -471,17 +471,17 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 
 #### 1. Ingested Fleet (Released Firmware Packages)
 <!-- FLEET_CENSUS_START -->
-- **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway. *(Emulated — 24 suites, full matrix parity)*
-- **MH200** (`020102` / 2.1.2): Legacy DIN scenario programmer & OpenWebNet gateway. *(Emulated — 24 suites, full matrix parity)*
-- **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 24 suites, full matrix parity)*
-- **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — 24 suites, full matrix parity)*
-- **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway. *(Emulated — 24 suites, full matrix parity)*
-- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway. *(Emulated — 24 suites, full matrix parity)*
-- **F453AV** (`030014` / 3.0.14): DIN audio/video web server (ARMv4 OABI). *(Emulated — 24 suites, full matrix parity)*
-- **F453** (`010100` / 1.1.0): DIN web server 6-module gateway (ARMv4 OABI). *(Emulated — 24 suites, full matrix parity)*
-- **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64). *(Emulated — 24 suites, full matrix parity)*
-- **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64). *(Emulated — 24 suites, full matrix parity)*
-- **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet). *(Emulated — 24 suites, BACnet side on the firmware's own `ebacgw` and its factory plant)*
+- **MH200N** (`010108` / 1.1.8): DIN scenario programmer & OpenWebNet gateway. *(Emulated — 25 suites, full matrix parity)*
+- **MH200** (`020102` / 2.1.2): Legacy DIN scenario programmer & OpenWebNet gateway. *(Emulated — 25 suites, full matrix parity)*
+- **MyHomeServer1** (`028206` / 2.82.6): Modern Linux gateway & IoT bridge. *(Emulated — 25 suites, full matrix parity)*
+- **F454** (`020051` / 2.0.51): Web server audio/video DIN gateway. *(Emulated — 25 suites, full matrix parity)*
+- **MH202** (`010024` / 1.0.24): Advanced scenario programmer & BACnet gateway. *(Emulated — 25 suites, full matrix parity)*
+- **F459** (`020105` / 2.1.5): Hotel / hospitality driver manager gateway. *(Emulated — 25 suites, full matrix parity)*
+- **F453AV** (`030014` / 3.0.14): DIN audio/video web server (ARMv4 OABI). *(Emulated — 25 suites, full matrix parity)*
+- **F453** (`010100` / 1.1.0): DIN web server 6-module gateway (ARMv4 OABI). *(Emulated — 25 suites, full matrix parity)*
+- **F460** (`020012` / 2.0.12): Hotel scenario programmer gateway (AArch64 / ARM64). *(Emulated — 25 suites, full matrix parity)*
+- **F461** (`020011` / 2.0.11): Server gateway stack (AArch64 / ARM64). *(Emulated — 25 suites, full matrix parity)*
+- **F450** (`020010` / 2.0.10): IP interface gateway (OPEN-BACnet). *(Emulated — 25 suites, BACnet side on the firmware's own `ebacgw` and its factory plant)*
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter subset already 100% covered by Linux gateways with zero added value to the matrix)*
 - **MH201** (`030644` / 3.6.44): Hotel guest room scenario module (bare-metal ARM Cortex-M3 STM32F217). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter/scenario subset already covered by Linux gateways with zero added value to the matrix)*
 
@@ -756,22 +756,22 @@ Art. 6; protocols aren't copyrightable, CJEU C-406/10):
   - **Video Door Entry & Intercom (WHO 8)**: `intercom-ts10.cases` ([`findings/MyHomeServer1/intercom-ts10.md`](findings/MyHomeServer1/intercom-ts10.md)). Confirms subsystem boundary isolation across automation gateways (MHS1, MH200N, MH202) versus Audio/Video routing on F454.
   - **Area 0 Lighting, Scenarios & Golden Trace Corpus**: `lights-area0.cases` ([`findings/MH200N/area0-lighting.md`](findings/MH200N/area0-lighting.md)), `ownd-pr82-lights.cases`, `scenario-who17.cases`, `matrix-refused.cases`, and `trace-corpus.cases` verified across all 11 emulated gateways.
 <!-- STATUS_PHASE2F_START -->
-- **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 12 active gateways under QEMU user emulation, achieving **full matrix parity across all 24 standard test suites (288 complete suite TSVs)**:
-  - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_supervisione`, `bt_energia`, `bt_alarm` — 24 suites).
-  - **MH200** (`020102`): Legacy DIN scenario programmer (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, `bt_alarm`, `bt_vct` — 24 suites).
-  - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018 — 24 suites).
-  - **F454** (`020051`): Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial PTY `/dev/ttyS1`, `bt_vct`, `openserver`, `scsserver` — 24 suites).
-  - **MH202** (`010024`): Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` — 24 suites).
-  - **F459** (`020105`): Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` — 24 suites).
-  - **F453AV** (`030014`): Legacy DIN audio/video gateway (`openserver`, `bt_vct`, `bt_processi` with `/dev/dsp1` audio DSP and `/dev/ttyPIC` PTY under ARMv4 OABI — 24 suites).
-  - **F453** (`010100`): Legacy 6-module DIN web server (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione`, `bt_alarm` with `/dev/dsp1` and `/dev/ttyPIC` PTY under ARMv4 OABI — 24 suites).
-  - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 24 suites).
-  - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 24 suites).
-  - **F450** (`020010`): OPEN-BACnet gateway (`bacclient`, `ebacgw` on its factory BACnet plant, `scsserver`, `bt_device`, `bt_termo` — 24 suites).
-  - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 24 suites).
+- **Phase 2f: Gateway Fleet Target Emulation.** Expanded execution harness in `oracle/qemu_target.py` and target specifications in `oracle/targets/` supporting 12 active gateways under QEMU user emulation, achieving **full matrix parity across all 25 standard test suites (300 complete suite TSVs)**:
+  - **MH200N** (`010108`): DIN scenario programmer (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_supervisione`, `bt_energia`, `bt_alarm` — 25 suites).
+  - **MH200** (`020102`): Legacy DIN scenario programmer (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_energia`, `bt_difson`, `bt_alarm`, `bt_vct` — 25 suites).
+  - **MyHomeServer1** (`028206`): Multi-daemon Linux gateway (`openserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione` on 30018/31018 — 25 suites).
+  - **F454** (`020051`): Audio/Video web server DIN gateway (`bt_daemon`, `stackopen` serial PTY `/dev/ttyS1`, `bt_vct`, `openserver`, `scsserver` — 25 suites).
+  - **MH202** (`010024`): Advanced scenario programmer & BACnet gateway (`bt_daemon`, `stackopen`, `bt_device`, `bt_energia`, `bt_supervisione`, `openserver`, `scsserver` — 25 suites).
+  - **F459** (`020105`): Hospitality / hotel room gateway (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_energia`, `bt_supervisione`, `coso` — 25 suites).
+  - **F453AV** (`030014`): Legacy DIN audio/video gateway (`openserver`, `bt_vct`, `bt_processi` with `/dev/dsp1` audio DSP and `/dev/ttyPIC` PTY under ARMv4 OABI — 25 suites).
+  - **F453** (`010100`): Legacy 6-module DIN web server (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_multi`, `bt_vct`, `bt_energia`, `bt_supervisione`, `bt_alarm` with `/dev/dsp1` and `/dev/ttyPIC` PTY under ARMv4 OABI — 25 suites).
+  - **F460** (`020012`): Eliot AArch64 hotel scenario programmer stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 25 suites).
+  - **F461** (`020011`): Eliot AArch64 server gateway stack (`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` on `/dev/ttyRPMSG30` PTY — 25 suites).
+  - **F450** (`020010`): OPEN-BACnet gateway (`bacclient`, `ebacgw` on its factory BACnet plant, `scsserver`, `bt_device`, `bt_termo` — 25 suites).
+  - **H4684** (`020054`): Colour touch screen console (`bt_processi`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_difson`, `bt_vct`, `bt_energia`, `bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — 25 suites).
 <!-- STATUS_PHASE2F_END -->
 <!-- STATUS_PHASE3_START -->
-- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **529 unique OpenWebNet frames** across **24 test suites** and **12 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F453, F460, F461, F450, H4684), delivering **6,848 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4686SDK, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
+- **Phase 3: Hash-Pinned MCP Verdict Index.** Completed schema 1.1.0 index covering the full catalogued fleet. `tools/mcp_index.py` aggregates verdicts across suites and gateways into `results/mcp_index.json`, protected by a canonical SHA-256 fingerprint (`verdicts_sha256`) for direct consumption by `openwebnet-mcp`. The index tracks **552 unique OpenWebNet frames** across **25 test suites** and **12 active gateways** (MH200N, MH200, MyHomeServer1, F454, MH202, F459, F453AV, F453, F460, F461, F450, H4684), delivering **7,152 deterministic verdict entries** with a zero-diff PR consistency gate in CI (`tools/mcp_index.py --check`). Catalogued devices without Linux userland (F455, MH201, L4686SDK, L4561N, 3550) are indexed with `status: "catalogued"` and empty suite arrays (bare-metal microcontroller flash firmware or interfaces without an OS; basic lighting/shutter/scenario OpenWebNet subsets already 100% covered).
 <!-- STATUS_PHASE3_END -->
 - **Phase 4: Cross-Gateway Analysis, Conformance & Anti-Drift Tooling.** Shipped offline analysis and verification tools (`tools/compare.py`, `tools/verdict_diff.py`, `tools/check.py`, `tools/live_probe.py`, `tools/export_evidence.py`, `tools/sync_readme.py`) with crash-awareness gates and automated CI step summaries.
 - **Phase 5: Closed-Loop Virtual SCS Plant & Full Virtual Trace Reproduction.** Shipped clean-room stateful virtual SCS plant (`oracle/plant/`), hardware-pinned plant fixtures (`f461-bench.yaml`, `mh200-bench.yaml`), and closed-loop `.seq` suites (`oracle/plant_cases/*.seq`) verified under QEMU across `F461/020011` (3-digit RPMsg PIC), `MH200/020102` (2-digit legacy PIC), and `MyHomeServer1/028206` (2-digit v8 PIC with 25 ms UART frame pacing). Indexed 48 unique closed-loop inputs across 6 plant suite TSVs in `results/plant_index.json` (`tools/plant_index.py --check`), documented the 2-digit/3-digit PIC inbound protocols ([`findings/pic-inbound-protocol.md`](findings/pic-inbound-protocol.md)), and published the 10-point architectural audit of the archived `MyHomeSystemEmulator` ([`findings/vdk-emulator-audit.md`](findings/vdk-emulator-audit.md)).

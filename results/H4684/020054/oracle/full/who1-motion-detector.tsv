@@ -1,0 +1,38 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who1-motion-detector
+# suite_sha256=44185bd0a90b6130a1af4a31cc9dc32683d2beebfbabc3dd0b877940ead73616
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1*52##	nack	out	bus:24 30 33 35 32 30 30 31 35 30 30 0d
+down	*#1*52*5##	nack	silent	-
+down	*#1*52*6##	nack	silent	-
+down	*#1*52*7##	nack	silent	-
+down	*#1*53*7##	nack	silent	-
+up	24 30 31 37 42 38 35 32 31 44 30 30 0d	-	silent	-
+up	24 30 31 37 42 38 35 32 31 44 30 31 0d	-	silent	-
+up	24 30 31 38 44 31 35 32 30 31 34 34 31 30 30 30 30 30 30 30 0d	-	silent	-
+up	24 30 31 38 44 31 35 32 30 31 34 34 31 35 30 30 30 30 30 32 0d	-	silent	-
+up	24 30 31 38 44 31 35 32 30 31 34 34 31 36 30 30 30 30 32 44 0d	-	silent	-
+up	24 30 31 38 44 32 30 30 30 31 33 34 31 36 30 30 30 30 32 44 0d	-	silent	-
+up	24 30 31 38 44 35 30 30 32 31 34 34 31 30 30 30 30 30 30 30 0d	-	silent	-
+up	24 30 31 38 44 35 30 30 32 31 34 34 31 35 30 30 30 30 30 32 0d	-	silent	-
+up	24 30 31 38 44 35 30 30 32 31 34 34 31 36 30 30 30 30 32 44 0d	-	silent	-
+up	24 31 37 42 38 35 32 31 44 30 30 0d	-	silent	-
+up	24 31 37 42 38 35 32 31 44 30 31 0d	-	silent	-
+up	24 31 38 44 31 35 32 30 31 34 34 31 30 30 30 30 30 30 30 0d	-	silent	-
+up	24 31 38 44 31 35 32 30 31 34 34 31 35 30 30 30 30 30 32 0d	-	silent	-
+up	24 31 38 44 31 35 32 30 31 34 34 31 36 30 30 30 30 32 44 0d	-	silent	-
+up	24 31 38 44 32 30 30 30 31 33 34 31 36 30 30 30 30 32 44 0d	-	silent	-
+up	24 31 38 44 35 30 30 32 31 34 34 31 30 30 30 30 30 30 30 0d	-	silent	-
+up	24 31 38 44 35 30 30 32 31 34 34 31 35 30 30 30 30 30 32 0d	-	silent	-
+up	24 31 38 44 35 30 30 32 31 34 34 31 36 30 30 30 30 32 44 0d	-	silent	-
