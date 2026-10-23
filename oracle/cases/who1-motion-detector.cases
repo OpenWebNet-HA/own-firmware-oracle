@@ -1,0 +1,39 @@
+; WHO 1 motion detector sharing an actuator address (OpenWebNet-HA/MyHOME#777).
+; Reporter: F454 2.0.51, Legrand 067226 detector configured at A=5 PL=2 (52)
+; driving an F411 channel at 52; F411 output 53 has no detector.
+;
+; down: what the gateway puts on the bus for the requests the reporter sent.
+down  *#1*52##
+down  *#1*52*5##
+down  *#1*52*6##
+down  *#1*52*7##
+down  *#1*53*7##
+;
+; up: PIC lines. 2-digit gateways read $17 (4 bytes) / $18 (8 bytes), F460 / F461
+; read $017 / $018 (findings/pic-inbound-protocol.md); each form is ignored by
+; the other family, so both are listed.
+;
+; presence status (class 1D) at 52: value 00 / 01 -> WHAT 34 / 39?
+; dimension replies (44) for DIM 6 (10), DIM 5 (15), DIM 7 (16) with the values
+; the reporter received: 0 lx, sensitivity 2, timeout 0 h 0 min 45 s (2D).
+;   D1 52 01 44 ..  addressed to point 52
+;   D5 00 21 44 ..  address byte 00 (reporter saw *#1*0*6*0##, *#1*0*5*2##, *#1*0*7*0*0*45##)
+;   D2 00 01 34 16  second address-00 form that also yields *#1*0*7*..## on F454
+up    24 31 37 42 38 35 32 31 44 30 30 0d
+up    24 31 37 42 38 35 32 31 44 30 31 0d
+up    24 31 38 44 31 35 32 30 31 34 34 31 30 30 30 30 30 30 30 0d
+up    24 31 38 44 31 35 32 30 31 34 34 31 35 30 30 30 30 30 32 0d
+up    24 31 38 44 31 35 32 30 31 34 34 31 36 30 30 30 30 32 44 0d
+up    24 31 38 44 35 30 30 32 31 34 34 31 30 30 30 30 30 30 30 0d
+up    24 31 38 44 35 30 30 32 31 34 34 31 35 30 30 30 30 30 32 0d
+up    24 31 38 44 35 30 30 32 31 34 34 31 36 30 30 30 30 32 44 0d
+up    24 31 38 44 32 30 30 30 31 33 34 31 36 30 30 30 30 32 44 0d
+up    24 30 31 37 42 38 35 32 31 44 30 30 0d
+up    24 30 31 37 42 38 35 32 31 44 30 31 0d
+up    24 30 31 38 44 31 35 32 30 31 34 34 31 30 30 30 30 30 30 30 0d
+up    24 30 31 38 44 31 35 32 30 31 34 34 31 35 30 30 30 30 30 32 0d
+up    24 30 31 38 44 31 35 32 30 31 34 34 31 36 30 30 30 30 32 44 0d
+up    24 30 31 38 44 35 30 30 32 31 34 34 31 30 30 30 30 30 30 30 0d
+up    24 30 31 38 44 35 30 30 32 31 34 34 31 35 30 30 30 30 30 32 0d
+up    24 30 31 38 44 35 30 30 32 31 34 34 31 36 30 30 30 30 32 44 0d
+up    24 30 31 38 44 32 30 30 30 31 33 34 31 36 30 30 30 30 32 44 0d
