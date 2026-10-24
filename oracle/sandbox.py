@@ -269,6 +269,10 @@ def wrap(
     sh_init = (
         "ip link set lo up && "
         "(ip link add eth0 type dummy 2>/dev/null || true) && "
+        # A dummy device gets a random MAC from the kernel, and a gateway that
+        # answers *#13**12## with it (F450, F454, MH202) would give a different
+        # row on every run. Pin it, so WHO 13 DIMENSION 12 is reproducible.
+        "(ip link set eth0 address 02:00:00:00:00:01 2>/dev/null || true) && "
         "(ip addr add 192.168.1.1/24 dev eth0 2>/dev/null || true) && "
         "(ip link set eth0 up 2>/dev/null || true) && "
         "(ip route add 224.0.0.0/4 dev lo 2>/dev/null || true); "
