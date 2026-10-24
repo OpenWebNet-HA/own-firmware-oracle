@@ -11,6 +11,8 @@
 ;   *#4*Z*19##       DIMENSION 19  valve status
 ;   *#4*Z*20##       DIMENSION 20  actuator status; *#4*Z#N*20## one actuator
 ;   *#4*#0*20##      actuators of every zone (via the central unit address)
+;   *#4*Z#0*20##     every actuator of zone Z; *#4*0#0*20## every actuator of
+;                    every zone (Encyclopedia all-actuators forms, r000585)
 ;   *#4*Z*60##       DIMENSION 60  humidity; *#4*0*60## every zone
 ;   *#4*0##          general status (already in thermo-ts10 / ownd-pr82-heating)
 ;
@@ -27,6 +29,8 @@ down *#4*2*20##
 down *#4*2#1*20##
 down *#4*2#2*20##
 down *#4*#0*20##
+down *#4*2#0*20##
+down *#4*0#0*20##
 down *#4*2*60##
 down *#4*0*60##
 down *#4*2#4#01##

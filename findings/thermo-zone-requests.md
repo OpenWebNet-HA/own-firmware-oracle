@@ -5,7 +5,7 @@ images. Nothing here is `experimentally_confirmed`; the live anchor is one F461
 `2.0.11` plant (below).
 
 **Suite:** [`oracle/cases/thermo-zone-requests.cases`](../oracle/cases/thermo-zone-requests.cases)
-(14 independent steps, `reset=each`, suite SHA-256 `7b4e9b399e87…`).
+(16 independent steps, `reset=each`, suite SHA-256 `03e229a2cd1b…`).
 Rows: `results/<product>/<version>/oracle/full/thermo-zone-requests.tsv` once
 `suites.yml` has produced them; the tables below come from a local run of the
 same images with the same harness (qemu-user 8.2.2, Docker on macOS) and are
@@ -24,7 +24,9 @@ per-zone requests for a plain zone, an actuator of a zone, the central form
 1. Which of `*#4*Z##`, `*#4*Z*0##`, `*#4*Z*12##`, `*#4*Z*14##`, `*#4*Z*19##`
    reach the bus?
 2. Which gateways forward the actuator request `*#4*Z*20##`, the per-actuator
-   form `*#4*Z#N*20##` and the all-zones form `*#4*#0*20##`?
+   form `*#4*Z#N*20##`, the all-zones form `*#4*#0*20##` and the Encyclopedia's
+   all-actuators forms `*#4*Z#0*20##` (one zone) and `*#4*0#0*20##` (every
+   zone)?
 3. Which gateways forward the humidity request `*#4*Z*60##` and `*#4*0*60##`?
 4. What happens to the same requests for a zone behind an interface
    (`*#4*2#4#01##`, `*#4*2#4#01*0##`, `*#4*2#4#01*20##`)?
@@ -42,8 +44,10 @@ MyHomeServer1 a `nack` after `out` is the empty-bus TX-ACK rule
 | Frame | F450 `020010` | F453 `010100` | F453AV `030014` | F454 `020051` | F459 `020105` | F460 `020012` | F461 `020011` | H4684 `020054` | MH200 `020102` | MH200N `010108` | MH202 `010024` | MyHomeServer1 `028206` |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `*#4*#0*20##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, out | nack, silent | nack, out (no device) |
+| `*#4*0#0*20##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, out | nack, silent | nack, out (no device) |
 | `*#4*0*60##` | nack, silent | nack, silent | nack, silent | nack, silent | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, silent | nack, silent | nack, out (no device) |
 | `*#4*2##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, out | nack, out | nack, out | ack, out | nack, out (no device) |
+| `*#4*2#0*20##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, out | nack, silent | nack, out (no device) |
 | `*#4*2#1*20##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, out | ack, out | nack, out (no device) |
 | `*#4*2#2*20##` | nack, out | nack, out | nack, out | nack, out | nack, out | nack, out (no device) | nack, out (no device) | nack, silent | nack, silent | nack, out | ack, out | nack, out (no device) |
 | `*#4*2#4#01##` | nack, silent | nack, silent | nack, silent | nack, silent | nack, silent | nack, silent | nack, silent | nack, out | nack, out | nack, silent | **crash** | nack, silent |
@@ -65,8 +69,17 @@ MyHomeServer1 a `nack` after `out` is the empty-bus TX-ACK rule
   F453AV, H4684, MH200, MH200N and MH202 and forwarded by the other six. The
   per-actuator form `*#4*2#N*20##` is forwarded by ten (dropped by H4684 and
   MH200), the all-zones form `*#4*#0*20##` by nine (dropped by H4684, MH200 and
-  MH202). A client that wants actuator state on an F453-class gateway must ask
-  per actuator or for all zones, not per zone.
+  MH202). The Encyclopedia's all-actuators forms `*#4*2#0*20##` (one zone) and
+  `*#4*0#0*20##` (every zone) follow `*#4*#0*20##` exactly on all twelve: the
+  same nine forward them, H4684, MH200 and MH202 drop them. On the bus
+  `*#4*0#0*20##` becomes the same SCS frame as `*#4*#0*20##` on every forwarding
+  gateway, and `*#4*2#0*20##` a frame addressed to zone 2 (F453, F453AV and
+  MH200N write the address byte as `82`, the other six as `02`). So F453,
+  F453AV and MH200N, which drop `*#4*2*20##`, forward the `Z#0` and `0#0`
+  forms; the MH202 drops every all-actuators form and, of the actuator requests,
+  forwards only `*#4*Z#N*20##` (plain or through an interface).
+  A client that wants actuator state on an F453-class gateway must ask per
+  actuator, per zone with `Z#0`, or for all zones, not with `*#4*Z*20##`.
 - **Humidity, DIMENSION 60.** `*#4*2*60##` and `*#4*0*60##` are dropped by
   F450, F453, F453AV, F454, H4684, MH200, MH200N and MH202; only F459, F460,
   F461 and MyHomeServer1 forward them. Polling humidity on the other eight
@@ -76,7 +89,8 @@ MyHomeServer1 a `nack` after `out` is the empty-bus TX-ACK rule
   the zone status through an interface, `*#4*2#4#01##`, crashes the
   thermoregulation daemon** (`nack`, verdict `crash`, the same in three fresh runs; the
   MH200 forwards the same frame); the other two interface forms do not. The actuator request through an interface, `*#4*2#4#01*20##`,
-  is forwarded by eight (not F453, F453AV, H4684, MH200, MH200N).
+  is forwarded by seven (F450, F454, F459, F460, F461, MH202, MyHomeServer1) and
+  dropped by five (F453, F453AV, H4684, MH200, MH200N).
 
 ## Live anchor
 
