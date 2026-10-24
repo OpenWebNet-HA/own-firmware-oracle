@@ -24,7 +24,13 @@ down *#13**#0*14*30*00*002##
 down *#13**#0*14*30*00*102##
 
 ; --- DIMENSION 1 (date) write ---------------------------------------------
-down *#13**#1*03*21*10*2026##
+; The date is deliberately NOT the 21 October 2026 above. The emulated gateway
+; keeps the host's wall clock and echoes a DIMENSION 1 write only when it
+; changes the date: writing today's date gets no output. 21 October 2026 was
+; "today" when this row was first recorded (silent), so it turned into an
+; echo on a later day. A date in the past (Thursday, W=04, 25 December 2025)
+; can never be today again; findings/who13-clock.md has the experiment.
+down *#13**#1*04*25*12*2025##
 
 ; --- DIMENSION 22 (time + zone + date) writes: valid whole-hour T --------
 down *#13**#22*14*30*00*000*03*21*10*2026##

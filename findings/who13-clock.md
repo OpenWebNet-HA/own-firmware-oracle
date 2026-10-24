@@ -124,6 +124,36 @@ the same NTP-on settings but ACK the writes.
 The reported time stays `{UTC}` after every write on every gateway: none
 shifts its answer by the stored `T` itself.
 
+### A DIMENSION 1 write is echoed only when it changes the date
+
+The emulated gateway keeps the host's wall clock (see above), and a DIMENSION 1
+(date) write is echoed on the event session only when the written date is not
+the host's current date. Writing today's date gets no output at all.
+
+The first version of this suite wrote Wednesday 21 October 2026, which was the
+day it was recorded, so the committed rows said `silent` for the gateways that
+echo (F450, F453, F453AV, F459, F460, F461, H4684, MH200, MH200N, MH202). On
+23 October the same inputs gave `out` and `suites` failed with "same inputs,
+different verdicts" on those ten ([run
+39997891568](https://github.com/OpenWebNet-HA/own-firmware-oracle/actions/runs/39997891568)).
+F454 and MyHomeServer1 stayed `silent` on 23 October (I did not test them with
+another date). Nothing was flaky: every re-run gave the same answer, only the committed file was out of
+date. The DIMENSION 22 writes (time + zone + date) are echoed in both cases,
+so they do not depend on the day.
+
+Experiment, F450 2.0.10, Saturday 24 October 2026 about 11:53 UTC, one fresh
+gateway per row:
+
+| Written | Output |
+| :--- | :--- |
+| `*#13**#1*06*24*10*2026##` (today) | none (`silent`) |
+| `*#13**#1*03*21*10*2026##` (three days earlier) | `own:*#13**#1*03*21*10*2026##` |
+
+The suite now writes Thursday 25 December 2025 (`*#13**#1*04*25*12*2025##`), a
+date that can never be the host's date again. The experiment above is not a
+suite: its answer depends on the day it runs, which is what a committed result
+must not do.
+
 ### How `bt_device` turns `T` into a zone (MH200N, syscall trace)
 
 On the no-`conf.xml` path, MH200N's `bt_device` links `/etc/localtime` to
