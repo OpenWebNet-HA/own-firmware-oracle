@@ -75,8 +75,8 @@ and MyHOME's manual identification were changed accordingly.
 
 ## Live anchor
 
-F461 `2.0.11` (2026-10-23, read-only): `*#13**15*200##`, `*#13**16*2*0*11##`,
-`*#13**12*0*3*80*159*63*151##`, `*#13**10*192*168*0*92##`, `*#13**11*255*255*255*0##`,
+F461 `2.0.11` (2026-10-23, read-only; MAC and LAN address rewritten to the synthetic `00:03:50:00:10:23` / `192.0.2.92` used by the MyHOME trace fixture): `*#13**15*200##`, `*#13**16*2*0*11##`,
+`*#13**12*0*3*80*0*16*35##`, `*#13**10*192*0*2*92##`, `*#13**11*255*255*255*0##`,
 `*#13**23*5*10*35##`, `*#13**24*2*26*4##`, `*#1013**1*134*15*5*0##`: the real
 gateway answers the MAC and IP the emulated one answers as `0*0*0*0` (it reads them
 from its running system, not a file), and `OBJECT_MODEL 134` where the factory
