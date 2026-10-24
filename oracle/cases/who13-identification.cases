@@ -1,0 +1,32 @@
+; WHO 13 gateway identification: the requests a client sends to learn which
+; gateway it talks to, in the order MyHOME's runtime uses them (MyHOME#420).
+;
+; Grammar (Encyclopedia functional/who-13-integration-gateway/dimensions.md,
+; functional/who-1013-diagnostics):
+;   *#13**15##    DIMENSION 15  device type (official code; 200 is shared by the
+;                               F454 / F461 / MyHomeServer1 / MH202 class)
+;   *#13**16##    DIMENSION 16  firmware version
+;   *#13**12##    DIMENSION 12  MAC address
+;   *#13**10##    DIMENSION 10  IP address
+;   *#13**11##    DIMENSION 11  netmask
+;   *#13**23##    DIMENSION 23  kernel version
+;   *#13**24##    DIMENSION 24  distribution version
+;   *#1013**1##   WHO 1013 OBJECT_MODEL (134 = F461, 19 = H4684, 4 = MH200)
+;   *#1013*0*1##  the same with WHERE 0
+;
+; DIMENSION 19 (uptime) and 27 (host name) are left out: their values depend on
+; the run, not on the firmware.
+;
+; Question: which of these does each firmware answer, and does any of them
+; harm the gateway? A client that adds a gateway by hand (no SSDP) has only
+; these frames to find out what it is talking to. Every step runs on a
+; freshly started gateway (reset=each).
+down *#13**15##
+down *#13**16##
+down *#13**12##
+down *#13**10##
+down *#13**11##
+down *#13**23##
+down *#13**24##
+down *#1013**1##
+down *#1013*0*1##
