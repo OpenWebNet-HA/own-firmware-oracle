@@ -10,7 +10,7 @@
 # responder=pic
 # settle_ms=3000
 # suite=who13-clock
-# suite_sha256=9df081fa5625e39f0b17beca5e5ac24a0ad4d8ddeb0c9356df3a2fd0119dde44
+# suite_sha256=f3a8566c86a746f08916e77c2a36d82ace98fb407ef5c414b55d5e9ae0fa29d0
 # oracle_version=3
 direction	input	reply	verdict	output
 down	*#13**#0*14*30*00*000##	-	silent	-
@@ -22,7 +22,7 @@ down	*#13**#0*14*30*00*102##	-	silent	-
 down	*#13**#0*14*30*00*124##	-	silent	-
 down	*#13**#0*14*30*00*999##	-	silent	-
 down	*#13**#0*22*50*00*##	-	silent	-
-down	*#13**#1*03*21*10*2026##	-	silent	-
+down	*#13**#1*04*25*12*2025##	-	silent	-
 down	*#13**#22*14*30*00**03*21*10*2026##	ack	silent	-
 down	*#13**#22*14*30*00*000*03*21*10*2026##	ack	silent	-
 down	*#13**#22*14*30*00*001*03*21*10*2026##	ack	silent	-
