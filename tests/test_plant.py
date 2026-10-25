@@ -377,6 +377,52 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert fc.handle_short(0x00, 0x12, 0x00, digits=2) == []
 
 
+def test_thermo_all_zones_actuator_query(tmp_path: Path) -> None:
+    # *#4*#0*20## / *#4*0#0*20## reach the bus as B9 00 30 10 (F461 2.0.11,
+    # results/F461/020011/oracle/full/thermo-zone-requests.tsv): every zone
+    # answers with the same per-actuator B7 frames as *#4*Z*20##.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    both = [b"$017B7823101\r", b"$017B7823220\r"]
+    assert td.handle_short(bytes.fromhex("B9003010"), digits=3) == both
+    assert td.handle_short(bytes.fromhex("A9023010"), digits=3) == both
+    # *#4*Z#0*20## on the gateways that set the sub-address bit: A9 <80+Z> 30 10
+    assert td.handle_short(bytes.fromhex("A9823010"), digits=3) == both
+    assert td.handle_short(bytes.fromhex("A9833010"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9003011"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9023010"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9003010"), digits=2) == [
+        b"$17B7823101\r",
+        b"$17B7823220\r",
+    ]
+
+    # Through the responder: the f461-bench zone, then a two-zone plant where
+    # each zone answers for itself in zone order; the fixtures without zones
+    # (mh200-bench) stay silent so the gateway NACKs on its bus timeout.
+    r = PlantResponder.from_fixture("f461-bench")
+    assert r.respond(b"$004B9003010\r") == both
+    assert r.respond(b"$004A9823010\r") == both
+    assert PlantResponder.from_fixture("mh200-bench").respond(b"$004B9003010\r") == []
+    two = tmp_path / "two-zones.yaml"
+    two.write_text(
+        "name: two-zones\ngateway_product: F461\ngateway_version: '020011'\n"
+        "thermo_zones:\n  5:\n    actuators:\n      1: 1\n"
+        "  2:\n    actuators:\n      1: 0\n      2: 5\n",
+        encoding="utf-8",
+    )
+    r2 = PlantResponder.from_yaml(two)
+    assert r2.respond(b"$004B9003010\r") == [
+        b"$017B7853100\r",
+        b"$017B7823101\r",
+        b"$017B7823220\r",
+    ]
+    assert r2.respond(b"$004A9823010\r") == both
+    assert r2.respond(b"$004A9853010\r") == [b"$017B7853100\r"]
+    pic = bus.get_responder("pic:plant:f461-bench", version="020011")
+    assert pic.respond(b"$004B9003010\r") == [b"$00800\r", *both]
+
+
 def test_topology_loaders_and_responder(tmp_path: Path) -> None:
     f461_topo = PlantTopology.from_fixture("f461-bench")
     mh200_topo = PlantTopology.from_fixture("mh200-bench.yaml")

@@ -98,7 +98,10 @@ class PlantResponder:
         b0, b1, b2, b3 = payload[0], payload[1], payload[2], payload[3]
 
         # WHO=4 short telegrams
-        if b0 in (0x90, 0x91, 0x92, 0x93, 0x99, 0xA9, 0xB4) and (b2 & 0xF0) == 0x30:
+        if (
+            b0 in (0x90, 0x91, 0x92, 0x93, 0x99, 0xA9, 0xB4, 0xB9)
+            and (b2 & 0xF0) == 0x30
+        ):
             out: list[bytes] = []
             for zone in self.topology.thermo_zones.values():
                 out.extend(zone.handle_short(payload, digits=digits))

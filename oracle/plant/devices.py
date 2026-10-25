@@ -500,42 +500,49 @@ class ThermoZoneDevice:
             return 0x10
         return 0xF0
 
+    def actuator_frame(self, act_id: int, *, digits: int) -> bytes:
+        """Encode actuator ``act_id`` as ``B7 <80+Z> 3<A> <state>``.
+
+        The gateway reports the telegram as ``*#4*Z#A*20*V##``.
+        """
+        return encode_short_inbound(
+            0xB7,
+            0x80 + self.config.bus_addr,
+            0x30 | (act_id & 0x0F),
+            THERMO_ACTUATOR_STATUS_BYTES.get(self.actuators[act_id], 0x01),
+            digits=digits,
+        )
+
+    def actuator_frames(self, *, digits: int) -> list[bytes]:
+        """Encode every actuator of the zone, lowest actuator number first."""
+        return [self.actuator_frame(a, digits=digits) for a in sorted(self.actuators)]
+
     def handle_short(self, payload: bytes, *, digits: int) -> list[bytes]:
         """Handle a 4-byte WHO=4 command or query."""
         b0, b1, b2, b3 = payload[0], payload[1], payload[2], payload[3]
+        addr = self.config.bus_addr
 
         # Virtual probe write B4 <Z> 30 <temp>
-        if b0 == 0xB4 and b1 == self.config.bus_addr and b2 == 0x30:
+        if b0 == 0xB4 and b1 == addr and b2 == 0x30:
             self.temp_deci = b3
             return []
 
-        # All actuators status query A9 <Z> 30 10 (*#4*Z*20##)
-        if b0 == 0xA9 and b1 == self.config.bus_addr and b2 == 0x30 and b3 == 0x10:
-            return [
-                encode_short_inbound(
-                    0xB7,
-                    0x80 + self.config.bus_addr,
-                    0x30 | (act_id & 0x0F),
-                    THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
-                    digits=digits,
-                )
-                for act_id, st in sorted(self.actuators.items())
-            ]
+        # All-zones actuators query B9 00 30 10 (*#4*#0*20##, *#4*0#0*20##):
+        # every zone answers for itself, as both actuators of the physical
+        # F461 bench did within 130 ms of the request.
+        if payload == b"\xb9\x00\x30\x10":
+            return self.actuator_frames(digits=digits)
+
+        # Zone actuators query A9 <Z> 30 10 (*#4*Z*20##) or A9 <80+Z> 30 10
+        # (*#4*Z#0*20## on the gateways that set the sub-address bit)
+        if b0 == 0xA9 and b1 in (addr, 0x80 + addr) and b2 == 0x30 and b3 == 0x10:
+            return self.actuator_frames(digits=digits)
 
         # Single actuator status query 99 <80+Z> 3<A> 10 (*#4*Z#A*20##)
-        if b0 == 0x99 and b1 == (0x80 + self.config.bus_addr) and b3 == 0x10:
+        if b0 == 0x99 and b1 == (0x80 + addr) and b3 == 0x10:
             act_id = b2 & 0x0F
             if act_id in self.actuators:
-                st = self.actuators[act_id]
-                return [
-                    encode_short_inbound(
-                        0xB7,
-                        b1,
-                        0x30 | act_id,
-                        THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
-                        digits=digits,
-                    )
-                ]
+                return [self.actuator_frame(act_id, digits=digits)]
             return []
 
         # Setpoint write 90/91/92 <Z> 3<m> <half_deg> (*#4*Z*#14*T*M##)
