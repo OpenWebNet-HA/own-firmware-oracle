@@ -1,0 +1,38 @@
+; WHO 4 zone requests a client uses to keep a thermostat zone fresh when the
+; general sweep is not answered: zone status, temperature, actuators and
+; humidity, for a plain zone, a zone behind an interface, an actuator of a
+; zone and the central form.
+;
+; Grammar (Encyclopedia functional/who-4-thermoregulation/dimensions.md):
+;   *#4*Z##          zone status (replies: DIM 0, 12, 14, 13 and the season)
+;   *#4*Z*0##        DIMENSION 0   measured temperature
+;   *#4*Z*12##       DIMENSION 12  set temperature in force (local)
+;   *#4*Z*14##       DIMENSION 14  set point
+;   *#4*Z*19##       DIMENSION 19  valve status
+;   *#4*Z*20##       DIMENSION 20  actuator status; *#4*Z#N*20## one actuator
+;   *#4*#0*20##      actuators of every zone (via the central unit address)
+;   *#4*Z#0*20##     every actuator of zone Z; *#4*0#0*20## every actuator of
+;                    every zone (Encyclopedia all-actuators forms, r000585)
+;   *#4*Z*60##       DIMENSION 60  humidity; *#4*0*60## every zone
+;   *#4*0##          general status (already in thermo-ts10 / ownd-pr82-heating)
+;
+; Question: which gateways forward each request to the bus and which drop it,
+; so a client can poll only what a gateway answers (MyHOME#185, #257, #674,
+; and the hvac_action / humidity polls of MyHOME's climate entity).
+; Every step runs on a freshly started gateway (reset=each).
+down *#4*2##
+down *#4*2*0##
+down *#4*2*12##
+down *#4*2*14##
+down *#4*2*19##
+down *#4*2*20##
+down *#4*2#1*20##
+down *#4*2#2*20##
+down *#4*#0*20##
+down *#4*2#0*20##
+down *#4*0#0*20##
+down *#4*2*60##
+down *#4*0*60##
+down *#4*2#4#01##
+down *#4*2#4#01*0##
+down *#4*2#4#01*20##
