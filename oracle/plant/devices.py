@@ -612,7 +612,41 @@ class ThermoZoneDevice:
         ans = bytes(
             [0xD2, self.config.bus_addr, 0x03, 0x04, 0x0E, hi, lo, self.function]
         )
-        return [encode_extended_inbound(ans, digits=digits)]
+        return [
+            encode_extended_inbound(ans, digits=digits),
+            *self._drive_active_actuator(digits=digits),
+        ]
+
+    def _drive_active_actuator(self, *, digits: int) -> list[bytes]:
+        """Switch the active season's actuator on the setpoint / temperature gap.
+
+        Heating: actuator 1 (the valve) is on (1) while the setpoint is above
+        the measured temperature, off (0) otherwise. Cooling: actuator 2 (the
+        fan coil) runs while the setpoint is below the temperature, reported
+        with the dimension 20 value of the fan speed in force (6..8 for speeds
+        1..3, 9 when the speed is automatic), 5 when off. The dimension 19
+        side of the season follows. A changed actuator reports itself with one
+        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway shows
+        as ``*#4*Z#A*20*V##``; the physical KW4691 did so 2.1-2.2 s after the
+        setpoint echo, the virtual plant answers at once.
+        """
+        if self.season == "cooling":
+            act_id = 2
+            if self.setpoint_deci < self.temp_deci:
+                state = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
+            else:
+                state = 5
+        else:
+            act_id = 1
+            state = 1 if self.setpoint_deci > self.temp_deci else 0
+        if act_id not in self.actuators or self.actuators[act_id] == state:
+            return []
+        self.actuators[act_id] = state
+        if act_id == 2:
+            self.valve_cooling = state
+        else:
+            self.valve_heating = state
+        return [self.actuator_frame(act_id, digits=digits)]
 
     def _handle_zone_query(self, probe: int, b3: int, *, digits: int) -> list[bytes]:
         if b3 == 0x00:
