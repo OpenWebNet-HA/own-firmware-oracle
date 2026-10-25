@@ -1,0 +1,31 @@
+# product=MH200
+# version=020102
+# image_sha256=53848de84438f9a395501cf955d20762951faacb8449e1271ed5e027448e1e3b
+# harness=full
+# target_sha256=539f943d7f298be10a77d5990b7163c0fe1a8616c45d865486291d71b3899583
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-zone-requests
+# suite_sha256=03e229a2cd1b05d9784ef4a0d5c4c28b091327ef08e671d36597084f8b8c5026
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#4*#0*20##	nack	silent	-
+down	*#4*0#0*20##	nack	silent	-
+down	*#4*0*60##	nack	silent	-
+down	*#4*2##	nack	out	bus:24 30 34 39 39 30 32 33 30 30 30 0d | bus:24 30 34 39 39 30 32 33 30 31 32 0d | bus:24 30 34 39 39 30 32 33 30 30 45 0d | bus:24 30 34 39 39 30 32 33 30 30 44 0d
+down	*#4*2#0*20##	nack	silent	-
+down	*#4*2#1*20##	nack	silent	-
+down	*#4*2#2*20##	nack	silent	-
+down	*#4*2#4#01##	nack	out	bus:24 30 34 39 39 30 32 33 30 30 30 0d | bus:24 30 34 39 39 30 32 33 30 31 32 0d | bus:24 30 34 39 39 30 32 33 30 30 45 0d | bus:24 30 34 39 39 30 32 33 30 30 44 0d
+down	*#4*2#4#01*0##	nack	out	bus:24 30 34 39 39 30 32 33 30 30 30 0d
+down	*#4*2#4#01*20##	nack	silent	-
+down	*#4*2*0##	nack	out	bus:24 30 34 39 39 30 32 33 30 30 30 0d
+down	*#4*2*12##	nack	out	bus:24 30 34 39 39 30 32 33 30 31 32 0d
+down	*#4*2*14##	nack	out	bus:24 30 34 39 39 30 32 33 30 30 45 0d
+down	*#4*2*19##	nack	out	bus:24 30 34 39 39 30 32 33 30 31 33 0d
+down	*#4*2*20##	nack	silent	-
+down	*#4*2*60##	nack	silent	-
