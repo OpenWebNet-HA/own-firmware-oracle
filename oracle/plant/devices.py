@@ -638,6 +638,9 @@ class ThermoZoneDevice:
             0x12: bytes([0xD2, addr, 0x03, 0x04, 0x12, self._mode_byte(), hi, lo]),
             0x0E: bytes([0xD2, addr, 0x03, 0x04, 0x0E, hi, lo, self.function]),
             0x0D: bytes([0xD2, addr, 0x03, 0x04, 0x0D, 0x00, 0x00, 0x00]),
+            # Valve status (dimension 19): the heating then the cooling output,
+            # each as the actuator status byte; the F461 2.0.11 reports them
+            # as *#4*Z*19*<cooling>*<heating>## (01 20 -> 19*5*0).
             0x13: bytes(
                 [
                     0xD2,
@@ -645,8 +648,8 @@ class ThermoZoneDevice:
                     0x03,
                     0x04,
                     0x13,
-                    0x1C + (self.valve_cooling & 0x0F),
-                    0x1C + (self.valve_heating & 0x0F),
+                    THERMO_ACTUATOR_STATUS_BYTES.get(self.valve_heating, 0x01),
+                    THERMO_ACTUATOR_STATUS_BYTES.get(self.valve_cooling, 0x01),
                     0x00,
                 ]
             ),

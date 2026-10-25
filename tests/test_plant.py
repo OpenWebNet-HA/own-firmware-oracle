@@ -339,6 +339,11 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert td.handle_short(bytes.fromhex("99023112"), digits=3) == []
     for dim_b in (0x12, 0x0E, 0x0D, 0x13):
         assert len(td.handle_short(bytes([0x99, 0x02, 0x30, dim_b]), digits=3)) == 1
+    # Dimension 19: heating valve 0 then fan coil 5 as status bytes 01 20, which
+    # the F461 2.0.11 reports as *#4*2*19*5*0## (the physical bench's reply).
+    assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
+        b"$018D202030413012000\r"
+    ]
     assert td.handle_short(bytes.fromhex("99023099"), digits=3) == []
     assert td.handle_short(bytes.fromhex("00000000"), digits=3) == []
 
