@@ -92,6 +92,14 @@ class PlantResponder:
         if len(payload) == 8 and payload[0] in (0xD1, 0xD5):
             return self._handle_extended(payload, digits=digits, subbus=subbus)
 
+        # WHO=4 general extended query (D2 00 03 ...): every zone answers for
+        # itself, as the zones with a humidity probe do for *#4*0*60##.
+        if len(payload) == 8 and payload[0] == 0xD2 and payload[1:3] == b"\x00\x03":
+            out: list[bytes] = []
+            for zone in self.topology.thermo_zones.values():
+                out.extend(zone.handle_extended(payload, digits=digits))
+            return out
+
         return []
 
     def _handle_short(self, payload: bytes, *, digits: int, subbus: int) -> list[bytes]:

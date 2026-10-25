@@ -193,6 +193,7 @@ class ThermoZoneConfig:
     actuators: dict[int, int] = field(default_factory=dict)
     initial_fan_speed: int = 0
     probes: tuple[int, ...] = ()
+    initial_humidity: int | None = None
 
 
 @dataclass(frozen=True)

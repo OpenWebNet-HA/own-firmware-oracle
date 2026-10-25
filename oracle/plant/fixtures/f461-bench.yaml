@@ -31,6 +31,7 @@ thermo_zones:
     actuators:
       1: 0
       2: 5
+    initial_humidity: 39
 energy_meters:
   "51":
     bus_addr: 0xA1

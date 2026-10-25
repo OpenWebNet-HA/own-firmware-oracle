@@ -149,6 +149,7 @@ def _parse_yaml_thermo(raw_thermo: Any) -> dict[int, ThermoZoneConfig]:
                 if isinstance(probes_raw, list)
                 else ()
             )
+            hum_raw = c.get("initial_humidity", c.get("humidity"))
             thermo_zones[z] = ThermoZoneConfig(
                 zone=z,
                 bus_addr=bus_addr,
@@ -163,6 +164,7 @@ def _parse_yaml_thermo(raw_thermo: Any) -> dict[int, ThermoZoneConfig]:
                 actuators=act_map,
                 initial_fan_speed=_int_val(c.get("initial_fan_speed"), 0),
                 probes=probes,
+                initial_humidity=None if hum_raw is None else _int_val(hum_raw),
             )
     return thermo_zones
 

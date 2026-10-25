@@ -337,7 +337,7 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert len(td.handle_short(bytes.fromhex("99023100"), digits=3)) == 1
     assert td.handle_short(bytes.fromhex("99023900"), digits=3) == []
     assert td.handle_short(bytes.fromhex("99023112"), digits=3) == []
-    for dim_b in (0x12, 0x0E, 0x0D, 0x13, 0x0B):
+    for dim_b in (0x12, 0x0E, 0x0D, 0x13):
         assert len(td.handle_short(bytes([0x99, 0x02, 0x30, dim_b]), digits=3)) == 1
     assert td.handle_short(bytes.fromhex("99023099"), digits=3) == []
     assert td.handle_short(bytes.fromhex("00000000"), digits=3) == []
@@ -421,6 +421,85 @@ def test_thermo_all_zones_actuator_query(tmp_path: Path) -> None:
     assert r2.respond(b"$004A9853010\r") == [b"$017B7853100\r"]
     pic = bus.get_responder("pic:plant:f461-bench", version="020011")
     assert pic.respond(b"$004B9003010\r") == [b"$00800\r", *both]
+
+
+def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
+    # Heating season on the f461-bench zone: the active output is the valve
+    # (dimension 19 heating side 0), so *#4*2*11## is left unanswered and the
+    # gateway NACKs on its bus timeout, as the physical KW4691 (2.1 s); the
+    # humidity probe answers *#4*2*60## with the fixture's 39 %.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(
+            zone=2, bus_addr=0x02, actuators={1: 0, 2: 5}, initial_humidity=39
+        )
+    )
+    dim11 = bytes.fromhex("9902300B")
+    dim60 = bytes.fromhex("D102030308000000")
+    dim60_all = bytes.fromhex("D200030308000000")
+    hum39 = [b"$018D202030408000027\r"]
+    assert td.season == "heating"
+    assert td.handle_short(dim11, digits=3) == []
+    assert td.handle_short(bytes.fromhex("9902303C"), digits=3) == []
+    assert td.handle_extended(dim60, digits=3) == hum39
+    assert td.handle_extended(dim60_all, digits=3) == hum39
+    assert td.handle_extended(bytes.fromhex("D103030308000000"), digits=3) == []
+    assert td.handle_extended(bytes.fromhex("D202030308000000"), digits=3) == []
+    assert td.handle_extended(bytes.fromhex("D102030308000001"), digits=3) == []
+    # Cooling (conditioning WHAT 0 or a 2xx program): the fan coil side (5)
+    # answers the fan speed, as the F461 did in cooling season.
+    for cooling_mode in (0, 202, 208):
+        td.mode = cooling_mode
+        assert td.season == "cooling"
+        assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    td.fan_speed = 3
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # Heating programs, generic modes and off keep the heating side.
+    for heating_mode in (1, 102, 108, 303, 311):
+        td.mode = heating_mode
+        assert td.season == "heating"
+        assert td.handle_short(dim11, digits=3) == []
+    # A plant whose heating output is a fan coil answers in heating season.
+    td.valve_heating = 5
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # An out-of-range fixture value is sent as a byte (review finding).
+    td.humidity = 256 + 39
+    assert td.handle_extended(dim60, digits=3) == hum39
+    # Without a humidity probe dimension 60 stays unanswered; reset restores it.
+    td.humidity = None
+    assert td.handle_extended(dim60, digits=3) == []
+    td.reset()
+    assert td.humidity == 39
+    assert td.mode == 1
+    assert td.handle_extended(dim60, digits=3) == hum39
+    assert (
+        ThermoZoneDevice(ThermoZoneConfig(zone=3, bus_addr=0x03)).handle_extended(
+            bytes.fromhex("D103030308000000"), digits=3
+        )
+        == []
+    )
+    # Through the responder: the zone read, the general read answered by the
+    # zones with a probe only, and an unrelated D2 frame left unanswered.
+    r = PlantResponder.from_fixture("f461-bench")
+    assert r.respond(b"$006D102030308000000\r") == hum39
+    assert r.respond(b"$006D200030308000000\r") == hum39
+    assert r.respond(b"$006D200010308000000\r") == []
+
+    # Fixture field: initial_humidity (f461-bench: 39) or its alias humidity.
+    bench = load_topology_yaml(
+        ROOT / "oracle" / "plant" / "fixtures" / "f461-bench.yaml"
+    )
+    assert bench.thermo_zones[2].initial_humidity == 39
+    alias = tmp_path / "alias.yaml"
+    alias.write_text(
+        "name: alias\ngateway_product: F461\ngateway_version: '020011'\n"
+        "thermo_zones:\n  2:\n    humidity: '0x28'\n  3: {}\n",
+        encoding="utf-8",
+    )
+    alias_cfg = load_topology_yaml(alias)
+    assert alias_cfg.thermo_zones[2].initial_humidity == 40
+    assert alias_cfg.thermo_zones[3].initial_humidity is None
+    r_alias = PlantResponder.from_yaml(alias)
+    assert r_alias.respond(b"$006D200030308000000\r") == [b"$018D202030408000028\r"]
 
 
 def test_topology_loaders_and_responder(tmp_path: Path) -> None:

@@ -467,6 +467,7 @@ class ThermoZoneDevice:
             else {1: config.initial_actuator_status}
         )
         self.fan_speed: int = config.initial_fan_speed
+        self.humidity: int | None = config.initial_humidity
 
     def reset(self) -> None:
         """Reset zone state to initial fixture values."""
@@ -484,6 +485,28 @@ class ThermoZoneDevice:
             else {1: self.config.initial_actuator_status}
         )
         self.fan_speed = self.config.initial_fan_speed
+        self.humidity = self.config.initial_humidity
+
+    @property
+    def season(self) -> str:
+        """Return the active season, ``"heating"`` or ``"cooling"``.
+
+        Derived from the zone mode (the WHAT of ``*4*M*Z##`` the zone reports
+        with dimension 12): WHAT 0 (conditioning) and the 2xx cooling programs
+        select cooling; every other mode (1 and the 1xx heating programs, the
+        3xx generic ones, 303 off included) keeps the heating side, which is
+        what the standalone KW4691 of the physical F461 bench reported in
+        heating season.
+        """
+        if self.mode == 0 or 200 <= self.mode <= 299:
+            return "cooling"
+        return "heating"
+
+    def _active_side(self) -> int:
+        """Return the dimension 19 value of the active season's output."""
+        if self.season == "cooling":
+            return self.valve_cooling
+        return self.valve_heating
 
     def _mode_byte(self) -> int:
         if self.mode == 0:
@@ -627,14 +650,37 @@ class ThermoZoneDevice:
                     0x00,
                 ]
             ),
-            0x0B: bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00]),
         }
+        # Fan speed (dimension 11): answered only when the active season's
+        # output is a fan coil (side value >= 5). A valve side leaves the
+        # request unanswered, so the gateway NACKs on its bus timeout, as the
+        # physical KW4691 does in heating season (2.1 s on the F461 2.0.11).
+        if self._active_side() >= 5:
+            replies[0x0B] = bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00])
         if b3 in replies:
             return [encode_extended_inbound(replies[b3], digits=digits)]
         return []
 
     def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
-        """Handle an 8-byte D1 WHO=4 command or query."""
+        """Handle an 8-byte D1 WHO=4 command or query (D2 00 for the general form)."""
+        addr = self.config.bus_addr
+        # Humidity read (dimension 60): D1 <Z> 03 03 08 00 00 00 for *#4*Z*60##,
+        # D2 00 03 03 08 00 00 00 for *#4*0*60##. Only a zone with a humidity
+        # probe answers, D2 <Z> 03 04 08 00 00 <humidity>; the others stay
+        # silent and the gateway NACKs *#4*Z*60## on its bus timeout.
+        if (
+            payload[2:] == b"\x03\x03\x08\x00\x00\x00"
+            and (payload[0], payload[1]) in ((0xD1, addr), (0xD2, 0x00))
+            and self.humidity is not None
+        ):
+            return [
+                encode_extended_inbound(
+                    bytes(
+                        [0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity & 0xFF]
+                    ),
+                    digits=digits,
+                )
+            ]
         if (
             payload[0] == 0xD1
             and payload[1] == self.config.bus_addr
