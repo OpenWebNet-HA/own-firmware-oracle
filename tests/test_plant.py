@@ -468,9 +468,6 @@ def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
     # A plant whose heating output is a fan coil answers in heating season.
     td.valve_heating = 5
     assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
-    # An out-of-range fixture value is sent as a byte (review finding).
-    td.humidity = 256 + 39
-    assert td.handle_extended(dim60, digits=3) == hum39
     # Without a humidity probe dimension 60 stays unanswered; reset restores it.
     td.humidity = None
     assert td.handle_extended(dim60, digits=3) == []
@@ -507,6 +504,20 @@ def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
     assert alias_cfg.thermo_zones[3].initial_humidity is None
     r_alias = PlantResponder.from_yaml(alias)
     assert r_alias.respond(b"$006D200030308000000\r") == [b"$018D202030408000028\r"]
+    # The value is a percentage: a fixture outside 0..100 is rejected instead
+    # of being masked to a byte (295 would have been answered as 39), by the
+    # config itself so that no loader can bypass it.
+    with pytest.raises(ValueError, match="initial_humidity 295"):
+        ThermoZoneConfig(zone=2, bus_addr=0x02, initial_humidity=295)
+    for bad in ("295", "-1", "'0x65'"):
+        bad_yaml = tmp_path / "bad_humidity.yaml"
+        bad_yaml.write_text(
+            "name: bad\ngateway_product: F461\ngateway_version: '020011'\n"
+            f"thermo_zones:\n  2:\n    initial_humidity: {bad}\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(ValueError, match="initial_humidity"):
+            load_topology_yaml(bad_yaml)
 
 
 def test_thermo_setpoint_write_switches_active_actuator() -> None:

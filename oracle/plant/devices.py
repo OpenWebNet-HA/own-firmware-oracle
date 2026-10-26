@@ -606,6 +606,10 @@ class ThermoZoneDevice:
             self.mode = 0
             self.function = 2
         else:
+            # Generic function 3 (*#4*Z*#14*T*3##) keeps the season: on the
+            # F461 2.0.11 bench a generic write after a cooling write left
+            # the zone in cooling with no season event
+            # (reports/data/live_scan_confirm_2026-10-26).
             self.function = 3
         hi = (self.setpoint_deci >> 8) & 0xFF
         lo = self.setpoint_deci & 0xFF
@@ -704,7 +708,10 @@ class ThermoZoneDevice:
         # Humidity read (dimension 60): D1 <Z> 03 03 08 00 00 00 for *#4*Z*60##,
         # D2 00 03 03 08 00 00 00 for *#4*0*60##. Only a zone with a humidity
         # probe answers, D2 <Z> 03 04 08 00 00 <humidity>; the others stay
-        # silent and the gateway NACKs *#4*Z*60## on its bus timeout.
+        # silent, and the harness answers the unanswered extended read with an
+        # immediate $000 (no TX-ACK, oracle/bus.py), which the gateway reports
+        # as a NACK for *#4*Z*60##. The physical bus timeout is not emulated
+        # for extended reads, and no fixture has a probe-less zone yet.
         if (
             payload[2:] == b"\x03\x03\x08\x00\x00\x00"
             and (payload[0], payload[1]) in ((0xD1, addr), (0xD2, 0x00))
@@ -712,9 +719,7 @@ class ThermoZoneDevice:
         ):
             return [
                 encode_extended_inbound(
-                    bytes(
-                        [0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity & 0xFF]
-                    ),
+                    bytes([0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity]),
                     digits=digits,
                 )
             ]
