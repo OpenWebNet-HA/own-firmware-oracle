@@ -5,8 +5,8 @@ images. Nothing here is `experimentally_confirmed`; the live anchor is one F461
 `2.0.11` plant (below).
 
 **Suite:** [`oracle/cases/thermo-zone-requests.cases`](../oracle/cases/thermo-zone-requests.cases)
-(23 steps, `reset=0` on targets whose default policy is `0` and `reset=each` on
-`F450`..`F459`, suite SHA-256 `b6f67fab0793bc867407ae231155b121230c9103d9c9f1f35068bbac655ecdcc`).
+(23 steps, `reset=each` on `F450 020010` and `reset=0` on the other eleven
+targets, suite SHA-256 `b6f67fab0793bc867407ae231155b121230c9103d9c9f1f35068bbac655ecdcc`).
 Rows: `results/<product>/<version>/oracle/full/thermo-zone-requests.tsv`.
 
 ## Question
@@ -83,9 +83,10 @@ local-bus WHO 4 telegram (`$04...` / `$004...` / `$06D1...`).
   - The per-zone form `*#4*2*20##` is dropped by F453, F453AV, H4684, MH200,
     MH200N and MH202 and forwarded (`$04A9023010\r` / `$004A9023010\r`) by the
     other six.
-  - The per-actuator Dimension 20 form `*#4*2#N*20##` is forwarded by ten
-    (`$0499823110\r` / `$04A9823110\r` / `$004A9823110\r`; dropped only by H4684
-    and MH200).
+  - The per-actuator Dimension 20 form `*#4*2#N*20##` (tested on `2#1` and `2#2`)
+    is forwarded by ten (`$0499823110\r` / `$00499823110\r` for `2#1`,
+    `$0499823210\r` / `$00499823210\r` for `2#2`; dropped only by H4684 and
+    MH200).
   - The all-zones form `*#4*#0*20##`, the single-zone all-actuators form
     `*#4*2#0*20##`, and the all-zones all-actuators form `*#4*0#0*20##` agree on
     all twelve gateways: forwarded by nine, dropped by H4684, MH200 and MH202.
@@ -117,24 +118,55 @@ local-bus WHO 4 telegram (`$04...` / `$004...` / `$06D1...`).
        `*#4*2#4#01*19##` emits `$0499023013\r` (both local zone 2).
      - On F450, F454, F459, F460, F461 and MyHomeServer1, `*#4*2#4#01*20##`,
        `*#4*2#4#12*20##` and `*#4*2#1#4#01*20##` all emit `$04A9023010\r` (or
-       `$004A9023010\r` on F460/F461), identical to `*#4*2*20##`: both `#4#01`,
-       `#4#12` and `#1#4#01` are truncated at the first `#`, polling **local zone
-       2** on the main bus.
+       `$004A9023010\r` on F460/F461), identical to `*#4*2*20##`: `#4#01`,
+       `#4#12` and `#1#4#01` are all truncated at the first `#`, polling **local
+       zone 2** on the main bus.
      - On F459, F460, F461 and MyHomeServer1, `*#4*2#4#01*60##` emits
        `$06D102030308000000\r` (or `$006D102030308000000\r`), identical to
        `*#4*2*60##` (local zone 2).
      - `*#4*2#4#01*11##` is `nack, silent` on all twelve gateways.
   2. **Trailing-token actuator misparse and `coso` crash on `MH202 010024`:**
-     - On MH202, both `*#4*2#4#01*20##` and `*#4*2#1#4#01*20##` emit
-       `bus:24 30 34 39 39 38 34 33 31 31 30 0d` (`$0499843110\r`) -- the exact
-       same local-bus telegram that `*#4*4#1*20##` emits for **local zone 4 (`84`),
-       actuator 1 (`31`)**! Conversely, `*#4*2#4#12*20##` (`12 > 9`, outside the
-       `1..9` actuator range) is `nack, silent`.
-     - For the same reason, `*#4*2#4#01##` is misparsed as a dimensionless
-       actuator status request for zone 4 actuator 1 and triggers the **exact
-       same `nack, crash` (`coso` `SIGSEGV`) as `*#4*2#1##`**, whereas
-       `*#4*2#4#12##` (`12 > 9`) is cleanly rejected (`nack, silent`) before
-       reaching `coso`.
+     - In the committed TSV rows on MH202, both `*#4*2#4#01*20##` and
+       `*#4*2#1#4#01*20##` emit `bus:24 30 34 39 39 38 34 33 31 31 30 0d`
+       (`$0499843110\r`). Comparing that telegram byte-for-byte with
+       `*#4*2#1*20##` (`$0499823110\r`, zone `2` = `82`, actuator `1` = `31`) and
+       `*#4*2#2*20##` (`$0499823210\r`, zone `2` = `82`, actuator `2` = `32`)
+       shows that `$0499843110\r` addresses **local zone 4 (`84`), actuator 1
+       (`31`)** on the main bus, while `*#4*2#4#12*20##` is `nack, silent`.
+     - Likewise, `*#4*2#4#01##` triggers the exact same `nack, crash` verdict as
+       `*#4*2#1##`, whereas `*#4*2#4#12##` is `nack, silent`.
+     - **Binary provenance (`results/MH202/010024/manifest.tsv`):** MH202 `010024`
+       is the only target in the 12-gateway fleet that routes WHO 4 through `coso`
+       (`/home/bticino/bin/coso`, SHA-256
+       `6865c2d1d441d25effa31275080ded70ad3538a8a49288e3002ffb196b066175`) via
+       `libplug_thermo_tr.so` (`/home/bticino/libcoso/libplug_thermo_tr.so`,
+       SHA-256
+       `5e2da864f01b19f4f14dde76e11786234b36c97f4f6778966d6a32f597d1452b`) and
+       `libthermo.so` (`/home/bticino/lib/libthermo.so`, SHA-256
+       `a84ac5be4d01eaadceafa4bbc54bee58e6794bf144398d64bb54c1f944686ff2`).
+       Static inspection of `libthermo.so` (`device_recognition` at `0x18c4` and
+       `scsDest` at `0x1dac`) confirms that 3-token `WHERE` strings `A#B#C` with
+       `1 <= B <= 99` and `1 <= C <= 9` are classified as local actuator addresses
+       with zone `B` and actuator `C` (`12 > 9` is rejected). In
+       `libplug_thermo_tr.so`, `thermo_open2scs` (`0x1f20`) handles `STATE REQUEST`
+       (`frame_type == 2`, `0x21b8`--`0x2250`) only when `WHERE` begins with `#`;
+       for non-`#` actuator status requests (such as `*#4*2#1##` and
+       `*#4*2#4#01##`) the outbound `GList *` remains `NULL` and
+       `g_list_first(NULL)->data` (`ldr r3, [r0]` at `0x22b4`,
+       `thermo_open2scs+0x394`) faults with `SIGSEGV`. During replay, `coso`'s
+       signal handler writes to `/var/volatile/tmp/BTicino.log`:
+       ```text
+       main[W]: !!! SIGSEV
+       main[W]: TRACE:
+       main[W]: /home/bticino/bin/coso(sighandl+0x50) [0xabb0]
+       main[W]: /lib/libc.so.6(__default_sa_restorer_v2+0) [0x4085c610]
+       main[W]: /home/bticino/libcoso/libplug_thermo_tr.so(thermo_open2scs+0x394) [0x40f332b4]
+       main[W]: /home/bticino/bin/coso(send_list_field+0x218) [0xb224]
+       main[W]: /home/bticino/bin/coso(syn_receive+0x20) [0xb4c0]
+       main[W]: /home/bticino/bin/coso(send_msgs2field+0x70) [0xb54c]
+       main[W]: /home/bticino/bin/coso(sm_receive+0x94) [0xb5f8]
+       main[W]: /home/bticino/bin/coso(appl_receive+0x124) [0xb738]
+       ```
 
 ## Live anchor
 
@@ -153,5 +185,7 @@ gateway answered `*#4*2##` with dimensions 0, 12, 14, 13 and the season frame,
   loaded in `harness=full`.
 - On physical MH202 hardware, `home/bticino/cfg/stack_open.xml` registers `coso`
   under `bt_daemon` supervision, so `bt_daemon` respawns `coso` after the
-  `SIGSEGV` caused by `*#4*Z#N##` or `*#4*Z#4#01..09##`; exact recovery timing on
-  live MH202 hardware is not measured here.
+  `SIGSEGV` caused by `*#4*2#1##` and `*#4*2#4#01##` (and, per static inspection
+  of `device_recognition`, any `*#4*Z#N##` or `*#4*Z#4#01..09##` with
+  `1 <= N <= 9`); exact recovery timing on live MH202 hardware is not measured
+  here.
