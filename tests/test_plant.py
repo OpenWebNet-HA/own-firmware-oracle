@@ -49,6 +49,7 @@ from oracle.plant import (
     where_to_bus_addr,
 )
 from oracle.plant.scs_codec import unwrap_raw_scs, wrap_raw_scs
+from oracle.plant.topology import fixture_path, fixture_sha256
 
 
 def test_scs_address_and_parse_own_where() -> None:
@@ -673,6 +674,10 @@ def test_topology_loaders_and_responder(tmp_path: Path) -> None:
     assert PlantTopology.from_fixture(str(fixture_file)).name == "f461-bench"
     with pytest.raises(FileNotFoundError, match="unknown plant fixture"):
         PlantTopology.from_fixture("nonexistent-bench")
+    assert fixture_path("f461-bench") == fixture_file
+    assert fixture_path(str(fixture_file)) == fixture_file
+    assert fixture_sha256("f461-bench") == fixture_sha256("f461-bench.yaml")
+    assert len(fixture_sha256(str(fixture_file))) == 64
 
     bad_yaml = tmp_path / "bad.yaml"
     bad_yaml.write_text("- not a mapping\n", encoding="utf-8")
@@ -1384,6 +1389,7 @@ def test_pic_spike_and_plant_index(
         "bus": "pty",
         "framer": "line",
         "responder": "pic:plant:f461-bench",
+        "plant_sha256": "f" * 64,
         "settle_ms": "300.0",
         "suite": "plant-f461-bench",
         "suite_sha256": "0" * 64,
@@ -1428,6 +1434,13 @@ def test_pic_spike_and_plant_index(
 
     idx = plant_index.build_plant_index(tmp_path / "results")
     assert "plant-f461-bench" in idx["suites"]  # type: ignore[operator]
+    # plant_sha256 comes from the TSV header (the fixture the run used), not
+    # from the fixture file as it is now; a header without it falls back to
+    # the file ("" when the harness names no fixture).
+    verdicts = idx["verdicts"]
+    assert isinstance(verdicts, dict)
+    assert verdicts["*1*1*06##"][0]["plant_sha256"] == "f" * 64
+    assert verdicts["*1*0*06##"][0]["plant_sha256"] == ""
     assert plant_index.parse_plant_output_column("-") == ([], [], [], [])
     assert plant_index.parse_plant_output_column("unknown:1") == ([], [], [], [])
     assert plant_index.fixture_sha256("nonexistent") == ""

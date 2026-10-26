@@ -45,6 +45,7 @@ from oracle import (
     target,
 )
 from oracle.bus import LineFramer
+from oracle.plant import topology
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
@@ -397,7 +398,7 @@ def suite_header(
     settle_ms: float,
     suite: cases.Suite,
 ) -> dict[str, str]:
-    return {
+    header = {
         "product": spec.product,
         "version": spec.version,
         "image_sha256": spec.image_sha256,
@@ -413,6 +414,12 @@ def suite_header(
         "suite_sha256": suite.sha256,
         "oracle_version": ORACLE_VERSION,
     }
+    if harness.startswith("plant:"):
+        # the fixture the plant answered from: part of the staleness key
+        header[record.PLANT_HEADER_KEY] = topology.fixture_sha256(
+            harness[len("plant:") :]
+        )
+    return header
 
 
 def suite_path(spec: target.TargetSpec, harness: str, suite_name: str) -> Path:

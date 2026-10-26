@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from oracle import bus, cases, driver, qemu_target, record, run, sandbox, target
+from oracle.plant import topology
 
 
 @pytest.fixture(autouse=True)
@@ -780,6 +781,17 @@ def test_cmd_suite_execution(monkeypatch, tmp_path):
     assert header["framer"] == "line"
     assert header["responder"] == "pic"
     assert header["harness"] == "full"
+    assert "plant_sha256" not in header
+
+    # A plant harness records the hash of the fixture it answered from.
+    plant_out = tmp_path / "plant.tsv"
+    assert run.main([*args[:5], "-o", str(plant_out), "--plant", "f461-bench"]) == 0
+    plant_header = record.read_header(plant_out)
+    assert plant_header["harness"] == "plant:f461-bench"
+    assert plant_header["plant_sha256"] == topology.fixture_sha256("f461-bench")
+    assert list(plant_header).index("plant_sha256") == (
+        list(plant_header).index("responder") + 1
+    )
 
     # Test with --keep and unit harness
     keep_dir = tmp_path / "keep_dir"

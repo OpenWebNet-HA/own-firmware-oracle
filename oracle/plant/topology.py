@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -35,6 +36,24 @@ from oracle.plant.models import (
 from oracle.plant.scs_codec import where_to_bus_addr
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+def fixture_path(name: str) -> Path:
+    """Resolve a fixture: a YAML path as given, else fixtures/<name>.yaml."""
+    cand = Path(name)
+    if cand.is_file():
+        return cand
+    filename = name if name.endswith(".yaml") else f"{name}.yaml"
+    path = FIXTURES_DIR / filename
+    if not path.is_file():
+        raise FileNotFoundError(f"unknown plant fixture: {name!r} ({path})")
+    return path
+
+
+def fixture_sha256(name: str) -> str:
+    """SHA-256 of the fixture file a ``plant:<name>`` harness runs against."""
+    return hashlib.sha256(fixture_path(name).read_bytes()).hexdigest()
+
 
 _OWN_STATUS_RE = re.compile(r"^\*(\d+)\*([^*]+)\*([^#*]+(?:#[^#*]+)*)##$")
 _OWN_DIM_RE = re.compile(r"^\*#(\d+)\*([^*]+)(?:\*([^#*]+(?:#[^#*]+)*))?(?:\*(.+))?##$")
@@ -406,14 +425,7 @@ class PlantTopology:
     @classmethod
     def from_fixture(cls, name: str) -> PlantTopology:
         """Load a named fixture from oracle/plant/fixtures/<name>.yaml."""
-        cand = Path(name)
-        if cand.is_file():
-            return cls.from_yaml(cand)
-        filename = name if name.endswith(".yaml") else f"{name}.yaml"
-        fixture_path = FIXTURES_DIR / filename
-        if not fixture_path.is_file():
-            raise FileNotFoundError(f"unknown plant fixture: {name!r} ({fixture_path})")
-        return cls.from_yaml(fixture_path)
+        return cls.from_yaml(fixture_path(name))
 
     @classmethod
     def from_plnt_xml(cls, path: Path) -> PlantTopology:

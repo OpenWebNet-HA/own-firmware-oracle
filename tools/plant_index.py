@@ -6,6 +6,12 @@ Scans `results/<product>/<version>/oracle/plant-*/<suite>.tsv` and writes
 `results/plant_index.json` without touching `results/mcp_index.json`.
 Each entry records `responder`, `plant_sha256`, `bus_frames`, `bus_rx`,
 `cmd_replies`, and `evt_events`.
+
+`plant_sha256` is the hash of the fixture the run answered from, read from the
+TSV header (`# plant_sha256=`, written by `oracle.run` for `plant:` harnesses).
+A TSV recorded before that key existed falls back to the hash of the fixture
+file as it is now, which is only right while the fixture has not changed since
+the run.
 """
 
 from __future__ import annotations
@@ -110,7 +116,9 @@ def read_plant_tsv(
     harness = hdr.get("harness", "")
     fixture_name = harness.split(":", 1)[1] if ":" in harness else harness
     responder = f"pic:{harness}" if harness.startswith("plant:") else harness
-    plant_sha = fixture_sha256(fixture_name, fixtures_dir=fixtures_dir)
+    plant_sha = hdr.get("plant_sha256") or fixture_sha256(
+        fixture_name, fixtures_dir=fixtures_dir
+    )
     image_sha256 = hdr.get("image_sha256", "")
     target_sha256 = hdr.get("target_sha256", "")
     suite = hdr.get("suite", "")
