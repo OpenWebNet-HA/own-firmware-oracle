@@ -329,7 +329,8 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert len(td.handle_short(bytes.fromhex("92023228"), digits=3)) == 1
     assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 1
     assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 1
+    # OFF releases the running fan coil: the echo plus the fan coil off.
+    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("93023099"), digits=3)) == 1
 
     # Zone queries
@@ -340,11 +341,12 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert td.handle_short(bytes.fromhex("99023112"), digits=3) == []
     for dim_b in (0x12, 0x0E, 0x0D, 0x13):
         assert len(td.handle_short(bytes([0x99, 0x02, 0x30, dim_b]), digits=3)) == 1
-    # Dimension 19: heating valve 0 then the fan coil as status bytes; the
-    # cooling write above left the fan coil running (2F), the physical bench's
-    # idle reply would be 01 20, reported by the F461 2.0.11 as *#4*2*19*5*0##.
+    # Dimension 19: heating valve 0 then the fan coil as status bytes; the OFF
+    # mode write above released the fan coil the cooling write had started
+    # (2F), so this is the physical bench's idle reply 01 20, reported by the
+    # F461 2.0.11 as *#4*2*19*5*0##.
     assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
-        b"$018D202030413012F00\r"
+        b"$018D202030413012000\r"
     ]
     assert td.handle_short(bytes.fromhex("99023099"), digits=3) == []
     assert td.handle_short(bytes.fromhex("00000000"), digits=3) == []
@@ -583,6 +585,80 @@ def test_thermo_setpoint_write_switches_active_actuator() -> None:
     valve_only = ThermoZoneDevice(ThermoZoneConfig(zone=4, bus_addr=0x04))
     assert len(valve_only.handle_short(bytes.fromhex("91043130"), digits=3)) == 1
     assert valve_only.actuators == {1: 0}
+
+
+def test_thermo_mode_and_fan_speed_writes_drive_actuators() -> None:
+    # Only setpoint writes drove the actuators before: a mode write left a
+    # heating demand's valve on in mode 303, and a fan speed write left the
+    # running fan coil at the old speed while dimension 11 said the new one.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim19 = bytes.fromhex("99023013")
+    # Heating demand (26.0 above 24.9): the valve switches on.
+    assert td.handle_short(bytes.fromhex("92023034"), digits=3)[1:] == [
+        b"$017B7823100\r"
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    # OFF (*4*303*2##, 93 <Z> 30 0F): the mode echo, then the valve released.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3) == [
+        b"$018D202030412FF0104\r",
+        b"$017B7823101\r",
+    ]
+    assert td.mode == 303
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_heating == 0
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413012000\r"]
+    # OFF again: nothing to release, only the echo.
+    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 1
+    # Cooling (*4*0*2##, 93 <Z> 30 01) with the setpoint still at 26.0: no
+    # demand, only the echo; manual heating (93 <Z> 30 00) drives the valve.
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3) == [
+        b"$018D202030412F10104\r"
+    ]
+    assert td.season == "cooling"
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3) == [
+        b"$018D202030412F00104\r",
+        b"$017B7823100\r",
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    # Cooling demand (24.0 below 24.9): the fan coil runs, automatic speed.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B782322F\r"
+    ]
+    assert td.actuators == {1: 1, 2: 9}
+    # Fan speed write *#4*2*#11*2## (D1 <Z> 03 02 0B 02): the dimension 11
+    # echo, then the running fan coil at speed 2 (dimension 20 value 7).
+    assert td.handle_extended(bytes.fromhex("D10203020B020000"), digits=3) == [
+        b"$018D20203040B020000\r",
+        b"$017B7823222\r",
+    ]
+    assert td.actuators[2] == 7
+    assert td.valve_cooling == 7
+    assert td.handle_short(bytes.fromhex("9902300B"), digits=3) == [
+        b"$018D20203040B020000\r"
+    ]
+    # The same speed again: only the echo. Back to automatic: 9 again.
+    assert len(td.handle_extended(bytes.fromhex("D10203020B020000"), digits=3)) == 1
+    assert td.handle_extended(bytes.fromhex("D10203020B000000"), digits=3)[1:] == [
+        b"$017B782322F\r"
+    ]
+    # OFF with both outputs on (the valve was left on by the season change):
+    # both are released, lowest actuator first.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3)[1:] == [
+        b"$017B7823101\r",
+        b"$017B7823220\r",
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_cooling == 5
+    # A fan speed write without a cooling demand (26.0 above 24.9), or in
+    # heating season, is only echoed.
+    td.mode = 0
+    td.setpoint_deci = 260
+    assert len(td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3)) == 1
+    td.mode = 1
+    assert len(td.handle_extended(bytes.fromhex("D10203020B010000"), digits=3)) == 1
+    assert td.actuators == {1: 0, 2: 5}
 
 
 def test_topology_loaders_and_responder(tmp_path: Path) -> None:

@@ -576,24 +576,39 @@ class ThermoZoneDevice:
         ):
             return self._handle_setpoint_write(b0, b2, b3, digits=digits)
 
-        # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##)
+        # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##). The outputs follow the
+        # new mode: OFF (303) releases every actuator of the zone, any other
+        # mode drives the active season's actuator on the setpoint /
+        # temperature gap like a setpoint write does, and like a setpoint
+        # write that changes the season it leaves the other season's output
+        # where it was (no capture shows what the KW4691 does to the inactive
+        # output). Emulation only: the zone form *4*303*2## has no physical
+        # row (the central form *4*303*#2## leaves the standalone KW4691 of
+        # the F461 bench unchanged, reports/data/live_scan_confirm_2026-10-26).
         if b0 == 0x93 and b1 == self.config.bus_addr and b2 == 0x30:
-            if b3 == 0x00:
-                self.mode = 1
-            elif b3 == 0x01:
-                self.mode = 0
-            elif b3 == 0x0F:
-                self.mode = 303
-            hi = (self.setpoint_deci >> 8) & 0xFF
-            lo = self.setpoint_deci & 0xFF
-            mb = self._mode_byte()
-            ans = bytes([0xD2, self.config.bus_addr, 0x03, 0x04, 0x12, mb, hi, lo])
-            return [encode_extended_inbound(ans, digits=digits)]
+            return self._handle_mode_write(b3, digits=digits)
 
         # Zone queries 99 <Z> 3<P> <dim>
         if b0 == 0x99 and b1 == self.config.bus_addr and (b2 & 0xF0) == 0x30:
             return self._handle_zone_query(b2 & 0x0F, b3, digits=digits)
         return []
+
+    def _handle_mode_write(self, b3: int, *, digits: int) -> list[bytes]:
+        if b3 == 0x00:
+            self.mode = 1
+        elif b3 == 0x01:
+            self.mode = 0
+        elif b3 == 0x0F:
+            self.mode = 303
+        hi = (self.setpoint_deci >> 8) & 0xFF
+        lo = self.setpoint_deci & 0xFF
+        mb = self._mode_byte()
+        ans = bytes([0xD2, self.config.bus_addr, 0x03, 0x04, 0x12, mb, hi, lo])
+        if self.mode == 303:
+            reports = self._release_actuators(digits=digits)
+        else:
+            reports = self._drive_active_actuator(digits=digits)
+        return [encode_extended_inbound(ans, digits=digits), *reports]
 
     def _handle_setpoint_write(
         self, b0: int, b2: int, b3: int, *, digits: int
@@ -643,6 +658,10 @@ class ThermoZoneDevice:
         else:
             act_id = 1
             state = 1 if self.setpoint_deci > self.temp_deci else 0
+        return self._set_actuator(act_id, state, digits=digits)
+
+    def _set_actuator(self, act_id: int, state: int, *, digits: int) -> list[bytes]:
+        """Move actuator ``act_id`` to ``state``; report it when it changed."""
         if act_id not in self.actuators or self.actuators[act_id] == state:
             return []
         self.actuators[act_id] = state
@@ -651,6 +670,14 @@ class ThermoZoneDevice:
         else:
             self.valve_heating = state
         return [self.actuator_frame(act_id, digits=digits)]
+
+    def _release_actuators(self, *, digits: int) -> list[bytes]:
+        """Switch every actuator off (valve 0, fan coil 5) for the OFF mode."""
+        reports: list[bytes] = []
+        for act_id, state in sorted(self.actuators.items()):
+            off = 5 if state >= 5 else 0
+            reports += self._set_actuator(act_id, off, digits=digits)
+        return reports
 
     def _handle_zone_query(self, probe: int, b3: int, *, digits: int) -> list[bytes]:
         if b3 == 0x00:
@@ -730,7 +757,16 @@ class ThermoZoneDevice:
             and payload[3] == 0x02
             and payload[4] == 0x0B
         ):
+            # Fan speed write (*#4*Z*#11*S##): a fan coil that is running
+            # follows the new speed (dimension 20 value 5 + S, 9 for
+            # automatic) and reports itself, so dimensions 11 and 20 agree;
+            # a valve side (heating season) is not touched.
             self.fan_speed = payload[5]
+            fan_reports = (
+                self._drive_active_actuator(digits=digits)
+                if self._active_side() >= 5
+                else []
+            )
             return [
                 encode_extended_inbound(
                     bytes(
@@ -746,7 +782,8 @@ class ThermoZoneDevice:
                         ]
                     ),
                     digits=digits,
-                )
+                ),
+                *fan_reports,
             ]
         return []
 
