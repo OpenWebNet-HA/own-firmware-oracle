@@ -467,6 +467,7 @@ class ThermoZoneDevice:
             else {1: config.initial_actuator_status}
         )
         self.fan_speed: int = config.initial_fan_speed
+        self.humidity: int | None = config.initial_humidity
 
     def reset(self) -> None:
         """Reset zone state to initial fixture values."""
@@ -484,6 +485,28 @@ class ThermoZoneDevice:
             else {1: self.config.initial_actuator_status}
         )
         self.fan_speed = self.config.initial_fan_speed
+        self.humidity = self.config.initial_humidity
+
+    @property
+    def season(self) -> str:
+        """Return the active season, ``"heating"`` or ``"cooling"``.
+
+        Derived from the zone mode (the WHAT of ``*4*M*Z##`` the zone reports
+        with dimension 12): WHAT 0 (conditioning) and the 2xx cooling programs
+        select cooling; every other mode (1 and the 1xx heating programs, the
+        3xx generic ones, 303 off included) keeps the heating side, which is
+        what the standalone KW4691 of the physical F461 bench reported in
+        heating season.
+        """
+        if self.mode == 0 or 200 <= self.mode <= 299:
+            return "cooling"
+        return "heating"
+
+    def _active_side(self) -> int:
+        """Return the dimension 19 value of the active season's output."""
+        if self.season == "cooling":
+            return self.valve_cooling
+        return self.valve_heating
 
     def _mode_byte(self) -> int:
         if self.mode == 0:
@@ -500,42 +523,49 @@ class ThermoZoneDevice:
             return 0x10
         return 0xF0
 
+    def actuator_frame(self, act_id: int, *, digits: int) -> bytes:
+        """Encode actuator ``act_id`` as ``B7 <80+Z> 3<A> <state>``.
+
+        The gateway reports the telegram as ``*#4*Z#A*20*V##``.
+        """
+        return encode_short_inbound(
+            0xB7,
+            0x80 + self.config.bus_addr,
+            0x30 | (act_id & 0x0F),
+            THERMO_ACTUATOR_STATUS_BYTES.get(self.actuators[act_id], 0x01),
+            digits=digits,
+        )
+
+    def actuator_frames(self, *, digits: int) -> list[bytes]:
+        """Encode every actuator of the zone, lowest actuator number first."""
+        return [self.actuator_frame(a, digits=digits) for a in sorted(self.actuators)]
+
     def handle_short(self, payload: bytes, *, digits: int) -> list[bytes]:
         """Handle a 4-byte WHO=4 command or query."""
         b0, b1, b2, b3 = payload[0], payload[1], payload[2], payload[3]
+        addr = self.config.bus_addr
 
         # Virtual probe write B4 <Z> 30 <temp>
-        if b0 == 0xB4 and b1 == self.config.bus_addr and b2 == 0x30:
+        if b0 == 0xB4 and b1 == addr and b2 == 0x30:
             self.temp_deci = b3
             return []
 
-        # All actuators status query A9 <Z> 30 10 (*#4*Z*20##)
-        if b0 == 0xA9 and b1 == self.config.bus_addr and b2 == 0x30 and b3 == 0x10:
-            return [
-                encode_short_inbound(
-                    0xB7,
-                    0x80 + self.config.bus_addr,
-                    0x30 | (act_id & 0x0F),
-                    THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
-                    digits=digits,
-                )
-                for act_id, st in sorted(self.actuators.items())
-            ]
+        # All-zones actuators query B9 00 30 10 (*#4*#0*20##, *#4*0#0*20##):
+        # every zone answers for itself, as both actuators of the physical
+        # F461 bench did within 130 ms of the request.
+        if payload == b"\xb9\x00\x30\x10":
+            return self.actuator_frames(digits=digits)
+
+        # Zone actuators query A9 <Z> 30 10 (*#4*Z*20##) or A9 <80+Z> 30 10
+        # (*#4*Z#0*20## on the gateways that set the sub-address bit)
+        if b0 == 0xA9 and b1 in (addr, 0x80 + addr) and b2 == 0x30 and b3 == 0x10:
+            return self.actuator_frames(digits=digits)
 
         # Single actuator status query 99 <80+Z> 3<A> 10 (*#4*Z#A*20##)
-        if b0 == 0x99 and b1 == (0x80 + self.config.bus_addr) and b3 == 0x10:
+        if b0 == 0x99 and b1 == (0x80 + addr) and b3 == 0x10:
             act_id = b2 & 0x0F
             if act_id in self.actuators:
-                st = self.actuators[act_id]
-                return [
-                    encode_short_inbound(
-                        0xB7,
-                        b1,
-                        0x30 | act_id,
-                        THERMO_ACTUATOR_STATUS_BYTES.get(st, 0x01),
-                        digits=digits,
-                    )
-                ]
+                return [self.actuator_frame(act_id, digits=digits)]
             return []
 
         # Setpoint write 90/91/92 <Z> 3<m> <half_deg> (*#4*Z*#14*T*M##)
@@ -582,7 +612,41 @@ class ThermoZoneDevice:
         ans = bytes(
             [0xD2, self.config.bus_addr, 0x03, 0x04, 0x0E, hi, lo, self.function]
         )
-        return [encode_extended_inbound(ans, digits=digits)]
+        return [
+            encode_extended_inbound(ans, digits=digits),
+            *self._drive_active_actuator(digits=digits),
+        ]
+
+    def _drive_active_actuator(self, *, digits: int) -> list[bytes]:
+        """Switch the active season's actuator on the setpoint / temperature gap.
+
+        Heating: actuator 1 (the valve) is on (1) while the setpoint is above
+        the measured temperature, off (0) otherwise. Cooling: actuator 2 (the
+        fan coil) runs while the setpoint is below the temperature, reported
+        with the dimension 20 value of the fan speed in force (6..8 for speeds
+        1..3, 9 when the speed is automatic), 5 when off. The dimension 19
+        side of the season follows. A changed actuator reports itself with one
+        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway shows
+        as ``*#4*Z#A*20*V##``; the physical KW4691 did so 2.1-2.2 s after the
+        setpoint echo, the virtual plant answers at once.
+        """
+        if self.season == "cooling":
+            act_id = 2
+            if self.setpoint_deci < self.temp_deci:
+                state = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
+            else:
+                state = 5
+        else:
+            act_id = 1
+            state = 1 if self.setpoint_deci > self.temp_deci else 0
+        if act_id not in self.actuators or self.actuators[act_id] == state:
+            return []
+        self.actuators[act_id] = state
+        if act_id == 2:
+            self.valve_cooling = state
+        else:
+            self.valve_heating = state
+        return [self.actuator_frame(act_id, digits=digits)]
 
     def _handle_zone_query(self, probe: int, b3: int, *, digits: int) -> list[bytes]:
         if b3 == 0x00:
@@ -608,6 +672,9 @@ class ThermoZoneDevice:
             0x12: bytes([0xD2, addr, 0x03, 0x04, 0x12, self._mode_byte(), hi, lo]),
             0x0E: bytes([0xD2, addr, 0x03, 0x04, 0x0E, hi, lo, self.function]),
             0x0D: bytes([0xD2, addr, 0x03, 0x04, 0x0D, 0x00, 0x00, 0x00]),
+            # Valve status (dimension 19): the heating then the cooling output,
+            # each as the actuator status byte; the F461 2.0.11 reports them
+            # as *#4*Z*19*<cooling>*<heating>## (01 20 -> 19*5*0).
             0x13: bytes(
                 [
                     0xD2,
@@ -615,19 +682,42 @@ class ThermoZoneDevice:
                     0x03,
                     0x04,
                     0x13,
-                    0x1C + (self.valve_cooling & 0x0F),
-                    0x1C + (self.valve_heating & 0x0F),
+                    THERMO_ACTUATOR_STATUS_BYTES.get(self.valve_heating, 0x01),
+                    THERMO_ACTUATOR_STATUS_BYTES.get(self.valve_cooling, 0x01),
                     0x00,
                 ]
             ),
-            0x0B: bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00]),
         }
+        # Fan speed (dimension 11): answered only when the active season's
+        # output is a fan coil (side value >= 5). A valve side leaves the
+        # request unanswered, so the gateway NACKs on its bus timeout, as the
+        # physical KW4691 does in heating season (2.1 s on the F461 2.0.11).
+        if self._active_side() >= 5:
+            replies[0x0B] = bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00])
         if b3 in replies:
             return [encode_extended_inbound(replies[b3], digits=digits)]
         return []
 
     def handle_extended(self, payload: bytes, *, digits: int) -> list[bytes]:
-        """Handle an 8-byte D1 WHO=4 command or query."""
+        """Handle an 8-byte D1 WHO=4 command or query (D2 00 for the general form)."""
+        addr = self.config.bus_addr
+        # Humidity read (dimension 60): D1 <Z> 03 03 08 00 00 00 for *#4*Z*60##,
+        # D2 00 03 03 08 00 00 00 for *#4*0*60##. Only a zone with a humidity
+        # probe answers, D2 <Z> 03 04 08 00 00 <humidity>; the others stay
+        # silent and the gateway NACKs *#4*Z*60## on its bus timeout.
+        if (
+            payload[2:] == b"\x03\x03\x08\x00\x00\x00"
+            and (payload[0], payload[1]) in ((0xD1, addr), (0xD2, 0x00))
+            and self.humidity is not None
+        ):
+            return [
+                encode_extended_inbound(
+                    bytes(
+                        [0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity & 0xFF]
+                    ),
+                    digits=digits,
+                )
+            ]
         if (
             payload[0] == 0xD1
             and payload[1] == self.config.bus_addr

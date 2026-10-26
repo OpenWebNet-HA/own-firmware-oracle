@@ -324,7 +324,8 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert td.handle_short(bytes.fromhex("99823910"), digits=3) == []
     assert len(td.handle_short(bytes.fromhex("90023228"), digits=3)) == 1
     assert len(td.handle_short(bytes.fromhex("90023328"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("91023128"), digits=3)) == 1
+    # Cooling at 20.0 below the 24.9 measured: the echo plus the fan coil on.
+    assert len(td.handle_short(bytes.fromhex("91023128"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("92023228"), digits=3)) == 1
     assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 1
     assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 1
@@ -337,8 +338,14 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert len(td.handle_short(bytes.fromhex("99023100"), digits=3)) == 1
     assert td.handle_short(bytes.fromhex("99023900"), digits=3) == []
     assert td.handle_short(bytes.fromhex("99023112"), digits=3) == []
-    for dim_b in (0x12, 0x0E, 0x0D, 0x13, 0x0B):
+    for dim_b in (0x12, 0x0E, 0x0D, 0x13):
         assert len(td.handle_short(bytes([0x99, 0x02, 0x30, dim_b]), digits=3)) == 1
+    # Dimension 19: heating valve 0 then the fan coil as status bytes; the
+    # cooling write above left the fan coil running (2F), the physical bench's
+    # idle reply would be 01 20, reported by the F461 2.0.11 as *#4*2*19*5*0##.
+    assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
+        b"$018D202030413012F00\r"
+    ]
     assert td.handle_short(bytes.fromhex("99023099"), digits=3) == []
     assert td.handle_short(bytes.fromhex("00000000"), digits=3) == []
 
@@ -375,6 +382,196 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     fc = FaultChannel(0x74)
     assert len(fc.handle_short(0x00, 0x15, 0x00, digits=2)) == 2
     assert fc.handle_short(0x00, 0x12, 0x00, digits=2) == []
+
+
+def test_thermo_all_zones_actuator_query(tmp_path: Path) -> None:
+    # *#4*#0*20## / *#4*0#0*20## reach the bus as B9 00 30 10 (F461 2.0.11,
+    # results/F461/020011/oracle/full/thermo-zone-requests.tsv): every zone
+    # answers with the same per-actuator B7 frames as *#4*Z*20##.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    both = [b"$017B7823101\r", b"$017B7823220\r"]
+    assert td.handle_short(bytes.fromhex("B9003010"), digits=3) == both
+    assert td.handle_short(bytes.fromhex("A9023010"), digits=3) == both
+    # *#4*Z#0*20## on the gateways that set the sub-address bit: A9 <80+Z> 30 10
+    assert td.handle_short(bytes.fromhex("A9823010"), digits=3) == both
+    assert td.handle_short(bytes.fromhex("A9833010"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9003011"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9023010"), digits=3) == []
+    assert td.handle_short(bytes.fromhex("B9003010"), digits=2) == [
+        b"$17B7823101\r",
+        b"$17B7823220\r",
+    ]
+
+    # Through the responder: the f461-bench zone, then a two-zone plant where
+    # each zone answers for itself in zone order; the fixtures without zones
+    # (mh200-bench) stay silent so the gateway NACKs on its bus timeout.
+    r = PlantResponder.from_fixture("f461-bench")
+    assert r.respond(b"$004B9003010\r") == both
+    assert r.respond(b"$004A9823010\r") == both
+    assert PlantResponder.from_fixture("mh200-bench").respond(b"$004B9003010\r") == []
+    two = tmp_path / "two-zones.yaml"
+    two.write_text(
+        "name: two-zones\ngateway_product: F461\ngateway_version: '020011'\n"
+        "thermo_zones:\n  5:\n    actuators:\n      1: 1\n"
+        "  2:\n    actuators:\n      1: 0\n      2: 5\n",
+        encoding="utf-8",
+    )
+    r2 = PlantResponder.from_yaml(two)
+    assert r2.respond(b"$004B9003010\r") == [
+        b"$017B7853100\r",
+        b"$017B7823101\r",
+        b"$017B7823220\r",
+    ]
+    assert r2.respond(b"$004A9823010\r") == both
+    assert r2.respond(b"$004A9853010\r") == [b"$017B7853100\r"]
+    pic = bus.get_responder("pic:plant:f461-bench", version="020011")
+    assert pic.respond(b"$004B9003010\r") == [b"$00800\r", *both]
+
+
+def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
+    # Heating season on the f461-bench zone: the active output is the valve
+    # (dimension 19 heating side 0), so *#4*2*11## is left unanswered and the
+    # gateway NACKs on its bus timeout, as the physical KW4691 (2.1 s); the
+    # humidity probe answers *#4*2*60## with the fixture's 39 %.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(
+            zone=2, bus_addr=0x02, actuators={1: 0, 2: 5}, initial_humidity=39
+        )
+    )
+    dim11 = bytes.fromhex("9902300B")
+    dim60 = bytes.fromhex("D102030308000000")
+    dim60_all = bytes.fromhex("D200030308000000")
+    hum39 = [b"$018D202030408000027\r"]
+    assert td.season == "heating"
+    assert td.handle_short(dim11, digits=3) == []
+    assert td.handle_short(bytes.fromhex("9902303C"), digits=3) == []
+    assert td.handle_extended(dim60, digits=3) == hum39
+    assert td.handle_extended(dim60_all, digits=3) == hum39
+    assert td.handle_extended(bytes.fromhex("D103030308000000"), digits=3) == []
+    assert td.handle_extended(bytes.fromhex("D202030308000000"), digits=3) == []
+    assert td.handle_extended(bytes.fromhex("D102030308000001"), digits=3) == []
+    # Cooling (conditioning WHAT 0 or a 2xx program): the fan coil side (5)
+    # answers the fan speed, as the F461 did in cooling season.
+    for cooling_mode in (0, 202, 208):
+        td.mode = cooling_mode
+        assert td.season == "cooling"
+        assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    td.fan_speed = 3
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # Heating programs, generic modes and off keep the heating side.
+    for heating_mode in (1, 102, 108, 303, 311):
+        td.mode = heating_mode
+        assert td.season == "heating"
+        assert td.handle_short(dim11, digits=3) == []
+    # A plant whose heating output is a fan coil answers in heating season.
+    td.valve_heating = 5
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # An out-of-range fixture value is sent as a byte (review finding).
+    td.humidity = 256 + 39
+    assert td.handle_extended(dim60, digits=3) == hum39
+    # Without a humidity probe dimension 60 stays unanswered; reset restores it.
+    td.humidity = None
+    assert td.handle_extended(dim60, digits=3) == []
+    td.reset()
+    assert td.humidity == 39
+    assert td.mode == 1
+    assert td.handle_extended(dim60, digits=3) == hum39
+    assert (
+        ThermoZoneDevice(ThermoZoneConfig(zone=3, bus_addr=0x03)).handle_extended(
+            bytes.fromhex("D103030308000000"), digits=3
+        )
+        == []
+    )
+    # Through the responder: the zone read, the general read answered by the
+    # zones with a probe only, and an unrelated D2 frame left unanswered.
+    r = PlantResponder.from_fixture("f461-bench")
+    assert r.respond(b"$006D102030308000000\r") == hum39
+    assert r.respond(b"$006D200030308000000\r") == hum39
+    assert r.respond(b"$006D200010308000000\r") == []
+
+    # Fixture field: initial_humidity (f461-bench: 39) or its alias humidity.
+    bench = load_topology_yaml(
+        ROOT / "oracle" / "plant" / "fixtures" / "f461-bench.yaml"
+    )
+    assert bench.thermo_zones[2].initial_humidity == 39
+    alias = tmp_path / "alias.yaml"
+    alias.write_text(
+        "name: alias\ngateway_product: F461\ngateway_version: '020011'\n"
+        "thermo_zones:\n  2:\n    humidity: '0x28'\n  3: {}\n",
+        encoding="utf-8",
+    )
+    alias_cfg = load_topology_yaml(alias)
+    assert alias_cfg.thermo_zones[2].initial_humidity == 40
+    assert alias_cfg.thermo_zones[3].initial_humidity is None
+    r_alias = PlantResponder.from_yaml(alias)
+    assert r_alias.respond(b"$006D200030308000000\r") == [b"$018D202030408000028\r"]
+
+
+def test_thermo_setpoint_write_switches_active_actuator() -> None:
+    # f461_actuators_live_2026-10-25: at 24.0 measured, *#4*2*#14*0260*3##
+    # was followed by *#4*2#1*20*1## (valve on) and the restore to 23.5 by
+    # *#4*2#1*20*0##. The virtual zone (24.9 measured, 24.5 setpoint) does
+    # the same with the B7 82 31 <state> telegram after the setpoint echo.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    echo_26 = b"$018D20203040E010403\r"
+    assert td.handle_short(bytes.fromhex("92023034"), digits=3) == [
+        echo_26,
+        b"$017B7823100\r",
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    assert td.valve_heating == 1
+    assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
+        b"$018D202030413002000\r"
+    ]
+    # The same setpoint again: nothing changes, only the echo.
+    assert len(td.handle_short(bytes.fromhex("92023034"), digits=3)) == 1
+    # Restore 24.5 (0x31 half degrees) below 24.9: the valve reports off.
+    assert td.handle_short(bytes.fromhex("92023031"), digits=3) == [
+        b"$018D20203040E00F503\r",
+        b"$017B7823101\r",
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_heating == 0
+
+    # Cooling season (*#4*2*#14*T*2## is 91 <Z> 3x <T>): the fan coil runs
+    # while the setpoint is below the temperature, at the speed in force.
+    assert td.handle_short(bytes.fromhex("91023131"), digits=3) == [
+        b"$018D20203040E00F502\r",
+        b"$017B782322F\r",
+    ]
+    assert td.season == "cooling"
+    assert td.actuators == {1: 0, 2: 9}
+    assert td.valve_cooling == 9
+    td.fan_speed = 2
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3) == [
+        b"$018D20203040E00F002\r",
+        b"$017B7823222\r",
+    ]
+    assert td.actuators[2] == 7
+    assert td.handle_short(bytes.fromhex("91023134"), digits=3) == [
+        b"$018D20203040E010402\r",
+        b"$017B7823220\r",
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_cooling == 5
+    # Back to heating (90 <Z> 30 <T>): the valve switches on above 24.9.
+    assert td.handle_short(bytes.fromhex("90023034"), digits=3) == [
+        b"$018D20203040E010401\r",
+        b"$017B7823100\r",
+    ]
+    assert td.season == "heating"
+
+    # A zone without the season's actuator only echoes.
+    lone = ThermoZoneDevice(ThermoZoneConfig(zone=3, bus_addr=0x03, actuators={2: 5}))
+    assert len(lone.handle_short(bytes.fromhex("92033034"), digits=3)) == 1
+    assert lone.actuators == {2: 5}
+    valve_only = ThermoZoneDevice(ThermoZoneConfig(zone=4, bus_addr=0x04))
+    assert len(valve_only.handle_short(bytes.fromhex("91043130"), digits=3)) == 1
+    assert valve_only.actuators == {1: 0}
 
 
 def test_topology_loaders_and_responder(tmp_path: Path) -> None:

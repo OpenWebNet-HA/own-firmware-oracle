@@ -255,6 +255,10 @@ Also in [`plant-f461-bench.tsv`](results/F461/020011/oracle/plant-f461-bench/pla
   - Gateway emits the exact 5-frame burst on both `cmd:` and `evt:`:
     `*#4*2*0*0249## | *#4*2*12*0245*3## | *4*1*2## | *#4*2*14*0245*3## | *#4*2*13*00##`
   - Querying actuator status `down *#4*2*20##` (`$004A9023010\r`) returns both actuator states (`$017B7823101\r`, `$017B7823220\r`), which `bt_termo` translates to `cmd:*#4*2#1*20*0## | evt:*#4*2#1*20*0## | evt:*#4*2#2*20*5##`.
+- **Actuator / fan-coil / setpoint flow of the physical F461 bench (`WHO=4`, zone `2` with a heating valve as actuator `1` and a fan coil as actuator `2`)**, the second half of the same suite:
+  - The all-zones request `down *#4*#0*20##` (`$004B9003010\r`) is answered by every zone for itself (`$017B7823101\r`, `$017B7823220\r`) and reported on both sessions (`cmd:*#4*2#1*20*0## | cmd:*#4*2#2*20*5##`); `*#4*2#0*20##` reaches the bus as the same `$004A9023010\r` as `*#4*2*20##`.
+  - `down *#4*2*19##` (`$00499023013\r`) is answered with the heating then the cooling output as actuator status bytes (`$018D202030413012000\r`), which `bt_termo` reports as `*#4*2*19*5*0##`; `down *#4*2*11##` is left unanswered by the valve side in heating season and the gateway `nack`s on its bus timeout, while in cooling season (`*#4*2*#14*0260*2##`) the fan-coil side answers (`$018D20203040B000000\r` -> `*#4*2*11*0##`); `down *#4*2*60##` is an extended read (`$006D102030308000000\r`) that the zone's humidity probe answers with `$018D202030408000027\r` -> `*#4*2*60*39##`.
+  - `down *#4*2*#14*0260*3##` (`$00492023034\r`, 26.0 above the measured 24.9) is echoed (`$018D20203040E010403\r`) and the valve reports itself on (`$017B7823100\r` -> `evt:*#4*2#1*20*1##`); the restore `*#4*2*#14*0245*3##` switches it off (`$017B7823101\r` -> `evt:*#4*2#1*20*0##`), and the following `*#4*2*20##` polls show the new state. The physical plant does the same 2.1-2.2 s after the echo (MyHOME fixture `f461_actuators_live_2026-10-25`); the thermostat's delay is not reproduced.
 
 #### Example 3: Non-Linear Hardware Dimmers (`F414` & `F418U2`) & `WHAT=19` Fault Co-occurrence (`MH200/020102`)
 
