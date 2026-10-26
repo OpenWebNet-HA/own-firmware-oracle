@@ -28,8 +28,9 @@ down  *#1*99##
 ; all-zones and Z#0 actuator requests, the season-gated fan speed, the humidity
 ; probe, a setpoint write above the measured 24.9 that switches the heating valve
 ; on and the restore to 24.5 that switches it off; then the same requests in
-; cooling season (fan speed answered) and the return to heating with the
-; fixture's generic function 3.
+; cooling season (fan speed answered), the return to heating with the manual
+; heating write *#4*2*#14*0245*1## (the generic function 3 write that follows
+; keeps the season, see below) and the actuator poll.
 down  *#4*#0*20##
 down  *#4*2#0*20##
 down  *#4*2*19##
@@ -45,4 +46,45 @@ down  *#4*2*19##
 down  *#4*2*#14*0245*1##
 down  *#4*2*11##
 down  *#4*2*#14*0245*3##
+down  *#4*2*20##
+; Season and the generic write, after the live F461 2.0.11 bench of 2026-10-26
+; (reports/data/live_scan_confirm_2026-10-26, zone 2 at 23.9-24.0): a cooling
+; write with the room below the target switched the season (*4*0*2##) with no
+; demand (*#4*2*19*5*0##, actuator 1 off, fan coil 5), and the generic write
+; *#4*2*#14*T*3## that followed left the zone in cooling with no season event;
+; the mode byte of dimensions 12 and 14 stayed 3 throughout. The plant's room is
+; 24.9, so the no-demand cooling write here is 26.0.
+down  *#4*2*#14*0260*2##
+down  *#4*2##
+down  *#4*2*19##
+down  *#4*2*20##
+down  *#4*2*#14*0260*3##
+down  *#4*2##
+down  *#4*2*19##
+down  *#4*2*20##
+; Emulation only (no physical row): a cooling write below the room drives the
+; fan coil (automatic speed, status 9), a fan speed write moves the running fan
+; coil to the written speed, and a generic write under cooling demand keeps
+; both the season and the fan coil.
+down  *#4*2*#14*0240*2##
+down  *#4*2*20##
+down  *#4*2*19##
+down  *#4*2*11##
+down  *#4*2*#11*2##
+down  *#4*2*20##
+down  *#4*2*11##
+down  *#4*2*#14*0240*3##
+down  *#4*2*20##
+; Emulation only: a heating demand switches the valve on and the OFF mode write
+; *4*303*2## releases both outputs (the central form *4*303*#2## left the
+; standalone physical zone unchanged). Then back to the fixture state: manual
+; heating 24.5, fan speed automatic.
+down  *#4*2*#14*0260*1##
+down  *#4*2*20##
+down  *4*303*2##
+down  *#4*2*20##
+down  *#4*2*19##
+down  *#4*2*12##
+down  *#4*2*#14*0245*1##
+down  *#4*2*#11*0##
 down  *#4*2*20##
