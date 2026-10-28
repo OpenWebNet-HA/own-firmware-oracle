@@ -1,0 +1,26 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-dim22
+# suite_sha256=fe5b990d3a9367d5e1e99d7de204364633c0c5436ba476c5510bd0238ec7f284
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#4*#0*22##	nack	silent	-
+down	*#4*0*22##	nack	silent	-
+down	*#4*2#1*#22*1*0215*2*0##	nack	silent	-
+down	*#4*2#1*22##	nack	silent	-
+down	*#4*2*#22*1*0215*2*0##	nack	silent	-
+down	*#4*2*22##	nack	silent	-
+down	*#4*3#2#1*#22*1*0215*2*0##	nack	silent	-
+down	*#4*3#2#1*22##	nack	silent	-
+down	*#4*45#1*#22*0***##	nack	silent	-
+down	*#4*45#1*#22*3**1*1##	nack	silent	-
+down	*#4*45#1*#22*4**1*1##	nack	silent	-

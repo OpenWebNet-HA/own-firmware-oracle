@@ -1,0 +1,38 @@
+; WHO 4 DIMENSION 22 (split-unit control): which syntactic forms the
+; thermoregulation daemon of each gateway forwards, refuses or dies on.
+;
+; Background: OWNd#136 refuses every WHO 4 DIMENSION 22 frame on the strength
+; of the two crash frames recorded for F461 020011 in
+; tools/expected_divergences.yaml (`*#4*2*22##`, `*#4*#0*22##`). The
+; Encyclopedia (functional/who-4-temperature-control/dimensions.md,
+; "DIMENSION 22 - split control") publishes the split forms only:
+;   *#4*3#Z#N*22##                    request   (Z = 0..99, N = 1..9)
+;   *#4*3#Z#N*#22*MOD*SP*VEL*SWING##  write     (MOD 0..5, SP tenths of a
+;                                               degree, VEL 0..4, SWING 0/1)
+; and records the touchscreen's partial writes `*#4*45#1*#22*3**1*1##`,
+; `*#4*45#1*#22*4**1*1##` and OFF `*#4*45#1*#22*0***##` (empty fields for
+; omitted values). No committed oracle row has replayed DIMENSION 22 yet.
+;
+; Question: does only the zone / central form crash the daemon, or does any
+; DIMENSION 22 frame? Each frame below is one independent step (the harness
+; gives every step a fresh daemon stack under the default reset=each and
+; restarts after a crash), so no crash can mask another frame's verdict; the
+; two known F461 crash frames are listed last for the reader.
+;
+; Published split forms (Encyclopedia):
+down *#4*3#2#1*22##
+down *#4*3#2#1*#22*1*0215*2*0##
+; Touchscreen partial writes and OFF (Encyclopedia, implementation evidence):
+down *#4*45#1*#22*3**1*1##
+down *#4*45#1*#22*4**1*1##
+down *#4*45#1*#22*0***##
+; Actuator-form read and write without the `3#` prefix:
+down *#4*2#1*22##
+down *#4*2#1*#22*1*0215*2*0##
+; Zone-form write, general read:
+down *#4*2*#22*1*0215*2*0##
+down *#4*0*22##
+; Zone-form read and central read: the two F461 020011 crash frames of
+; tools/expected_divergences.yaml (OWNd#136).
+down *#4*2*22##
+down *#4*#0*22##
