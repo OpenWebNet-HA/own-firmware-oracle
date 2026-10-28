@@ -76,6 +76,12 @@ clock_or_crash_known:
     - product: "F461"
       frame: "*#4*#0*22##"
       reason: "Known bt_termo daemon crash on WHO=4 DIMENSION 22 in F461 020011."
+    - product: "F461"
+      frame: "*#4*2*#22*1*0215*2*0##"
+      reason: "bt_termo SIGSEGV on the zone-form DIMENSION 22 write in F461 020011 (thermo-dim22 suite, findings/thermo-dim22.md)."
+    - product: "F461"
+      frame: "*#4*0*22##"
+      reason: "bt_termo SIGSEGV on the general DIMENSION 22 read in F461 020011 (thermo-dim22 suite, findings/thermo-dim22.md)."
   out_of_scope_frames:
     - "*#1*04##"
     - "*2*1*05##"
