@@ -1,0 +1,26 @@
+# product=F453
+# version=010100
+# image_sha256=da02a317e44827beef0b51fd65e4fdf4f53f36865eec85dbca130c14685ed626
+# harness=full
+# target_sha256=590e19455cf9a2d5bff2eeec26aa6498a1e8e270dbced4c62a4a3cac96e97e78
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-dim22
+# suite_sha256=fe5b990d3a9367d5e1e99d7de204364633c0c5436ba476c5510bd0238ec7f284
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#4*#0*22##	nack	crash	-
+down	*#4*0*22##	nack	crash	-
+down	*#4*2#1*#22*1*0215*2*0##	nack	silent	-
+down	*#4*2#1*22##	nack	silent	-
+down	*#4*2*#22*1*0215*2*0##	nack	crash	-
+down	*#4*2*22##	nack	crash	-
+down	*#4*3#2#1*#22*1*0215*2*0##	ack	out	bus:24 30 36 44 31 38 32 31 33 30 32 31 36 31 32 30 31 32 42 0d
+down	*#4*3#2#1*22##	nack	out	bus:24 30 36 44 31 38 32 31 33 30 33 31 36 30 30 30 30 30 30 0d
+down	*#4*45#1*#22*0***##	nack	silent	-
+down	*#4*45#1*#22*3**1*1##	nack	silent	-
+down	*#4*45#1*#22*4**1*1##	nack	silent	-
