@@ -96,14 +96,19 @@ Same decoding as [`thermo-zone-requests.md`](thermo-zone-requests.md)
 `0x80 + Z` (`82` for zone 2, `AD` = `0x80 + 45` for the touchscreen's zone 45),
 the second is the actuator token (`13` for `N = 1`; only `N = 1` was tested),
 then `03` for a read or `02` for a write, then `16` = 22, the dimension. **The
-`3#` prefix is not a bus token**: MH202 emits byte-identical telegrams for
-`3#2#1` and `2#1`. On every forwarding gateway the split forms address local
-zone Z, actuator N on the main bus, dimension 22; nothing goes through an
-interface. Write payload, from three samples only: third byte `2B` = 43 =
-21.5 °C in half-degree units for `SP=0215` (`00` when SP is empty), second
-byte `01` / `03` / `04` = MOD, first byte `12` for `VEL=2, SWING=0` and `01`
-for `VEL=1, SWING=1`; the fan / swing packing is not resolvable from two
-samples. No gateway produced a reply frame (empty bus, no split unit
+`3#` prefix is not serialised into the telegram**: MH202 emits byte-identical
+telegrams for `3#2#1` and `2#1`, for the one `Z=2, N=1` pair tested. It still
+matters to the translators: on the nine other forwarding gateways the
+prefix-less `2#1` forms are `nack, silent`, so the prefix decides acceptance
+even though it leaves no trace on the bus. On every forwarding gateway the
+split forms address local zone Z, actuator N on the main bus, dimension 22;
+nothing goes through an interface. Write payload, from three samples only:
+the third byte `2B` = 43 is consistent with `SP=0215` in half-degree units
+(21.5 °C), and is `00` in the two writes whose SP field is empty; one value
+does not establish the conversion, and no other oracle row covers it. The
+second byte `01` / `03` / `04` tracks MOD; the first byte is `12` for
+`VEL=2, SWING=0` and `01` for `VEL=1, SWING=1`, so the fan / swing packing is
+not resolvable from two samples. No gateway produced a reply frame (empty bus, no split unit
 emulated), so the read-back format is untested.
 
 **By gateway class.** The nine crashing gateways have identical rows except
@@ -118,17 +123,24 @@ twelve.
 
 **The stack came back after every crash.** No kept run log has a failed
 restart, and the F461 shared-stack pass gave the same rows after each of the
-four crashes. In the emulation the harness restarts `bt_termo`; on a real F461
-the supervisor's reaction is what the user observed as a reboot, and that
-supervisor is not part of the emulated stack.
+four crashes. In the emulation the harness restarts `bt_termo`. A physical
+F461 `2.0.11` rebooted on `*#4*2*22##` (OWNd#136); whether that reboot is the
+supervisor's reaction to this `bt_termo` crash is not established here, since
+the supervisor is not part of the emulated stack.
 
 ## Consequence for clients
 
-A guard that refuses WHO 4 DIMENSION 22 only when the WHERE has no actuator
-token (`Z`, `0`, `0ZZ`, `#0`, `#Z`) covers every crash row observed here;
-refusing the published split forms `3#Z#N` and the actuator forms `Z#N` as
-well (OWNd#136) is wider than the evidence. That narrows the technical claim;
-it does not by itself make sending DIMENSION 22 to a physical F461 advisable.
+Every crash row observed here has a WHERE without an actuator token (`Z`,
+`0`, `#0`), and no row with an actuator token (`3#Z#N`, `Z#N`, tested with
+`Z=2`, `N=1`, and the touchscreen's `45#1`) crashed. A guard that refuses
+DIMENSION 22 for those three WHERE classes covers every observed crash;
+refusing the published split forms as well (OWNd#136) is wider than the
+evidence. The forms `0ZZ` and `#Z` have no rows in this suite: a client that
+adds them to the refused set does so as a conservative, untested extension,
+not on oracle coverage, and the rows do not clear WHERE spellings, zones,
+actuator numbers or payloads the suite did not send. That narrows the
+technical claim; it does not by itself make sending DIMENSION 22 to a
+physical F461 advisable.
 
 ## What the suite does not settle
 
