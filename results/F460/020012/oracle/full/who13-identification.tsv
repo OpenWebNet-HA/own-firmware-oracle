@@ -1,0 +1,24 @@
+# product=F460
+# version=020012
+# image_sha256=b5a50d606578f47ecbf0d327d7078b1357abb78425ea821ce743cd486b801b26
+# harness=full
+# target_sha256=3822230ea71018536bcdd90008f0c44f39fd326da1ca48da76e9e69c5fa866f2
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-identification
+# suite_sha256=99fa591dd8a72109824799045d5ee26d54205f5063265e80c80c57b873a325e5
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1013**1##	ack	out	own:*#1013**1*0*0*0*0##
+down	*#1013*0*1##	ack	out	own:*#1013**1*0*0*0*0##
+down	*#13**10##	ack	out	own:*#13**10*192*168*1*1##
+down	*#13**11##	ack	out	own:*#13**11*255*255*255*0##
+down	*#13**12##	ack	out	own:*#13**12*0*0*0*0##
+down	*#13**15##	ack	out	own:*#13**15*200##
+down	*#13**16##	ack	out	own:*#13**16*2*0*12##
+down	*#13**23##	ack	out	own:*#13**23*4*14*78##
+down	*#13**24##	ack	out	own:*#13**24*##
