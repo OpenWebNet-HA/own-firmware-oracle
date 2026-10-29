@@ -15,7 +15,7 @@ if str(ROOT / "tools") not in sys.path:
 import check
 import pic_spike
 import plant_index
-from oracle import bus, driver, plant, qemu_target, record, target
+from oracle import bus, cases, driver, plant, qemu_target, record, target
 from oracle import run as oracle_run
 from oracle.plant import (
     CoverConfig,
@@ -1046,7 +1046,7 @@ def test_needs_device_txack() -> None:
     assert bus.pic_v8_mode("12") is False
 
 
-def test_bus_and_driver_plant_integration() -> None:
+def test_bus_and_driver_plant_integration(tmp_path: Path) -> None:
     assert bus.PicResponder(version="12")._is_2digit_v8() is False
     # PicResponder with PlantResponder (3-digit and 2-digit v8)
     r3 = bus.get_responder("pic:plant:f461-bench", version="020011")
@@ -1155,6 +1155,45 @@ def test_bus_and_driver_plant_integration() -> None:
     oracle_run.apply_plant_flag(ns2)
     assert ns2.harness == "plant:custom"
     assert ns2.responder == "pic:custom"
+    # A fixture path outside oracle/plant/fixtures/ keeps its path in the
+    # responder (the harness, a result directory name, takes the stem), and
+    # the header hashes the responder's fixture when it names one.
+    custom = tmp_path / "custom.yaml"
+    custom.write_text(
+        (ROOT / "oracle" / "plant" / "fixtures" / "mh200-bench.yaml").read_text(
+            encoding="utf-8"
+        )
+        + "\n# custom copy\n",
+        encoding="utf-8",
+    )
+    ns3 = argparse.Namespace(plant=str(custom), harness="full", responder=None)
+    oracle_run.apply_plant_flag(ns3)
+    assert ns3.harness == "plant:custom"
+    assert ns3.responder == f"pic:plant:{custom}"
+    # The live responder is named after the fixture's own name, so the
+    # header takes the fixture from the descriptor as typed.
+    assert bus.get_responder(ns3.responder, version="020102").name == (
+        "pic:plant:mh200-bench"
+    )
+    assert oracle_run.plant_of_responder(ns3.responder) == str(custom)
+    assert oracle_run.plant_of_responder("plant:f461-bench") == "f461-bench"
+    assert oracle_run.plant_of_responder("pic") is None
+    assert oracle_run.plant_of_responder(None) is None
+    suite = cases.load(ROOT / "oracle" / "plant_cases" / "plant-mh200-bench.seq")
+    args = (spec, "plant:custom", "0" * 64, "0", "line", "pic:plant:mh200-bench")
+    header = oracle_run.suite_header(*args, 3000.0, suite, plant=str(custom))
+    assert header["plant_sha256"] == fixture_sha256(str(custom))
+    assert header["plant_sha256"] != fixture_sha256("mh200-bench")
+    # --responder pic:plant:X next to a different --harness: X is hashed;
+    # without a plant descriptor the harness's fixture is.
+    args = (spec, "plant:f461-bench", "0" * 64, "0", "line", "pic:plant:mh200-bench")
+    header = oracle_run.suite_header(*args, 3000.0, suite, plant="mh200-bench")
+    assert header["plant_sha256"] == fixture_sha256("mh200-bench")
+    header = oracle_run.suite_header(*args[:5], "pic", 3000.0, suite)
+    assert header["plant_sha256"] == fixture_sha256("f461-bench")
+    assert "plant_sha256" not in oracle_run.suite_header(
+        spec, "full", "0" * 64, "each", "line", "pic", 3000.0, suite
+    )
 
 
 def test_check_trace_and_f461_extractors(tmp_path: Path) -> None:
