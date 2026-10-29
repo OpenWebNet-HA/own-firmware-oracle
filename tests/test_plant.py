@@ -516,7 +516,18 @@ def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
     # config itself so that no loader can bypass it.
     with pytest.raises(ValueError, match="initial_humidity 295"):
         ThermoZoneConfig(zone=2, bus_addr=0x02, initial_humidity=295)
-    for bad in ("295", "-1", "'0x65'"):
+    # bool is an int subclass: True would have passed as a 1 % probe. The
+    # config rejects it and every non-int, whatever loader built it.
+    for bad_value in (True, False, 39.5, "39"):
+        with pytest.raises(ValueError, match="initial_humidity"):
+            ThermoZoneConfig(
+                zone=2,
+                bus_addr=0x02,
+                initial_humidity=bad_value,  # type: ignore[arg-type]
+            )
+    # The YAML loader parses the value strictly instead of defaulting to 0:
+    # out of range, a bool, a float, a malformed string and a list all fail.
+    for bad in ("295", "-1", "'0x65'", "true", "false", "39.5", "150.5", "'39%'", "[]"):
         bad_yaml = tmp_path / "bad_humidity.yaml"
         bad_yaml.write_text(
             "name: bad\ngateway_product: F461\ngateway_version: '020011'\n"

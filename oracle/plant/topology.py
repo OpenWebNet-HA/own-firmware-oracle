@@ -71,6 +71,24 @@ def _int_val(val: Any, default: int = 0) -> int:
     return default
 
 
+def _strict_int(val: Any, what: str) -> int:
+    """Parse a fixture value that must be an integer; anything else is an error.
+
+    Unlike ``_int_val`` there is no default: a bool, a float, a string that
+    is not a decimal or ``0x`` integer, or a non-scalar raises ``ValueError``
+    naming ``what`` instead of silently becoming 0.
+    """
+    if isinstance(val, int) and not isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        s = val.strip()
+        try:
+            return int(s, 16) if s.lower().startswith("0x") else int(s, 10)
+        except ValueError:
+            pass
+    raise ValueError(f"{what}: {val!r} is not an integer")
+
+
 def _parse_yaml_lights(raw_lights: Any) -> dict[str, LightConfig]:
     lights: dict[str, LightConfig] = {}
     if isinstance(raw_lights, dict):
@@ -183,7 +201,11 @@ def _parse_yaml_thermo(raw_thermo: Any) -> dict[int, ThermoZoneConfig]:
                 actuators=act_map,
                 initial_fan_speed=_int_val(c.get("initial_fan_speed"), 0),
                 probes=probes,
-                initial_humidity=None if hum_raw is None else _int_val(hum_raw),
+                initial_humidity=(
+                    None
+                    if hum_raw is None
+                    else _strict_int(hum_raw, f"thermo zone {z}: initial_humidity")
+                ),
             )
     return thermo_zones
 
