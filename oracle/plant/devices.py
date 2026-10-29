@@ -602,9 +602,15 @@ class ThermoZoneDevice:
         # temperature gap like a setpoint write does and, like a setpoint
         # write that changes the season, releases the other season's output
         # (_drive_active_actuator, after the f461_live_2026-10-15 captures).
-        # Emulation only: the zone form *4*303*2## has no physical
-        # row (the central form *4*303*#2## leaves the standalone KW4691 of
-        # the F461 bench unchanged, reports/data/live_scan_confirm_2026-10-26).
+        # Physical boundary (MyHOME fixture f461_live_2026-10-15,
+        # run3_climate, F461 2.0.11 + KW4691 + F430/2 as 2#1 + F430/4 as
+        # 2#2): the zone form *4*303*2## was sent at t=163.537 while 2#2 was
+        # running (20*8); the F461 ACKed and emitted *4*303*2##,
+        # *#4*2*12*0230*3##, *4*303*2##, *#4*2*0*0241##, and 2.8 s later the
+        # KW4691 released 2#2 (*#4*2#2*#20*5##, *#4*2#2*20*5## at t=166.446).
+        # The virtual zone releases at once. The central form *4*303*#2##
+        # addresses a 4/99-zone central unit absent on that bench and left
+        # the standalone zone unchanged (live_scan_confirm_2026-10-26).
         if b0 == 0x93 and b1 == self.config.bus_addr and b2 == 0x30:
             return self._handle_mode_write(b3, digits=digits)
 
@@ -770,6 +776,18 @@ class ThermoZoneDevice:
         # output is a fan coil (side value >= 5). A valve side leaves the
         # request unanswered, so the gateway NACKs on its bus timeout, as the
         # physical KW4691 does in heating season (2.1 s on the F461 2.0.11).
+        # Physical boundary of the fan coil rows (f461_live_2026-10-15,
+        # run3_climate): the cooling demand *#4*2*#14*0230*2## below 24.1 °C
+        # (t=137.4..140.4) was captured on the discrete 3-relay F430/4 (2#2)
+        # with the speed automatic (11*0), where the KW4691 PI loop drove
+        # speed 3 (*#4*2#2*20*8##, *#4*2*19*8*0##); the 0x2F -> 20*9 the
+        # virtual fan coil reports for the automatic speed is the modulating
+        # ("ON automatic") status byte bt_termo decodes (ownkb:claim:c003281),
+        # not a value that bench produced. *#4*2*#11*1..3,0## (t=324.972..
+        # 336.783) were ACKed, echoed as *#4*2*11*S## and persisted by the
+        # physical KW4691 with the zone OFF; a #11 write while 2#2 was
+        # running was not exercised live, so the running fan coil following
+        # the written speed is clean-room.
         if self._active_side() >= 5:
             replies[0x0B] = bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00])
         if b3 in replies:
@@ -783,9 +801,10 @@ class ThermoZoneDevice:
         # D2 00 03 03 08 00 00 00 for *#4*0*60##. Only a zone with a humidity
         # probe answers, D2 <Z> 03 04 08 00 00 <humidity>; the others stay
         # silent, and the harness answers the unanswered extended read with an
-        # immediate $000 (no TX-ACK, oracle/bus.py), which the gateway reports
-        # as a NACK for *#4*Z*60##. The physical bus timeout is not emulated
-        # for extended reads, and no fixture has a probe-less zone yet.
+        # immediate $000 / $00 (3-digit / 2-digit PIC target, no TX-ACK,
+        # oracle/bus.py), which the gateway reports as a NACK for *#4*Z*60##.
+        # The physical bus timeout is not emulated for extended reads, and no
+        # fixture has a probe-less zone yet.
         if (
             payload[2:] == b"\x03\x03\x08\x00\x00\x00"
             and (payload[0], payload[1]) in ((0xD1, addr), (0xD2, 0x00))

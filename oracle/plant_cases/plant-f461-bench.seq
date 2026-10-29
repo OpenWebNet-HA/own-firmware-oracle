@@ -62,10 +62,18 @@ down  *#4*2*#14*0260*3##
 down  *#4*2##
 down  *#4*2*19##
 down  *#4*2*20##
-; Emulation only (no physical row): a cooling write below the room drives the
-; fan coil (automatic speed, status 9), a fan speed write moves the running fan
-; coil to the written speed, and a generic write under cooling demand keeps
-; both the season and the fan coil.
+; Fan coil rows. Physical boundary (MyHOME fixture f461_live_2026-10-15,
+; run3_climate, F461 2.0.11 + KW4691 + F430/2 as 2#1 + F430/4 as 2#2): the
+; cooling demand *#4*2*#14*0230*2## below 24.1 (t=137.4..140.4) was captured on
+; the discrete 3-relay F430/4 with the speed automatic (11*0), where the KW4691
+; PI loop drove speed 3 (*#4*2#2*20*8##, *#4*2*19*8*0##); the 20*9 the virtual
+; fan coil reports for the automatic speed is the modulating status byte 0x2F
+; bt_termo decodes (ownkb:claim:c003281), not a value that bench produced.
+; *#4*2*#11*1..3,0## (t=324.972..336.783) were ACKed, echoed as *#4*2*11*S## and
+; persisted by the physical KW4691 with the zone OFF; a #11 write while 2#2 was
+; running was not exercised live, so the running fan coil following the written
+; speed is clean-room, as is the generic write under cooling demand keeping the
+; fan coil.
 down  *#4*2*#14*0240*2##
 down  *#4*2*20##
 down  *#4*2*19##
@@ -75,10 +83,17 @@ down  *#4*2*20##
 down  *#4*2*11##
 down  *#4*2*#14*0240*3##
 down  *#4*2*20##
-; Emulation only: a heating demand switches the valve on and the OFF mode write
-; *4*303*2## releases both outputs (the central form *4*303*#2## left the
-; standalone physical zone unchanged). Then back to the fixture state: manual
-; heating 24.5, fan speed automatic.
+; Season switch and OFF. Physical boundary (f461_live_2026-10-15): the switch
+; to heating with the cooling fan coil running released it to 20*5
+; (probe_followup t=80.437..82.905), the switch to cooling with the heating
+; valve on released it to 20*0 / 19*5*0 (probe_fancoil t=9.446..16.536), so the
+; heating demand here releases 2#2 before 2#1 switches on; *4*303*2## was sent
+; while 2#2 ran (20*8, run3_climate t=163.537), the F461 ACKed and emitted
+; *4*303*2##, *#4*2*12*0230*3##, *4*303*2##, *#4*2*0*0241##, and 2.8 s later the
+; KW4691 released 2#2 to 20*5 (t=166.446); here OFF releases the valve the
+; heating demand switched on. The central form *4*303*#2## left the standalone
+; zone unchanged (2026-10-26). Then back to the fixture state: manual heating
+; 24.5, fan speed automatic.
 down  *#4*2*#14*0260*1##
 down  *#4*2*20##
 down  *4*303*2##
