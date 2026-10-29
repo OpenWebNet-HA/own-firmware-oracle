@@ -579,10 +579,10 @@ class ThermoZoneDevice:
         # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##). The outputs follow the
         # new mode: OFF (303) releases every actuator of the zone, any other
         # mode drives the active season's actuator on the setpoint /
-        # temperature gap like a setpoint write does, and like a setpoint
-        # write that changes the season it leaves the other season's output
-        # where it was (no capture shows what the KW4691 does to the inactive
-        # output). Emulation only: the zone form *4*303*2## has no physical
+        # temperature gap like a setpoint write does and, like a setpoint
+        # write that changes the season, releases the other season's output
+        # (_drive_active_actuator, after the f461_live_2026-10-15 captures).
+        # Emulation only: the zone form *4*303*2## has no physical
         # row (the central form *4*303*#2## leaves the standalone KW4691 of
         # the F461 bench unchanged, reports/data/live_scan_confirm_2026-10-26).
         if b0 == 0x93 and b1 == self.config.bus_addr and b2 == 0x30:
@@ -637,28 +637,45 @@ class ThermoZoneDevice:
         ]
 
     def _drive_active_actuator(self, *, digits: int) -> list[bytes]:
-        """Switch the active season's actuator on the setpoint / temperature gap.
+        """Drive the active season's actuator and release the other season's.
 
-        Heating: actuator 1 (the valve) is on (1) while the setpoint is above
-        the measured temperature, off (0) otherwise. Cooling: actuator 2 (the
-        fan coil) runs while the setpoint is below the temperature, reported
-        with the dimension 20 value of the fan speed in force (6..8 for speeds
-        1..3, 9 when the speed is automatic), 5 when off. The dimension 19
-        side of the season follows. A changed actuator reports itself with one
-        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway shows
-        as ``*#4*Z#A*20*V##``; the physical KW4691 did so 2.1-2.2 s after the
-        setpoint echo, the virtual plant answers at once.
+        The demand is the setpoint / temperature gap: heating while the
+        setpoint is above the measured temperature, cooling while it is below.
+        The active output is actuator 1 in heating and actuator 2 in cooling;
+        a binary valve (dimension 20 value below 5) switches to 1 / 0, a fan
+        coil (5 and above) runs at the speed in force (6..8 for speeds 1..3, 9
+        when the speed is automatic) or rests at 5. Either season may drive
+        either kind of output, so a heating-side fan coil keeps its 5..9
+        values and goes on answering dimension 11. The inactive season's
+        output is released (valve 0, fan coil 5) first, so the two outputs
+        are never on together: on the physical KW4691 of the F461 2.0.11
+        bench (MyHOME fixture ``f461_live_2026-10-15``) the switch to heating
+        ``*4*1*2##`` with the cooling fan coil 2#2 running released it to
+        ``*#4*2#2*20*5##`` (``probe_followup`` t=80.437..82.905), and the
+        switch to cooling ``*4*0*2##`` with the heating valve 2#1 on released
+        it to ``*#4*2#1*20*0##`` / ``*#4*2*19*5*0##`` (``probe_fancoil``
+        t=9.446..16.536). A changed actuator reports itself with one
+        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway
+        shows as ``*#4*Z#A*20*V##``, the release before the drive; the
+        physical thermostat did so 1-2 s after the echo, the virtual plant
+        answers at once.
         """
         if self.season == "cooling":
-            act_id = 2
-            if self.setpoint_deci < self.temp_deci:
-                state = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
-            else:
-                state = 5
+            active_id, inactive_id = 2, 1
+            demand = self.setpoint_deci < self.temp_deci
         else:
-            act_id = 1
-            state = 1 if self.setpoint_deci > self.temp_deci else 0
-        return self._set_actuator(act_id, state, digits=digits)
+            active_id, inactive_id = 1, 2
+            demand = self.setpoint_deci > self.temp_deci
+        if self.actuators.get(active_id, self._active_side()) >= 5:
+            speed = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
+            active_state = speed if demand else 5
+        else:
+            active_state = 1 if demand else 0
+        inactive_off = 5 if self.actuators.get(inactive_id, 0) >= 5 else 0
+        return [
+            *self._set_actuator(inactive_id, inactive_off, digits=digits),
+            *self._set_actuator(active_id, active_state, digits=digits),
+        ]
 
     def _set_actuator(self, act_id: int, state: int, *, digits: int) -> list[bytes]:
         """Move actuator ``act_id`` to ``state``; report it when it changed."""

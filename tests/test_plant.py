@@ -328,9 +328,11 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     # Cooling at 20.0 below the 24.9 measured: the echo plus the fan coil on.
     assert len(td.handle_short(bytes.fromhex("91023128"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("92023228"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 1
-    # OFF releases the running fan coil: the echo plus the fan coil off.
+    # Manual heating releases the running fan coil (no heating demand at
+    # 20.0 below 25.0): the echo plus the fan coil off; manual cooling starts
+    # it again, and OFF releases it.
+    assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 2
+    assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("93023099"), digits=3)) == 1
 
@@ -623,11 +625,13 @@ def test_thermo_mode_and_fan_speed_writes_drive_actuators() -> None:
         b"$017B7823100\r",
     ]
     assert td.actuators == {1: 1, 2: 5}
-    # Cooling demand (24.0 below 24.9): the fan coil runs, automatic speed.
+    # Cooling demand (24.0 below 24.9): the heating valve is released first,
+    # then the fan coil runs at the automatic speed.
     assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
-        b"$017B782322F\r"
+        b"$017B7823101\r",
+        b"$017B782322F\r",
     ]
-    assert td.actuators == {1: 1, 2: 9}
+    assert td.actuators == {1: 0, 2: 9}
     # Fan speed write *#4*2*#11*2## (D1 <Z> 03 02 0B 02): the dimension 11
     # echo, then the running fan coil at speed 2 (dimension 20 value 7).
     assert td.handle_extended(bytes.fromhex("D10203020B020000"), digits=3) == [
@@ -644,10 +648,8 @@ def test_thermo_mode_and_fan_speed_writes_drive_actuators() -> None:
     assert td.handle_extended(bytes.fromhex("D10203020B000000"), digits=3)[1:] == [
         b"$017B782322F\r"
     ]
-    # OFF with both outputs on (the valve was left on by the season change):
-    # both are released, lowest actuator first.
+    # OFF with the fan coil running: it is released.
     assert td.handle_short(bytes.fromhex("9302300F"), digits=3)[1:] == [
-        b"$017B7823101\r",
         b"$017B7823220\r",
     ]
     assert td.actuators == {1: 0, 2: 5}
@@ -1491,3 +1493,103 @@ def test_pic_spike_and_plant_index(
         )
         == 1
     )
+
+
+def test_thermo_season_switch_releases_inactive_actuator() -> None:
+    # f461_live_2026-10-15 on the physical F461 2.0.11 + KW4691 bench: the
+    # switch to heating with the cooling fan coil 2#2 running released it
+    # (*#4*2#2*20*5##, probe_followup t=80.437..82.905), and the switch to
+    # cooling with the heating valve 2#1 on released it (*#4*2#1*20*0##,
+    # *#4*2*19*5*0##, probe_fancoil t=9.446..16.536). The virtual zone never
+    # reports both outputs on together.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim19 = bytes.fromhex("99023013")
+    # Cooling demand at speed 2 (24.0 below 24.9): the fan coil runs at 7.
+    td.fan_speed = 2
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B7823222\r"
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+    # Cooling -> heating with a heating demand (26.0 above 24.9): the fan
+    # coil is released to 5 before the valve switches on, and dimension 19
+    # shows the valve on and the fan coil off.
+    assert td.handle_short(bytes.fromhex("90023034"), digits=3) == [
+        b"$018D20203040E010401\r",
+        b"$017B7823220\r",
+        b"$017B7823100\r",
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    assert td.valve_heating == 1
+    assert td.valve_cooling == 5
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413002000\r"]
+    # Heating -> cooling with the valve on and a cooling demand: the valve
+    # is released to 0, then the fan coil runs.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3) == [
+        b"$018D20203040E00F002\r",
+        b"$017B7823101\r",
+        b"$017B7823222\r",
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413012200\r"]
+    # The mode write does the same as the setpoint write: *4*1*2## with the
+    # fan coil running and no heating demand (24.0 below 24.9) only releases
+    # the fan coil; *4*0*2## starts it again.
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3)[1:] == [
+        b"$017B7823220\r"
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3)[1:] == [
+        b"$017B7823222\r"
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+
+
+def test_thermo_heating_fan_coil_survives_fan_speed_write() -> None:
+    # A plant whose heating output is a fan coil (dimension 19 heating side
+    # 5..9) keeps it through *#4*Z*#11*S##: the speed write moves the running
+    # fan coil to the written speed instead of clobbering it to a valve's
+    # 0 / 1, and dimension 11 keeps answering.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(
+            zone=2,
+            bus_addr=0x02,
+            initial_valve_heating=5,
+            actuators={1: 5, 2: 5},
+        )
+    )
+    dim11 = bytes.fromhex("9902300B")
+    assert td.season == "heating"
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    # Heating demand (26.0 above 24.9): the heating fan coil runs, automatic.
+    assert td.handle_short(bytes.fromhex("90023034"), digits=3)[1:] == [
+        b"$017B782312F\r"
+    ]
+    assert td.actuators == {1: 9, 2: 5}
+    assert td.valve_heating == 9
+    # Fan speed 3: the echo, then the fan coil at 8; dimension 11 answers 3
+    # and the heating side of dimension 19 is the fan coil value.
+    assert td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3) == [
+        b"$018D20203040B030000\r",
+        b"$017B7823123\r",
+    ]
+    assert td.actuators == {1: 8, 2: 5}
+    assert td.valve_heating == 8
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
+        b"$018D202030413232000\r"
+    ]
+    # No demand (24.5 below 24.9): the fan coil rests at 5, still a fan coil.
+    assert td.handle_short(bytes.fromhex("90023031"), digits=3)[1:] == [
+        b"$017B7823120\r"
+    ]
+    assert td.actuators == {1: 5, 2: 5}
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # A heating valve with a fan coil in cooling: the speed write in heating
+    # season leaves the valve alone and only echoes.
+    valve = ThermoZoneDevice(
+        ThermoZoneConfig(zone=3, bus_addr=0x03, actuators={1: 0, 2: 5})
+    )
+    assert len(valve.handle_extended(bytes.fromhex("D10303020B030000"), digits=3)) == 1
+    assert valve.actuators == {1: 0, 2: 5}
