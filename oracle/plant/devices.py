@@ -455,7 +455,8 @@ class ThermoZoneDevice:
         self.config = config
         self.temp_deci: int = config.initial_temp_deci
         self.setpoint_deci: int = config.initial_setpoint_deci
-        self.mode: int = config.initial_mode
+        self._season: str = "heating"
+        self.mode = config.initial_mode
         self.function: int = config.initial_function
         self.offset: str = config.initial_offset
         self.valve_heating: int = config.initial_valve_heating
@@ -473,6 +474,7 @@ class ThermoZoneDevice:
         """Reset zone state to initial fixture values."""
         self.temp_deci = self.config.initial_temp_deci
         self.setpoint_deci = self.config.initial_setpoint_deci
+        self._season = "heating"
         self.mode = self.config.initial_mode
         self.function = self.config.initial_function
         self.offset = self.config.initial_offset
@@ -488,19 +490,37 @@ class ThermoZoneDevice:
         self.humidity = self.config.initial_humidity
 
     @property
-    def season(self) -> str:
-        """Return the active season, ``"heating"`` or ``"cooling"``.
+    def mode(self) -> int:
+        """The zone mode, the WHAT of ``*4*M*Z##`` reported with dimension 12."""
+        return self._mode
 
-        Derived from the zone mode (the WHAT of ``*4*M*Z##`` the zone reports
-        with dimension 12): WHAT 0 (conditioning) and the 2xx cooling programs
-        select cooling; every other mode (1 and the 1xx heating programs, the
-        3xx generic ones, 303 off included) keeps the heating side, which is
-        what the standalone KW4691 of the physical F461 bench reported in
-        heating season.
+    @mode.setter
+    def mode(self, value: int) -> None:
+        # The season follows the mode written: WHAT 0 (conditioning) and the
+        # 2xx cooling programs select cooling, WHAT 1 and the 1xx heating
+        # programs select heating, the 3xx generic modes (303 off included)
+        # keep the season in force. A zone that starts in a 3xx mode starts in
+        # heating, which is what the standalone KW4691 of the physical F461
+        # bench reported in heating season.
+        self._mode = value
+        if value == 0 or 200 <= value <= 299:
+            self._season = "cooling"
+        elif value == 1 or 100 <= value <= 199:
+            self._season = "heating"
+
+    @property
+    def season(self) -> str:
+        """Return the season in force, ``"heating"`` or ``"cooling"``.
+
+        Tracked under the mode, as the physical KW4691 does (MyHOME fixture
+        ``f461_live_2026-10-15``, ``run3_climate`` t=163.5..395.0): OFF
+        (``*4*303*2##``) entered from cooling keeps cooling underneath, so
+        ``*#4*2*11##`` goes on answering ``11*0``; ``*4*1*2##`` and
+        ``*4*0*2##`` sent while OFF flip the underlying season without leaving
+        OFF (dimension 12 keeps reporting 303), and only a setpoint write
+        leaves OFF, in the manual mode of that season.
         """
-        if self.mode == 0 or 200 <= self.mode <= 299:
-            return "cooling"
-        return "heating"
+        return self._season
 
     def _active_side(self) -> int:
         """Return the dimension 19 value of the active season's output."""
@@ -594,12 +614,17 @@ class ThermoZoneDevice:
         return []
 
     def _handle_mode_write(self, b3: int, *, digits: int) -> list[bytes]:
-        if b3 == 0x00:
-            self.mode = 1
-        elif b3 == 0x01:
-            self.mode = 0
-        elif b3 == 0x0F:
+        # 00 manual heating (*4*1*Z##), 01 manual cooling (*4*0*Z##), 0F off
+        # (*4*303*Z##); any other byte is left unanswered. A season written
+        # while the zone is OFF only moves the underlying season.
+        if b3 not in (0x00, 0x01, 0x0F):
+            return []
+        if b3 == 0x0F:
             self.mode = 303
+        elif self.mode == 303:
+            self._season = "heating" if b3 == 0x00 else "cooling"
+        else:
+            self.mode = 1 if b3 == 0x00 else 0
         hi = (self.setpoint_deci >> 8) & 0xFF
         lo = self.setpoint_deci & 0xFF
         mb = self._mode_byte()
@@ -624,8 +649,13 @@ class ThermoZoneDevice:
             # Generic function 3 (*#4*Z*#14*T*3##) keeps the season: on the
             # F461 2.0.11 bench a generic write after a cooling write left
             # the zone in cooling with no season event
-            # (reports/data/live_scan_confirm_2026-10-26).
+            # (reports/data/live_scan_confirm_2026-10-26). It leaves OFF in
+            # the manual mode of the underlying season (f461_live_2026-10-15
+            # run3_climate t=394.846: *#4*2*#14*0200*3## in 303 over cooling
+            # reported *4*0*2##).
             self.function = 3
+            if self.mode == 303:
+                self.mode = 0 if self._season == "cooling" else 1
         hi = (self.setpoint_deci >> 8) & 0xFF
         lo = self.setpoint_deci & 0xFF
         ans = bytes(
@@ -777,11 +807,14 @@ class ThermoZoneDevice:
             # Fan speed write (*#4*Z*#11*S##): a fan coil that is running
             # follows the new speed (dimension 20 value 5 + S, 9 for
             # automatic) and reports itself, so dimensions 11 and 20 agree;
-            # a valve side (heating season) is not touched.
+            # a valve side is not touched, and a zone that is OFF only keeps
+            # the speed for later (f461_live_2026-10-15 run3_climate
+            # t=324.972..336.783: *#4*2*#11*1..3,0## in 303 were echoed and
+            # persisted with 2#2 resting at 20*5).
             self.fan_speed = payload[5]
             fan_reports = (
                 self._drive_active_actuator(digits=digits)
-                if self._active_side() >= 5
+                if self._active_side() >= 5 and self.mode != 303
                 else []
             )
             return [

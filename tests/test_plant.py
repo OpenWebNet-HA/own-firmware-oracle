@@ -334,7 +334,9 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 2
-    assert len(td.handle_short(bytes.fromhex("93023099"), digits=3)) == 1
+    # An unknown mode byte is left unanswered and drives nothing.
+    assert td.handle_short(bytes.fromhex("93023099"), digits=3) == []
+    assert td.mode == 303
 
     # Zone queries
     assert len(td.handle_short(bytes.fromhex("99023000"), digits=3)) == 1
@@ -614,16 +616,26 @@ def test_thermo_mode_and_fan_speed_writes_drive_actuators() -> None:
     assert td.handle_short(dim19, digits=3) == [b"$018D202030413012000\r"]
     # OFF again: nothing to release, only the echo.
     assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 1
-    # Cooling (*4*0*2##, 93 <Z> 30 01) with the setpoint still at 26.0: no
-    # demand, only the echo; manual heating (93 <Z> 30 00) drives the valve.
+    # While OFF, cooling (*4*0*2##, 93 <Z> 30 01) and heating (93 <Z> 30 00)
+    # only move the underlying season: the echo keeps mode 303 (FF) and
+    # nothing is driven. A generic setpoint write (26.0 above 24.9) leaves
+    # OFF in the manual mode of that season and drives the valve.
     assert td.handle_short(bytes.fromhex("93023001"), digits=3) == [
-        b"$018D202030412F10104\r"
+        b"$018D202030412FF0104\r"
     ]
+    assert td.mode == 303
     assert td.season == "cooling"
     assert td.handle_short(bytes.fromhex("93023000"), digits=3) == [
-        b"$018D202030412F00104\r",
+        b"$018D202030412FF0104\r"
+    ]
+    assert td.mode == 303
+    assert td.season == "heating"
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.handle_short(bytes.fromhex("92023034"), digits=3) == [
+        b"$018D20203040E010403\r",
         b"$017B7823100\r",
     ]
+    assert td.mode == 1
     assert td.actuators == {1: 1, 2: 5}
     # Cooling demand (24.0 below 24.9): the heating valve is released first,
     # then the fan coil runs at the automatic speed.
@@ -1593,3 +1605,77 @@ def test_thermo_heating_fan_coil_survives_fan_speed_write() -> None:
     )
     assert len(valve.handle_extended(bytes.fromhex("D10303020B030000"), digits=3)) == 1
     assert valve.actuators == {1: 0, 2: 5}
+
+
+def test_thermo_off_keeps_the_underlying_season() -> None:
+    # f461_live_2026-10-15 run3_climate on the physical KW4691: *4*303*2##
+    # (t=163.537) sent in cooling with 2#2 running released it to 20*5 and
+    # *#4*2*11## went on answering 11*0 while OFF; *4*1*2## (t=278.671) and
+    # *4*0*2## (t=289.498) sent while OFF flipped the underlying season
+    # (dimension 11 unanswered in between) with dimension 12 still 303; the
+    # generic write *#4*2*#14*0200*3## (t=394.846) left OFF as *4*0*2##.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim11 = bytes.fromhex("9902300B")
+    dim12 = bytes.fromhex("99023012")
+    off_echo = b"$018D202030412FF00F0\r"
+    # Cooling demand (24.0 below 24.9): the fan coil runs at the automatic
+    # speed and dimension 11 answers.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B782322F\r"
+    ]
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    # OFF releases the fan coil; cooling stays underneath.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3) == [
+        off_echo,
+        b"$017B7823220\r",
+    ]
+    assert (td.mode, td.season) == (303, "cooling")
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    assert td.handle_short(dim12, digits=3) == [off_echo]
+    # Heating while OFF: still 303, the valve side no longer answers 11.
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3) == [off_echo]
+    assert (td.mode, td.season) == (303, "heating")
+    assert td.handle_short(dim11, digits=3) == []
+    assert td.handle_short(dim12, digits=3) == [off_echo]
+    assert td.actuators == {1: 0, 2: 5}
+    # Cooling while OFF: still 303, dimension 11 answers again. A fan speed
+    # write while OFF is echoed and kept but starts nothing (speed 3, then
+    # back to automatic).
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3) == [off_echo]
+    assert (td.mode, td.season) == (303, "cooling")
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    assert td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3) == [
+        b"$018D20203040B030000\r"
+    ]
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    assert td.actuators == {1: 0, 2: 5}
+    assert len(td.handle_extended(bytes.fromhex("D10203020B000000"), digits=3)) == 1
+    # The generic setpoint write 20.0 (92 <Z> 31 28) leaves OFF in manual
+    # cooling (mode 0, dimension 12 byte F1) and the fan coil runs.
+    assert td.handle_short(bytes.fromhex("92023128"), digits=3) == [
+        b"$018D20203040E00C803\r",
+        b"$017B782322F\r",
+    ]
+    assert (td.mode, td.season) == (0, "cooling")
+    assert td.handle_short(dim12, digits=3) == [b"$018D202030412F100C8\r"]
+    # The same generic write from OFF over heating leaves it in manual
+    # heating; a zone whose fixture starts OFF starts in heating.
+    td.mode = 303
+    assert td.season == "cooling"
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3)[1:] == [
+        b"$017B7823220\r"
+    ]
+    assert len(td.handle_short(bytes.fromhex("92023128"), digits=3)) == 1
+    assert (td.mode, td.season) == (1, "heating")
+    assert td.actuators == {1: 0, 2: 5}
+    off_zone = ThermoZoneDevice(
+        ThermoZoneConfig(zone=3, bus_addr=0x03, initial_mode=303)
+    )
+    assert (off_zone.mode, off_zone.season) == (303, "heating")
+    # reset() restores the fixture's season with its mode.
+    td.mode = 208
+    assert td.season == "cooling"
+    td.reset()
+    assert (td.mode, td.season) == (1, "heating")
