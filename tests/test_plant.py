@@ -15,7 +15,7 @@ if str(ROOT / "tools") not in sys.path:
 import check
 import pic_spike
 import plant_index
-from oracle import bus, driver, plant, qemu_target, record, target
+from oracle import bus, cases, driver, plant, qemu_target, record, target
 from oracle import run as oracle_run
 from oracle.plant import (
     CoverConfig,
@@ -49,6 +49,7 @@ from oracle.plant import (
     where_to_bus_addr,
 )
 from oracle.plant.scs_codec import unwrap_raw_scs, wrap_raw_scs
+from oracle.plant.topology import fixture_path, fixture_sha256
 
 
 def test_scs_address_and_parse_own_where() -> None:
@@ -327,10 +328,15 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     # Cooling at 20.0 below the 24.9 measured: the echo plus the fan coil on.
     assert len(td.handle_short(bytes.fromhex("91023128"), digits=3)) == 2
     assert len(td.handle_short(bytes.fromhex("92023228"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 1
-    assert len(td.handle_short(bytes.fromhex("93023099"), digits=3)) == 1
+    # Manual heating releases the running fan coil (no heating demand at
+    # 20.0 below 25.0): the echo plus the fan coil off; manual cooling starts
+    # it again, and OFF releases it.
+    assert len(td.handle_short(bytes.fromhex("93023000"), digits=3)) == 2
+    assert len(td.handle_short(bytes.fromhex("93023001"), digits=3)) == 2
+    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 2
+    # An unknown mode byte is left unanswered and drives nothing.
+    assert td.handle_short(bytes.fromhex("93023099"), digits=3) == []
+    assert td.mode == 303
 
     # Zone queries
     assert len(td.handle_short(bytes.fromhex("99023000"), digits=3)) == 1
@@ -340,11 +346,12 @@ def test_devices_thermo_energy_scenario_fault() -> None:
     assert td.handle_short(bytes.fromhex("99023112"), digits=3) == []
     for dim_b in (0x12, 0x0E, 0x0D, 0x13):
         assert len(td.handle_short(bytes([0x99, 0x02, 0x30, dim_b]), digits=3)) == 1
-    # Dimension 19: heating valve 0 then the fan coil as status bytes; the
-    # cooling write above left the fan coil running (2F), the physical bench's
-    # idle reply would be 01 20, reported by the F461 2.0.11 as *#4*2*19*5*0##.
+    # Dimension 19: heating valve 0 then the fan coil as status bytes; the OFF
+    # mode write above released the fan coil the cooling write had started
+    # (2F), so this is the physical bench's idle reply 01 20, reported by the
+    # F461 2.0.11 as *#4*2*19*5*0##.
     assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
-        b"$018D202030413012F00\r"
+        b"$018D202030413012000\r"
     ]
     assert td.handle_short(bytes.fromhex("99023099"), digits=3) == []
     assert td.handle_short(bytes.fromhex("00000000"), digits=3) == []
@@ -468,9 +475,6 @@ def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
     # A plant whose heating output is a fan coil answers in heating season.
     td.valve_heating = 5
     assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
-    # An out-of-range fixture value is sent as a byte (review finding).
-    td.humidity = 256 + 39
-    assert td.handle_extended(dim60, digits=3) == hum39
     # Without a humidity probe dimension 60 stays unanswered; reset restores it.
     td.humidity = None
     assert td.handle_extended(dim60, digits=3) == []
@@ -507,6 +511,31 @@ def test_thermo_season_gated_fan_speed_and_humidity(tmp_path: Path) -> None:
     assert alias_cfg.thermo_zones[3].initial_humidity is None
     r_alias = PlantResponder.from_yaml(alias)
     assert r_alias.respond(b"$006D200030308000000\r") == [b"$018D202030408000028\r"]
+    # The value is a percentage: a fixture outside 0..100 is rejected instead
+    # of being masked to a byte (295 would have been answered as 39), by the
+    # config itself so that no loader can bypass it.
+    with pytest.raises(ValueError, match="initial_humidity 295"):
+        ThermoZoneConfig(zone=2, bus_addr=0x02, initial_humidity=295)
+    # bool is an int subclass: True would have passed as a 1 % probe. The
+    # config rejects it and every non-int, whatever loader built it.
+    for bad_value in (True, False, 39.5, "39"):
+        with pytest.raises(ValueError, match="initial_humidity"):
+            ThermoZoneConfig(
+                zone=2,
+                bus_addr=0x02,
+                initial_humidity=bad_value,  # type: ignore[arg-type]
+            )
+    # The YAML loader parses the value strictly instead of defaulting to 0:
+    # out of range, a bool, a float, a malformed string and a list all fail.
+    for bad in ("295", "-1", "'0x65'", "true", "false", "39.5", "150.5", "'39%'", "[]"):
+        bad_yaml = tmp_path / "bad_humidity.yaml"
+        bad_yaml.write_text(
+            "name: bad\ngateway_product: F461\ngateway_version: '020011'\n"
+            f"thermo_zones:\n  2:\n    initial_humidity: {bad}\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(ValueError, match="initial_humidity"):
+            load_topology_yaml(bad_yaml)
 
 
 def test_thermo_setpoint_write_switches_active_actuator() -> None:
@@ -574,6 +603,90 @@ def test_thermo_setpoint_write_switches_active_actuator() -> None:
     assert valve_only.actuators == {1: 0}
 
 
+def test_thermo_mode_and_fan_speed_writes_drive_actuators() -> None:
+    # Only setpoint writes drove the actuators before: a mode write left a
+    # heating demand's valve on in mode 303, and a fan speed write left the
+    # running fan coil at the old speed while dimension 11 said the new one.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim19 = bytes.fromhex("99023013")
+    # Heating demand (26.0 above 24.9): the valve switches on.
+    assert td.handle_short(bytes.fromhex("92023034"), digits=3)[1:] == [
+        b"$017B7823100\r"
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    # OFF (*4*303*2##, 93 <Z> 30 0F): the mode echo, then the valve released.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3) == [
+        b"$018D202030412FF0104\r",
+        b"$017B7823101\r",
+    ]
+    assert td.mode == 303
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_heating == 0
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413012000\r"]
+    # OFF again: nothing to release, only the echo.
+    assert len(td.handle_short(bytes.fromhex("9302300F"), digits=3)) == 1
+    # While OFF, cooling (*4*0*2##, 93 <Z> 30 01) and heating (93 <Z> 30 00)
+    # only move the underlying season: the echo keeps mode 303 (FF) and
+    # nothing is driven. A generic setpoint write (26.0 above 24.9) leaves
+    # OFF in the manual mode of that season and drives the valve.
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3) == [
+        b"$018D202030412FF0104\r"
+    ]
+    assert td.mode == 303
+    assert td.season == "cooling"
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3) == [
+        b"$018D202030412FF0104\r"
+    ]
+    assert td.mode == 303
+    assert td.season == "heating"
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.handle_short(bytes.fromhex("92023034"), digits=3) == [
+        b"$018D20203040E010403\r",
+        b"$017B7823100\r",
+    ]
+    assert td.mode == 1
+    assert td.actuators == {1: 1, 2: 5}
+    # Cooling demand (24.0 below 24.9): the heating valve is released first,
+    # then the fan coil runs at the automatic speed.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B7823101\r",
+        b"$017B782322F\r",
+    ]
+    assert td.actuators == {1: 0, 2: 9}
+    # Fan speed write *#4*2*#11*2## (D1 <Z> 03 02 0B 02): the dimension 11
+    # echo, then the running fan coil at speed 2 (dimension 20 value 7).
+    assert td.handle_extended(bytes.fromhex("D10203020B020000"), digits=3) == [
+        b"$018D20203040B020000\r",
+        b"$017B7823222\r",
+    ]
+    assert td.actuators[2] == 7
+    assert td.valve_cooling == 7
+    assert td.handle_short(bytes.fromhex("9902300B"), digits=3) == [
+        b"$018D20203040B020000\r"
+    ]
+    # The same speed again: only the echo. Back to automatic: 9 again.
+    assert len(td.handle_extended(bytes.fromhex("D10203020B020000"), digits=3)) == 1
+    assert td.handle_extended(bytes.fromhex("D10203020B000000"), digits=3)[1:] == [
+        b"$017B782322F\r"
+    ]
+    # OFF with the fan coil running: it is released.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3)[1:] == [
+        b"$017B7823220\r",
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.valve_cooling == 5
+    # A fan speed write without a cooling demand (26.0 above 24.9), or in
+    # heating season, is only echoed.
+    td.mode = 0
+    td.setpoint_deci = 260
+    assert len(td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3)) == 1
+    td.mode = 1
+    assert len(td.handle_extended(bytes.fromhex("D10203020B010000"), digits=3)) == 1
+    assert td.actuators == {1: 0, 2: 5}
+
+
 def test_topology_loaders_and_responder(tmp_path: Path) -> None:
     f461_topo = PlantTopology.from_fixture("f461-bench")
     mh200_topo = PlantTopology.from_fixture("mh200-bench.yaml")
@@ -586,6 +699,10 @@ def test_topology_loaders_and_responder(tmp_path: Path) -> None:
     assert PlantTopology.from_fixture(str(fixture_file)).name == "f461-bench"
     with pytest.raises(FileNotFoundError, match="unknown plant fixture"):
         PlantTopology.from_fixture("nonexistent-bench")
+    assert fixture_path("f461-bench") == fixture_file
+    assert fixture_path(str(fixture_file)) == fixture_file
+    assert fixture_sha256("f461-bench") == fixture_sha256("f461-bench.yaml")
+    assert len(fixture_sha256(str(fixture_file))) == 64
 
     bad_yaml = tmp_path / "bad.yaml"
     bad_yaml.write_text("- not a mapping\n", encoding="utf-8")
@@ -929,7 +1046,7 @@ def test_needs_device_txack() -> None:
     assert bus.pic_v8_mode("12") is False
 
 
-def test_bus_and_driver_plant_integration() -> None:
+def test_bus_and_driver_plant_integration(tmp_path: Path) -> None:
     assert bus.PicResponder(version="12")._is_2digit_v8() is False
     # PicResponder with PlantResponder (3-digit and 2-digit v8)
     r3 = bus.get_responder("pic:plant:f461-bench", version="020011")
@@ -1038,6 +1155,45 @@ def test_bus_and_driver_plant_integration() -> None:
     oracle_run.apply_plant_flag(ns2)
     assert ns2.harness == "plant:custom"
     assert ns2.responder == "pic:custom"
+    # A fixture path outside oracle/plant/fixtures/ keeps its path in the
+    # responder (the harness, a result directory name, takes the stem), and
+    # the header hashes the responder's fixture when it names one.
+    custom = tmp_path / "custom.yaml"
+    custom.write_text(
+        (ROOT / "oracle" / "plant" / "fixtures" / "mh200-bench.yaml").read_text(
+            encoding="utf-8"
+        )
+        + "\n# custom copy\n",
+        encoding="utf-8",
+    )
+    ns3 = argparse.Namespace(plant=str(custom), harness="full", responder=None)
+    oracle_run.apply_plant_flag(ns3)
+    assert ns3.harness == "plant:custom"
+    assert ns3.responder == f"pic:plant:{custom}"
+    # The live responder is named after the fixture's own name, so the
+    # header takes the fixture from the descriptor as typed.
+    assert bus.get_responder(ns3.responder, version="020102").name == (
+        "pic:plant:mh200-bench"
+    )
+    assert oracle_run.plant_of_responder(ns3.responder) == str(custom)
+    assert oracle_run.plant_of_responder("plant:f461-bench") == "f461-bench"
+    assert oracle_run.plant_of_responder("pic") is None
+    assert oracle_run.plant_of_responder(None) is None
+    suite = cases.load(ROOT / "oracle" / "plant_cases" / "plant-mh200-bench.seq")
+    args = (spec, "plant:custom", "0" * 64, "0", "line", "pic:plant:mh200-bench")
+    header = oracle_run.suite_header(*args, 3000.0, suite, plant=str(custom))
+    assert header["plant_sha256"] == fixture_sha256(str(custom))
+    assert header["plant_sha256"] != fixture_sha256("mh200-bench")
+    # --responder pic:plant:X next to a different --harness: X is hashed;
+    # without a plant descriptor the harness's fixture is.
+    args = (spec, "plant:f461-bench", "0" * 64, "0", "line", "pic:plant:mh200-bench")
+    header = oracle_run.suite_header(*args, 3000.0, suite, plant="mh200-bench")
+    assert header["plant_sha256"] == fixture_sha256("mh200-bench")
+    header = oracle_run.suite_header(*args[:5], "pic", 3000.0, suite)
+    assert header["plant_sha256"] == fixture_sha256("f461-bench")
+    assert "plant_sha256" not in oracle_run.suite_header(
+        spec, "full", "0" * 64, "each", "line", "pic", 3000.0, suite
+    )
 
 
 def test_check_trace_and_f461_extractors(tmp_path: Path) -> None:
@@ -1297,6 +1453,7 @@ def test_pic_spike_and_plant_index(
         "bus": "pty",
         "framer": "line",
         "responder": "pic:plant:f461-bench",
+        "plant_sha256": "f" * 64,
         "settle_ms": "300.0",
         "suite": "plant-f461-bench",
         "suite_sha256": "0" * 64,
@@ -1341,6 +1498,13 @@ def test_pic_spike_and_plant_index(
 
     idx = plant_index.build_plant_index(tmp_path / "results")
     assert "plant-f461-bench" in idx["suites"]  # type: ignore[operator]
+    # plant_sha256 comes from the TSV header (the fixture the run used), not
+    # from the fixture file as it is now; a header without it falls back to
+    # the file ("" when the harness names no fixture).
+    verdicts = idx["verdicts"]
+    assert isinstance(verdicts, dict)
+    assert verdicts["*1*1*06##"][0]["plant_sha256"] == "f" * 64
+    assert verdicts["*1*0*06##"][0]["plant_sha256"] == ""
     assert plant_index.parse_plant_output_column("-") == ([], [], [], [])
     assert plant_index.parse_plant_output_column("unknown:1") == ([], [], [], [])
     assert plant_index.fixture_sha256("nonexistent") == ""
@@ -1391,3 +1555,177 @@ def test_pic_spike_and_plant_index(
         )
         == 1
     )
+
+
+def test_thermo_season_switch_releases_inactive_actuator() -> None:
+    # f461_live_2026-10-15 on the physical F461 2.0.11 + KW4691 bench: the
+    # switch to heating with the cooling fan coil 2#2 running released it
+    # (*#4*2#2*20*5##, probe_followup t=80.437..82.905), and the switch to
+    # cooling with the heating valve 2#1 on released it (*#4*2#1*20*0##,
+    # *#4*2*19*5*0##, probe_fancoil t=9.446..16.536). The virtual zone never
+    # reports both outputs on together.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim19 = bytes.fromhex("99023013")
+    # Cooling demand at speed 2 (24.0 below 24.9): the fan coil runs at 7.
+    td.fan_speed = 2
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B7823222\r"
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+    # Cooling -> heating with a heating demand (26.0 above 24.9): the fan
+    # coil is released to 5 before the valve switches on, and dimension 19
+    # shows the valve on and the fan coil off.
+    assert td.handle_short(bytes.fromhex("90023034"), digits=3) == [
+        b"$018D20203040E010401\r",
+        b"$017B7823220\r",
+        b"$017B7823100\r",
+    ]
+    assert td.actuators == {1: 1, 2: 5}
+    assert td.valve_heating == 1
+    assert td.valve_cooling == 5
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413002000\r"]
+    # Heating -> cooling with the valve on and a cooling demand: the valve
+    # is released to 0, then the fan coil runs.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3) == [
+        b"$018D20203040E00F002\r",
+        b"$017B7823101\r",
+        b"$017B7823222\r",
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+    assert td.handle_short(dim19, digits=3) == [b"$018D202030413012200\r"]
+    # The mode write does the same as the setpoint write: *4*1*2## with the
+    # fan coil running and no heating demand (24.0 below 24.9) only releases
+    # the fan coil; *4*0*2## starts it again.
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3)[1:] == [
+        b"$017B7823220\r"
+    ]
+    assert td.actuators == {1: 0, 2: 5}
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3)[1:] == [
+        b"$017B7823222\r"
+    ]
+    assert td.actuators == {1: 0, 2: 7}
+
+
+def test_thermo_heating_fan_coil_survives_fan_speed_write() -> None:
+    # A plant whose heating output is a fan coil (dimension 19 heating side
+    # 5..9) keeps it through *#4*Z*#11*S##: the speed write moves the running
+    # fan coil to the written speed instead of clobbering it to a valve's
+    # 0 / 1, and dimension 11 keeps answering.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(
+            zone=2,
+            bus_addr=0x02,
+            initial_valve_heating=5,
+            actuators={1: 5, 2: 5},
+        )
+    )
+    dim11 = bytes.fromhex("9902300B")
+    assert td.season == "heating"
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    # Heating demand (26.0 above 24.9): the heating fan coil runs, automatic.
+    assert td.handle_short(bytes.fromhex("90023034"), digits=3)[1:] == [
+        b"$017B782312F\r"
+    ]
+    assert td.actuators == {1: 9, 2: 5}
+    assert td.valve_heating == 9
+    # Fan speed 3: the echo, then the fan coil at 8; dimension 11 answers 3
+    # and the heating side of dimension 19 is the fan coil value.
+    assert td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3) == [
+        b"$018D20203040B030000\r",
+        b"$017B7823123\r",
+    ]
+    assert td.actuators == {1: 8, 2: 5}
+    assert td.valve_heating == 8
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    assert td.handle_short(bytes.fromhex("99023013"), digits=3) == [
+        b"$018D202030413232000\r"
+    ]
+    # No demand (24.5 below 24.9): the fan coil rests at 5, still a fan coil.
+    assert td.handle_short(bytes.fromhex("90023031"), digits=3)[1:] == [
+        b"$017B7823120\r"
+    ]
+    assert td.actuators == {1: 5, 2: 5}
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    # A heating valve with a fan coil in cooling: the speed write in heating
+    # season leaves the valve alone and only echoes.
+    valve = ThermoZoneDevice(
+        ThermoZoneConfig(zone=3, bus_addr=0x03, actuators={1: 0, 2: 5})
+    )
+    assert len(valve.handle_extended(bytes.fromhex("D10303020B030000"), digits=3)) == 1
+    assert valve.actuators == {1: 0, 2: 5}
+
+
+def test_thermo_off_keeps_the_underlying_season() -> None:
+    # f461_live_2026-10-15 run3_climate on the physical KW4691: *4*303*2##
+    # (t=163.537) sent in cooling with 2#2 running released it to 20*5 and
+    # *#4*2*11## went on answering 11*0 while OFF; *4*1*2## (t=278.671) and
+    # *4*0*2## (t=289.498) sent while OFF flipped the underlying season
+    # (dimension 11 unanswered in between) with dimension 12 still 303; the
+    # generic write *#4*2*#14*0200*3## (t=394.846) left OFF as *4*0*2##.
+    td = ThermoZoneDevice(
+        ThermoZoneConfig(zone=2, bus_addr=0x02, actuators={1: 0, 2: 5})
+    )
+    dim11 = bytes.fromhex("9902300B")
+    dim12 = bytes.fromhex("99023012")
+    off_echo = b"$018D202030412FF00F0\r"
+    # Cooling demand (24.0 below 24.9): the fan coil runs at the automatic
+    # speed and dimension 11 answers.
+    assert td.handle_short(bytes.fromhex("91023130"), digits=3)[1:] == [
+        b"$017B782322F\r"
+    ]
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    # OFF releases the fan coil; cooling stays underneath.
+    assert td.handle_short(bytes.fromhex("9302300F"), digits=3) == [
+        off_echo,
+        b"$017B7823220\r",
+    ]
+    assert (td.mode, td.season) == (303, "cooling")
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    assert td.handle_short(dim12, digits=3) == [off_echo]
+    # Heating while OFF: still 303, the valve side no longer answers 11.
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3) == [off_echo]
+    assert (td.mode, td.season) == (303, "heating")
+    assert td.handle_short(dim11, digits=3) == []
+    assert td.handle_short(dim12, digits=3) == [off_echo]
+    assert td.actuators == {1: 0, 2: 5}
+    # Cooling while OFF: still 303, dimension 11 answers again. A fan speed
+    # write while OFF is echoed and kept but starts nothing (speed 3, then
+    # back to automatic).
+    assert td.handle_short(bytes.fromhex("93023001"), digits=3) == [off_echo]
+    assert (td.mode, td.season) == (303, "cooling")
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B000000\r"]
+    assert td.handle_extended(bytes.fromhex("D10203020B030000"), digits=3) == [
+        b"$018D20203040B030000\r"
+    ]
+    assert td.handle_short(dim11, digits=3) == [b"$018D20203040B030000\r"]
+    assert td.actuators == {1: 0, 2: 5}
+    assert len(td.handle_extended(bytes.fromhex("D10203020B000000"), digits=3)) == 1
+    # The generic setpoint write 20.0 (92 <Z> 31 28) leaves OFF in manual
+    # cooling (mode 0, dimension 12 byte F1) and the fan coil runs.
+    assert td.handle_short(bytes.fromhex("92023128"), digits=3) == [
+        b"$018D20203040E00C803\r",
+        b"$017B782322F\r",
+    ]
+    assert (td.mode, td.season) == (0, "cooling")
+    assert td.handle_short(dim12, digits=3) == [b"$018D202030412F100C8\r"]
+    # The same generic write from OFF over heating leaves it in manual
+    # heating; a zone whose fixture starts OFF starts in heating.
+    td.mode = 303
+    assert td.season == "cooling"
+    assert td.handle_short(bytes.fromhex("93023000"), digits=3)[1:] == [
+        b"$017B7823220\r"
+    ]
+    assert len(td.handle_short(bytes.fromhex("92023128"), digits=3)) == 1
+    assert (td.mode, td.season) == (1, "heating")
+    assert td.actuators == {1: 0, 2: 5}
+    off_zone = ThermoZoneDevice(
+        ThermoZoneConfig(zone=3, bus_addr=0x03, initial_mode=303)
+    )
+    assert (off_zone.mode, off_zone.season) == (303, "heating")
+    # reset() restores the fixture's season with its mode.
+    td.mode = 208
+    assert td.season == "cooling"
+    td.reset()
+    assert (td.mode, td.season) == (1, "heating")

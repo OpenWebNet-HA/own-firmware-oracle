@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -36,6 +37,24 @@ from oracle.plant.scs_codec import where_to_bus_addr
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
+
+def fixture_path(name: str) -> Path:
+    """Resolve a fixture: a YAML path as given, else fixtures/<name>.yaml."""
+    cand = Path(name)
+    if cand.is_file():
+        return cand
+    filename = name if name.endswith(".yaml") else f"{name}.yaml"
+    path = FIXTURES_DIR / filename
+    if not path.is_file():
+        raise FileNotFoundError(f"unknown plant fixture: {name!r} ({path})")
+    return path
+
+
+def fixture_sha256(name: str) -> str:
+    """SHA-256 of the fixture file a ``plant:<name>`` harness runs against."""
+    return hashlib.sha256(fixture_path(name).read_bytes()).hexdigest()
+
+
 _OWN_STATUS_RE = re.compile(r"^\*(\d+)\*([^*]+)\*([^#*]+(?:#[^#*]+)*)##$")
 _OWN_DIM_RE = re.compile(r"^\*#(\d+)\*([^*]+)(?:\*([^#*]+(?:#[^#*]+)*))?(?:\*(.+))?##$")
 
@@ -50,6 +69,24 @@ def _int_val(val: Any, default: int = 0) -> int:
         if s.lstrip("-").isdigit():
             return int(s)
     return default
+
+
+def _strict_int(val: Any, what: str) -> int:
+    """Parse a fixture value that must be an integer; anything else is an error.
+
+    Unlike ``_int_val`` there is no default: a bool, a float, a string that
+    is not a decimal or ``0x`` integer, or a non-scalar raises ``ValueError``
+    naming ``what`` instead of silently becoming 0.
+    """
+    if isinstance(val, int) and not isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        s = val.strip()
+        try:
+            return int(s, 16) if s.lower().startswith("0x") else int(s, 10)
+        except ValueError:
+            pass
+    raise ValueError(f"{what}: {val!r} is not an integer")
 
 
 def _parse_yaml_lights(raw_lights: Any) -> dict[str, LightConfig]:
@@ -164,7 +201,11 @@ def _parse_yaml_thermo(raw_thermo: Any) -> dict[int, ThermoZoneConfig]:
                 actuators=act_map,
                 initial_fan_speed=_int_val(c.get("initial_fan_speed"), 0),
                 probes=probes,
-                initial_humidity=None if hum_raw is None else _int_val(hum_raw),
+                initial_humidity=(
+                    None
+                    if hum_raw is None
+                    else _strict_int(hum_raw, f"thermo zone {z}: initial_humidity")
+                ),
             )
     return thermo_zones
 
@@ -406,14 +447,7 @@ class PlantTopology:
     @classmethod
     def from_fixture(cls, name: str) -> PlantTopology:
         """Load a named fixture from oracle/plant/fixtures/<name>.yaml."""
-        cand = Path(name)
-        if cand.is_file():
-            return cls.from_yaml(cand)
-        filename = name if name.endswith(".yaml") else f"{name}.yaml"
-        fixture_path = FIXTURES_DIR / filename
-        if not fixture_path.is_file():
-            raise FileNotFoundError(f"unknown plant fixture: {name!r} ({fixture_path})")
-        return cls.from_yaml(fixture_path)
+        return cls.from_yaml(fixture_path(name))
 
     @classmethod
     def from_plnt_xml(cls, path: Path) -> PlantTopology:

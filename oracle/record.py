@@ -43,6 +43,11 @@ HEADER_KEYS = (
     "suite_sha256",
     "oracle_version",
 )
+# A plant harness answers from a fixture (oracle/plant/fixtures/<name>.yaml):
+# its hash is an answer-changing key too, written right after `responder`
+# and only for `plant:<fixture>` harnesses. tools/plant_index.py reads it
+# from the TSV instead of hashing the fixture at index time.
+PLANT_HEADER_KEY = "plant_sha256"
 HEADER_VALUE = re.compile(r"[\x21-\x7e]+")
 HARNESS = re.compile(r"full|(?:unit|plant):[A-Za-z0-9][A-Za-z0-9._-]*")
 
@@ -103,12 +108,21 @@ def result_path(product: str, version: str, harness: str, suite: str) -> str:
     return f"{product}/{version}/oracle/{harness_dir(harness)}/{suite}.tsv"
 
 
+def header_keys(harness: str) -> tuple[str, ...]:
+    """The header keys of a record, in writing order, for this harness."""
+    if harness.startswith("plant:"):
+        i = HEADER_KEYS.index("responder") + 1
+        return (*HEADER_KEYS[:i], PLANT_HEADER_KEY, *HEADER_KEYS[i:])
+    return HEADER_KEYS
+
+
 def render(header: dict[str, str], rows: list[Row], *, ordered: bool) -> str:
-    missing = [k for k in HEADER_KEYS if k not in header]
-    extra = sorted(set(header) - set(HEADER_KEYS))
+    hkeys = header_keys(str(header.get("harness", "")))
+    missing = [k for k in hkeys if k not in header]
+    extra = sorted(set(header) - set(hkeys))
     if missing or extra:
         raise ValueError(f"header keys: missing {missing}, unexpected {extra}")
-    for key in HEADER_KEYS:
+    for key in hkeys:
         if not HEADER_VALUE.fullmatch(header[key]):
             raise ValueError(f"header {key}={header[key]!r} is not a plain token")
     harness_dir(header["harness"])
@@ -117,7 +131,7 @@ def render(header: dict[str, str], rows: list[Row], *, ordered: bool) -> str:
         if len(set(keys)) != len(keys):
             raise ValueError("duplicate (direction, input) in an unordered suite")
         rows = sorted(rows, key=lambda r: (r.direction, r.input))
-    lines = [f"# {k}={header[k]}" for k in HEADER_KEYS]
+    lines = [f"# {k}={header[k]}" for k in hkeys]
     lines.append("\t".join(COLUMNS))
     lines += ["\t".join(r.cells()) for r in rows]
     return "\n".join(lines) + "\n"

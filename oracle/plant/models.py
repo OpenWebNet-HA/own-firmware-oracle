@@ -195,6 +195,21 @@ class ThermoZoneConfig:
     probes: tuple[int, ...] = ()
     initial_humidity: int | None = None
 
+    def __post_init__(self) -> None:
+        # A percentage, answered as one byte of the dimension 60 reply: a
+        # value outside 0..100 is a fixture error, not something to mask,
+        # and so is anything but an int (bool is an int subclass: True would
+        # have passed as a 1 % probe).
+        if self.initial_humidity is not None and (
+            isinstance(self.initial_humidity, bool)
+            or not isinstance(self.initial_humidity, int)
+            or not 0 <= self.initial_humidity <= 100
+        ):
+            raise ValueError(
+                f"thermo zone {self.zone}: initial_humidity "
+                f"{self.initial_humidity!r} is not a percentage (0..100)"
+            )
+
 
 @dataclass(frozen=True)
 class EnergyMeterConfig:

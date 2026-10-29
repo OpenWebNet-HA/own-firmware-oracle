@@ -161,6 +161,29 @@ def test_record_roundtrips_header_and_result_path(tmp_path):
     assert record.read_header(p) == HEADER
 
 
+def test_record_plant_harness_carries_the_fixture_hash(tmp_path):
+    # A plant harness answers from a fixture: its hash is a header key, written
+    # right after `responder`, required there and rejected elsewhere.
+    plant = {
+        **HEADER,
+        "harness": "plant:f461-bench",
+        "responder": "pic:plant:f461-bench",
+    }
+    with pytest.raises(ValueError, match="missing \\['plant_sha256'\\]"):
+        record.render(plant, [], ordered=True)
+    with pytest.raises(ValueError, match="unexpected \\['plant_sha256'\\]"):
+        record.render({**HEADER, "plant_sha256": "a" * 64}, [], ordered=False)
+    plant["plant_sha256"] = "a" * 64
+    keys = record.header_keys("plant:f461-bench")
+    assert keys.index("plant_sha256") == keys.index("responder") + 1
+    assert record.header_keys("full") == record.HEADER_KEYS
+    p = tmp_path / record.result_path("F461", "020011", "plant:f461-bench", "bench")
+    record.write(p, plant, [], ordered=True)
+    lines = p.read_text(encoding="ascii").splitlines()
+    assert lines[: len(keys)] == [f"# {k}={plant[k]}" for k in keys]
+    assert record.read_header(p) == plant
+
+
 # --- bus ---------------------------------------------------------------------
 
 

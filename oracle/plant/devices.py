@@ -455,7 +455,8 @@ class ThermoZoneDevice:
         self.config = config
         self.temp_deci: int = config.initial_temp_deci
         self.setpoint_deci: int = config.initial_setpoint_deci
-        self.mode: int = config.initial_mode
+        self._season: str = "heating"
+        self.mode = config.initial_mode
         self.function: int = config.initial_function
         self.offset: str = config.initial_offset
         self.valve_heating: int = config.initial_valve_heating
@@ -473,6 +474,7 @@ class ThermoZoneDevice:
         """Reset zone state to initial fixture values."""
         self.temp_deci = self.config.initial_temp_deci
         self.setpoint_deci = self.config.initial_setpoint_deci
+        self._season = "heating"
         self.mode = self.config.initial_mode
         self.function = self.config.initial_function
         self.offset = self.config.initial_offset
@@ -488,19 +490,37 @@ class ThermoZoneDevice:
         self.humidity = self.config.initial_humidity
 
     @property
-    def season(self) -> str:
-        """Return the active season, ``"heating"`` or ``"cooling"``.
+    def mode(self) -> int:
+        """The zone mode, the WHAT of ``*4*M*Z##`` reported with dimension 12."""
+        return self._mode
 
-        Derived from the zone mode (the WHAT of ``*4*M*Z##`` the zone reports
-        with dimension 12): WHAT 0 (conditioning) and the 2xx cooling programs
-        select cooling; every other mode (1 and the 1xx heating programs, the
-        3xx generic ones, 303 off included) keeps the heating side, which is
-        what the standalone KW4691 of the physical F461 bench reported in
-        heating season.
+    @mode.setter
+    def mode(self, value: int) -> None:
+        # The season follows the mode written: WHAT 0 (conditioning) and the
+        # 2xx cooling programs select cooling, WHAT 1 and the 1xx heating
+        # programs select heating, the 3xx generic modes (303 off included)
+        # keep the season in force. A zone that starts in a 3xx mode starts in
+        # heating, which is what the standalone KW4691 of the physical F461
+        # bench reported in heating season.
+        self._mode = value
+        if value == 0 or 200 <= value <= 299:
+            self._season = "cooling"
+        elif value == 1 or 100 <= value <= 199:
+            self._season = "heating"
+
+    @property
+    def season(self) -> str:
+        """Return the season in force, ``"heating"`` or ``"cooling"``.
+
+        Tracked under the mode, as the physical KW4691 does (MyHOME fixture
+        ``f461_live_2026-10-15``, ``run3_climate`` t=163.5..395.0): OFF
+        (``*4*303*2##``) entered from cooling keeps cooling underneath, so
+        ``*#4*2*11##`` goes on answering ``11*0``; ``*4*1*2##`` and
+        ``*4*0*2##`` sent while OFF flip the underlying season without leaving
+        OFF (dimension 12 keeps reporting 303), and only a setpoint write
+        leaves OFF, in the manual mode of that season.
         """
-        if self.mode == 0 or 200 <= self.mode <= 299:
-            return "cooling"
-        return "heating"
+        return self._season
 
     def _active_side(self) -> int:
         """Return the dimension 19 value of the active season's output."""
@@ -576,24 +596,50 @@ class ThermoZoneDevice:
         ):
             return self._handle_setpoint_write(b0, b2, b3, digits=digits)
 
-        # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##)
+        # Zone mode write 93 <Z> 30 <cmd> (*4*M*Z##). The outputs follow the
+        # new mode: OFF (303) releases every actuator of the zone, any other
+        # mode drives the active season's actuator on the setpoint /
+        # temperature gap like a setpoint write does and, like a setpoint
+        # write that changes the season, releases the other season's output
+        # (_drive_active_actuator, after the f461_live_2026-10-15 captures).
+        # Physical boundary (MyHOME fixture f461_live_2026-10-15,
+        # run3_climate, F461 2.0.11 + KW4691 + F430/2 as 2#1 + F430/4 as
+        # 2#2): the zone form *4*303*2## was sent at t=163.537 while 2#2 was
+        # running (20*8); the F461 ACKed and emitted *4*303*2##,
+        # *#4*2*12*0230*3##, *4*303*2##, *#4*2*0*0241##, and 2.8 s later the
+        # KW4691 released 2#2 (*#4*2#2*#20*5##, *#4*2#2*20*5## at t=166.446).
+        # The virtual zone releases at once. The central form *4*303*#2##
+        # addresses a 4/99-zone central unit absent on that bench and left
+        # the standalone zone unchanged (live_scan_confirm_2026-10-26).
         if b0 == 0x93 and b1 == self.config.bus_addr and b2 == 0x30:
-            if b3 == 0x00:
-                self.mode = 1
-            elif b3 == 0x01:
-                self.mode = 0
-            elif b3 == 0x0F:
-                self.mode = 303
-            hi = (self.setpoint_deci >> 8) & 0xFF
-            lo = self.setpoint_deci & 0xFF
-            mb = self._mode_byte()
-            ans = bytes([0xD2, self.config.bus_addr, 0x03, 0x04, 0x12, mb, hi, lo])
-            return [encode_extended_inbound(ans, digits=digits)]
+            return self._handle_mode_write(b3, digits=digits)
 
         # Zone queries 99 <Z> 3<P> <dim>
         if b0 == 0x99 and b1 == self.config.bus_addr and (b2 & 0xF0) == 0x30:
             return self._handle_zone_query(b2 & 0x0F, b3, digits=digits)
         return []
+
+    def _handle_mode_write(self, b3: int, *, digits: int) -> list[bytes]:
+        # 00 manual heating (*4*1*Z##), 01 manual cooling (*4*0*Z##), 0F off
+        # (*4*303*Z##); any other byte is left unanswered. A season written
+        # while the zone is OFF only moves the underlying season.
+        if b3 not in (0x00, 0x01, 0x0F):
+            return []
+        if b3 == 0x0F:
+            self.mode = 303
+        elif self.mode == 303:
+            self._season = "heating" if b3 == 0x00 else "cooling"
+        else:
+            self.mode = 1 if b3 == 0x00 else 0
+        hi = (self.setpoint_deci >> 8) & 0xFF
+        lo = self.setpoint_deci & 0xFF
+        mb = self._mode_byte()
+        ans = bytes([0xD2, self.config.bus_addr, 0x03, 0x04, 0x12, mb, hi, lo])
+        if self.mode == 303:
+            reports = self._release_actuators(digits=digits)
+        else:
+            reports = self._drive_active_actuator(digits=digits)
+        return [encode_extended_inbound(ans, digits=digits), *reports]
 
     def _handle_setpoint_write(
         self, b0: int, b2: int, b3: int, *, digits: int
@@ -606,7 +652,16 @@ class ThermoZoneDevice:
             self.mode = 0
             self.function = 2
         else:
+            # Generic function 3 (*#4*Z*#14*T*3##) keeps the season: on the
+            # F461 2.0.11 bench a generic write after a cooling write left
+            # the zone in cooling with no season event
+            # (reports/data/live_scan_confirm_2026-10-26). It leaves OFF in
+            # the manual mode of the underlying season (f461_live_2026-10-15
+            # run3_climate t=394.846: *#4*2*#14*0200*3## in 303 over cooling
+            # reported *4*0*2##).
             self.function = 3
+            if self.mode == 303:
+                self.mode = 0 if self._season == "cooling" else 1
         hi = (self.setpoint_deci >> 8) & 0xFF
         lo = self.setpoint_deci & 0xFF
         ans = bytes(
@@ -618,27 +673,48 @@ class ThermoZoneDevice:
         ]
 
     def _drive_active_actuator(self, *, digits: int) -> list[bytes]:
-        """Switch the active season's actuator on the setpoint / temperature gap.
+        """Drive the active season's actuator and release the other season's.
 
-        Heating: actuator 1 (the valve) is on (1) while the setpoint is above
-        the measured temperature, off (0) otherwise. Cooling: actuator 2 (the
-        fan coil) runs while the setpoint is below the temperature, reported
-        with the dimension 20 value of the fan speed in force (6..8 for speeds
-        1..3, 9 when the speed is automatic), 5 when off. The dimension 19
-        side of the season follows. A changed actuator reports itself with one
-        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway shows
-        as ``*#4*Z#A*20*V##``; the physical KW4691 did so 2.1-2.2 s after the
-        setpoint echo, the virtual plant answers at once.
+        The demand is the setpoint / temperature gap: heating while the
+        setpoint is above the measured temperature, cooling while it is below.
+        The active output is actuator 1 in heating and actuator 2 in cooling;
+        a binary valve (dimension 20 value below 5) switches to 1 / 0, a fan
+        coil (5 and above) runs at the speed in force (6..8 for speeds 1..3, 9
+        when the speed is automatic) or rests at 5. Either season may drive
+        either kind of output, so a heating-side fan coil keeps its 5..9
+        values and goes on answering dimension 11. The inactive season's
+        output is released (valve 0, fan coil 5) first, so the two outputs
+        are never on together: on the physical KW4691 of the F461 2.0.11
+        bench (MyHOME fixture ``f461_live_2026-10-15``) the switch to heating
+        ``*4*1*2##`` with the cooling fan coil 2#2 running released it to
+        ``*#4*2#2*20*5##`` (``probe_followup`` t=80.437..82.905), and the
+        switch to cooling ``*4*0*2##`` with the heating valve 2#1 on released
+        it to ``*#4*2#1*20*0##`` / ``*#4*2*19*5*0##`` (``probe_fancoil``
+        t=9.446..16.536). A changed actuator reports itself with one
+        ``B7 <80+Z> 3<A> <state>`` telegram, the status form the gateway
+        shows as ``*#4*Z#A*20*V##``, the release before the drive; the
+        physical thermostat did so 1-2 s after the echo, the virtual plant
+        answers at once.
         """
         if self.season == "cooling":
-            act_id = 2
-            if self.setpoint_deci < self.temp_deci:
-                state = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
-            else:
-                state = 5
+            active_id, inactive_id = 2, 1
+            demand = self.setpoint_deci < self.temp_deci
         else:
-            act_id = 1
-            state = 1 if self.setpoint_deci > self.temp_deci else 0
+            active_id, inactive_id = 1, 2
+            demand = self.setpoint_deci > self.temp_deci
+        if self.actuators.get(active_id, self._active_side()) >= 5:
+            speed = 5 + self.fan_speed if 1 <= self.fan_speed <= 3 else 9
+            active_state = speed if demand else 5
+        else:
+            active_state = 1 if demand else 0
+        inactive_off = 5 if self.actuators.get(inactive_id, 0) >= 5 else 0
+        return [
+            *self._set_actuator(inactive_id, inactive_off, digits=digits),
+            *self._set_actuator(active_id, active_state, digits=digits),
+        ]
+
+    def _set_actuator(self, act_id: int, state: int, *, digits: int) -> list[bytes]:
+        """Move actuator ``act_id`` to ``state``; report it when it changed."""
         if act_id not in self.actuators or self.actuators[act_id] == state:
             return []
         self.actuators[act_id] = state
@@ -647,6 +723,14 @@ class ThermoZoneDevice:
         else:
             self.valve_heating = state
         return [self.actuator_frame(act_id, digits=digits)]
+
+    def _release_actuators(self, *, digits: int) -> list[bytes]:
+        """Switch every actuator off (valve 0, fan coil 5) for the OFF mode."""
+        reports: list[bytes] = []
+        for act_id, state in sorted(self.actuators.items()):
+            off = 5 if state >= 5 else 0
+            reports += self._set_actuator(act_id, off, digits=digits)
+        return reports
 
     def _handle_zone_query(self, probe: int, b3: int, *, digits: int) -> list[bytes]:
         if b3 == 0x00:
@@ -692,6 +776,18 @@ class ThermoZoneDevice:
         # output is a fan coil (side value >= 5). A valve side leaves the
         # request unanswered, so the gateway NACKs on its bus timeout, as the
         # physical KW4691 does in heating season (2.1 s on the F461 2.0.11).
+        # Physical boundary of the fan coil rows (f461_live_2026-10-15,
+        # run3_climate): the cooling demand *#4*2*#14*0230*2## below 24.1 °C
+        # (t=137.4..140.4) was captured on the discrete 3-relay F430/4 (2#2)
+        # with the speed automatic (11*0), where the KW4691 PI loop drove
+        # speed 3 (*#4*2#2*20*8##, *#4*2*19*8*0##); the 0x2F -> 20*9 the
+        # virtual fan coil reports for the automatic speed is the modulating
+        # ("ON automatic") status byte bt_termo decodes (ownkb:claim:c003281),
+        # not a value that bench produced. *#4*2*#11*1..3,0## (t=324.972..
+        # 336.783) were ACKed, echoed as *#4*2*11*S## and persisted by the
+        # physical KW4691 with the zone OFF; a #11 write while 2#2 was
+        # running was not exercised live, so the running fan coil following
+        # the written speed is clean-room.
         if self._active_side() >= 5:
             replies[0x0B] = bytes([0xD2, addr, 0x03, 0x04, 0x0B, fs, 0x00, 0x00])
         if b3 in replies:
@@ -704,7 +800,11 @@ class ThermoZoneDevice:
         # Humidity read (dimension 60): D1 <Z> 03 03 08 00 00 00 for *#4*Z*60##,
         # D2 00 03 03 08 00 00 00 for *#4*0*60##. Only a zone with a humidity
         # probe answers, D2 <Z> 03 04 08 00 00 <humidity>; the others stay
-        # silent and the gateway NACKs *#4*Z*60## on its bus timeout.
+        # silent, and the harness answers the unanswered extended read with an
+        # immediate $000 / $00 (3-digit / 2-digit PIC target, no TX-ACK,
+        # oracle/bus.py), which the gateway reports as a NACK for *#4*Z*60##.
+        # The physical bus timeout is not emulated for extended reads, and no
+        # fixture has a probe-less zone yet.
         if (
             payload[2:] == b"\x03\x03\x08\x00\x00\x00"
             and (payload[0], payload[1]) in ((0xD1, addr), (0xD2, 0x00))
@@ -712,9 +812,7 @@ class ThermoZoneDevice:
         ):
             return [
                 encode_extended_inbound(
-                    bytes(
-                        [0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity & 0xFF]
-                    ),
+                    bytes([0xD2, addr, 0x03, 0x04, 0x08, 0x00, 0x00, self.humidity]),
                     digits=digits,
                 )
             ]
@@ -725,7 +823,19 @@ class ThermoZoneDevice:
             and payload[3] == 0x02
             and payload[4] == 0x0B
         ):
+            # Fan speed write (*#4*Z*#11*S##): a fan coil that is running
+            # follows the new speed (dimension 20 value 5 + S, 9 for
+            # automatic) and reports itself, so dimensions 11 and 20 agree;
+            # a valve side is not touched, and a zone that is OFF only keeps
+            # the speed for later (f461_live_2026-10-15 run3_climate
+            # t=324.972..336.783: *#4*2*#11*1..3,0## in 303 were echoed and
+            # persisted with 2#2 resting at 20*5).
             self.fan_speed = payload[5]
+            fan_reports = (
+                self._drive_active_actuator(digits=digits)
+                if self._active_side() >= 5 and self.mode != 303
+                else []
+            )
             return [
                 encode_extended_inbound(
                     bytes(
@@ -741,7 +851,8 @@ class ThermoZoneDevice:
                         ]
                     ),
                     digits=digits,
-                )
+                ),
+                *fan_reports,
             ]
         return []
 

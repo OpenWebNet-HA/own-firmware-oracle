@@ -8,6 +8,7 @@
 # bus=pty
 # framer=line
 # responder=pic:plant:f461-bench
+# plant_sha256=741e40e4f62f3d0d2f6f729a1fd479f31b6165520311c88a928f10ec8d7d9b66
 # settle_ms=3000
 # suite=plant-energy-f520
 # suite_sha256=3df1862a3b8c31111ceeab065c84d42ba002f3a7f777b99b44c9c7b615cfeaf8

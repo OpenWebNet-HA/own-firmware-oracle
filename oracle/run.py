@@ -45,6 +45,7 @@ from oracle import (
     target,
 )
 from oracle.bus import LineFramer
+from oracle.plant import topology
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
@@ -396,8 +397,10 @@ def suite_header(
     responder: str,
     settle_ms: float,
     suite: cases.Suite,
+    *,
+    plant: str | None = None,
 ) -> dict[str, str]:
-    return {
+    header = {
         "product": spec.product,
         "version": spec.version,
         "image_sha256": spec.image_sha256,
@@ -413,6 +416,24 @@ def suite_header(
         "suite_sha256": suite.sha256,
         "oracle_version": ORACLE_VERSION,
     }
+    if harness.startswith("plant:"):
+        # The fixture the plant answered from, part of the staleness key: the
+        # one the --responder descriptor names when it does (a --plant path
+        # or a pic:plant:X next to a different harness is hashed as run),
+        # else the harness's.
+        header[record.PLANT_HEADER_KEY] = topology.fixture_sha256(
+            plant if plant is not None else harness[len("plant:") :]
+        )
+    return header
+
+
+def plant_of_responder(descriptor: str | None) -> str | None:
+    """The fixture a plant responder descriptor names, else None."""
+    if descriptor:
+        for prefix in ("pic:plant:", "plant:"):
+            if descriptor.startswith(prefix):
+                return descriptor[len(prefix) :]
+    return None
 
 
 def suite_path(spec: target.TargetSpec, harness: str, suite_name: str) -> Path:
@@ -424,13 +445,23 @@ def suite_path(spec: target.TargetSpec, harness: str, suite_name: str) -> Path:
 
 
 def apply_plant_flag(args: argparse.Namespace) -> None:
+    """Turn --plant into the harness and responder it stands for.
+
+    The harness names the result directory (plant-<stem>), so it takes the
+    fixture's stem; the responder gets the fixture as it resolves, a name
+    (with or without .yaml) under oracle/plant/fixtures/ or the YAML path as
+    given, so that a custom fixture outside that directory is found and
+    hashed by topology.fixture_path() / fixture_sha256().
+    """
     plant_arg = getattr(args, "plant", None)
     if plant_arg:
-        fixture_slug = Path(str(plant_arg)).stem
+        plant = str(plant_arg)
+        fixture_slug = Path(plant).stem
         if getattr(args, "harness", "full") == "full":
             args.harness = f"plant:{fixture_slug}"
         if not getattr(args, "responder", None):
-            args.responder = f"pic:plant:{fixture_slug}"
+            fixture = plant if Path(plant).is_file() else fixture_slug
+            args.responder = f"pic:plant:{fixture}"
 
 
 def cmd_suite(args: argparse.Namespace) -> int:
@@ -528,6 +559,7 @@ def cmd_suite(args: argparse.Namespace) -> int:
                 tgt.bus.responder.name,
                 tgt.settle_ms,
                 suite,
+                plant=plant_of_responder(responder_arg),
             )
     out = Path(args.out) if args.out else suite_path(spec, args.harness, suite.name)
     record.write(out, header, rows, ordered=suite.ordered)
