@@ -6,39 +6,41 @@ images. Rows from the `suites` workflow on `main` after #59 (branch
 results"): a new suite enters `results/` only when a second run reproduces the
 file byte for byte (`tools/suite_plan.py`, verdict `unstable` otherwise). The
 crash rows were also reproduced in three fresh local runs each. Nothing here is
-`experimentally_confirmed`; the live anchor is one F461 `2.0.11`.
+`experimentally_confirmed`; the live anchors are an F461 `2.0.11` and a
+MyHomeServer1 `3.87.13`.
 
 **Suite:** [`oracle/cases/who13-identification.cases`](../oracle/cases/who13-identification.cases)
-(9 independent steps, suite SHA-256
-`99fa591dd8a72109824799045d5ee26d54205f5063265e80c80c57b873a325e5`; the
+(10 independent steps, suite SHA-256
+`718a8e0e59e9a6d7b0bdd4ebe78edac87200d1bb4d82ed57b8422b15ddad188c`; the
 workflow ran them with `reset=each` on F450 `020010` and `reset=0` on the other
 eleven targets, the reset policy of each target's committed suites). Rows:
 `results/<product>/<version>/oracle/full/who13-identification.tsv`; image,
 target SHA-256 and reset policy are in each file's header. DIMENSION 23, 24 and
 the WHERE form `*#1013*0*1##` were already covered by `trace-corpus.cases` on
-all twelve gateways (since 2026-10-15); this suite adds DIMENSION 10, 11, 12 and
-`*#1013**1##` and puts the nine requests side by side.
+all twelve gateways (since 2026-10-15); this suite adds DIMENSION 10, 11, 12,
+27 and `*#1013**1##` and puts the ten requests side by side.
 
 ## Question
 
 A client that adds a gateway by hand (no SSDP) has only WHO 13 and WHO 1013 to
 learn what it talks to. MyHOME's runtime asks `*#13**15##` first and `*#1013**1##`
 only when the device type is the shared code `200` (MyHOME#420); its manual
-config flow had started to ask the MAC (`*#13**12##`) as well. The suite asks:
+config flow had started to ask the MAC (`*#13**12##`) and model name
+(`*#13**27##`, OWNd#139) as well. The suite asks:
 
-1. Which of DIMENSION 15, 16, 10, 11, 12, 23, 24 and WHO 1013 `OBJECT_MODEL` does
-   each firmware answer?
+1. Which of DIMENSION 15, 16, 10, 11, 12, 23, 24, 27 and WHO 1013
+   `OBJECT_MODEL` does each firmware answer?
 2. Does any of them harm the gateway?
 
-DIMENSION 19 (uptime) and 27 (host name) are left out: their values depend on the
-run, not on the firmware.
+DIMENSION 19 (uptime) is left out: its value depends on the run, not on the
+firmware.
 
 ## Method
 
 In the CI jail: the daemons see the jail's dummy `eth0` (`192.168.1.1/24`) and
 the pinned MAC `02:00:00:00:00:01` (own-firmware-oracle#57), which is what makes
 the IP and MAC **values** below reproducible. On F450 every step ran on a freshly
-started gateway (`reset=each`); on the other eleven the nine steps ran in the
+started gateway (`reset=each`); on the other eleven the ten steps ran in the
 order of the table on one gateway start (`reset=0`), the harness restarting the
 target after a `crash` row (`oracle/driver.py`), so the three crash rows of
 H4684 and MH200 are each a fresh daemon exit and the rows after them come from
@@ -48,8 +50,10 @@ the same verdicts with the container's own interface values.
 ## Rows
 
 Cells: `ack, out <frame>` is the ACK followed by that OpenWebNet reply; `ack,
-silent` is an ACK with no reply after it; **crash** is a `nack` after which the
-target was no longer alive (verdict `crash`, `oracle/driver.py`).
+silent` / `nack, silent` is an ACK or NACK with no reply frame; `-, out <frame>`
+is an OpenWebNet frame with no separate `*#*1##` / `*#*0##` delimiter after it;
+**crash** is a `nack` after which the target was no longer alive (verdict
+`crash`, `oracle/driver.py`).
 
 | Frame | F450 `020010` | F453 `010100` | F453AV `030014` | F454 `020051` | F459 `020105` | F460 `020012` | F461 `020011` | H4684 `020054` | MH200 `020102` | MH200N `010108` | MH202 `010024` | MyHomeServer1 `028206` |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -62,6 +66,7 @@ target was no longer alive (verdict `crash`, `oracle/driver.py`).
 | `*#13**16##` | ack, out `*#13**16*2*0*10##` | ack, out `*#13**16*1*1*0##` | ack, out `*#13**16*3*0*14##` | ack, out `*#13**16*2*0*51##` | ack, out `*#13**16*2*1*5##` | ack, out `*#13**16*2*0*12##` | ack, out `*#13**16*2*0*11##` | ack, out `*#13**16*2*0*54##` | ack, out `*#13**16*2*1*2##` | ack, out `*#13**16*1*1*8##` | ack, out `*#13**16*1*0*24##` | ack, out `*#13**16*2*82*6##` |
 | `*#13**23##` | ack, out `*#13**23*2*6*32##` | ack, out `*#13**23*##` | ack, out `*#13**23*##` | ack, out `*#13**23*2*6*32##` | ack, out `*#13**23*2*6*32##` | ack, out `*#13**23*4*14*78##` | ack, out `*#13**23*4*14*78##` | ack, out `*#13**23*2*0*5##` | ack, out `*#13**23*0*0*9##` | ack, out `*#13**23*##` | ack, out `*#13**23*2*6*32##` | ack, out `*#13**23*5*10*35##` |
 | `*#13**24##` | ack, out `*#13**24*##` | ack, out `*#13**24*3*0*1##` | ack, out `*#13**24*3*0*1##` | ack, out `*#13**24##` | ack, out `*#13**24*##` | ack, out `*#13**24*##` | ack, out `*#13**24*##` | ack, out `*#13**24*3*0*0##` | ack, out `*#13**24*3*0*5##` | ack, out `*#13**24*3*0*1##` | ack, out `*#13**24*##` | ack, out `*#13**24*2*23*10##` |
+| `*#13**27##` | ack, out `*#13**27*72#79#83#84##` | ack, out `*#13**27*66#84#87#69#66##` | ack, out `*#13**27*66#84#87#69#66##` | ack, out `*#13**27*72#79#83#84##` | ack, out `*#13**27*72#79#83#84##` | ack, out `*#13**27*72#79#83#84##` | ack, out `*#13**27*72#79#83#84##` | nack, silent | -, out `*#13**27*#*#*1##` | -, out `*#13**27*#*#*1##` | ack, out `*#13**27*72#79#83#84##` | -, out `*#13**27*#*#*1##` |
 
 The crash rows were reproduced in three fresh runs on each of H4684 `020054` and
 MH200 `020102` (`work/oracle-run/crash-recheck`, `pr-suites`), with `*#13**15##`,
@@ -92,22 +97,46 @@ MH200 `020102` (`work/oracle-run/crash-recheck`, `pr-suites`), with `*#13**15##`
   targets, `4*14*78` for F460 and F461, `5*10*35` for MyHomeServer1. It is not
   evidence about the physical gateway's kernel: the live F461 `2.0.11` reports
   `5*10*35` (below).
+- **Model name / machine descriptor** (`*#13**27##`) never crashes a daemon, nor
+  does any target read the Linux UTS hostname. Six targets (`F450`, `F454`,
+  `F459`, `F460`, `F461`, `MH202`) answer `*#13**27*72#79#83#84##` (`"HOST"` in
+  `#`-separated decimal ASCII codes, the factory/unpopulated fallback) followed
+  by `ack`; `F453` and `F453AV` answer `*#13**27*66#84#87#69#66##` (`"BTWEB"`
+  from their recovery `conf.xml`) followed by `ack`; `H4684` refuses cleanly
+  (`nack, silent`). On `MH200`, `MH200N` and `MyHomeServer1` `028206` (whose
+  staged configuration has an empty descriptor string), the reply on the
+  command socket is `own:*#13**27*#*#*1##` (`reply=-`): an unterminated empty
+  `*#13**27*#` (one `#` instead of `##`) concatenated directly with `*#*1##`, so
+  a `##`-delimited stream reader absorbs the ACK into the malformed frame and
+  never sees a separate `*#*1##`.
 
 For a client: ask DIMENSION 15 first, WHO 1013 only on `200`, and the network
-dimensions only from a model known to answer them. OWNd's `request_mac_address`
-and MyHOME's manual identification were changed accordingly.
+dimensions only from a model known to answer them. On gateways where the stored
+DIMENSION 27 descriptor is empty (`MH200`, `MH200N`, or an unpopulated
+`MyHomeServer1`), sending `*#13**27##` swallows the command-session `*#*1##` ACK
+into `*#13**27*#*#*1##` and stalls an ACK-waiting request until its timeout.
+OWNd's `request_mac_address`, `WHO13ModelNameReading` (OWNd#139) and MyHOME's
+manual identification were designed accordingly.
 
 ## Live anchor
 
-F461 `2.0.11` (2026-10-23, read-only; MAC and LAN address rewritten to the synthetic `00:03:50:00:10:23` / `192.0.2.92` used by the MyHOME trace fixture): `*#13**15*200##`, `*#13**16*2*0*11##`,
-`*#13**12*0*3*80*0*16*35##`, `*#13**10*192*0*2*92##`, `*#13**11*255*255*255*0##`,
-`*#13**23*5*10*35##`, `*#13**24*2*26*4##`, `*#1013**1*134*15*5*0##`: the real
-gateway answers the MAC and IP the emulated one answers as `0*0*0*0` (it reads them
-from its running system, not a file), and `OBJECT_MODEL 134` where the factory
-configuration gives `0*0*0*0`.
+- F461 `2.0.11` (2026-10-23, read-only; MAC and LAN address rewritten to the synthetic `00:03:50:00:10:23` / `192.0.2.92` used by the MyHOME trace fixture): `*#13**15*200##`, `*#13**16*2*0*11##`,
+  `*#13**12*0*3*80*0*16*35##`, `*#13**10*192*0*2*92##`, `*#13**11*255*255*255*0##`,
+  `*#13**23*5*10*35##`, `*#13**24*2*26*4##`, `*#13**27*70#52#54#49##` (`"F461"`),
+  `*#1013**1*134*15*5*0##`: the real gateway answers the MAC, IP, `"F461"` model
+  name and `OBJECT_MODEL 134` where the factory configuration gives `0*0*0*0`
+  and `"HOST"`.
+- MyHomeServer1 `3.87.13` (2026-10-24, read-only MyHOME trace fixture):
+  `*#13**15*200##`, `*#13**27*77#121#72#111#109#101#83#101#114#118#101#114#49##`
+  (`"MyHomeServer1"`), `*#1013**1*67*15*5*0##`: on physical hardware with a
+  populated descriptor, DIMENSION 27 emits a properly `##`-terminated ASCII
+  code sequence followed by `*#*1##`, whereas the emulated `028206` factory
+  image has an empty descriptor and emits the unterminated `*#13**27*#*#*1##`.
 
 ## What the suite does not settle
 
 - How the physical H4684 and MH200 behave: a daemon exit under qemu-user; the
   supervisor's restart is not observed.
-- The MAC and IP values on gateways that read them from a file: factory values.
+- The MAC, IP and DIMENSION 27 descriptor values on gateways that populate them
+  at boot or from plant files: factory/unpopulated values (`0*0*0*0`, `"HOST"`,
+  `"BTWEB"`, or empty) appear in the jail.
