@@ -2,6 +2,15 @@
   "format_version": "1.0.0",
   "gateways": [
     {
+      "image_sha256": "c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624",
+      "product": "3488",
+      "reply_semantics": "",
+      "status": "catalogued",
+      "suites": [],
+      "target_sha256": "",
+      "version": "030205"
+    },
+    {
       "image_sha256": "ef2e3ccd3e67842a8ad19d50e8cd1c54c58eb8c04308948ec12f84b8a1c7a471",
       "product": "3550",
       "reply_semantics": "",

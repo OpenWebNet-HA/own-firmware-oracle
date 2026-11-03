@@ -1,0 +1,48 @@
+# One catalog entry per firmware image.
+# Everything here is public metadata: product, version, hashes, where to get it.
+# The image itself is never committed (see .gitignore + tools/guard.py).
+#
+# HOMETOUCH (article 3488), the 7" MyHOME_Up touch screen and video door
+# entry internal unit. The vendor product page links the firmware package
+# SMARTDES_030205.fwz directly (no outer zip), so wrapper and image are the
+# same file. Inside: fwz.xml (<name>SMARTDES</name>, fwz_ver 3.2.5), a
+# uImage kernel and two ext4 rootfs images (btweb_only, btweb_only_recovery),
+# each wrapped as <file>.sha256.sig.zip like the MyHomeServer1 SMARTGW
+# package; seven extra_download members (*.xtz) are declared but not shipped.
+product: "3488"
+article: "3488"
+version: "030205"          # firmware 3.2.5 (fwz_ver in fwz.xml, vendor filename SMARTDES_030205)
+name: "HOMETOUCH 7\" touch screen (SMARTDES)"
+
+wrapper:
+  filename: SMARTDES_030205.fwz
+  size: 167250224
+  sha256: "c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624"
+  sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/SMARTDES_030205.fwz"
+
+image:
+  filename: SMARTDES_030205.fwz
+  size: 167250224
+  sha256: "c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624"
+
+# Top-level listing:
+#   btweb_only.ext4.gz.sha256.sig.zip           114607037   stored
+#   btweb_only_recovery.ext4.gz.sha256.sig.zip   46356100   stored
+#   fwz.xml                                          1758   ZipCrypto
+#   uImage.zip.sha256.sig.zip                     6285976   stored
+#
+# Vendor packaging scheme: "the password is the model", and here the model
+# name inside the package is SMARTDES (the fwz.xml <name>), not the article
+# number: SMARTDES opens fwz.xml, 3488 does not.
+password_scheme:
+  candidates:
+    - "SMARTDES"
+    - "$PRODUCT"         # expands to 3488
+    - "3488"
+    - "bticino"
+
+limits:
+  max_expand_mib: 4096   # uncompressed ext4 rootfs images
+
+status: unpackable
