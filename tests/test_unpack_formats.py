@@ -409,6 +409,12 @@ def test_guard_allows_big_manifests_but_nothing_else(tmp_path):
     )
     assert guard.max_bytes(Path("results/F460/020012/notes.tsv")) == guard.MAX_BYTES
     assert guard.max_bytes(Path("findings/manifest.tsv")) == guard.MAX_BYTES
+    # the two generated indexes get their own ceiling, nothing else under results/
+    assert guard.max_bytes(Path("results/mcp_index.json")) == guard.INDEX_MAX_BYTES
+    assert guard.max_bytes(Path("results/plant_index.json")) == guard.INDEX_MAX_BYTES
+    assert guard.max_bytes(Path("results/other.json")) == guard.MAX_BYTES
+    assert guard.max_bytes(Path("results/F460/mcp_index.json")) == guard.MAX_BYTES
+    assert guard.max_bytes(Path("mcp_index.json")) == guard.MAX_BYTES
 
 
 def test_guard_knows_the_new_container_magics(tmp_path):
