@@ -154,8 +154,8 @@ name the suite, say "daemon not attributed", and point here.
   being undefined, it crashes MH202 `010024`.
 - `*#4*001##` / `*#4*001*0##` are documented and work on eleven gateways; a
   client that wants all probes of a zone needs the `0ZZ` form (eight probe
-  telegrams on the 2-digit gateways), but should not send it to MH202
-  `010024`.
+  telegrams on the legacy 2-digit-PIC gateways), but should not send it to
+  MH202 `010024`.
 - DIMENSION 52 requests should use the two-digit `52#yy#M` year the page
   documents; the four-digit year that was sent reaches the bus on seven
   gateways with a malformed year/month field and crashes F460 / F461,
@@ -206,6 +206,8 @@ and `*#3*##` (OWNd's evidence note) only on F454 and F459.
 - **Other spellings.** Only zone `001`, meter `51`, year `2026` / month `10`
   were sent; other three-digit zones, other meters and other out-of-range
   years have no rows.
-- **The full suite's 65 other rows** (program numbers, holiday dates, WHO 16
-  / 22 / 18 ranges, door entry, alarm, clock) are in the held-back TSVs and
-  are not claimed by this finding.
+- **The suite's 60 other rows** (program numbers, holiday dates, WHO 16 / 22
+  / 18 ranges, door entry, alarm, clock — the 72 suite steps minus the five
+  crashing frames and seven "See also" frames above) are in the committed
+  TSVs (`ownd-audit-frames.tsv`) for completeness and are not claimed by this
+  finding.
