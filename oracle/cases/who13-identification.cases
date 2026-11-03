@@ -11,11 +11,12 @@
 ;   *#13**11##    DIMENSION 11  netmask
 ;   *#13**23##    DIMENSION 23  kernel version
 ;   *#13**24##    DIMENSION 24  distribution version
+;   *#13**27##    DIMENSION 27  model name (hash-separated ASCII codes; OWNd#139)
 ;   *#1013**1##   WHO 1013 OBJECT_MODEL (134 = F461, 19 = H4684, 4 = MH200)
 ;   *#1013*0*1##  the same with WHERE 0
 ;
-; DIMENSION 19 (uptime) and 27 (host name) are left out: their values depend on
-; the run, not on the firmware.
+; DIMENSION 19 (uptime) is left out: its value depends on the run, not on the
+; firmware.
 ;
 ; Question: which of these does each firmware answer, and does any of them
 ; harm the gateway? A client that adds a gateway by hand (no SSDP) has only
@@ -28,5 +29,6 @@ down *#13**10##
 down *#13**11##
 down *#13**23##
 down *#13**24##
+down *#13**27##
 down *#1013**1##
 down *#1013*0*1##
