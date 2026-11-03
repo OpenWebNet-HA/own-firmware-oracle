@@ -6,26 +6,26 @@ images, two fresh runs per gateway (fresh containers, run 2 started after run
 reply, verdict and bus output). Nothing here is `experimentally_confirmed`:
 none of these frames was sent to a physical gateway.
 
-**Suite:** `ownd-audit-frames.cases` (72 independent `down` steps,
-`reset=each`, suite SHA-256
-`db03cc878d84d514b9e324c2d01d050264f2e4ccd0c1aad33937683c30e472ca`). The suite
+**Suite:** [`oracle/cases/ownd-audit-frames.cases`](../oracle/cases/ownd-audit-frames.cases)
+(72 independent `down` steps, `reset=each`, suite SHA-256
+`db03cc878d84d514b9e324c2d01d050264f2e4ccd0c1aad33937683c30e472ca`). Rows:
+`results/<product>/<version>/oracle/full/ownd-audit-frames.tsv` (run 1; run 2
+was byte-identical and is not committed, as for every other suite); image and
+target SHA-256 are in each file's header. The suite
 sends, pairwise, the frame an OWNd `master` builder emits and the form the
 Encyclopedia functional page defines for the same request (test2 report 21,
 "OWNd master vs the OpenWebNet Encyclopedia", 2026-10-28). No WHO 4
 DIMENSION 22 frame is in the suite.
 
-**Why the suite and its TSVs are not in this commit.** The 24 TSVs
-(12 gateways x 2 runs) and the `.cases` file are held back: 52 of the 72
-frames are new to the index (20 already have committed rows), and with them
-the regenerated `results/mcp_index.json` grows from 589 to 641 inputs
-and to 5,673,665 bytes, over the 5 MiB `MAX_BYTES` cap in
-[`tools/guard.py`](../tools/guard.py), so the branch could not pass `guard`
-and `mcp_index.py --check` at the same time. This finding therefore carries the
-crash rows into [`tools/expected_divergences.yaml`](../tools/expected_divergences.yaml)
-and quotes the TSV lines verbatim; the suite file and both runs' TSVs are
-available on request and can be committed once the index cap or the index
-format is addressed. Image and target hashes of the three crashing gateways,
-from the TSV headers:
+**Index.** 63 of the 72 frames are new to
+[`results/mcp_index.json`](../results/mcp_index.json) (9 already had committed
+rows in other suites), which grows from 589 to 652 inputs and past the 5 MiB
+`MAX_BYTES` backstop of [`tools/guard.py`](../tools/guard.py); the two
+generated indexes now have their own `INDEX_MAX_BYTES` ceiling (25 MiB) there.
+The seven crash verdicts are also carried into
+[`tools/expected_divergences.yaml`](../tools/expected_divergences.yaml)
+(`crash_frames`), and the TSV lines are quoted verbatim below. Image and
+target hashes of the three crashing gateways, from the TSV headers:
 
 | Product | `image_sha256` | `target_sha256` |
 |---|---|---|
@@ -61,7 +61,7 @@ MH202 dies on it. The same step with a real WHERE (`*#1*12##`) goes out on
 11 of 12.
 
 ```text
-ownd-audit-frames-MH202-run1.tsv:16:down	*#1*##	nack	crash	-
+results/MH202/010024/oracle/full/ownd-audit-frames.tsv:16:down	*#1*##	nack	crash	-
 ```
 
 ### MH202 `010024`: the documented all-probes form `*#4*001##` and its DIMENSION 0 read
@@ -70,26 +70,31 @@ Per the Encyclopedia WHO 4 addressing page, `001..099` is "all probes in
 zone" (master and slave probes of zone `ZZ`), distinct from `1..99` (the
 master probe), so `*#4*001##` and `*#4*001*0##` are **valid documented
 frames**, not OWNd misbuilds (OWNd collapses `001` onto zone `1`, report row
-H2). Eleven gateways forward them. On the eight 2-digit-PIC gateways
-`*#4*001*0##` fans out to eight telegrams `$0499013100\r` .. `$0499013800\r`
-(zone 1, probes 1..8), while `*#4*1*0##` gives `$0499013000\r` (probe 0 =
-master); the dimensionless `*#4*001##` is not distinguished from `*#4*1##`
-(the same four zone-status telegrams). MH202 crashes on both `001` forms and
-answers both `1` forms with `ack, out`.
+H2). Eleven gateways forward them. On the eight legacy 2-digit-PIC gateways
+(F450, F453, F453AV, F454, F459, H4684, MH200, MH200N) `*#4*001*0##` fans out
+to eight telegrams `$0499013100\r` .. `$0499013800\r` (zone 1, probes 1..8),
+while `*#4*1*0##` gives `$0499013000\r` (probe 0 = master); F460, F461 and
+MyHomeServer1 emit a single telegram, `$0499013100\r` on MyHomeServer1 and
+`$00499013100\r` with the 3-digit RPMsg prefix on F460 / F461 (MyHomeServer1
+`028206` runs a 2-digit v8 PIC on `/dev/ttymxc2`, so the single telegram is a
+translator difference, not a transport one). The dimensionless `*#4*001##` is not
+distinguished from `*#4*1##` (the same four zone-status telegrams). MH202
+crashes on both `001` forms and answers both `1` forms with `ack, out`.
 
 ```text
-ownd-audit-frames-MH202-run1.tsv:42:down	*#4*001##	nack	crash	-
-ownd-audit-frames-MH202-run1.tsv:43:down	*#4*001*0##	nack	crash	-
+results/MH202/010024/oracle/full/ownd-audit-frames.tsv:42:down	*#4*001##	nack	crash	-
+results/MH202/010024/oracle/full/ownd-audit-frames.tsv:43:down	*#4*001*0##	nack	crash	-
 ```
 
-For comparison, the same rows on MH200N `010108` (2-digit PIC) and F461
-`020011` (3-digit RPMsg, one telegram only):
+For comparison, the same rows on MH200N `010108` (legacy 2-digit PIC, eight
+telegrams) and F461 `020011` (3-digit RPMsg, one telegram; MyHomeServer1
+`028206` also emits one, with the 2-digit `$04` prefix):
 
 ```text
-ownd-audit-frames-MH200N-run1.tsv:42:down	*#4*001##	nack	out	bus:24 30 34 39 39 30 31 33 30 30 30 0d | bus:24 30 34 39 39 30 31 33 30 31 32 0d | bus:24 30 34 39 39 30 31 33 30 30 45 0d | bus:24 30 34 39 39 30 31 33 30 30 44 0d
-ownd-audit-frames-MH200N-run1.tsv:43:down	*#4*001*0##	nack	out	bus:24 30 34 39 39 30 31 33 31 30 30 0d | bus:24 30 34 39 39 30 31 33 32 30 30 0d | bus:24 30 34 39 39 30 31 33 33 30 30 0d | bus:24 30 34 39 39 30 31 33 34 30 30 0d | bus:24 30 34 39 39 30 31 33 35 30 30 0d | bus:24 30 34 39 39 30 31 33 36 30 30 0d | bus:24 30 34 39 39 30 31 33 37 30 30 0d | bus:24 30 34 39 39 30 31 33 38 30 30 0d
-ownd-audit-frames-F461-run1.tsv:42:down	*#4*001##	nack	out	bus:24 30 30 34 39 39 30 31 33 30 30 30 0d
-ownd-audit-frames-F461-run1.tsv:43:down	*#4*001*0##	nack	out	bus:24 30 30 34 39 39 30 31 33 31 30 30 0d
+results/MH200N/010108/oracle/full/ownd-audit-frames.tsv:42:down	*#4*001##	nack	out	bus:24 30 34 39 39 30 31 33 30 30 30 0d | bus:24 30 34 39 39 30 31 33 30 31 32 0d | bus:24 30 34 39 39 30 31 33 30 30 45 0d | bus:24 30 34 39 39 30 31 33 30 30 44 0d
+results/MH200N/010108/oracle/full/ownd-audit-frames.tsv:43:down	*#4*001*0##	nack	out	bus:24 30 34 39 39 30 31 33 31 30 30 0d | bus:24 30 34 39 39 30 31 33 32 30 30 0d | bus:24 30 34 39 39 30 31 33 33 30 30 0d | bus:24 30 34 39 39 30 31 33 34 30 30 0d | bus:24 30 34 39 39 30 31 33 35 30 30 0d | bus:24 30 34 39 39 30 31 33 36 30 30 0d | bus:24 30 34 39 39 30 31 33 37 30 30 0d | bus:24 30 34 39 39 30 31 33 38 30 30 0d
+results/F461/020011/oracle/full/ownd-audit-frames.tsv:42:down	*#4*001##	nack	out	bus:24 30 30 34 39 39 30 31 33 30 30 30 0d
+results/F461/020011/oracle/full/ownd-audit-frames.tsv:43:down	*#4*001*0##	nack	out	bus:24 30 30 34 39 39 30 31 33 31 30 30 0d
 ```
 
 The committed `thermo-zone-requests` rows already show MH202 crashing on two
@@ -114,10 +119,10 @@ month 9) against one four-digit sample (2026, month 10), so the contrast is
 between those two rows, not a rule for every year and month.
 
 ```text
-ownd-audit-frames-F460-run1.tsv:27:down	*#18*51*52#2026#10##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
-ownd-audit-frames-F460-run1.tsv:28:down	*#18*51*52#2026#10*100##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
-ownd-audit-frames-F461-run1.tsv:27:down	*#18*51*52#2026#10##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
-ownd-audit-frames-F461-run1.tsv:28:down	*#18*51*52#2026#10*100##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
+results/F460/020012/oracle/full/ownd-audit-frames.tsv:27:down	*#18*51*52#2026#10##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
+results/F460/020012/oracle/full/ownd-audit-frames.tsv:28:down	*#18*51*52#2026#10*100##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
+results/F461/020011/oracle/full/ownd-audit-frames.tsv:27:down	*#18*51*52#2026#10##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
+results/F461/020011/oracle/full/ownd-audit-frames.tsv:28:down	*#18*51*52#2026#10*100##	nack	crash	bus:24 30 30 36 44 31 41 31 30 32 33 33 35 30 31 36 37 45 41 30 0d
 ```
 
 The telegram is `$006D1A1023350167EA0\r` (3-digit prefix; `$06D1A1023350167EA0\r`
@@ -129,7 +134,7 @@ not fit the one-byte year field, and the month is no longer a separate
 byte. The crash follows that telegram on the two RPMsg gateways only; which
 process exits is not attributed in this run.
 
-## Committed oracle rows (the seven crash frames, all 12 gateways, run 1; run 2 identical)
+## Committed oracle rows (five crashing frames, seven `(gateway, frame)` crash cells; all 12 gateways, run 1; run 2 identical)
 
 | Frame | F450 `020010` | F453 `010100` | F453AV `030014` | F454 `020051` | F459 `020105` | F460 `020012` | F461 `020011` | H4684 `020054` | MH200 `020102` | MH200N `010108` | MH202 `010024` | MyHomeServer1 `028206` |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -161,11 +166,12 @@ name the suite, say "daemon not attributed", and point here.
 Two results of the replay that are useful to clients, with their rows (run 1;
 run 2 identical). Neither crashed anywhere.
 
-**WHO 25: the firmware applies the `3` prefix itself.** `*#25*39##` goes out
-as `$04B4009009\r` (sensor **09**), `*#25*35##` as `$04B4009005\r`, and
-`*#25*339##` as `$04B4009039\r` (sensor 39), on the nine WHO 25-forwarding
-gateways; `*#25*5##` is refused on 12 of 12. So an OWNd event parser that
-strips a leading `3` matches the emulated gateways, but a builder that emits
+**WHO 25: on `down` the firmware requires and strips the `3` prefix; on `up`
+it prepends it.** `*#25*39##` goes out as `$04B4009009\r` (sensor **09**),
+`*#25*35##` as `$04B4009005\r`, and `*#25*339##` as `$04B4009039\r` (sensor
+39), on the nine WHO 25-forwarding gateways; the prefix-less `*#25*5##` is
+refused on 12 of 12. So an OWNd event parser that strips a leading `3` from
+the `up` WHERE matches the emulated gateways, but a `down` builder that emits
 `*#25*39##` for "sensor 39" addresses sensor 09.
 
 | Frame | F450 | F453 | F453AV | F454 | F459 | F460 | F461 | H4684 | MH200 | MH200N | MH202 | MyHomeServer1 |
