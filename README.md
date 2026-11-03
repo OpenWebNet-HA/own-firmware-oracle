@@ -453,7 +453,7 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 | **L4686SDK** | `012001` (1.20.1) | Bare-metal Microchip PIC18 (`0x000000`-`0x00EDDD`) | 3 | Zip, Intel HEX | OpenWebNet-to-SCS serial translator (`4686SDK_012001.HEX`, no OS) | Static analysis only (PIC18 serial/USB translator — no TCP/IP stack) |
 | **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
 | **3550** | `030020` (3.0.20) | Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`) | 5 | Zip, ZipCrypto, Motorola S-record | 99-zone central unit firmware (`3550_030020.mot`, no OS) | Static analysis only (QEMU has no M16C target) |
-| **3488** | `030205` (3.2.5) | Linux ARMv7 `eabi5` | 17,998 | U-Boot, Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `bt_vct`, `bt_av_media`, `coso`, `bt_mhportal` | Pending Emulation (MyHomeServer1-class daemon stack on `/dev/ttymxc1`; no Phase 2 target yet) |
+| **3488** | `030205` (3.2.5) | Linux ARMv7 `eabi5` | 18,008 | U-Boot, Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `bt_vct`, `bt_av_media`, `coso`, `bt_mhportal` | Pending Emulation (MyHomeServer1-class daemon stack on `/dev/ttymxc1`; no Phase 2 target yet) |
 <!-- FLEET_TABLE_END -->
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller

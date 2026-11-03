@@ -2,7 +2,7 @@
 
 Catalog entry: [`catalog/3488/030205.yaml`](../../catalog/3488/030205.yaml).
 Manifest: [`results/3488/030205/manifest.tsv`](../../results/3488/030205/manifest.tsv)
-(17,998 rows, built locally with `tools/unpack.py` in the project's docker
+(18,008 rows, built with `tools/unpack.py` in the project's docker
 harness; `oracle.yml` rebuilds it once the entry is on `main`).
 
 ## Why it is here
