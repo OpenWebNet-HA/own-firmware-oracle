@@ -1,13 +1,14 @@
 # WHO 13 gateway identification: which requests a gateway answers, and two that crash it
 
 **Epistemic status:** `firmware_observed` (emulated, `harness=full`), 12 gateway
-images. Rows from the `suites` workflow on `main` after #59 (branch
-`oracle/update-suites`, commit `112d916`, "oracle: new and refreshed suite
-results"): a new suite enters `results/` only when a second run reproduces the
-file byte for byte (`tools/suite_plan.py`, verdict `unstable` otherwise). The
-crash rows were also reproduced in three fresh local runs each. Nothing here is
-`experimentally_confirmed`; the live anchors are an F461 `2.0.11` and a
-MyHomeServer1 `3.87.13`.
+images. The initial nine-step suite entered `results/` via the `suites` workflow
+on `main` after #59 (branch `oracle/update-suites`, commit `112d916`, "oracle:
+new and refreshed suite results"), and #71 (`oracle/who13-dim27`) added the
+tenth step (`*#13**27##`); in both runs a suite enters `results/` only when a
+second pass reproduces the file byte for byte (`tools/suite_plan.py`, verdict
+`unstable` otherwise). The crash rows were also reproduced in three fresh local
+runs each. Nothing here is `experimentally_confirmed`; the live anchors are an
+F461 `2.0.11` and a MyHomeServer1 `3.87.13`.
 
 **Suite:** [`oracle/cases/who13-identification.cases`](../oracle/cases/who13-identification.cases)
 (10 independent steps, suite SHA-256
@@ -25,8 +26,10 @@ all twelve gateways (since 2026-10-15); this suite adds DIMENSION 10, 11, 12,
 A client that adds a gateway by hand (no SSDP) has only WHO 13 and WHO 1013 to
 learn what it talks to. MyHOME's runtime asks `*#13**15##` first and `*#1013**1##`
 only when the device type is the shared code `200` (MyHOME#420); its manual
-config flow had started to ask the MAC (`*#13**12##`) and model name
-(`*#13**27##`, OWNd#139) as well. The suite asks:
+config flow asks the MAC (`*#13**12##`) on models known to answer it
+(MyHOME#799), while OWNd decodes `#`-separated ASCII model-name replies on
+DIMENSION 27 (`*#13**27##`, `OWNGatewayEvent.model_name`, OWNd#139). The suite
+asks:
 
 1. Which of DIMENSION 15, 16, 10, 11, 12, 23, 24, 27 and WHO 1013
    `OBJECT_MODEL` does each firmware answer?
@@ -41,11 +44,15 @@ In the CI jail: the daemons see the jail's dummy `eth0` (`192.168.1.1/24`) and
 the pinned MAC `02:00:00:00:00:01` (own-firmware-oracle#57), which is what makes
 the IP and MAC **values** below reproducible. On F450 every step ran on a freshly
 started gateway (`reset=each`); on the other eleven the ten steps ran in the
-order of the table on one gateway start (`reset=0`), the harness restarting the
-target after a `crash` row (`oracle/driver.py`), so the three crash rows of
-H4684 and MH200 are each a fresh daemon exit and the rows after them come from
-a restarted gateway. Earlier local runs with `--no-sandbox` and `reset=each` gave
-the same verdicts with the container's own interface values.
+order of `who13-identification.cases` (`15`, `16`, `12`, `10`, `11`, `23`, `24`,
+`27`, `*#1013**1##`, `*#1013*0*1##`; `oracle/record.py` sorts unordered `.cases`
+rows lexicographically in the TSV and table below) on one gateway start
+(`reset=0`), with `oracle/driver.py` restarting the target after a `crash` row
+and `oracle/qemu_target.py` (`_recover_cmd_session`) reconnecting the command
+socket after a `reply=-` step. The three crash rows of H4684 and MH200 are each
+a fresh daemon exit and the rows after them come from a restarted gateway.
+Earlier local runs with `--no-sandbox` and `reset=each` gave the same verdicts
+with the container's own interface values.
 
 ## Rows
 
@@ -111,12 +118,14 @@ MH200 `020102` (`work/oracle-run/crash-recheck`, `pr-suites`), with `*#13**15##`
   never sees a separate `*#*1##`.
 
 For a client: ask DIMENSION 15 first, WHO 1013 only on `200`, and the network
-dimensions only from a model known to answer them. On gateways where the stored
-DIMENSION 27 descriptor is empty (`MH200`, `MH200N`, or an unpopulated
-`MyHomeServer1`), sending `*#13**27##` swallows the command-session `*#*1##` ACK
-into `*#13**27*#*#*1##` and stalls an ACK-waiting request until its timeout.
-OWNd's `request_mac_address`, `WHO13ModelNameReading` (OWNd#139) and MyHOME's
-manual identification were designed accordingly.
+dimensions only from a model known to answer them (`MAC_REQUEST_SAFE_MODELS`
+gates `OWNGatewayCommand.request_mac_address()` in MyHOME#799). On gateways
+where the stored DIMENSION 27 descriptor is empty (`MH200`, `MH200N`, or an
+unpopulated `MyHomeServer1`), sending `*#13**27##` swallows the command-session
+`*#*1##` ACK into `*#13**27*#*#*1##` and stalls an ACK-waiting request until
+its timeout; `OWNGatewayEvent.model_name` (OWNd#139) decodes `#`-separated
+ASCII replies when received, while MyHOME's identification probe does not send
+`*#13**27##`.
 
 ## Live anchor
 
