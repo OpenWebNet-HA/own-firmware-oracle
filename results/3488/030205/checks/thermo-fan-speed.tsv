@@ -1,0 +1,28 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# harness=full
+# target_sha256=e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-fan-speed
+# suite_sha256=96b9b84ce01bb1500269d9242fa143146fd73640e2bfb42f30282f8b038a8bf5
+# oracle_version=3
+# ownd_version=2.0.0b11
+direction	input	reply	verdict	output	ownd	live
+down	*#4*#0#2*#11*1##	nack	silent	-	-	unchecked
+down	*#4*#0*#11*1##	nack	silent	-	-	unchecked
+down	*#4*#1*#11*1##	nack	silent	-	-	unchecked
+down	*#4*1*#11*0##	nack	out	bus:24 31 30 36 44 31 30 31 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*1##	nack	out	bus:24 31 30 36 44 31 30 31 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*2##	nack	out	bus:24 31 30 36 44 31 30 31 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*3##	nack	out	bus:24 31 30 36 44 31 30 31 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked
+down	*#4*1*#11*4##	nack	silent	-	-	unchecked
+down	*#4*99*#11*0##	nack	out	bus:24 31 30 36 44 31 36 33 30 33 30 32 30 42 30 30 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*1##	nack	out	bus:24 31 30 36 44 31 36 33 30 33 30 32 30 42 30 31 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*2##	nack	out	bus:24 31 30 36 44 31 36 33 30 33 30 32 30 42 30 32 30 30 30 30 0d	-	unchecked
+down	*#4*99*#11*3##	nack	out	bus:24 31 30 36 44 31 36 33 30 33 30 32 30 42 30 33 30 30 30 30 0d	-	unchecked

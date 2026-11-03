@@ -1,0 +1,26 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# harness=full
+# target_sha256=e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=who13-identification
+# suite_sha256=718a8e0e59e9a6d7b0bdd4ebe78edac87200d1bb4d82ed57b8422b15ddad188c
+# oracle_version=3
+# ownd_version=2.0.0b11
+direction	input	reply	verdict	output	ownd	live
+down	*#1013**1##	ack	out	own:*#1013**1*0*0*0*0##	OWNGatewayDiagnosticEvent	unchecked
+down	*#1013*0*1##	ack	out	own:*#1013**1*0*0*0*0##	OWNGatewayDiagnosticEvent	unchecked
+down	*#13**10##	ack	out	own:*#13**10*172*17*0*3##	OWNGatewayEvent	unchecked
+down	*#13**11##	ack	out	own:*#13**11*255*255*0*0##	OWNGatewayEvent	unchecked
+down	*#13**12##	ack	out	own:*#13**12*0*0*0*0##	OWNGatewayEvent	unchecked
+down	*#13**15##	ack	out	own:*#13**15*200##	OWNGatewayEvent	unchecked
+down	*#13**16##	ack	out	own:*#13**16*3*2*5##	OWNGatewayEvent	unchecked
+down	*#13**23##	ack	out	own:*#13**23*5*15*157##	OWNGatewayEvent	unchecked
+down	*#13**24##	ack	out	own:*#13**24*2*18*3##	OWNGatewayEvent	unchecked
+down	*#13**27##	-	out	own:*#13**27*#*#*1##	unparsed	unchecked

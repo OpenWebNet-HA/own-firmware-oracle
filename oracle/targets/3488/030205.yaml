@@ -1,0 +1,448 @@
+product: "3488"
+version: "030205"
+sysroot:
+  - "SMARTDES_030205.fwz!btweb_only.ext4.gz.sha256.sig.zip!btweb_only.ext4.gz~gunzip:"
+bus_device: /dev/ttymxc1
+bus_framer: line
+bus_responder: pic
+own_auth: none
+programs:
+  bt_daemon:
+    path: home/bticino/bin/bt_daemon
+    sha256: "7fe4d4d6a7a33820bc6ed2b735f78c06e54308c6092903ad3f8ba34dc7f2867e"
+    role: supervisor
+  openserver:
+    path: home/bticino/bin/openserver
+    sha256: "e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c"
+    role: own_server
+    port: 20000
+  scsserver:
+    path: home/bticino/bin/scsserver
+    sha256: "61b32d37bbb3576e8672d19d39b0b5208b256496ab2bd42939a6731a482ebe8c"
+    role: bus_server
+    port: 20001
+  bt_luci:
+    path: home/bticino/bin/bt_luci
+    sha256: "49dbb12bec974a0c08482115e104a9c10f415835b53d8fe3b614ad07c887fc4c"
+    role: translator
+  bt_device:
+    path: home/bticino/bin/bt_device
+    sha256: "d4b9ebd3c9e2569704b432333a0f23a18a0a78a5fa4a75faaa3b350f0d24d30b"
+    role: translator
+  bt_termo:
+    path: home/bticino/bin/bt_termo
+    sha256: "f755a29d1d6604b215d34925fcf23e9b270e6ad4cf86d840c0565db5ee1af25d"
+    role: translator
+  bt_multi:
+    path: home/bticino/bin/bt_multi
+    sha256: "e05e82ae3c7bca89fff5398f214dcf49decd2aa4fee968c21b8575b858919247"
+    role: translator
+  bt_supervisione:
+    path: home/bticino/bin/bt_supervisione
+    sha256: "1409ffe356ca3dc0c6faf3bf00f58f91f53226305fbc9e3d0464db4eb8c24396"
+    role: translator
+  coso:
+    path: home/bticino/bin/coso
+    sha256: "bfd0be7e9ed15d1d6f9ec8ab2e9702994b9c549fefc1f5c7a7d66c9ee1aa17f6"
+    role: translator
+runtime:
+  cwd: /home/bticino
+  env:
+    LD_LIBRARY_PATH: /usr/lib:/home/bticino/lib:/home/bticino/libcoso
+  tmpfs:
+    - /var/volatile
+  dirs:
+    - /var/volatile/tmp
+    - /var/volatile/tmp/flags
+    - /var/volatile/log
+    - /var/tmp/bticino/bt_wd
+    - /sys/firmware/devicetree/base
+  links:
+    /var/volatile/tmp/stack_open.xml: /home/bticino/cfg/stack_open.xml
+    /var/volatile/tmp/conf.xml: /home/bticino/cfg/restore/conf.xml.def
+  files:
+    /sys/firmware/devicetree/base/model: "BTicino Mamoj board"
+    # rts_alim 1 -> 0: with 1 scsserver needs the modem-control lines (TIOCMGET) to
+    # power the PIC and aborts ("Cannot Open /dev/ttymxc1") on a pty, which has none.
+    /home/bticino/cfg/stack_open.xml: |
+      <root>
+      <hw>
+      <nvdata>
+      <eeprom>
+      <enable>1</enable>
+      <device></device>
+      </eeprom>
+      <mtd>
+      <enable>1</enable>
+      <cfg></cfg>
+      <cfgcopy></cfgcopy>
+      <cfg_ro></cfg_ro>
+      <cfgcopy_ro></cfgcopy_ro>
+      <app></app>
+      <appcopy></appcopy>
+      <app_ro></app_ro>
+      <appcopy_ro></appcopy_ro>
+      </mtd>
+      </nvdata>
+      <led>
+      <enable>0</enable>
+      </led>
+      <beep>
+      <enable>0</enable>
+      </beep>
+      <eth>
+      <enable>1</enable>
+      <manage>0</manage>
+      <default>1</default>
+      </eth>
+      <lcd>
+      <enable>0</enable>
+      </lcd>
+      <usb>
+      <enable>1</enable>
+      <default>0</default>
+      </usb>
+      <wifi>
+      <enable>1</enable>
+      <default>0</default>
+      </wifi>
+      </hw>
+      <sw>
+      <keyobjects>
+      <ucm>
+      <low_mac_as_uc>0</low_mac_as_uc>
+      </ucm>
+      <fcm/>
+      </keyobjects>
+      <extra_mount>
+      <enable>0</enable>
+      </extra_mount>
+      <dedrifu>
+      <enable>0</enable>
+      </dedrifu>
+      <authentication>
+      <hmac>0</hmac>
+      <open>1</open>
+      </authentication>
+      <audio_volume>
+      <val_line_out>100</val_line_out>
+      <val_pcm_vol>74</val_pcm_vol>
+      <val_rec_gain>100</val_rec_gain>
+      </audio_volume>
+      <logfile>/var/tmp/BTicino.log</logfile>
+      <logfilerot>/var/log/log_rotation.log</logfilerot>
+      <logrotation>1</logrotation>
+      <logtcpserver>log.bs.iotleg.com</logtcpserver>
+      <logtcpserverport>5002</logtcpserverport>
+      <manage_sipinfo>1</manage_sipinfo>
+      <enable_mqtt>1</enable_mqtt>
+      <enable_harvest>1</enable_harvest>
+      <drop_cache>300</drop_cache>
+      <wdt>
+      <enable>1</enable>
+      </wdt>
+      <manage_time>
+      <enable>1</enable>
+      <utc>0</utc>
+      </manage_time>
+      <device_update>
+      <type>1</type>
+      </device_update>
+      <path_var>/var</path_var>
+      <extra>
+      <enable>0</enable>
+      <check></check>
+      <nocheck></nocheck>
+      </extra>
+      <security>
+      <ai_enable_capable>1</ai_enable_capable>
+      </security>
+      <normal_status>4</normal_status>
+      <bt_daemon>
+      <logverbosity>0</logverbosity>
+      <stackopen>
+      <p0>
+      <name>openserver</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      <secure_mode>1</secure_mode>
+      </p0>
+      <p1>
+      <name>scsserver</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      </p1>
+      <p2>
+      <name>bt_device</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      </p2>
+      <p3>
+      <name>bt_vct</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p3>
+      <p4>
+      <name>bt_av_media</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p4>
+      <p5>
+      <name>bt_answering_machine</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      <early_sig>1</early_sig>
+      <secure_mode>1</secure_mode>
+      </p5>
+      <p6>
+      <name>bt_upnp_hls</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      <secure_mode>1</secure_mode>
+      </p6>
+      <p7>
+      <name>configuration_manager</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      </p7>
+      <p8>
+      <name>bt_mhportal</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      <secure_mode>1</secure_mode>
+      </p8>
+      <p9>
+      <name>SmartToolHLS</name>
+      <path>bin</path>
+      <working_mode>1</working_mode>
+      </p9>
+      <p10>
+      <name>bt_dbus_manager</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p10>
+      <p11>
+      <name>coso</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p11>
+      <p12>
+      <name>bt_termo</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p12>
+      <p13>
+      <name>bt_luci</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p13>
+      <p14>
+      <name>bt_supervisione</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p14>
+      <p15>
+      <name>bt_multi</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      </p15>
+      <p16>
+      <name>bt_ipcamera</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      <secure_mode>0</secure_mode>
+      </p16>
+      </stackopen>
+      <gui>
+      <p0>
+      <name>BtSmartDes_qws</name>
+      <path>bin</path>
+      <working_mode>0</working_mode>
+      <gui_check_conf>0</gui_check_conf>
+      </p0>
+      </gui>
+      </bt_daemon>
+      <scsserver>
+      <logverbosity>0</logverbosity>
+      <port_0>20001</port_0>
+      <port_1>20002</port_1>
+      <bus_type>0</bus_type>
+      <max_num_client_up>9</max_num_client_up>
+      <serialchannel>
+      <device>/dev/ttymxc1</device>
+      <speed>115200</speed>
+      <rts_alim>0</rts_alim>
+      </serialchannel>
+      </scsserver>
+      <bt_device>
+      <logverbosity>0</logverbosity>
+      <port>30013</port>
+      <port_monitor>31013</port_monitor>
+      <port_scs>20002</port_scs>
+      <id_client>13</id_client>
+      <id_frame>00</id_frame>
+      <time_autodia>1200</time_autodia>
+      <object_model_15_not_managed>1</object_model_15_not_managed>
+      <scs_enable>1</scs_enable>
+      <secure_open_update>1</secure_open_update>
+      </bt_device>
+      <bt_vct>
+      <logverbosity>0</logverbosity>
+      <port>30006</port>
+      <port_monitor>31006</port_monitor>
+      <port_scs>20001</port_scs>
+      <port_open>20000</port_open>
+      <id_client>06</id_client>
+      <id_frame>00</id_frame>
+      <id_flgbuf>01</id_flgbuf>
+      <id_flgfast>01</id_flgfast>
+      <sendemail>0</sendemail>
+      <abil_segreteria>0</abil_segreteria>
+      <device>1</device>
+      </bt_vct>
+      <bt_answering_machine>
+      <ringtones>/home/bticino/ringtones</ringtones>
+      </bt_answering_machine>
+      <bt_av_media>
+      <logverbosity>0</logverbosity>
+      <port>30007</port>
+      <port_monitor>31007</port_monitor>
+      <logfile>/var/tmp/bt_av_media.log</logfile>
+      <gst_filesink>/var/tmp/records/grab.jpg</gst_filesink>
+      <gst_afilesink>/var/tmp/records/audio.wav</gst_afilesink>
+      <aswm_message>/var/tmp/messages/aswm_message.wav</aswm_message>
+      <play_file>/var/tmp/records/audio.wav</play_file>
+      <alsa_card>i2s_48000</alsa_card>
+      <videodev>/dev/video0</videodev>
+      <alsa_capture_element>ZL38005 SOUTGN</alsa_capture_element>
+      <alsa_playback_element>Mono DAC Playback Volume</alsa_playback_element>
+      <ringtone_iu_call_1>/var/tmp/ringtones/call1.wav</ringtone_iu_call_1>
+      <ringtone_iu_call_2>/var/tmp/ringtones/call2.wav</ringtone_iu_call_2>
+      <ringtone_iu_call_3>/var/tmp/ringtones/call3.wav</ringtone_iu_call_3>
+      <ringtone_iu_call_4>/var/tmp/ringtones/call4.wav</ringtone_iu_call_4>
+      <ringtone_iu_intercom>/var/tmp/ringtones/interc.wav</ringtone_iu_intercom>
+      <ringtone_iu_interflat>/var/tmp/ringtones/interf.wav</ringtone_iu_interflat>
+      <ringtone_iu_door>/var/tmp/ringtones/door.wav</ringtone_iu_door>
+      <ringtone_iu_alm>/var/tmp/ringtones/alm.wav</ringtone_iu_alm>
+      <ringtone_iu_msg>/var/tmp/ringtones/msg.wav</ringtone_iu_msg>
+      <ringtone_iu_busy>/home/bticino/ringtones/busy.wav</ringtone_iu_busy>
+      <ringtone_iu_diss>/home/bticino/ringtones/diss.wav</ringtone_iu_diss>
+      <crop>
+      <left>16</left>
+      <top>48</top>
+      <width>688</width>
+      <height>480</height>
+      </crop>
+      <brightness>
+      <min>21</min>
+      <max>180</max>
+      <delta>15</delta>
+      <step>10</step>
+      </brightness>
+      <contrast>
+      <min>44</min>
+      <max>209</max>
+      <delta>15</delta>
+      <step>10</step>
+      </contrast>
+      <saturation>
+      <min>64</min>
+      <max>244</max>
+      <delta>18</delta>
+      <step>10</step>
+      </saturation>
+      <quality>
+      <min>0</min>
+      <max>100</max>
+      <delta>5</delta>
+      <step>5</step>
+      </quality>
+      <sharpness>
+      <min>50</min>
+      <max>250</max>
+      <delta>2</delta>
+      <step>1</step>
+      </sharpness>
+      <sharp_def>50</sharp_def>
+      <latency_time>20000</latency_time>
+      <buffer_time>60000</buffer_time>
+      <block_size>640</block_size>
+      <latency_time_rec>20000</latency_time_rec>
+      <buffer_time_rec>60000</buffer_time_rec>
+      <enable_speex>1</enable_speex>
+      <audio_debug>0</audio_debug>
+      <videosink_no_deinterlacer>1</videosink_no_deinterlacer>
+      <audio_compression>1</audio_compression>
+      <characteristics_rec>1</characteristics_rec>
+      <mode_rec>0</mode_rec>
+      <threshold_rec>0</threshold_rec>
+      <ratio_rec>1</ratio_rec>
+      <characteristics_send>0</characteristics_send>
+      <mode_send>0</mode_send>
+      <threshold_send>0.7</threshold_send>
+      <ratio_send>0.3</ratio_send>
+      <sampling_rate>16000</sampling_rate>
+      </bt_av_media>
+      <bt_luci>
+      <logverbosity>0</logverbosity>
+      <port>30001</port>
+      <port_monitor>31001</port_monitor>
+      <port_scs>20002</port_scs>
+      <id_client>01</id_client>
+      <id_frame>00</id_frame>
+      <sinottico>0</sinottico>
+      <disable_automation>1</disable_automation>
+      </bt_luci>
+      <bt_termo>
+      <logverbosity>0</logverbosity>
+      <port>30004</port>
+      <port_monitor>31004</port_monitor>
+      <port_scs>20002</port_scs>
+      <id_client>04</id_client>
+      <id_frame>00</id_frame>
+      <sendemail>0</sendemail>
+      </bt_termo>
+      <bt_supervisione>
+      <logverbosity>0</logverbosity>
+      <port>30018</port>
+      <port_monitor>31018</port_monitor>
+      <port_scs>20002</port_scs>
+      <id_client>18</id_client>
+      <id_frame>00</id_frame>
+      </bt_supervisione>
+      <bt_multi>
+      <logverbosity>0</logverbosity>
+      <port>30022</port>
+      <port_monitor>31022</port_monitor>
+      <port_scs>20002</port_scs>
+      <id_client>22</id_client>
+      <id_frame>00</id_frame>
+      </bt_multi>
+      <bt_upnp>
+      <logverbosity>0</logverbosity>
+      <upnp_mode>1</upnp_mode>
+      <upnpsearch>
+      <default>1</default>
+      <features>
+      <vde>0</vde>
+      <igd>0</igd>
+      </features>
+      </upnpsearch>
+      </bt_upnp>
+      <coso>
+      <port>30002</port>
+      <port_monitor>31002</port_monitor>
+      </coso>
+      <BtSmartDes>
+      <logverbosity>0</logverbosity>
+      </BtSmartDes>
+      </sw>
+      </root>
+  devices:
+    /dev/ttymxc1: pty
+  stack_config: home/bticino/cfg/stack_open.xml
+  kernel_release: "5.15.157-lts-next+gc9df1633303c+p0"
+boundary:
+  status: discovered
+  bus: pty
+  own: full

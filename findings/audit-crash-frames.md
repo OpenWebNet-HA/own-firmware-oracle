@@ -148,6 +148,8 @@ The ledger rows added for these frames (`clock_or_crash_known.crash_frames`
 in [`tools/expected_divergences.yaml`](../tools/expected_divergences.yaml))
 name the suite, say "daemon not attributed", and point here.
 
+**3488 `030205` (added in Phase 2, not in the table above):** the four-digit-year DIMENSION 52 requests `*#18*51*52#2026#10##` and `*#18*51*52#2026#10*100##` are `crash` on the 3488 HOMETOUCH, after the telegram went out, as on F460 and F461; the daemon is not attributed by the run log. Ledger rows in `tools/expected_divergences.yaml`; rows in `results/3488/030205/oracle/full/ownd-audit-frames.tsv`.
+
 ## Consequence for clients
 
 - A WHO 1 status request must never be built with an empty WHERE: besides
