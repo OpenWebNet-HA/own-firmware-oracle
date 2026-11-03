@@ -4,13 +4,13 @@
 #
 #    pip-compile --allow-unsafe --generate-hashes --newline=LF --no-emit-index-url --no-index --strip-extras oracle.in
 #
-boto3==1.43.108 \
-    --hash=sha256:03341f089158368acf83e921aca98b706095322ca52bc4c039a616940aa5ad41 \
-    --hash=sha256:19e9da95ef0c494e27052049a42137550e66730509bb613e76eaa30ddf9a7170
+boto3==1.43.118 \
+    --hash=sha256:ab8f3d2c622ef039338b4f228d97ea55f1abd573d84bb9b9a5ee8cb6780c0ccd \
+    --hash=sha256:c0620f799e0f0c222ba42c337b65cdbcd3da38a3121187f634d8926cbbb28a9c
     # via -r oracle.in
-botocore==1.43.108 \
-    --hash=sha256:ab9d16c6b4350aaa54ed28202dfa2998b2d735fdbf3247eb60af469d8d48a5b8 \
-    --hash=sha256:ee4f75cf3bdbb0da7912e089950e8112f692016539d939312c771499958e6cfd
+botocore==1.43.123 \
+    --hash=sha256:80948cb9b1cdf1a1a25809089a42e3a1bc4af0258d198222db6e97dcc660dd0c \
+    --hash=sha256:e30580f9c1282c321529238ff8ff75066096a2adbd0a293c8ae592c21d1733a3
     # via
     #   boto3
     #   s3transfer
