@@ -1,0 +1,117 @@
+; OWNd-built frames vs the Encyclopedia forms (test2 report 21, "OWNd master
+; vs the OpenWebNet Encyclopedia", 2026-10-28). Every pair below is one row of
+; that report: the frame OWNd's builder emits next to the form the
+; Encyclopedia functional pages define. The question for each gateway: does
+; the daemon treat the two forms alike (same reply, same verdict, same bus
+; bytes) or does it refuse / re-address the OWNd form? Unordered, one step
+; per frame, no WHO 4 DIMENSION 22 frame anywhere in this suite.
+;
+; H10 - program builders: OWNd emits 31PP / 315#31PP / 33DDD#31PP with
+; PP = 04..16; who-4 what.md defines weekly programs 3101..3103 only.
+down *4*3116*#0##
+down *4*3104*#0##
+down *4*3103*#0##
+down *4*315#3104*#0##
+down *4*315#3103*#0##
+down *4*33002#3116*#0##
+down *4*33002#3103*#0##
+; H18 - DIMENSION 30 holiday end: OWNd builds 31 February; docs require a
+; valid calendar date.
+down *#4*#0*#30*31*02*2026##
+down *#4*#0*#30*28*02*2026##
+; H19 - a three-digit probe address is turned into `#105`; docs define
+; `#1..#99` for zone-via-central and `PZZ` for probes.
+down *#4*#105*#14*0200*1##
+down *#4*#5*#14*0200*1##
+down *#4*105*#14*0200*1##
+; H1 / H3 - `#0#C` (4-zone central unit C), `#0` (central), `0` (all probes)
+; and `#C` (zone via central) are four different documented targets that
+; OWNd folds together.
+down *4*303*#0#1##
+down *4*303*#0##
+down *4*303*0##
+down *4*303*#1##
+; H2 - `001` (all probes of zone 1) vs `1` (master probe): OWNd collapses
+; both onto zone 1.
+down *#4*001##
+down *#4*1##
+down *#4*001*0##
+down *#4*1*0##
+; L7 - out-of-range speed is dropped: `*1*1*12##` instead of the explicit
+; `*1*1#255*12##`.
+down *1*1*12##
+down *1*1#255*12##
+; L8 - out-of-range transition rewritten to SPEED 0 ("last speed") in a
+; DIMENSION 1 write.
+down *#1*12*#1*150*0##
+down *#1*12*#1*150*255##
+; L10 - empty WHERE and a WHERE carrying `*` (becomes a DIMENSION 1 request).
+down *#1*##
+down *#1*12##
+down *#1*12*1##
+; L1 (load) - general status spellings: `*#3*##` (OWNd evidence note),
+; `*#3##`, `*#3*0##` (who-3 README).
+down *#3*##
+down *#3##
+down *#3*0##
+; E1 (energy) - DIMENSION 52 without `#Y#M` (OWNd builder) vs the documented
+; `52#Y#M` request and report.
+down *#18*51*52*100##
+down *#18*51*52#2026#10##
+down *#18*51*52#2026#10*100##
+; E2 - Stop&Go WHERE: OWNd accepts 11..19 only; who-18 addressing.md defines
+; `1N`, N = 1..127. Documented WHAT 21 / 22 (open / close).
+down *18*21*11##
+down *18*21*110##
+down *18*21*120##
+down *18*21*1127##
+down *18*22*120##
+; E3 - DIMENSION 212 self-test interval: OWNd accepts up to 255, docs 1..180.
+down *#18*11*#212*200##
+down *#18*11*#212*180##
+; S1 (sound) - WHO 16 volume: OWNd accepts 0..100, docs 0..31.
+down *#16*21*#1*50##
+down *#16*21*#1*31##
+; S2 - amplifier `20` is a documented address; routing frame `*16*3*1ES##`.
+down *16*3*121##
+down *16*3*20##
+; D1 - `WHAT#4#X`: X is the AREA (docs); OWNd reads a source and
+; `turn_off_atomic` hard-codes `0#4#0`.
+down *22*0#4#0*3#2#1##
+down *22*0#4#2*3#2#1##
+down *22*1#4#1*3#2#1##
+down *22*1#4#2*3#2#1##
+; D2 - `35#4#AREA#SOURCE`: OWNd defaults the area to 1 for every target.
+down *22*35#4#1#7*3#2#1##
+down *22*35#4#2#7*3#2#1##
+down *22*35#4#2#1*3#2#1##
+; D5 - bare `*22*3*WHERE##` (OWNd, step omitted) vs `*22*3#1*WHERE##`.
+down *22*3*3#1#1##
+down *22*3#1*3#1#1##
+; D7 - WHAT 19 paging and a DIMENSION 11 client write, neither defined.
+down *22*19#1*5#3#0#0##
+down *#22*2#1*#11*1*10150*3##
+; T1 - WHO 25 status: `39`, `35`, `5` are documented addresses; `339` is not.
+down *#25*39##
+down *#25*339##
+down *#25*35##
+down *#25*5##
+; E1 (door entry) - `open_lock()` defaults to WHERE 0; docs 4000..4095.
+down *6*10*0##
+down *6*10*4001##
+; I1 - end call: OWNd sends the bare local address or `4`; docs `4LOCAL`.
+down *8*3#6#2*11##
+down *8*3#6#2*4##
+down *8*3#6#2*411##
+; A1 (alarm) - OWNd transmits state WHATs 1/2/8/9/17 as commands; the only
+; documented control is `36#PASSWORD` (dummy password 12345).
+down *5*2*0##
+down *5*1*0##
+down *5*17*0##
+down *5*8*0##
+down *5*9*0##
+down *5*36#12345*0##
+; G5 - WHO 13 clock read with WHERE `0` (conformance matrix) vs the
+; documented empty WHERE.
+down *#13*0*0##
+down *#13**0##

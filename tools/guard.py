@@ -26,6 +26,8 @@ from pathlib import Path
 
 MAX_BYTES = 5 * 1024 * 1024
 MANIFEST_MAX_BYTES = 50 * 1024 * 1024  # GitHub refuses files over 100 MB
+INDEX_MAX_BYTES = 25 * 1024 * 1024  # results/mcp_index.json, results/plant_index.json
+INDEX_FILES = frozenset({"mcp_index.json", "plant_index.json"})
 
 # magic bytes we never want committed
 BIN_MAGIC = [
@@ -89,6 +91,8 @@ def max_bytes(path: Path) -> int:
     parts = path.parts
     if len(parts) == 4 and parts[0] == "results" and parts[3] == "manifest.tsv":
         return MANIFEST_MAX_BYTES
+    if len(parts) == 2 and parts[0] == "results" and parts[1] in INDEX_FILES:
+        return INDEX_MAX_BYTES
     return MAX_BYTES
 
 
