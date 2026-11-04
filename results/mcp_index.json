@@ -17265,7 +17265,7 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [
-          "*#13**10*172*17*0*3##"
+          "*#13**10*192*168*1*1##"
         ],
         "image_sha256": "c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624",
         "line_number": 18,
@@ -17478,7 +17478,7 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [
-          "*#13**11*255*255*0*0##"
+          "*#13**11*255*255*255*0##"
         ],
         "image_sha256": "c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624",
         "line_number": 19,
@@ -152899,5 +152899,5 @@
       }
     ]
   },
-  "verdicts_sha256": "260f4b33b4d04ada4d8705b54ff951586a3ae101fc977c1b6211864cdae825d5"
+  "verdicts_sha256": "213114b5636398f9545c3772dcf750b4d47da5b95d8ada6d54eff172d725aa99"
 }
