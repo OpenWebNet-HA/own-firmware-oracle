@@ -10,9 +10,11 @@ import struct
 import subprocess
 import sys
 import types
+import urllib.error
 import urllib.request
 import zlib
-from http.client import HTTPMessage
+from http.client import HTTPMessage, IncompleteRead
+from http.cookiejar import CookieJar
 from pathlib import Path
 
 import pytest
@@ -154,9 +156,94 @@ def test_fetch_vendor_streams_through_the_allowlisting_opener(tmp_path, monkeypa
     dest = tmp_path / "out"
     fwfetch._fetch_vendor(VENDOR, dest)
     assert dest.read_bytes() == BLOB
-    assert seen["handlers"] == (fwfetch._VendorRedirects,)
+    assert len(seen["handlers"]) == 2
+    assert seen["handlers"][0] is fwfetch._VendorRedirects
+    assert isinstance(seen["handlers"][1], urllib.request.HTTPCookieProcessor)
+    assert isinstance(seen["handlers"][1].cookiejar, CookieJar)
     assert seen["url"] == VENDOR
     assert seen["ua"].startswith("own-firmware-oracle/")
+
+
+def test_fetch_vendor_retries_transient_5xx_and_network_errors(
+    tmp_path, monkeypatch, capsys
+):
+    sleeps: list[float] = []
+    jars: list[CookieJar] = []
+    monkeypatch.setattr(fwfetch.time, "sleep", sleeps.append)
+    monkeypatch.setattr(fwfetch, "VENDOR_MAX_ATTEMPTS", 5)
+
+    failures: list[Exception] = [
+        urllib.error.HTTPError(
+            VENDOR, 502, "Proxy Error", HTTPMessage(), io.BytesIO(b"bad gateway")
+        ),
+        IncompleteRead(b"part", 10),
+        urllib.error.URLError("connection reset"),
+    ]
+
+    class Opener:
+        def open(self, _req, timeout):
+            if failures:
+                raise failures.pop(0)
+            return io.BytesIO(BLOB)
+
+    def build_opener(*handlers):
+        jars.append(handlers[1].cookiejar)
+        return Opener()
+
+    monkeypatch.setattr(fwfetch.urllib.request, "build_opener", build_opener)
+    dest = tmp_path / "out"
+    fwfetch._fetch_vendor(VENDOR, dest)
+    assert dest.read_bytes() == BLOB
+    assert sleeps == [1.0, 2.0, 3.0]
+    assert len({id(j) for j in jars}) == 4  # fresh cookie jar on every attempt
+    err_out = capsys.readouterr().err
+    assert "attempt 1/5" in err_out
+    assert "HTTP Error 502: Proxy Error" in err_out
+
+
+def test_fetch_vendor_does_not_retry_non_transient_http_errors(tmp_path, monkeypatch):
+    sleeps: list[float] = []
+    calls = 0
+    monkeypatch.setattr(fwfetch.time, "sleep", sleeps.append)
+
+    class Opener:
+        def open(self, _req, timeout):
+            nonlocal calls
+            calls += 1
+            raise urllib.error.HTTPError(
+                VENDOR, 404, "Not Found", HTTPMessage(), io.BytesIO(b"missing")
+            )
+
+    monkeypatch.setattr(
+        fwfetch.urllib.request, "build_opener", lambda *_handlers: Opener()
+    )
+    with pytest.raises(urllib.error.HTTPError, match="404"):
+        fwfetch._fetch_vendor(VENDOR, tmp_path / "out")
+    assert calls == 1
+    assert sleeps == []
+
+
+def test_fetch_vendor_exhausts_max_attempts_on_persistent_502(tmp_path, monkeypatch):
+    sleeps: list[float] = []
+    calls = 0
+    monkeypatch.setattr(fwfetch.time, "sleep", sleeps.append)
+    monkeypatch.setattr(fwfetch, "VENDOR_MAX_ATTEMPTS", 3)
+
+    class Opener:
+        def open(self, _req, timeout):
+            nonlocal calls
+            calls += 1
+            raise urllib.error.HTTPError(
+                VENDOR, 502, "Proxy Error", HTTPMessage(), io.BytesIO(b"proxy err")
+            )
+
+    monkeypatch.setattr(
+        fwfetch.urllib.request, "build_opener", lambda *_handlers: Opener()
+    )
+    with pytest.raises(urllib.error.HTTPError, match="502"):
+        fwfetch._fetch_vendor(VENDOR, tmp_path / "out")
+    assert calls == 3
+    assert sleeps == [1.0, 2.0]
 
 
 def test_fetch_vendor_refuses_a_non_vendor_url(tmp_path):
