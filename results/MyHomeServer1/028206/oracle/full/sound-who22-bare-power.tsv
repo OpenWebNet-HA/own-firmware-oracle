@@ -1,0 +1,27 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=sound-who22-bare-power
+# suite_sha256=723dd8e8e64b9d94db427bc0289b813c9bdbfde4f3e0f93afa2772d9ae7a1fb0
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*22*0*2#1##	nack	crash	-
+down	*22*0*3#1#1##	nack	crash	-
+down	*22*0*4#1##	nack	crash	-
+down	*22*0*6##	nack	crash	-
+down	*22*1#4#1*2#1##	ack	out	bus:24 30 34 39 30 30 31 38 46 31 33 0d
+down	*22*1#4#1*3#1#1##	ack	out	bus:24 30 34 39 30 30 31 38 31 31 33 0d
+down	*22*1#4#1*4#1##	ack	out	bus:24 30 34 41 30 30 31 38 31 31 33 0d
+down	*22*1#4#1*6##	ack	out	bus:24 30 34 41 30 30 46 38 31 31 33 0d
+down	*22*1*2#1##	nack	crash	-
+down	*22*1*3#1#1##	nack	crash	-
+down	*22*1*4#1##	nack	crash	-
+down	*22*1*6##	nack	crash	-
