@@ -10,6 +10,7 @@ wrapper:
   size: 74448014
   sha256: "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3"
   sources:
+    - vendor: "https://assets.legrand.com/pim/AUTRE/F454_020051.fwz"
     - vendor: "https://www.homesystems-legrandgroup.com/MatrixENG/liferay/bt_mxLiferayCheckout.jsp?fileFormat=generic&fileName=F454_020051.fwz&fileId=58107.23188.40907.34137"
 
 image:
