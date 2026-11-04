@@ -291,7 +291,9 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
     },
     "3488": {
         "phase2f_desc": (
-            "Video door-entry touch screen, connected through a gateway (`bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `coso` — {suites} suites)"
+            "Video door-entry touch screen, connected through a gateway (`bt_daemon`, "
+            "`openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, "
+            "`bt_supervisione`, `coso` — {suites} suites)"
         ),
         "title": 'HOMETOUCH 7" Touch Screen',
         "arch": "Linux ARMv7 `eabi5`",
