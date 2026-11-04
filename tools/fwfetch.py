@@ -23,9 +23,13 @@ import hashlib
 import os
 import struct
 import sys
+import time
+import urllib.error
 import urllib.request
 import zlib
-from http.client import HTTPMessage
+from collections.abc import Callable
+from http.client import HTTPException, HTTPMessage
+from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import IO
 
@@ -33,6 +37,10 @@ import schema
 from schema import CatalogEntry
 
 CACHE = Path(os.environ.get("OWN_FW_CACHE", Path.home() / ".cache" / "own-fw"))
+RETRYABLE_HTTP_CODES = frozenset({408, 429, 500, 502, 503, 504})
+VENDOR_MAX_ATTEMPTS = 20
+VENDOR_BACKOFF_BASE = 1.0
+VENDOR_BACKOFF_MAX = 3.0
 
 
 def sha256_file(path: Path) -> str:
@@ -79,6 +87,51 @@ class _VendorRedirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def _build_vendor_opener() -> urllib.request.OpenerDirector:
+    """Build an HTTPS opener with redirect validation and a fresh cookie jar.
+
+    Legrand's Liferay/Matrix checkout (`bt_mxLiferayCheckout.jsp`) sets sticky
+    load-balancer (`ROUTEID`) and session (`JSESSIONID`) cookies on the 302
+    ticket response; carrying them to the `/servlet/fcs/checkout` redirect hop
+    keeps the download pinned to the healthy backend node that minted the
+    ticket. A fresh jar per attempt prevents a failed attempt's cookies from
+    pinning retries to a degraded backend.
+    """
+    return urllib.request.build_opener(
+        _VendorRedirects,
+        urllib.request.HTTPCookieProcessor(CookieJar()),
+    )
+
+
+def _is_retryable(err: Exception) -> bool:
+    if isinstance(err, urllib.error.HTTPError):
+        return err.code in RETRYABLE_HTTP_CODES
+    return isinstance(err, (HTTPException, OSError))
+
+
+def _retry_vendor[T](fn: Callable[[], T]) -> T:
+    attempt = 1
+    while True:
+        try:
+            return fn()
+        except Exception as err:
+            if isinstance(err, urllib.error.HTTPError):
+                err.close()
+            if not _is_retryable(err) or attempt >= VENDOR_MAX_ATTEMPTS:
+                raise
+            delay = min(
+                VENDOR_BACKOFF_MAX,
+                VENDOR_BACKOFF_BASE * (2 ** (attempt - 1)),
+            )
+            print(
+                f"  vendor transient error (attempt {attempt}/{VENDOR_MAX_ATTEMPTS}): "
+                f"{err}; retrying in {delay:.1f}s",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+            attempt += 1
+
+
 def _cookfs_page(raw: bytes) -> bytes:
     return raw[1:] if raw[0] == 0 else zlib.decompress(raw[1:], -15)
 
@@ -115,21 +168,24 @@ def _fetch_vendor_cookfs(
 ) -> None:
     """Extract `member` (and any `___bitrockBigFile<N>` splits) from a remote
     BitRock InstallBuilder Cookfs (`CFS0002`) archive via HTTP Range."""
-    opener = urllib.request.build_opener(_VendorRedirects)
 
     def get_range(start: int, length: int) -> tuple[bytes, int]:
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "own-firmware-oracle/1",
-                "Range": f"bytes={start}-{start + length - 1}",
-            },
-        )
-        with opener.open(req, timeout=120) as resp:
-            cr = resp.headers.get("Content-Range", "")
-            if "/" not in cr:
-                raise Mismatch("missing Content-Range header")
-            return resp.read(), int(cr.rsplit("/", 1)[1])
+        def once() -> tuple[bytes, int]:
+            opener = _build_vendor_opener()
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": "own-firmware-oracle/1",
+                    "Range": f"bytes={start}-{start + length - 1}",
+                },
+            )
+            with opener.open(req, timeout=120) as resp:
+                cr = resp.headers.get("Content-Range", "")
+                if "/" not in cr:
+                    raise Mismatch("missing Content-Range header")
+                return resp.read(), int(cr.rsplit("/", 1)[1])
+
+        return _retry_vendor(once)
 
     _, total_size = get_range(0, 1)
     tail_len = min(total_size, 4 * 1024 * 1024)
@@ -194,15 +250,21 @@ def _fetch_vendor(url: str, dest: Path, limit: int | None = None) -> None:
     if sep:
         _fetch_vendor_cookfs(base_url, frag.removeprefix("cookfs="), dest, limit)
         return
-    opener = urllib.request.build_opener(_VendorRedirects)
-    req = urllib.request.Request(url, headers={"User-Agent": "own-firmware-oracle/1"})
-    written = 0
-    with opener.open(req, timeout=120) as resp, dest.open("wb") as out:
-        while chunk := resp.read(1 << 20):
-            written += len(chunk)
-            if limit is not None and written > limit:
-                raise Mismatch(f"size mismatch: more than {limit} bytes")
-            out.write(chunk)
+
+    def once() -> None:
+        opener = _build_vendor_opener()
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "own-firmware-oracle/1"}
+        )
+        written = 0
+        with opener.open(req, timeout=120) as resp, dest.open("wb") as out:
+            while chunk := resp.read(1 << 20):
+                written += len(chunk)
+                if limit is not None and written > limit:
+                    raise Mismatch(f"size mismatch: more than {limit} bytes")
+                out.write(chunk)
+
+    _retry_vendor(once)
 
 
 def _fetch_r2(key: str, dest: Path) -> None:

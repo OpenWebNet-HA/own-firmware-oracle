@@ -992,6 +992,23 @@ def test_own_plant_engine_comprehensive() -> None:
     assert eng.step("*#4*99*0##").ack_or_nack == "*#*0##"
     for d in ("0", "13", "14", "19", "20"):
         assert eng.step(f"*#4*2*{d}##").ack_or_nack == "*#*1##"
+    # #73 humidity (dim 60): the per-zone probe value, NACK without a probe.
+    z2 = eng.topology.thermo_zones[2]
+    assert eng.step("*#4*2*60##").replies == (f"*#4*2*60*{z2.humidity}##",)
+    saved_hum = z2.humidity
+    z2.humidity = None
+    assert eng.step("*#4*2*60##").ack_or_nack == "*#*0##"
+    z2.humidity = saved_hum
+    # #73 303 OFF releases the active actuator: run the cooling fan coil up,
+    # then *4*303*2## releases output 2 from running to 5 and reports it.
+    z2.temp_deci = 300
+    z2.setpoint_deci = 200
+    eng.step("*4*0*2##")
+    assert z2.actuators[2] >= 6
+    off = eng.step("*4*303*2##")
+    assert z2.mode == 303
+    assert z2.actuators[2] == 5
+    assert "*#4*2#2*20*5##" in off.events_after
     eng.topology.thermo_zones[2].actuators.clear()
     assert eng.step("*4*1*2##").ack_or_nack == "*#*1##"
 
@@ -1034,6 +1051,69 @@ def test_own_plant_engine_comprehensive() -> None:
     assert mh_eng.step("*2*0*11#4#02##").ack_or_nack == "*#*1##"
     mh_eng.topology.covers["11#4#02"].locked = True
     assert mh_eng.step("*2*1*11#4#02##").ack_or_nack == "*#*1##"
+
+
+def test_own_plant_engine_matches_responder_on_f461_bench() -> None:
+    # #73: the fast engine must mutate the shared ThermoZoneDevice exactly as
+    # the closed-loop responder (devices.py, aligned to the #67 physical bench)
+    # does. Drive matching WHO=4 frames through both on a fresh f461-bench zone
+    # and assert the ACK/NACK, the replies and the resulting tz state agree.
+    f461_cfg = load_topology_yaml(
+        ROOT / "oracle" / "plant" / "fixtures" / "f461-bench.yaml"
+    )
+    eng = OwnPlantEngine(f461_cfg)
+    resp = PlantResponder.from_fixture("f461-bench")
+    etz = eng.topology.thermo_zones[2]
+    rtz = resp.topology.thermo_zones[2]
+
+    def state(tz: ThermoZoneDevice) -> tuple[object, ...]:
+        return (
+            tz.mode,
+            tz.season,
+            tz.valve_heating,
+            tz.valve_cooling,
+            tuple(sorted(tz.actuators.items())),
+            tz.fan_speed,
+            tz.humidity,
+        )
+
+    def resp_step(frame_hex: str) -> list[bytes]:
+        # The responder consumes the raw D1 / short device frames the gateway
+        # decodes to; digits=3 for the F461 bench.
+        payload = bytes.fromhex(frame_hex)
+        if payload[0] in (0xD1, 0xD2):
+            return rtz.handle_extended(payload, digits=3)
+        return rtz.handle_short(payload, digits=3)
+
+    # (OWN frame for the engine, equivalent device frame for the responder).
+    sequence = [
+        ("*#4*2*11##", "9902300B"),  # heating valve: both leave it unanswered
+        ("*#4*2*60##", "D102030308000000"),  # humidity probe: both answer 39
+        ("*4*0*2##", "93023001"),  # cooling: drive the fan coil (side 2) up
+        ("*#4*2*11##", "9902300B"),  # cooling fan coil active: both answer
+        ("*#4*2*#11*2##", "D10203020B020000"),  # running coil follows the speed
+        ("*4*303*2##", "9302300F"),  # OFF: release the running coil to 5
+        ("*4*1*2##", "93023000"),  # season flip while OFF stays 303
+        ("*4*0*2##", "93023001"),  # season flip while OFF stays 303
+        ("*#4*2*#11*1##", "D10203020B010000"),  # #11 while OFF only keeps speed
+    ]
+    assert state(etz) == state(rtz)
+    for own, frame_hex in sequence:
+        ex = eng.step(own)
+        reply = resp_step(frame_hex)
+        assert (ex.ack_or_nack == "*#*1##") == bool(reply), own
+        assert state(etz) == state(rtz), own
+
+    # Replies are the shared state, never a constant: the humidity value is the
+    # fixture probe, and a probe-less zone leaves both silent (engine NACK,
+    # responder empty).
+    eng.reset()
+    resp.reset()
+    assert eng.step("*#4*2*60##").replies == (f"*#4*2*60*{rtz.humidity}##",)
+    etz.humidity = None
+    rtz.humidity = None
+    assert eng.step("*#4*2*60##").ack_or_nack == "*#*0##"
+    assert resp_step("D102030308000000") == []
 
 
 def test_needs_device_txack() -> None:
