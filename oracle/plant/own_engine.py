@@ -595,8 +595,7 @@ class OwnPlantEngine:
                 tz.mode = 202
             return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
         if what_str in ("0", "1"):
-            # *4*1*Z## heating mode, *4*0*Z## conditioning mode (WHO 4 PDF p.5 season
-            # WHATs; manual adjustment is 110/210/310). While OFF a
+            # *4*1*Z## manual heating, *4*0*Z## manual cooling. While OFF a
             # season write only moves the underlying season and stays 303;
             # otherwise it drives the active season's actuator
             # (devices.py _handle_mode_write).

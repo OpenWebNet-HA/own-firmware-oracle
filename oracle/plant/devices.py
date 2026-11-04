@@ -620,8 +620,7 @@ class ThermoZoneDevice:
         return []
 
     def _handle_mode_write(self, b3: int, *, digits: int) -> list[bytes]:
-        # 00 heating mode (*4*1*Z##), 01 conditioning mode (*4*0*Z##): the season
-        # WHATs of the WHO 4 PDF p.5 (manual adjustment is WHAT 110/210/310); 0F off
+        # 00 manual heating (*4*1*Z##), 01 manual cooling (*4*0*Z##), 0F off
         # (*4*303*Z##); any other byte is left unanswered. A season written
         # while the zone is OFF only moves the underlying season.
         if b3 not in (0x00, 0x01, 0x0F):
