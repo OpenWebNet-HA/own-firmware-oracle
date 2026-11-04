@@ -562,32 +562,67 @@ class OwnPlantEngine:
 
         return self._apply_who4_zone_mode(tx, what_str, int(where_str))
 
+    def _actuator_events(self, z: int, before: dict[int, int]) -> tuple[str, ...]:
+        """OWN *#4*Z#A*20*V## events for the zone's actuators that changed."""
+        tz = self.topology.thermo_zones[z]
+        return tuple(
+            f"*#4*{z}#{act_id}*20*{val}##"
+            for act_id, val in sorted(tz.actuators.items())
+            if before.get(act_id) != val
+        )
+
     def _apply_who4_zone_mode(self, tx: str, what_str: str, z: int) -> Exchange:
         tz = self.topology.thermo_zones[z]
         if what_str == "311":
             return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
         if what_str == "303":
+            # OFF releases every actuator (valve->0, fan coil->5), reusing the
+            # responder helper so engine and responder cannot drift
+            # (devices.py _handle_mode_write / _release_actuators). Live F461
+            # 2026-11-03 *4*303*2## -> OFF; #67 fixture f461_live_2026-10-15
+            # run3_climate released 2#2 (*#4*2#2*20*5##) 2.8 s later.
+            before = dict(tz.actuators)
             tz.mode = 303
-        elif what_str == "302":
+            tz._release_actuators(digits=2)
+            return Exchange(
+                tx=tx,
+                replies=(),
+                ack_or_nack="*#*1##",
+                events_after=self._actuator_events(z, before),
+            )
+        if what_str == "302":
             if tz.mode != 303:
                 tz.mode = 202
-        elif what_str in ("0", "1"):
-            tz.valve_heating = int(what_str)
-            if 1 in tz.actuators:
-                tz.actuators[1] = int(what_str)
-            if tz.mode != 303:
+            return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
+        if what_str in ("0", "1"):
+            # *4*1*Z## manual heating, *4*0*Z## manual cooling. While OFF a
+            # season write only moves the underlying season and stays 303;
+            # otherwise it drives the active season's actuator
+            # (devices.py _handle_mode_write).
+            before = dict(tz.actuators)
+            if tz.mode == 303:
+                tz._season = "heating" if what_str == "1" else "cooling"
+                tz._release_actuators(digits=2)
+            else:
                 tz.mode = int(what_str)
-        elif what_str.isdigit():
-            tz.mode = int(what_str)
-        elif what_str.startswith("312#"):
+                tz._drive_active_actuator(digits=2)
+            return Exchange(
+                tx=tx,
+                replies=(),
+                ack_or_nack="*#*1##",
+                events_after=self._actuator_events(z, before),
+            )
+        if what_str.startswith("312#"):
             arg = what_str.split("#", 1)[1]
             if arg.isdigit():
                 tz.fan_speed = int(arg)
             elif not all(p.isdigit() for p in arg.split("#")):
                 return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
-        else:
-            return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
-        return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
+            return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
+        if what_str.isdigit():
+            tz.mode = int(what_str)
+            return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
+        return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
 
     def _step_who4_query_or_dim(
         self, tx: str, where_str: str, rest: list[str]
@@ -691,10 +726,21 @@ class OwnPlantEngine:
             "13#1": f"*#4*{z}*13*{tz.offset}##",
             "14": f"*#4*{z}*14*{tz.setpoint_deci:04d}*{tz.function}##",
             "19": f"*#4*{z}*19*{tz.valve_cooling}*{tz.valve_heating}##",
-            "60": f"*#4*{z}*60*34##",
         }
         if dim in single_dims:
             st = single_dims[dim]
+            return Exchange(
+                tx=tx, replies=(st,), ack_or_nack="*#*1##", events_after=(st,)
+            )
+        if dim == "60":
+            # Humidity: only a zone with a probe answers (responder path
+            # devices.py: self.humidity is not None -> D2 Z 03 04 08 00 00 H);
+            # a probe-less zone leaves the extended read unanswered, which the
+            # gateway reports as a NACK. Report the per-zone value, never the
+            # old constant 34 (live F461 2026-11-03 zone 2: *#4*2*60*47##).
+            if tz.humidity is None:
+                return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
+            st = f"*#4*{z}*60*{tz.humidity}##"
             return Exchange(
                 tx=tx, replies=(st,), ack_or_nack="*#*1##", events_after=(st,)
             )
@@ -714,7 +760,12 @@ class OwnPlantEngine:
                 tx=tx, replies=ev[:1], ack_or_nack="*#*1##", events_after=ev
             )
         if dim == "11":
-            if tz.mode == 1 or tz.valve_heating == 1:
+            # Fan speed is answered only when the active season's output is a
+            # fan coil (dimension 19 side value >= 5); a valve side leaves the
+            # request unanswered and the gateway NACKs (responder devices.py:
+            # self._active_side() >= 5). Live F461 2026-11-03: *#4*2*11## NACKed
+            # in heating (active output 2#1 is an F430/2 valve).
+            if tz._active_side() < 5:
                 return Exchange(tx=tx, replies=(), ack_or_nack="*#*0##")
             st = f"*#4*{z}*11*{tz.fan_speed}##"
             return Exchange(
@@ -752,6 +803,18 @@ class OwnPlantEngine:
                     tz.actuators[2] = vc
         elif dim == "#11" and len(rest) >= 2 and rest[1].isdigit():
             tz.fan_speed = int(rest[1])
+            # A running fan coil follows the new speed and reports itself;
+            # a valve side is untouched and an OFF zone only keeps the speed
+            # (responder devices.py: self._active_side() >= 5 and mode != 303).
+            if tz._active_side() >= 5 and tz.mode != 303:
+                before = dict(tz.actuators)
+                tz._drive_active_actuator(digits=2)
+                return Exchange(
+                    tx=tx,
+                    replies=(),
+                    ack_or_nack="*#*1##",
+                    events_after=self._actuator_events(z, before),
+                )
         return Exchange(tx=tx, replies=(), ack_or_nack="*#*1##", events_after=())
 
     def _step_who18_query_or_dim(
