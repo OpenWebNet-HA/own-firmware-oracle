@@ -453,6 +453,7 @@ The oracle catalogues, unpacks, and tracks deterministic manifests for all stand
 | **L4686SDK** | `012001` (1.20.1) | Bare-metal Microchip PIC18 (`0x000000`-`0x00EDDD`) | 3 | Zip, Intel HEX | OpenWebNet-to-SCS serial translator (`4686SDK_012001.HEX`, no OS) | Static analysis only (PIC18 serial/USB translator — no TCP/IP stack) |
 | **L4561N** | `040006` (4.0.6) | Bare-metal Microcontroller | 3 | Zip, Intel HEX | Stereo control interface firmware (`rca_ir.HEX`) | Pending Emulation (Specialized bus interface — zero matrix value) |
 | **3550** | `030020` (3.0.20) | Bare-metal Mitsubishi M16C (`0x0E0000`-`0x0FFFFF`) | 5 | Zip, ZipCrypto, Motorola S-record | 99-zone central unit firmware (`3550_030020.mot`, no OS) | Static analysis only (QEMU has no M16C target) |
+| **3488** | `030205` (3.2.5) | Linux ARMv7 `eabi5` | 18,008 | U-Boot, Ext4, Gzip, Zip | `bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, `bt_termo`, `bt_multi`, `bt_supervisione`, `bt_vct`, `bt_av_media`, `coso`, `bt_mhportal` | Pending Emulation (MyHomeServer1-class daemon stack on `/dev/ttymxc1`; no Phase 2 target yet) |
 <!-- FLEET_TABLE_END -->
 
 ### Architectural Differences: Linux vs. Bare-Metal Microcontroller
@@ -490,7 +491,7 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 - **F455** (`010102` / 1.1.2): Basic OpenWebNet IP interface (bare-metal ARM Cortex-M). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter subset already 100% covered by Linux gateways with zero added value to the matrix)*
 - **MH201** (`030644` / 3.6.44): Hotel guest room scenario module (bare-metal ARM Cortex-M3 STM32F217). *(Pending Emulation — bare-metal microcontroller flash image without OS/userland; basic lighting/shutter/scenario subset already covered by Linux gateways with zero added value to the matrix)*
 
-*(Note: Auxiliary hardware (touch screen, bus interface, temperature control central unit) such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`), **L4686SDK** OpenWebNet USB & RS-232 Interface (`catalog/L4686SDK/012001.yaml`), **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`), and **3550** Temperature Control Central Unit (`catalog/3550/030020.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 17).*
+*(Note: Auxiliary hardware (touch screen, bus interface, temperature control central unit) such as the **H4684** Colour Touch Screen (`catalog/H4684/020054.yaml`), **L4686SDK** OpenWebNet USB & RS-232 Interface (`catalog/L4686SDK/012001.yaml`), **L4561N** Stereo Control Interface (`catalog/L4561N/040006.yaml`), **3550** Temperature Control Central Unit (`catalog/3550/030020.yaml`), and **3488** HOMETOUCH 7" Touch Screen (`catalog/3488/030205.yaml`) are also catalogued with full cryptographic provenance, bringing total catalogued firmware packages to 18).*
 <!-- FLEET_CENSUS_END -->
 
 #### 2. Excluded Hardware & Legacy Devices (and Why)
@@ -500,7 +501,6 @@ To ensure complete clarity regarding the BTicino/Legrand MyHOME product ecosyste
 | :--- | :--- | :--- |
 | **F452 / F452V** | First-generation Web Server DIN | Discontinued early 2000s hardware. Firmware was stored in masked ROM / EEPROM; no firmware update packages were ever published for download. |
 | **F458 / 003599** | IP Server | Specialized telecom/IP server module; no public firmware archive distributed. |
-| **HOMETOUCH 7" (3488 / 067259)** | Connected Touchscreen | Embedded Android touch display; firmware updates are distributed exclusively as full-device Android OTA updates, not OpenWebNet gateway images. |
 | **Classe 300X (`344642`, `344742`)** | Video Internal Unit with Wi-Fi | 2-wire video internal unit with Netatmo cloud bridging; firmware updates are distributed exclusively as encrypted OTA cloud synchronization. |
 | **Classe 300 EOS (`344842`, `344845`)** | Smart Video Internal Unit | Connected video internal unit with Alexa; firmware updated exclusively via Netatmo / Legrand cloud OTA. |
 | **HC4690 / HD4690 / HS4690 (`067285`)** | Multimedia Touch Screen | 10-inch multimedia display console; specialized display firmware. |

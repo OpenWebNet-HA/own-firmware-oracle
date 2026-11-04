@@ -289,6 +289,20 @@ GATEWAY_METADATA: dict[str, dict[str, str]] = {
             "`bt_alarm` on `/dev/ttyPIC` PTY under ARMv4 OABI — {suites} suites)"
         ),
     },
+    "3488": {
+        "title": 'HOMETOUCH 7" Touch Screen',
+        "arch": "Linux ARMv7 `eabi5`",
+        "layers": "U-Boot, Ext4, Gzip, Zip",
+        "daemons": (
+            "`bt_daemon`, `openserver`, `scsserver`, `bt_luci`, `bt_device`, "
+            "`bt_termo`, `bt_multi`, `bt_supervisione`, `bt_vct`, `bt_av_media`, "
+            "`coso`, `bt_mhportal`"
+        ),
+        "pending_status": (
+            "Pending Emulation (MyHomeServer1-class daemon stack on `/dev/ttymxc1`; "
+            "no Phase 2 target yet)"
+        ),
+    },
     "L4686SDK": {
         "title": "OpenWebNet USB & RS-232 Interface",
         "arch": "Bare-metal Microchip PIC18 (`0x000000`-`0x00EDDD`)",
@@ -334,16 +348,6 @@ KNOWN_EXCLUDED_HARDWARE = [
         (
             "Specialized telecom/IP server module; no public firmware archive "
             "distributed."
-        ),
-    ),
-    (
-        'HOMETOUCH 7" (3488 / 067259)',
-        ["HOMETOUCH", "3488", "067259"],
-        "Connected Touchscreen",
-        (
-            "Embedded Android touch display; firmware updates are distributed "
-            "exclusively as full-device Android OTA updates, not OpenWebNet gateway "
-            "images."
         ),
     ),
     (
