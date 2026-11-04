@@ -11,7 +11,7 @@ The README listed HOMETOUCH among the excluded products as "an embedded
 Android touch display whose firmware ships only as Android OTA updates". That
 was an inference, and the vendor product page proves it wrong: it links
 `SMARTDES_030205.fwz` directly, and the package is the same Linux stack the
-emulated gateways run. The unit is a MyHOME_Up touch screen and a video door
+emulated targets run. The unit is a MyHOME_Up touch screen and a video door
 entry internal station, so it is auxiliary hardware like the H4684, but it
 carries a full `openserver` / `scsserver` / translator stack of its own, which
 makes it a Phase 2 emulation candidate rather than a static-only entry.
