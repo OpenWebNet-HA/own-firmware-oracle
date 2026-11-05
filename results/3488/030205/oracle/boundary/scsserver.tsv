@@ -1,0 +1,26 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# program=scsserver
+# target_sha256=61b32d37bbb3576e8672d19d39b0b5208b256496ab2bd42939a6731a482ebe8c
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.15.157-lts-next+gc9df1633303c+p0
+# window_s=10
+# oracle_version=3
+kind	detail	result
+bind	inet:127.0.0.1:20001	ok
+bind	inet:127.0.0.1:20002	ok
+exit	running	timeout
+ioctl	/dev/ttymxc1 TCFLSH	ok
+ioctl	/dev/ttymxc1 TCGETS	ok
+ioctl	/dev/ttymxc1 TCSETS iflag=IGNPAR|ICRNL|IXON|IXOFF cflag=B115200,CS8,CREAD|CLOCAL	ok
+listen	inet:127.0.0.1:20001	ok
+listen	inet:127.0.0.1:20002	ok
+open	/dev/ttymxc1 O_RDWR|O_NOCTTY|O_NONBLOCK	ok
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/Pic_Conf.txt.3O74X3 O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE	ok
+open	/var/tmp/Pic_Conf_ext.txt.6I74X3 O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE	ok
+open	/var/tmp/Pic_Rel.txt.VL64X3 O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE	ok
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+write	/dev/ttymxc1	$024\x0d

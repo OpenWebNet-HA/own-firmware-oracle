@@ -1,0 +1,26 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# harness=full
+# target_sha256=e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=matrix-refused
+# suite_sha256=688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*#1*1*#1*20##	nack	silent	-
+down	*#18*51*52##	nack	silent	-
+down	*#2*1*#1*50##	nack	silent	-
+down	*15*01#1*0001##	nack	silent	-
+down	*15*01#2*0001##	nack	silent	-
+down	*15*01#3*0001##	nack	silent	-
+down	*15*01*0001##	nack	silent	-
+down	*2*1*21#4#1##	nack	silent	-
+down	*25*21*0001##	nack	silent	-
+down	*25*22*0001##	nack	silent	-
+down	*25*23*0001##	nack	silent	-

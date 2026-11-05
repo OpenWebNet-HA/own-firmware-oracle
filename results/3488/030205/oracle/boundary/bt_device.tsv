@@ -1,0 +1,37 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# program=bt_device
+# target_sha256=d4b9ebd3c9e2569704b432333a0f23a18a0a78a5fa4a75faaa3b350f0d24d30b
+# emulator=qemu-arm-8.2.2
+# kernel_release=5.15.157-lts-next+gc9df1633303c+p0
+# window_s=10
+# oracle_version=3
+kind	detail	result
+bind	inet:127.0.0.1:30013	ok
+bind	inet:127.0.0.1:31013	ok
+execve	/bin/sh	ECHILD
+execve	/bin/uname	ok
+exit	running	timeout
+ioctl	fd TCGETS	ENOTTY
+ioctl	fd TIOCGPGRP	EBADF
+ioctl	fd TIOCGPGRP	ENOTTY
+ioctl	fd TIOCGWINSZ	ENOTTY
+listen	inet:127.0.0.1:30013	ok
+listen	inet:127.0.0.1:31013	ok
+open	/dev/rtc O_RDONLY	ENOENT
+open	/dev/tty O_RDWR|O_LARGEFILE|O_NONBLOCK	ENXIO
+open	/etc/ld.so.cache O_RDONLY|O_LARGEFILE|O_CLOEXEC	ok
+open	/etc/nsswitch.conf O_RDONLY|O_CLOEXEC	ok
+open	/etc/passwd O_RDONLY|O_CLOEXEC	ok
+open	/etc/version O_RDONLY	ok
+open	/proc/cpuinfo O_RDONLY	ok
+open	/proc/device-tree/revision O_RDONLY	ENOENT
+open	/sys/class/i2c-dev/i2c-2/device/2-0053/eeprom O_RDWR	ENOENT
+open	/sys/firmware/devicetree/base/model O_RDONLY	ok
+open	/var/tmp/BTicino.log O_WRONLY|O_APPEND|O_CREAT	ok
+open	/var/tmp/conf.xml O_RDONLY	ok
+open	/var/tmp/flags/WORKING_MODE O_RDONLY	ENOENT
+open	/var/tmp/stack_open.xml O_RDONLY	ok
+open	/var/tmp/version.txt O_RDONLY	ok
+open	/var/tmp/version.txt O_WRONLY|O_CREAT|O_LARGEFILE|O_TRUNC	ok
