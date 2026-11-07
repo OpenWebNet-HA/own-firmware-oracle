@@ -1,0 +1,27 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# harness=full
+# target_sha256=e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=lights-level
+# suite_sha256=f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b
+# oracle_version=3
+# ownd_version=2.0.0b11
+direction	input	reply	verdict	output	ownd	live
+down	*#1*0*#1*100*0##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*0##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*255##	nack	silent	-	-	unchecked
+down	*#1*31*#1*100*5##	nack	silent	-	-	unchecked
+down	*#1*31*#1*101*0##	nack	out	bus:24 31 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d	-	unchecked
+down	*1*0#0*31##	nack	out	bus:24 31 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d	-	unchecked
+down	*1*0#1*31##	nack	out	bus:24 31 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d	-	unchecked
+down	*1*0#255*31##	nack	out	bus:24 31 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d	-	unchecked
+down	*1*0#5*31##	nack	out	bus:24 31 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d	-	unchecked
+down	*1*0*31##	nack	out	bus:24 31 30 33 33 31 30 30 31 32 30 31 0d	-	unchecked
+down	*1*1*31##	nack	out	bus:24 31 30 33 33 31 30 30 31 32 30 30 0d	-	unchecked

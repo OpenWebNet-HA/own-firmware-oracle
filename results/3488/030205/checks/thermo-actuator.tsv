@@ -1,0 +1,19 @@
+# product=3488
+# version=030205
+# image_sha256=c88d7215b2a1930aa1f206daa7f37f6f2e907bc519dd275da517a236a0101624
+# harness=full
+# target_sha256=e7b640dc8513bce4f995f71a42f111c01955e51db03a041da7de48f095198d7c
+# adapter=pty-1
+# reset=each
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=thermo-actuator
+# suite_sha256=7d1b7c4a97ecc16d1df9254e69ab09c3b6134cad6093e3961e0ba962e54b325a
+# oracle_version=3
+# ownd_version=2.0.0b11
+direction	input	reply	verdict	output	ownd	live
+down	*#4*#0*20##	nack	out	bus:24 31 30 34 42 39 30 30 33 30 31 30 0d	-	unchecked
+down	*#4*1#1*20##	nack	out	bus:24 31 30 34 39 39 38 31 33 31 31 30 0d	-	unchecked
+down	*#4*1*20##	nack	out	bus:24 31 30 34 41 39 30 31 33 30 31 30 0d	-	unchecked
