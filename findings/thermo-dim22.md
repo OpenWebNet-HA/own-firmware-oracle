@@ -62,6 +62,8 @@ after the step and reading its console log.
 | `*#4*#0*22##` | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, silent | nack, silent | nack, **crash** | nack, silent | nack, **crash** |
 | `*#4*0*22##` | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, **crash** | nack, silent | nack, silent | nack, **crash** | nack, silent | nack, **crash** |
 
+**3488 `030205` (added in Phase 2, not in the table above):** the same four no-actuator-token forms (`*#4*2*22##`, `*#4*#0*22##`, `*#4*0*22##`, `*#4*2*#22*1*0215*2*0##`) are `crash` on the 3488 HOMETOUCH, with nothing on the bus; the daemon is not attributed by the run log. Ledger rows in `tools/expected_divergences.yaml`; rows in `results/3488/030205/oracle/full/thermo-dim22.tsv`.
+
 ## What the rows and bus bytes say
 
 **Only the forms whose WHERE carries no actuator token crash.** On the nine
