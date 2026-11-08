@@ -1,0 +1,31 @@
+; ==============================================================================
+; OpenWebNet WHO 22 Sound Diffusion: bare power frames vs the published form
+; ==============================================================================
+; The WHO 22 specification (v1.1) publishes the amplifier power command as
+; *22*WHAT#MULTIMEDIA_TYPE#AREA*WHERE## (WHAT 1 ON / 0 OFF, e.g. *22*1#4#1*2#1##).
+; OWNd's OWNSoundDiffusionCommand.turn_on / turn_off historically built the bare
+; form *22*1*WHERE## / *22*0*WHERE## without the #MULTIMEDIA_TYPE#AREA tail.
+; This suite records what each gateway does with the bare form on the four
+; WHERE classes (point-to-point 2#1, source-and-amplifier 3#1#1, area 4#1,
+; all 6), with the published form as a control for each target.
+; Pairs with OWNd#163 (send-layer refusal of the bare form).
+
+; Point-to-point amplifier (area 2, point 1)
+down *22*1*2#1##
+down *22*1#4#1*2#1##
+down *22*0*2#1##
+
+; Source-and-amplifier target 3#1#1
+down *22*1*3#1#1##
+down *22*1#4#1*3#1#1##
+down *22*0*3#1#1##
+
+; Area 4#1
+down *22*1*4#1##
+down *22*1#4#1*4#1##
+down *22*0*4#1##
+
+; All amplifiers (6)
+down *22*1*6##
+down *22*1#4#1*6##
+down *22*0*6##
