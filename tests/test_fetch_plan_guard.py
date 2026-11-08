@@ -115,6 +115,7 @@ def test_a_valid_cache_entry_is_reused_without_fetching(cache, monkeypatch):
 
 
 def test_a_bad_source_falls_through_to_the_next(cache, monkeypatch, capsys):
+    monkeypatch.setenv("R2_ENDPOINT", "https://r2.example")
     monkeypatch.setattr(
         fwfetch,
         "_fetch_vendor",
@@ -128,14 +129,53 @@ def test_a_bad_source_falls_through_to_the_next(cache, monkeypatch, capsys):
     assert _cached_files(cache) == [out]  # the rejected .part is gone
 
 
+def test_unconfigured_r2_source_is_skipped_preserving_vendor_error(
+    cache, monkeypatch, capsys
+):
+    monkeypatch.delenv("R2_ENDPOINT", raising=False)
+
+    def gateway_timeout(_url: str, _dest: Path, _limit: int) -> None:
+        raise urllib.error.HTTPError(
+            VENDOR, 504, "Gateway Time-out", HTTPMessage(), io.BytesIO(b"timeout")
+        )
+
+    monkeypatch.setattr(fwfetch, "_fetch_vendor", gateway_timeout)
+    monkeypatch.setattr(
+        fwfetch, "_fetch_r2", lambda *_: pytest.fail("_fetch_r2 called without R2")
+    )
+    sources = [{"vendor": VENDOR}, {"r2": "firmware/sha256/x.zip"}]
+    with pytest.raises(
+        SystemExit,
+        match=(
+            r"no source produced a valid image: "
+            r"vendor: HTTP Error 504: Gateway Time-out"
+        ),
+    ):
+        fwfetch.fetch(_entry(sources), None)
+    err_out = capsys.readouterr().err
+    assert "source vendor failed: HTTP Error 504: Gateway Time-out" in err_out
+    assert "source r2 failed" not in err_out
+    assert _cached_files(cache) == []
+
+
 def test_no_valid_source_is_fatal(cache, monkeypatch):
+    monkeypatch.delenv("R2_ENDPOINT", raising=False)
+
     def offline(_url: str, _dest: Path, _limit: int) -> None:
         raise OSError("network unreachable")
 
     monkeypatch.setattr(fwfetch, "_fetch_vendor", offline)
     sources = [{"mirror": "ignored"}, {"vendor": VENDOR}]
-    with pytest.raises(SystemExit, match="no source produced a valid image"):
+    with pytest.raises(
+        SystemExit,
+        match="no source produced a valid image: vendor: network unreachable",
+    ):
         fwfetch.fetch(_entry(sources), None)
+    with pytest.raises(
+        SystemExit,
+        match="no source produced a valid image: no configured source available",
+    ):
+        fwfetch.fetch(_entry([{"r2": "firmware/sha256/x.zip"}]), None)
     assert _cached_files(cache) == []
 
 
@@ -170,14 +210,21 @@ def test_fetch_vendor_retries_transient_5xx_and_network_errors(
     sleeps: list[float] = []
     jars: list[CookieJar] = []
     monkeypatch.setattr(fwfetch.time, "sleep", sleeps.append)
-    monkeypatch.setattr(fwfetch, "VENDOR_MAX_ATTEMPTS", 5)
+    monkeypatch.setattr(fwfetch, "VENDOR_MAX_ATTEMPTS", 8)
 
     failures: list[Exception] = [
         urllib.error.HTTPError(
             VENDOR, 502, "Proxy Error", HTTPMessage(), io.BytesIO(b"bad gateway")
         ),
+        urllib.error.HTTPError(
+            VENDOR, 504, "Gateway Time-out", HTTPMessage(), io.BytesIO(b"timeout")
+        ),
         IncompleteRead(b"part", 10),
         urllib.error.URLError("connection reset"),
+        TimeoutError("read timed out"),
+        urllib.error.HTTPError(
+            VENDOR, 503, "Service Unavailable", HTTPMessage(), io.BytesIO(b"busy")
+        ),
     ]
 
     class Opener:
@@ -194,11 +241,12 @@ def test_fetch_vendor_retries_transient_5xx_and_network_errors(
     dest = tmp_path / "out"
     fwfetch._fetch_vendor(VENDOR, dest)
     assert dest.read_bytes() == BLOB
-    assert sleeps == [1.0, 2.0, 3.0]
-    assert len({id(j) for j in jars}) == 4  # fresh cookie jar on every attempt
+    assert sleeps == [1.0, 2.0, 4.0, 8.0, 15.0, 15.0]
+    assert len({id(j) for j in jars}) == 7  # fresh cookie jar on every attempt
     err_out = capsys.readouterr().err
-    assert "attempt 1/5" in err_out
+    assert "attempt 1/8" in err_out
     assert "HTTP Error 502: Proxy Error" in err_out
+    assert "HTTP Error 504: Gateway Time-out" in err_out
 
 
 def test_fetch_vendor_does_not_retry_non_transient_http_errors(tmp_path, monkeypatch):
