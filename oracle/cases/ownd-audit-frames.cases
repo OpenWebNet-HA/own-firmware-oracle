@@ -88,10 +88,13 @@ down *22*35#4#2#1*3#2#1##
 ; D5 - bare `*22*3*WHERE##` (OWNd, step omitted) vs `*22*3#1*WHERE##`.
 down *22*3*3#1#1##
 down *22*3#1*3#1#1##
-; D7 - WHAT 19 paging and a DIMENSION 11 client write, neither defined.
+; D7 - WHAT 19 paging is absent from the WHO 22 WHAT table; the DIMENSION 11 client write
+;      IS published (WHO 22 PDF 3.4.1.1: *#22*5#2#<sourceID>*#11*<modulation>*<freqValue>*<station>## -> Ack).
 down *22*19#1*5#3#0#0##
 down *#22*2#1*#11*1*10150*3##
-; T1 - WHO 25 status: `39`, `35`, `5` are documented addresses; `339` is not.
+; T1 - WHO 25 status: the WHO 25 PDF WHERE table publishes the WHERE with its prefix, 3 + [1-201]
+;      or 3 + [1-9][1-9] (examples *#25*311##, *#25*399##): `339` is a published form, bare `5` is not;
+;      `39` / `35` are the Encyclopedia's prefix-less sensor numbers.
 down *#25*39##
 down *#25*339##
 down *#25*35##
