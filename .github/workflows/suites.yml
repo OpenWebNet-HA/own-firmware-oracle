@@ -156,13 +156,16 @@ jobs:
           path: ${{ runner.temp }}/evidence/
           if-no-files-found: ignore
           retention-days: 7
-      - name: delete firmware and work files from the runner
+      - name: delete work files from the runner
         if: always()
-        run: rm -rf "$RUNNER_TEMP/produced" "$RUNNER_TEMP/evidence" "$RUNNER_TEMP/own-fw"
+        run: rm -rf "$RUNNER_TEMP/produced" "$RUNNER_TEMP/evidence"
+      - name: delete firmware on non-PR run
+        if: always() && github.event_name != 'pull_request'
+        run: rm -rf "$RUNNER_TEMP/own-fw"
 
   publish:
     needs: [plan, run]
-    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.matrix != '[]' && !cancelled() }}
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.matrix != '[]' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

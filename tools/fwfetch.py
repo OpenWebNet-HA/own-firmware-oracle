@@ -40,7 +40,7 @@ CACHE = Path(os.environ.get("OWN_FW_CACHE", Path.home() / ".cache" / "own-fw"))
 RETRYABLE_HTTP_CODES = frozenset({408, 429, 500, 502, 503, 504})
 VENDOR_MAX_ATTEMPTS = 20
 VENDOR_BACKOFF_BASE = 1.0
-VENDOR_BACKOFF_MAX = 3.0
+VENDOR_BACKOFF_MAX = 15.0
 
 
 def sha256_file(path: Path) -> str:
@@ -301,24 +301,27 @@ def fetch(entry: CatalogEntry, from_file: str | None) -> Path:
             raise SystemExit(f"{src}: {err}") from None
         tmp.write_bytes(src.read_bytes())
     else:
-        last_err: Exception | None = None
+        errors: list[str] = []
         for source in w.get("sources", []):
             kind, loc = next(iter(source.items()))
             try:
                 if kind == "vendor":
                     _fetch_vendor(loc, tmp, size)
                 elif kind == "r2":
+                    if not os.environ.get("R2_ENDPOINT"):
+                        continue
                     _fetch_r2(loc, tmp)
                 else:
                     continue
                 _verify(tmp, size, sha256)
                 break
             except Exception as err:  # noqa: BLE001 -- try the next source
-                last_err = err
+                errors.append(f"{kind}: {err}")
                 tmp.unlink(missing_ok=True)
                 print(f"  source {kind} failed: {err}", file=sys.stderr)
         else:
-            raise SystemExit(f"no source produced a valid image: {last_err}")
+            detail = "; ".join(errors) or "no configured source available"
+            raise SystemExit(f"no source produced a valid image: {detail}")
 
     tmp.replace(dest)
     return dest
