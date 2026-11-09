@@ -10,7 +10,7 @@
 # responder=pic
 # settle_ms=3000
 # suite=ownd-audit-frames
-# suite_sha256=db03cc878d84d514b9e324c2d01d050264f2e4ccd0c1aad33937683c30e472ca
+# suite_sha256=1d23e273412d02df83fa3aa7e75851c323361b6978341cacfa733ce43a24e1ac
 # oracle_version=3
 direction	input	reply	verdict	output
 down	*#1*##	nack	silent	-
