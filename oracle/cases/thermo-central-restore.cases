@@ -1,0 +1,35 @@
+; Thermo: central unit "restore" WHATs 3100 / 3200 / 3000 next to 3101 and 311 (OWNd#169).
+; Question from the review of OWNd#169: which command byte does each gateway put on the
+; bus for the published "last set up weekly program" command, on the 99-zone address #0
+; and on a 4-zone central address #0#C, compared with the numbered program 3101 and with
+; the zone command 311 that OWNd's set_central_mode(where, "auto") used to send?
+;
+; Sources (Legrand "Open Web Net Language, WHO = 4"):
+;   1.6.8  p. 33  last set up weekly program activation      *4*3100*#0##
+;   1.6.12 p. 39  last set up scenario activation            *4*3200*#0##
+;   1.6.19 p. 51  holiday deactivation, weekly program N     *4*3000#what*#0##  what = 3101..3103
+;   1.6.20 p. 52  holiday deactivation, last weekly program  *4*3000*#0##
+;
+; Not answered here: what a central unit does with the telegram. A live 3550 (99 zones)
+; restores its program on *4*3100*#0## (OWNd#169); no 4-zone central unit has been traced.
+
+; 1. Last weekly program: 99-zone address and the two 4-zone forms.
+down *4*3100*#0##
+down *4*3100*#0#2##
+down *4*3100*#0#1##
+
+; 2. Last scenario.
+down *4*3200*#0##
+down *4*3200*#0#2##
+
+; 3. Holiday deactivation, with and without the weekly program parameter.
+down *4*3000*#0##
+down *4*3000*#0#2##
+down *4*3000#3101*#0##
+
+; 4. Controls: numbered weekly program 1 (also in thermo-ts10 for #0 and #0#1) and the
+;    zone "automatic generic" WHAT 311 on the central addresses (also in thermo-central-mode).
+down *4*3101*#0##
+down *4*3101*#0#2##
+down *4*311*#0##
+down *4*311*#0#2##
