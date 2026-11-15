@@ -12,6 +12,9 @@
 ;
 ; Not answered here: what a central unit does with the telegram. A live 3550 (99 zones)
 ; restores its program on *4*3100*#0## (OWNd#169); no 4-zone central unit has been traced.
+;
+; Every WHAT is replayed on the same three addresses: #0 (99 zones) and the 4-zone forms
+; #0#2 and #0#1.
 
 ; 1. Last weekly program: 99-zone address and the two 4-zone forms.
 down *4*3100*#0##
@@ -21,15 +24,22 @@ down *4*3100*#0#1##
 ; 2. Last scenario.
 down *4*3200*#0##
 down *4*3200*#0#2##
+down *4*3200*#0#1##
 
 ; 3. Holiday deactivation, with and without the weekly program parameter.
 down *4*3000*#0##
 down *4*3000*#0#2##
+down *4*3000*#0#1##
 down *4*3000#3101*#0##
+down *4*3000#3101*#0#2##
+down *4*3000#3101*#0#1##
 
 ; 4. Controls: numbered weekly program 1 (also in thermo-ts10 for #0 and #0#1) and the
-;    zone "automatic generic" WHAT 311 on the central addresses (also in thermo-central-mode).
+;    zone "automatic generic" WHAT 311 on the central addresses (also in thermo-central-mode
+;    for #0 and #0#2).
 down *4*3101*#0##
 down *4*3101*#0#2##
+down *4*3101*#0#1##
 down *4*311*#0##
 down *4*311*#0#2##
+down *4*311*#0#1##
