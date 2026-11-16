@@ -1,0 +1,49 @@
+; WHO 22 sound diffusion: where the <area> of a power frame lands on the bus (MyHOME#924 A1,
+; OWNd#176).
+; Question: in *22*1#<mmtype>#<area>*2#<sourceID>## is the second WHAT parameter the output
+; area or a source? OWNd decoded it as a source until OWNd#176.
+;
+; Source (Legrand "Open Web Net Language, WHO = 22", version 1.1):
+;   1.1    <sourceID> "Source address" [1-4]; <area> "Represents the output area where the
+;          source is ON" [1-9]
+;   3.1.1  source OFF                  *22*0#<mmtype>#<area>*2#<sourceID>##
+;   3.1.2  source ON                   *22*1#<mmtype>#<area>*2#<sourceID>##
+;          event frames                *22*21#<mmtype>#<area>*5#2#<sourceID>##
+;                                      *22*2#<mmtype>#<area>*5#2#<sourceID>##
+;   3.1.9  go to source                *22*22#<mmtype>#<area>*2#<sourceID>##
+;   3.2.1 / 3.2.2  amplifier OFF / ON, printed without the separators
+;          (*22*1#<mmtype><area>*3#<area><point>##)
+;
+; ORACLE ONLY: no WHO 22 frame of this file may be sent to a real gateway. The bare forms
+; next to them crash the sound daemon on several gateways (suite sound-who22-bare-power).
+;
+; Already in other suites, not repeated here: *22*1#4#1*2#1## (sound-who22-bare-power),
+; *22*1#4#1*3#1#1##, *22*0#4#1*3#1#1## and the WHAT 34 / 35 forms (sound-who22).
+
+; 1. Source 1 switched on with a moving area: 5, 8, and 9 (the top of the published range).
+down *22*1#4#5*2#1##
+down *22*1#4#8*2#1##
+down *22*1#4#9*2#1##
+
+; 2. Area 1 with a moving source: 2, 4 (the top of the published range) and 5 (above it).
+down *22*1#4#1*2#2##
+down *22*1#4#1*2#4##
+down *22*1#4#1*2#5##
+
+; 3. Source OFF with an area (3.1.1).
+down *22*0#4#3*2#1##
+
+; 4. Amplifier 3#3#1: ON with its own area 3, ON with another area (8), OFF with area 3.
+down *22*1#4#3*3#3#1##
+down *22*1#4#8*3#3#1##
+down *22*0#4#3*3#3#1##
+
+; 5. The other WHATs printed with <mmtype>#<area>: 22 as a command to a source (3.1.9), and
+; the event-session forms 2 and 21 on the general source address 5#2#<sourceID>. WHAT 23 is
+; not in the specification; it is received in the same form next to 21 and 2
+; (*22*23#4#1*5#2#1## on an H4890, *22*23#4#2*5#2#2## on an H/L4684, MyHOME issue 466
+; traces). Sent downward here only to record whether a gateway forwards them.
+down *22*22#4#3*2#1##
+down *22*2#4#3*5#2#1##
+down *22*21#4#3*5#2#1##
+down *22*23#4#3*5#2#1##
