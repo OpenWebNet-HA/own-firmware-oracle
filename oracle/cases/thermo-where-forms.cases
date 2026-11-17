@@ -1,0 +1,52 @@
+; WHO 4 thermoregulation: zone status request WHERE forms (the 3..99 boundary, zero-padded,
+; 3-digit, interface and local-bus forms).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#4*N##
+;    forwarded by all 13
+down *#4*3##
+down *#4*99##
+;    CRASH on MH202
+down *#4*100##
+;    forwarded by MH202
+down *#4*101##
+;    forwarded by F453, F453AV, MH200N; CRASH on MH202
+down *#4*000##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N,
+;    MyHomeServer1; CRASH on MH202
+down *#4*0001##
+down *#4*0010##
+down *#4*0099##
+down *#4*00001##
+
+; 2. *#4*#100##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#4*#100##
+
+; 3. *#4*N#N#N##
+;    CRASH on MH202
+down *#4*0#4#01##
+;    forwarded by H4684, MH200; CRASH on MH202
+down *#4*1#4#01##
+down *#4*11#4#01##
+down *#4*11#4#1##
+down *#4*11#4#001##
+down *#4*11#3#1##
+
+; 4. *#4*11#N##
+;    forwarded by H4684, MH200; CRASH on MH202
+down *#4*11#4##
+down *#4*11#3##
+down *#4*11#5##
+down *#4*11#9##
+
+; 5. *#4*11#4#01#1##
+;    forwarded by H4684, MH200; CRASH on MH202
+down *#4*11#4#01#1##
