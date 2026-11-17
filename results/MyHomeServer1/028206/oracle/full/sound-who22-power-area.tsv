@@ -1,0 +1,29 @@
+# product=MyHomeServer1
+# version=028206
+# image_sha256=aa1cd393e4ae4262b3b2c4f9f25b8e831adbed648975505e2084c801f2b7f5e7
+# harness=full
+# target_sha256=5d511f9f848f2ec07d3d14bf9a1084de4084a8b976fb9aece332c7aa9bd3a856
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=sound-who22-power-area
+# suite_sha256=92ec24fbc7df6ab63d56ab0539eaaff6c5f1b2e4f0d760aef21a41795336537e
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*22*0#4#3*2#1##	ack	out	bus:24 30 34 39 31 30 31 38 46 33 33 0d
+down	*22*0#4#3*3#3#1##	ack	out	bus:24 30 34 39 31 30 31 38 33 33 33 0d
+down	*22*1#4#1*2#2##	ack	out	bus:24 30 34 39 30 30 32 38 46 31 33 0d
+down	*22*1#4#1*2#4##	ack	out	bus:24 30 34 39 30 30 34 38 46 31 33 0d
+down	*22*1#4#1*2#5##	ack	out	bus:24 30 34 39 30 30 35 38 46 31 33 0d
+down	*22*1#4#3*3#3#1##	ack	out	bus:24 30 34 39 30 30 31 38 33 33 33 0d
+down	*22*1#4#5*2#1##	ack	out	bus:24 30 34 39 30 30 31 38 46 35 33 0d
+down	*22*1#4#8*2#1##	ack	out	bus:24 30 34 39 30 30 31 38 46 38 33 0d
+down	*22*1#4#8*3#3#1##	ack	out	bus:24 30 34 39 30 30 31 38 33 38 33 0d
+down	*22*1#4#9*2#1##	ack	out	bus:24 30 34 39 30 30 31 38 46 39 33 0d
+down	*22*2#4#3*5#2#1##	ack	out	bus:24 30 34 42 32 30 31 38 46 33 33 0d
+down	*22*21#4#3*5#2#1##	ack	out	bus:24 30 34 42 38 30 31 38 46 33 33 0d
+down	*22*22#4#3*2#1##	ack	out	bus:24 30 34 39 39 30 31 38 46 33 33 0d
+down	*22*23#4#3*5#2#1##	ack	out	bus:24 30 34 42 41 30 31 38 46 33 33 0d
