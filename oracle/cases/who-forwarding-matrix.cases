@@ -1,0 +1,117 @@
+; Which WHO numbers a gateway forwards at all: command *W*1*31##, status request *#W*31##,
+; dimension request *#W*31*1##.
+; Boundary probe of 2026-11-16, WHO 0..40, 1000..1030 and spot values up to 9999, on the 13
+; emulated gateways.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#N*31##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#0*31##
+;    dropped by every gateway
+down *#3*31##
+down *#5*31##
+down *#6*31##
+down *#8*31##
+down *#21*31##
+down *#23*31##
+down *#24*31##
+down *#26*31##
+down *#99*31##
+down *#100*31##
+down *#1000*31##
+down *#1099*31##
+down *#1100*31##
+down *#9999*31##
+;    forwarded by all 13
+down *#4*31##
+;    forwarded by F453AV
+down *#7*31##
+;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#22*31##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#25*31##
+
+; 2. *#N*31*1##
+;    dropped by every gateway
+down *#15*31*1##
+down *#17*31*1##
+down *#21*31*1##
+down *#23*31*1##
+down *#99*31*1##
+down *#100*31*1##
+down *#999*31*1##
+down *#1002*31*1##
+down *#1003*31*1##
+down *#1006*31*1##
+down *#1012*31*1##
+down *#1014*31*1##
+down *#1017*31*1##
+down *#1019*31*1##
+down *#1099*31*1##
+down *#1100*31*1##
+down *#9999*31*1##
+;    forwarded by F453, F453AV, F454, H4684, MH200, MH200N
+down *#16*31*1##
+;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#22*31*1##
+;    forwarded by MH202
+down *#1000*31*1##
+;    forwarded by all 13
+down *#1001*31*1##
+down *#1004*31*1##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *#1005*31*1##
+down *#1018*31*1##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#1013*31*1##
+
+; 3. *N*1*31##
+;    dropped by every gateway
+down *3*1*31##
+down *5*1*31##
+down *6*1*31##
+down *8*1*31##
+down *13*1*31##
+down *21*1*31##
+down *23*1*31##
+down *99*1*31##
+down *100*1*31##
+down *1002*1*31##
+down *1003*1*31##
+down *1006*1*31##
+down *1012*1*31##
+down *1014*1*31##
+down *1017*1*31##
+down *1019*1*31##
+down *1099*1*31##
+down *1100*1*31##
+down *9999*1*31##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *4*1*31##
+down *1004*1*31##
+down *1005*1*31##
+down *1018*1*31##
+;    forwarded by F453AV
+down *7*1*31##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *14*1*31##
+;    forwarded by MH202
+down *15*1*31##
+down *1000*1*31##
+;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *22*1*31##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *1001*1*31##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1013*1*31##
