@@ -1,0 +1,26 @@
+; WHO 2 automation: the WHAT values a gateway forwards for a point command (*2*WHAT*31##).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways, WHAT 0..35 and spot values up to
+; 9999.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *2*N*31##
+;    dropped by every gateway
+down *2*3*31##
+down *2*9*31##
+down *2*15*31##
+down *2*40*31##
+down *2*50*31##
+down *2*99*31##
+down *2*100*31##
+down *2*255*31##
+down *2*1000*31##
+down *2*9999*31##
+;    forwarded by 3488, F454, F459, F460, F461, MH202, MyHomeServer1
+down *2*10*31##
+down *2*11*31##
+down *2*12*31##
+down *2*13*31##
+down *2*14*31##
