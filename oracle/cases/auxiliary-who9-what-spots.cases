@@ -1,0 +1,16 @@
+; WHO 9 auxiliary: WHAT values above 35 (*9*WHAT*1##).
+; Boundary probe of 2026-11-16: two far values were seen once with exploration timing;
+; witnesses.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *9*N*1##
+;    dropped by every gateway
+down *9*275*1##
+down *9*300*1##
+down *9*325*1##
+down *9*3250*1##
+down *9*3500*1##
+down *9*3750*1##
