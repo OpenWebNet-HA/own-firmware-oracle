@@ -1,0 +1,22 @@
+; WHO 1001 / 1013 diagnostic: the WHAT values a gateway forwards (*1001*WHAT*74##,
+; *1013*WHAT*0##).
+; Boundary probe of 2026-11-16, WHAT 36..9999 coarse and 760..1240 step 10 around the accepted
+; value 1000.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *N*N*N##
+;    dropped by every gateway
+down *1001*79*74##
+down *1001*81*74##
+down *1001*990*74##
+down *1001*1010*74##
+down *1013*79*0##
+down *1013*81*0##
+down *1013*990*0##
+down *1013*1010*0##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1001*80*74##
+down *1013*80*0##
