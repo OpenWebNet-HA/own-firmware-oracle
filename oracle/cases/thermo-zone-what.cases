@@ -1,0 +1,31 @@
+; WHO 4 thermoregulation: the zone-level WHAT values a gateway forwards (*4*WHAT*1##).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways: the zone modes 102 / 103 / 202 /
+; 302 / 303, the manual 4001 / 4002 forms and their silent neighbours.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *4*N*1##
+;    dropped by every gateway
+down *4*2*1##
+down *4*50*1##
+down *4*99*1##
+down *4*100*1##
+down *4*101*1##
+down *4*201*1##
+down *4*255*1##
+down *4*301*1##
+down *4*304*1##
+down *4*1000*1##
+down *4*9999*1##
+;    forwarded by all 13
+down *4*40*1##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *4*102*1##
+down *4*103*1##
+down *4*202*1##
+down *4*302*1##
+;    forwarded by 3488, F460, F461, MyHomeServer1
+down *4*4001*1##
+down *4*4002*1##
