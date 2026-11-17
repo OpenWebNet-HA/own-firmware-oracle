@@ -1,0 +1,16 @@
+; WHO 2 automation: the DIMENSION 11 write (*#2*31*#11*value##).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *#2*31*#11*N##
+;    forwarded by 3488, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#2*31*#11*0##
+down *#2*31*#11*1##
+down *#2*31*#11*50##
+down *#2*31*#11*99##
+down *#2*31*#11*100##
+;    dropped by every gateway
+down *#2*31*#11*101##
