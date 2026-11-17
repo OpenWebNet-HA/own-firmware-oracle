@@ -1,0 +1,57 @@
+; WHO 1 lighting: the dimension write frames a gateway forwards (*#1*31*#DIM*values##), level
+; 100..200 for DIMENSION 1.
+; Boundary probe of 2026-11-16 on the 13 emulated gateways.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *#1*31*#9*N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#1*31*#9*0##
+down *#1*31*#9*1##
+down *#1*31*#9*100##
+down *#1*31*#9*1000##
+down *#1*31*#9*10000##
+
+; 2. *#1*31*#1*N*N##
+;    forwarded by MH202
+down *#1*31*#1*0*0##
+down *#1*31*#1*1*0##
+down *#1*31*#1*50*0##
+down *#1*31*#1*99*0##
+down *#1*31*#1*150*256##
+down *#1*31*#1*150*1000##
+down *#1*31*#1*255*0##
+down *#1*31*#1*256*0##
+down *#1*31*#1*1000*0##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*#1*102*0##
+down *#1*31*#1*110*0##
+down *#1*31*#1*120*0##
+down *#1*31*#1*130*0##
+down *#1*31*#1*140*0##
+down *#1*31*#1*150*0##
+down *#1*31*#1*150*1##
+down *#1*31*#1*150*10##
+down *#1*31*#1*150*100##
+down *#1*31*#1*150*255##
+down *#1*31*#1*160*0##
+down *#1*31*#1*170*0##
+down *#1*31*#1*180*0##
+down *#1*31*#1*190*0##
+down *#1*31*#1*199*0##
+
+; 3. *#1*31*#2*N*N*N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*#2*0*0*0##
+down *#1*31*#2*0*0*1##
+down *#1*31*#2*0*0*60##
+down *#1*31*#2*0*1*0##
+down *#1*31*#2*0*60*0##
+down *#1*31*#2*1*0*0##
+down *#1*31*#2*255*0*0##
+;    forwarded by MH202
+down *#1*31*#2*0*0*255##
