@@ -1,0 +1,139 @@
+; WHO 1 lighting: WHERE forms of a point command and status request (3- and 4-digit points,
+; high groups, interface numbers, local bus, malformed).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *1*1*N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *1*1*10##
+down *1*1*20##
+down *1*1*50##
+down *1*1*90##
+down *1*1*100##
+down *1*1*1000##
+down *1*1*1001##
+;    forwarded by MH202
+down *1*1*101##
+down *1*1*000##
+down *1*1*0000##
+down *1*1*0100##
+down *1*1*0101##
+down *1*1*9999##
+down *1*1*00001##
+
+; 2. *1*1*#N##
+;    forwarded by MH202
+down *1*1*#0##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *1*1*#10##
+down *1*1*#99##
+down *1*1*#100##
+
+; 3. *1*1*#4#01##
+;    forwarded by MH202
+down *1*1*#4#01##
+
+; 4. *1*1*N#N#N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *1*1*0#4#01##
+down *1*1*1#4#01##
+down *1*1*11#4#01##
+down *1*1*11#4#16##
+down *1*1*11#4#99##
+;    forwarded by MH202
+down *1*1*11#4#00##
+down *1*1*11#4#0##
+down *1*1*11#4#1##
+down *1*1*11#4#001##
+down *1*1*11#3#1##
+
+; 5. *1*1*#1#4#01##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *1*1*#1#4#01##
+
+; 6. *1*1*11#N##
+;    forwarded by MH202
+down *1*1*11#4##
+down *1*1*11#5##
+down *1*1*11#9##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *1*1*11#3##
+
+; 7. *1*1*11#4#01#1##
+;    forwarded by MH202
+down *1*1*11#4#01#1##
+
+; 8. *#1*N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#1*10##
+down *#1*20##
+down *#1*50##
+down *#1*90##
+down *#1*100##
+down *#1*1000##
+down *#1*1001##
+;    forwarded by MH202
+down *#1*101##
+down *#1*000##
+down *#1*0000##
+down *#1*0100##
+down *#1*0101##
+down *#1*9999##
+down *#1*00001##
+
+; 9. *#1*#N##
+;    forwarded by MH202
+down *#1*#0##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#1*#10##
+down *#1*#99##
+down *#1*#100##
+
+; 10. *#1*#4#01##
+;    forwarded by MH202
+down *#1*#4#01##
+
+; 11. *#1*N#N#N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*0#4#01##
+down *#1*1#4#01##
+down *#1*11#4#01##
+down *#1*11#4#16##
+;    forwarded by MH202
+down *#1*11#4#00##
+down *#1*11#4#0##
+down *#1*11#4#1##
+down *#1*11#4#001##
+down *#1*11#3#1##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N,
+;    MyHomeServer1; CRASH on MH202
+down *#1*11#4#99##
+
+; 12. *#1*#1#4#01##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*#1#4#01##
+
+; 13. *#1*11#N##
+;    CRASH on MH202
+down *#1*11#4##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*11#3##
+;    forwarded by MH202
+down *#1*11#5##
+down *#1*11#9##
+
+; 14. *#1*11#4#01#1##
+;    forwarded by MH202
+down *#1*11#4#01#1##
