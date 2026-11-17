@@ -1,0 +1,37 @@
+; WHO 18 energy: WHAT values above 35 on meter 51 (*18*WHAT*51##).
+; Boundary probe of 2026-11-16, WHAT 36..99 step 1, 100..975 step 25, 1000..9750 step 250,
+; 9999.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *18*N*51##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *18*51*51##
+down *18*52*51##
+down *18*53*51##
+down *18*54*51##
+down *18*55*51##
+down *18*56*51##
+down *18*71*51##
+down *18*72*51##
+down *18*73*51##
+down *18*74*51##
+;    forwarded by 3488, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *18*57*51##
+down *18*58*51##
+down *18*59*51##
+down *18*75*51##
+;    dropped by every gateway
+down *18*60*51##
+down *18*62*51##
+down *18*63*51##
+down *18*64*51##
+down *18*70*51##
+down *18*76*51##
+down *18*77*51##
+down *18*78*51##
+down *18*8250*51##
+down *18*8500*51##
+down *18*8750*51##
