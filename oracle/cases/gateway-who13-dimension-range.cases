@@ -1,0 +1,40 @@
+; WHO 13 gateway: the DIMENSION request numbers a gateway answers itself (*#13**DIM##).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways, DIMENSION 0..30 and spot values.
+; DIMENSION 19 (uptime) changes between runs and is left out on purpose.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#13**N##
+;    forwarded by MH202
+down *#13**2##
+down *#13**3##
+;    dropped by every gateway
+down *#13**4##
+down *#13**8##
+down *#13**13##
+down *#13**14##
+down *#13**18##
+down *#13**21##
+down *#13**25##
+down *#13**26##
+down *#13**28##
+down *#13**100##
+down *#13**255##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *#13**9##
+;    forwarded by all 13
+down *#13**17##
+down *#13**20##
+;    forwarded by F453, F453AV, MH200N
+down *#13**40##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1; CRASH on F453,
+;    F453AV, MH200N
+down *#13**50##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#13**51##
