@@ -1,0 +1,57 @@
+; WHO 22 sound diffusion: the WHAT values a gateway forwards on the amplifier 3#1#1
+; (*22*WHAT*3#1#1##).
+; Boundary probe of 2026-11-16 on the 13 emulated gateways, WHAT 0..35 and spot values. Several
+; values crash the sound daemon (see the groups below).
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *22*N*3#1#1##
+;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *22*2*3#1#1##
+down *22*19*3#1#1##
+down *22*20*3#1#1##
+down *22*21*3#1#1##
+down *22*22*3#1#1##
+down *22*23*3#1#1##
+down *22*33*3#1#1##
+down *22*40*3#1#1##
+down *22*50*3#1#1##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *22*4*3#1#1##
+down *22*5*3#1#1##
+down *22*6*3#1#1##
+down *22*9*3#1#1##
+down *22*11*3#1#1##
+down *22*12*3#1#1##
+down *22*13*3#1#1##
+down *22*14*3#1#1##
+down *22*15*3#1#1##
+down *22*16*3#1#1##
+down *22*26*3#1#1##
+down *22*27*3#1#1##
+down *22*28*3#1#1##
+down *22*29*3#1#1##
+down *22*30*3#1#1##
+down *22*31*3#1#1##
+down *22*32*3#1#1##
+;    dropped by every gateway
+down *22*7*3#1#1##
+down *22*8*3#1#1##
+down *22*17*3#1#1##
+down *22*18*3#1#1##
+down *22*24*3#1#1##
+down *22*25*3#1#1##
+down *22*34*3#1#1##
+down *22*99*3#1#1##
+down *22*100*3#1#1##
+down *22*101*3#1#1##
+down *22*255*3#1#1##
+down *22*1000*3#1#1##
+down *22*9999*3#1#1##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *22*10*3#1#1##
