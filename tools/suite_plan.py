@@ -68,7 +68,10 @@ INPUT_KEYS = (
 )
 RESET = re.compile(r"^(each|0|batch-[1-9][0-9]*)$")
 CASE_SUFFIXES = (".cases", ".seq")
-SHARDS_PER_TARGET = 2
+# Sized for the slowest target: 3488/030205 (reset=each) needs about 12.5 s per
+# step and run, a new suite runs twice, and one shard must stay well below the
+# 270-minute step timeout of suites.yml.
+SHARDS_PER_TARGET = 10
 MIN_RUNS_TO_SHARD = 6
 SMOKE_SUITES: tuple[str, ...] = (
     "lights-level",

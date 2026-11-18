@@ -163,7 +163,8 @@ def test_plan_shards_long_target_runs(repo: Path) -> None:
         for j in suite_plan.plan(repo)
         if j["target"] == "oracle/targets/GW1/010000.yaml"
     ]
-    assert len(jobs) == suite_plan.SHARDS_PER_TARGET
+    # six runs: one shard each once the limit is six or more
+    assert len(jobs) == min(suite_plan.SHARDS_PER_TARGET, 6)
     all_runs = [tok for j in jobs for tok in j["runs"].split()]
     assert sorted(all_runs) == [
         "alpha:each",
