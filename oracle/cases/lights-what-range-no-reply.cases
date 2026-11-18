@@ -2,7 +2,8 @@
 ; NACK). WHO 1 lighting: the WHAT values a gateway forwards for a point command (*1*WHAT*31##).
 ; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways. Kept apart from
 ; lights-what-range: a gateway that does not answer such a frame can stop answering the frames
-; that follow in the same run, so these frames must not share a file with other steps.
+; that follow in the same run. tools/suite_plan.py therefore runs every suite named *-no-reply
+; with reset each, a fresh gateway for every step, on every target.
 ;
 ; Result (stock settings, two identical runs per target, 13 targets): per group below, the
 ; gateways that forward the frame to the bus or answer it on the event session, the gateways
