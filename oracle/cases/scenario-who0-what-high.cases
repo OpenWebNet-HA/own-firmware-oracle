@@ -1,0 +1,16 @@
+; WHO 0 scenarios: WHAT values above 35 (*0*WHAT*31##).
+; Boundary probe of 2026-11-16, WHAT 36..99 step 1, 100..975 step 25, 1000..9750 step 250,
+; 9999.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *0*N*31##
+;    dropped by every gateway
+down *0*41*31##
+down *0*45*31##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *0*42*31##
+down *0*43*31##
+down *0*44*31##

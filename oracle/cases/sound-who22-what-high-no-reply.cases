@@ -1,0 +1,19 @@
+; WHO 22 sound diffusion: WHAT 60 on the amplifier 3#1#1 (*22*60*3#1#1##), which the MH202 does
+; not answer at all (no ACK, no NACK).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways. Kept apart from
+; sound-who22-what-high: a gateway that does not answer such a frame can stop answering the
+; frames that follow in the same run. tools/suite_plan.py therefore runs every suite named
+; *-no-reply with reset each, a fresh gateway for every step, on every target.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, the gateways
+; whose daemon crashes, and the gateways that send no reply at all. Gateways not named drop the
+; frame.
+;
+; ORACLE ONLY: where a line below says 'no reply at all', the gateway sent neither ACK nor NACK
+; for the frame, and in the emulator it can stop answering the frames that follow; do not send
+; such a frame to a real gateway.
+
+; 1. *22*N*3#1#1##
+;    no reply at all (no ACK, no NACK) from MH202
+down *22*60*3#1#1##

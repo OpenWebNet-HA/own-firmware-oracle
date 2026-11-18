@@ -68,8 +68,19 @@ INPUT_KEYS = (
 )
 RESET = re.compile(r"^(each|0|batch-[1-9][0-9]*)$")
 CASE_SUFFIXES = (".cases", ".seq")
-SHARDS_PER_TARGET = 2
+# Shards per target, by the reset policy most of the target's suites use.
+# reset=each is sized for the slowest target: 3488/030205 needs about 12.5 s per
+# step and run, a new suite runs twice, and one shard must stay well below the
+# 270-minute step timeout of suites.yml. A target that keeps one gateway for the
+# steps of a suite is several times faster and needs far fewer shards.
+SHARDS_PER_TARGET = 10
+SHARDS_PER_SHARED_TARGET = 4
 MIN_RUNS_TO_SHARD = 6
+# A frame a gateway does not answer at all (no ACK, no NACK) can leave it
+# answering nothing behind it in the same run, and the driver restarts a gateway
+# only after a crash. A suite named *-no-reply therefore always runs with
+# reset=each: a fresh gateway for every step, on every target.
+NO_REPLY_SUFFIX = "-no-reply"
 SMOKE_SUITES: tuple[str, ...] = (
     "lights-level",
     "what19",
@@ -215,13 +226,19 @@ def plan(
     scope: set[Pair] | None = None,
     *,
     mode: str = "full",
-    max_shards: int = SHARDS_PER_TARGET,
+    max_shards: int | None = None,
 ) -> list[dict[str, str]]:
-    """Matrix items per target (sharded when a target runs many suites)."""
+    """Matrix items per target (sharded when a target runs many suites).
+    max_shards=None takes the limit of the target's usual reset policy."""
     names = suites(root)
     jobs: list[dict[str, str]] = []
     for product, version in targets(root):
         fallback = default_reset(root, product, version)
+        limit = max_shards
+        if limit is None:
+            limit = (
+                SHARDS_PER_TARGET if fallback == "each" else SHARDS_PER_SHARED_TARGET
+            )
         runs: list[tuple[str, str]] = []
         for suite in names:
             if scope is not None:
@@ -230,14 +247,15 @@ def plan(
             elif mode == "smoke" and suite not in SMOKE_SUITES:
                 continue
             committed = result_file(root, product, version, suite)
-            reset = (
-                header(committed).get("reset", fallback)
-                if committed.is_file()
-                else fallback
-            )
+            if suite.endswith(NO_REPLY_SUFFIX):
+                reset = "each"
+            elif committed.is_file():
+                reset = header(committed).get("reset", fallback)
+            else:
+                reset = fallback
             runs.append((suite, reset))
         if runs:
-            for shard in _shard_runs(runs, names, max_shards=max_shards):
+            for shard in _shard_runs(runs, names, max_shards=limit):
                 jobs.append(
                     {
                         "catalog": f"catalog/{product}/{version}.yaml",
@@ -543,8 +561,12 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
     ap.add_argument(
         "--shards",
         type=int,
-        default=SHARDS_PER_TARGET,
-        help=f"maximum shards per target (default: {SHARDS_PER_TARGET})",
+        default=None,
+        help=(
+            "maximum shards per target (default: "
+            f"{SHARDS_PER_TARGET} for a reset=each target, "
+            f"{SHARDS_PER_SHARED_TARGET} for the others)"
+        ),
     )
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--target")
