@@ -1,15 +1,20 @@
-; WHO 22 sound diffusion: WHAT values above 35 on the amplifier 3#1#1 (*22*WHAT*3#1#1##).
-; Boundary probe of 2026-11-16, WHAT 36..99 step 1, 100..975 step 25, 1000..9750 step 250,
-; 9999. WHAT 57 also crashes and 58 / 59 are forwarded; they are left out here (58 / 59 in
-; sound-who22-what-58-59) because the rows behind the crash run are not reproducible on the
-; MH202.
+; WHO 22 sound diffusion: WHAT values 36..54 and 60 on the amplifier 3#1#1 (*22*WHAT*3#1#1##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: every value 36..54,
+; and 60. WHAT 55, 56 and 57 are in sound-who22-what-55-57 and 58 / 59 in
+; sound-who22-what-58-59. The MH202 does not answer WHAT 54 and 60 at all; the steps run in
+; sorted order, so these two run last and no other step runs behind them.
 ;
 ; Result (stock settings, two identical runs per target, 13 targets): per group below, the
-; gateways that forward the frame to the bus or answer it on the event session, and the
-; gateways whose daemon crashes. Gateways not named drop the frame.
+; gateways that forward the frame to the bus or answer it on the event session, the gateways
+; whose daemon crashes, and the gateways that send no reply at all. Gateways not named drop the
+; frame.
 ;
 ; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
 ; them to a real gateway.
+;
+; ORACLE ONLY: where a line below says 'no reply at all', the gateway sent neither ACK nor NACK
+; for the frame, and in the emulator it can stop answering the frames that follow; do not send
+; such a frame to a real gateway.
 
 ; 1. *22*N*3#1#1##
 ;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
@@ -17,6 +22,7 @@ down *22*36*3#1#1##
 down *22*37*3#1#1##
 down *22*38*3#1#1##
 down *22*39*3#1#1##
+down *22*40*3#1#1##
 down *22*41*3#1#1##
 down *22*42*3#1#1##
 down *22*43*3#1#1##
@@ -24,6 +30,7 @@ down *22*46*3#1#1##
 down *22*47*3#1#1##
 down *22*48*3#1#1##
 down *22*49*3#1#1##
+down *22*50*3#1#1##
 down *22*51*3#1#1##
 down *22*52*3#1#1##
 down *22*53*3#1#1##
@@ -31,6 +38,6 @@ down *22*53*3#1#1##
 ;    MyHomeServer1
 down *22*44*3#1#1##
 down *22*45*3#1#1##
-;    dropped by every gateway
+;    no reply at all (no ACK, no NACK) from MH202
 down *22*54*3#1#1##
 down *22*60*3#1#1##
