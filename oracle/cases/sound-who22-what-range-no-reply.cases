@@ -1,0 +1,24 @@
+; The frames of sound-who22-what-range that at least one gateway does not answer at all (no
+; ACK, no NACK). WHO 22 sound diffusion: the WHAT values a gateway forwards on the amplifier
+; 3#1#1 (*22*WHAT*3#1#1##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways. Kept apart from
+; sound-who22-what-range: a gateway that does not answer such a frame can stop answering the
+; frames that follow in the same run, so these frames must not share a file with other steps.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, the gateways
+; whose daemon crashes, and the gateways that send no reply at all. Gateways not named drop the
+; frame.
+;
+; ORACLE ONLY: where a line below says 'no reply at all', the gateway sent neither ACK nor NACK
+; for the frame, and in the emulator it can stop answering the frames that follow; do not send
+; such a frame to a real gateway.
+
+; 1. *22*N*3#1#1##
+;    no reply at all (no ACK, no NACK) from MH202
+down *22*99*3#1#1##
+down *22*100*3#1#1##
+down *22*101*3#1#1##
+down *22*255*3#1#1##
+down *22*1000*3#1#1##
+down *22*9999*3#1#1##
