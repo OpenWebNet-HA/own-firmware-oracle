@@ -148,31 +148,91 @@ def test_plan_runs_every_suite_on_every_target(repo: Path) -> None:
     ]
 
 
+def _steps(cases: Path, name: str, count: int) -> None:
+    lines = ["# comment", "; comment", ""] + [f"down *1*1*{i}##" for i in range(count)]
+    (cases / f"{name}.cases").write_text("\n".join(lines) + "\n")
+
+
+def _gw1_shards(repo: Path, max_shards: int | None = None) -> list[list[str]]:
+    return [
+        j["runs"].split()
+        for j in suite_plan.plan(repo, max_shards=max_shards)
+        if j["target"] == "oracle/targets/GW1/010000.yaml"
+    ]
+
+
 def test_plan_shards_long_target_runs(repo: Path) -> None:
     cases = repo / "oracle" / "cases"
     for idx, name in enumerate(("c1", "c2", "c3", "c4")):
-        lines = ["# comment", "; comment", ""] + [
-            f"down *1*1*{i}##" for i in range(idx + 1)
-        ]
-        (cases / f"{name}.cases").write_text("\n".join(lines) + "\n")
+        _steps(cases, name, idx + 1)
     _tsv(repo, "GW1", "010000", "alpha", reset="each")
     _tsv(repo, "GW1", "010000", "beta", reset="each")
     _tsv(repo, "GW1", "010000", "c4", reset="0")
-    jobs = [
-        j
-        for j in suite_plan.plan(repo)
-        if j["target"] == "oracle/targets/GW1/010000.yaml"
-    ]
-    # six runs: one shard each once the limit is six or more
-    assert len(jobs) == min(suite_plan.SHARDS_PER_TARGET, 6)
-    all_runs = [tok for j in jobs for tok in j["runs"].split()]
-    assert sorted(all_runs) == [
+    # six runs, fewer than the limit of a reset=each target: one shard each
+    assert suite_plan.SHARDS_PER_TARGET >= 6
+    shards = _gw1_shards(repo)
+    assert len(shards) == 6
+    assert sorted(tok for shard in shards for tok in shard) == [
         "alpha:each",
         "beta:each",
         "c1:each",
         "c2:each",
         "c3:each",
         "c4:0",
+    ]
+    # with three shards the runs are packed: the heaviest run first, each into
+    # the lightest shard (a reset=each step weighs two, a reset=0 step one)
+    assert _gw1_shards(repo, max_shards=3) == [
+        ["c1:each", "c3:each"],
+        ["alpha:each", "c2:each"],
+        ["beta:each", "c4:0"],
+    ]
+
+
+def test_plan_packs_many_suites_into_the_shards_of_the_reset_policy(
+    repo: Path,
+) -> None:
+    cases = repo / "oracle" / "cases"
+    extra = [f"s{i:02d}" for i in range(2 * suite_plan.SHARDS_PER_TARGET + 1)]
+    steps = {"alpha": 1, "beta": 1}
+    for idx, name in enumerate(extra):
+        _steps(cases, name, idx + 1)
+        steps[name] = idx + 1
+
+    def loads(shards: list[list[str]], per_step: int) -> list[int]:
+        return [sum(steps[tok.split(":")[0]] * per_step for tok in s) for s in shards]
+
+    # no committed result: every run is reset=each, the larger limit applies
+    each = _gw1_shards(repo)
+    assert len(each) == suite_plan.SHARDS_PER_TARGET
+    assert sorted(tok for s in each for tok in s) == sorted(f"{n}:each" for n in steps)
+    assert all(len(s) > 1 for s in each)  # more suites than shards: they share
+    assert max(loads(each, 2)) - min(loads(each, 2)) <= 2 * max(steps.values())
+    # a target whose suites share a gateway (reset=0) gets the smaller limit
+    _tsv(repo, "GW1", "010000", "alpha", reset="0")
+    shared = _gw1_shards(repo)
+    assert suite_plan.SHARDS_PER_SHARED_TARGET < suite_plan.SHARDS_PER_TARGET
+    assert len(shared) == suite_plan.SHARDS_PER_SHARED_TARGET
+    assert sorted(tok for s in shared for tok in s) == sorted(f"{n}:0" for n in steps)
+    assert max(loads(shared, 1)) - min(loads(shared, 1)) <= max(steps.values())
+    # the other target keeps its own policy and limit
+    gw2 = [
+        j
+        for j in suite_plan.plan(repo)
+        if j["target"] == "oracle/targets/GW2/020000.yaml"
+    ]
+    assert len(gw2) == suite_plan.SHARDS_PER_TARGET
+
+
+def test_plan_runs_a_no_reply_suite_with_reset_each(repo: Path) -> None:
+    cases = repo / "oracle" / "cases"
+    (cases / "quiet-no-reply.cases").write_text("down *1*19*31##\n")
+    _tsv(repo, "GW1", "010000", "alpha", reset="0")  # GW1's usual policy
+    # even a committed result with another policy does not keep it
+    _tsv(repo, "GW1", "010000", "quiet-no-reply", reset="0")
+    assert [j["runs"] for j in suite_plan.plan(repo)] == [
+        "alpha:0 beta:0 quiet-no-reply:each",
+        "alpha:each beta:each quiet-no-reply:each",
     ]
 
 
