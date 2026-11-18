@@ -1,6 +1,6 @@
-; WHO 18 energy: WHAT values above 35 on meter 51 (*18*WHAT*51##).
-; Boundary probe of 2026-11-16, WHAT 36..99 step 1, 100..975 step 25, 1000..9750 step 250,
-; 9999.
+; WHO 18 energy: WHAT values above 50 on meter 51 (*18*WHAT*51##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: WHAT 51..65, 69..79,
+; 8250, 8500, 8750.
 ;
 ; Result (stock settings, two identical runs per target, 13 targets): per group below, the
 ; gateways that forward the frame to the bus or answer it on the event session, and the
@@ -25,13 +25,17 @@ down *18*59*51##
 down *18*75*51##
 ;    dropped by every gateway
 down *18*60*51##
+down *18*61*51##
 down *18*62*51##
 down *18*63*51##
 down *18*64*51##
+down *18*65*51##
+down *18*69*51##
 down *18*70*51##
 down *18*76*51##
 down *18*77*51##
 down *18*78*51##
+down *18*79*51##
 down *18*8250*51##
 down *18*8500*51##
 down *18*8750*51##
