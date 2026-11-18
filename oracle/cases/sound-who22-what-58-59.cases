@@ -1,5 +1,6 @@
-; WHO 22 sound diffusion: WHAT 58 and 59 on the amplifier 3#1#1, the two forwarded values above
-; the 36..57 crash run.
+; WHO 22 sound diffusion: WHAT 58 and 59 on the amplifier 3#1#1 (*22*WHAT*3#1#1##), the two
+; forwarded values above WHAT 57, the highest value that crashes a daemon: 36..53 and 57 crash,
+; 54 is dropped or not answered at all, 55 and 56 are forwarded.
 ; Kept apart from sound-who22-what-high: after the crash run the MH202 sound daemon is not
 ; always back, so rows behind it are not reproducible there (1 of 5 stock runs differed).
 ;
