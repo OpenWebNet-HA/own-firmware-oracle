@@ -1,32 +1,52 @@
-; WHO 4 thermoregulation: the DIMENSION 13 request forms (zone, central #0, bare 0, with
-; interface) a gateway forwards to the bus.
-; Probe of 2026-11-16 on the 13 emulated gateways, asked for MyHOME (local offset / knob
-; reads).
+; WHO 4 thermoregulation: the DIMENSION 13 request forms a gateway forwards to the bus: WHERE N
+; and #N, bare, with the #1 suffix and with the interface suffix #4#01.
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways, asked for MyHOME
+; (local offset / knob reads): the same N (0, 1, 101) in all six forms.
 ;
 ; Result (stock settings, two identical runs per target, 13 targets): per group below, the
 ; gateways that forward the frame to the bus or answer it on the event session, and the
 ; gateways whose daemon crashes. Gateways not named drop the frame.
 
 ; 1. *#4*N*13##
-;    forwarded by all 13
-down *#4*1*13##
 ;    forwarded by F453, F453AV, MH200N
 down *#4*0*13##
+;    forwarded by all 13
+down *#4*1*13##
 ;    forwarded by MH202
 down *#4*101*13##
 
 ; 2. *#4*#N*13##
-;    forwarded by F453, F453AV, MH200N, MH202
-down *#4*#1*13##
 ;    forwarded by F453, F453AV, MH200N
 down *#4*#0*13##
-
-; 3. *#4*#0#1*13##
+;    forwarded by F453, F453AV, MH200N, MH202
+down *#4*#1*13##
 ;    dropped by every gateway
-down *#4*#0#1*13##
+down *#4*#101*13##
 
-; 4. *#4*N#1*13##
-;    forwarded by H4684, MH200
-down *#4*1#1*13##
+; 3. *#4*N#1*13##
 ;    dropped by every gateway
 down *#4*0#1*13##
+down *#4*101#1*13##
+;    forwarded by H4684, MH200
+down *#4*1#1*13##
+
+; 4. *#4*#N#1*13##
+;    dropped by every gateway
+down *#4*#0#1*13##
+down *#4*#101#1*13##
+;    forwarded by MH202
+down *#4*#1#1*13##
+
+; 5. *#4*N#4#01*13##
+;    dropped by every gateway
+down *#4*0#4#01*13##
+down *#4*101#4#01*13##
+;    forwarded by H4684, MH200
+down *#4*1#4#01*13##
+
+; 6. *#4*#N#4#01*13##
+;    dropped by every gateway
+down *#4*#0#4#01*13##
+down *#4*#101#4#01*13##
+;    forwarded by MH202
+down *#4*#1#4#01*13##
