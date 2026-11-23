@@ -13,9 +13,10 @@
 
 | Artifact | Size (bytes) | SHA-256 |
 |---|---:|---|
-| `LH4695_AM5875_010103.fwz` (`ThermorCentralUnit v01.01.03`, ZipCrypto) | 66,460 | `b01630d5b548653c882fd1896ec309567ad3cb552fd2713bd7a0a8718dcbb4f6` |
-| `4695_010103.mot` (Motorola S2 records `0x0E0000..0x0FFFFF`) | 269,750 | `3a760549b394ac9e22ba990cb0095df3b060d295f6690546bc3e87c6af6ca6b9` |
-| Decoded Renesas M16C/60 Flash (`0x0E0000..0x0FFFFF`, `0xFF`-filled) | 131,072 | `254e3daef34b292cf21f1190698021704d017b0c2bf29f029e539a6906fd4124` |
+| `LH4695_AM5875_010103.fwz` (`ThermorCentralUnit v01.01.03`, ZipCrypto) | 109,864 | `b01630d5f4d4fb45ee3392279635cde4e3575778fe69afae505d71a7c211a3be` |
+| `info.txt` (package metadata inside `.fwz`) | 188 | `6d71fe6e03f38ceaafc3f28e41a2fce5be774ed34c78413d518d8318a931c1b3` |
+| `4695_010103.mot` (Motorola `1` `S0` + `7,638` `S2` + `1` `S8`, `0x0E0000..0x0FFFFF`) | 350,878 | `3a760549e6c9b376308e29a1a6b46f5bb8f57a1b6f2715fff2f063324588ed01` |
+| Decoded Renesas M16C/60 Flash (`0x0E0000..0x0FFFFF`, `0xFF`-filled) | 131,072 | `254e3daed3534a4bcbf31a42534f75c3a8148e4e65fdcbcd0ea73aa4c16c91e9` |
 
 ### Verified `4695 v01.01.03` Protocol Facts (`firmware_observed`)
 
@@ -23,10 +24,10 @@
    - Computed at `0x0E9532` from configurators `ZA` and `ZB` (`1..99`, managing 4 consecutive zones `N .. N+3`; e.g. `ZA=2, ZB=1` -> `0x15 = 21` `#0#21` managing zones `21..24`, matching BTicino Technical Guide `U1809C` pp. 54–55).
    - At `0x0EA185..0x0EA19B`, incoming extended frames with `B1 == 0x00` (`#0`, `#1`, `#3`) or `B1 != 0x14B9` are unconditionally dropped.
 2. **Built-In Master Zone `N` Drops Direct `90/91/92/93` Writes (`0x0E987C..0x0E989C`)**:
-   - The `4695` contains the Zone `N` temperature probe internally (answering `99 <N> 30 <00|12|0E|0D|13>` polls at `0x0E9C7F..0x0EA180`), but its short-frame RX dispatcher (`0x0E987C`) handles only `0x99` (read) and `0x98` on `B1 == 0x14B9`.
+   - The `4695` contains the Zone `N` temperature probe internally (answering `99 <N> 30 <00|12|0E|0D|13>` polls at `0x0E9C7F..0x0EA180`), but its short-frame RX dispatcher (`0x0E987C`) handles only `0x99` (read) and `0x95` on `B1 == 0x14B9`.
    - Direct zone setpoint (`90/91/92 <N> 30 <T*2>`) and zone mode (`93 <N> 30 <cmd>`) writes to Zone `N` (`Z=1` on `#0#1`) are **silently dropped**, and no external slave probe exists at `Z=N`. External slave probes (`N+1..N+3`, e.g. `Z=3, 4`) DO accept direct `90/91/92/93` writes on gateways that forward them.
 3. **`C2` Controlled-Zone Subcode (`#Z` / `#Z#N` / `*4*311*#0#N##`) Has NO Write Handler**:
-   - Under `B3 = 0x02` (`0x0EA1D2..0x0EA222`), `4695` handles `B4 = 0xC1`, `0xC4`, `0xC5`, and `0x0B` — **`B4 = 0xC2` is absent**.
+   - Under `B3 = 0x02` (`0x0EA1D2..0x0EA222`), `4695` handles `B4 = 0xC1` and `0xBA` — **`B4 = 0xC2` is absent**.
    - Both `*#4*#3*#14*0180*3##` (`D1 00 03 02 C2 03 02 24`) and BTouch `*#4*#3#1*#14*0175*3##` (`D1 01 03 02 C2 03 02 23`, `#994` trace 2 frame 37), as well as `*4*311*#0#1##` (`D1 01 03 02 C2 00 00 00`), are dropped by `4695`. `C2` is implemented **read-only** under `B3 = 0x03` (`0x0EACC6` -> `0x0EBD1A`, `*#4*#3#1##`).
 4. **`C1` Season Filter (`0x0EA31F..0x0EA347`) — Generic `M=3` Works in Both Seasons**:
    - `B5` high nibble `0x10` (`M=1` `*#4*#0#N*#14*TTTT*1##` -> `C1 12`, `1101..1103`, `103`, `102`) is accepted **only** in Heating (`0x17B5 == 0`) and dropped in Cooling (`0x17B5 == 1`).
