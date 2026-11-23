@@ -110,10 +110,7 @@ class PlantResponder:
             b0 in (0x90, 0x91, 0x92, 0x93, 0x99, 0xA9, 0xB4, 0xB9)
             and (b2 & 0xF0) == 0x30
         ):
-            out: list[bytes] = []
-            for zone in self.topology.thermo_zones.values():
-                out.extend(zone.handle_short(payload, digits=digits))
-            return out
+            return self._handle_thermo_short(payload, digits=digits)
 
         # General / Area / Group broadcasts
         if b0 in (0xB1, 0xB3, 0xB5):
@@ -126,6 +123,23 @@ class PlantResponder:
             )
 
         return self._handle_p2p_short(b0, b1, b2, b3, digits=digits, subbus=subbus)
+
+    def _handle_thermo_short(self, payload: bytes, *, digits: int) -> list[bytes]:
+        b0, b1, b3 = payload[0], payload[1], payload[3]
+        out: list[bytes] = []
+        for cu in self.topology.four_zone_centrals.values():
+            out.extend(cu.handle_short(payload, digits=digits))
+            if b0 in (0x90, 0x91, 0x92, 0x93) and b1 == cu.config.cu_addr:
+                # 4695 0x0E987C..0x0E989C: built-in master Zone N drops 90/91/92/93
+                return out
+        for zone in self.topology.thermo_zones.values():
+            zone_ans = zone.handle_short(payload, digits=digits)
+            if zone_ans and b0 in (0x90, 0x91, 0x92, 0x93):
+                for cu in self.topology.four_zone_centrals.values():
+                    if b1 in cu.config.slave_zones:
+                        cu.record_slave_override(b1, b0, b3)
+            out.extend(zone_ans)
+        return out
 
     def _emit_group_Aggregate_if_changed(
         self, grp: int, subbus: int, was_on: bool, *, digits: int
@@ -379,6 +393,12 @@ class PlantResponder:
 
         # WHO=4 extended commands/queries
         if (b2 & 0x0F) == 0x03:
+            for cu in self.topology.four_zone_centrals.values():
+                ans = cu.handle_extended(
+                    payload, digits=digits, zones=self.topology.thermo_zones
+                )
+                if ans:
+                    return ans
             for zone in self.topology.thermo_zones.values():
                 ans = zone.handle_extended(payload, digits=digits)
                 if ans:

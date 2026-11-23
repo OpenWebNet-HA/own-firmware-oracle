@@ -28,6 +28,8 @@ from oracle.plant import (
     EnergyMeterDevice,
     Exchange,
     FaultChannel,
+    FourZoneCentralConfig,
+    FourZoneCentralDevice,
     LightConfig,
     LightDevice,
     OwnPlantEngine,
@@ -38,6 +40,7 @@ from oracle.plant import (
     ScenarioConfig,
     ScenarioDevice,
     SCSAddress,
+    ThermoCentralUnit4695,
     ThermoZoneConfig,
     ThermoZoneDevice,
     decode_gateway_frame,
@@ -1809,3 +1812,146 @@ def test_thermo_off_keeps_the_underlying_season() -> None:
     assert td.season == "cooling"
     td.reset()
     assert (td.mode, td.season) == (1, "heating")
+
+
+def test_four_zone_central_4695_protocol_and_yaml(tmp_path: Path) -> None:
+    assert ThermoCentralUnit4695 is FourZoneCentralDevice
+
+    # Config validation
+    with pytest.raises(ValueError, match="cu_addr"):
+        FourZoneCentralConfig(cu_addr=0)
+    with pytest.raises(ValueError, match="cu_addr"):
+        FourZoneCentralConfig(cu_addr=97)
+    with pytest.raises(ValueError, match="cu_addr"):
+        FourZoneCentralConfig(cu_addr=True)
+    with pytest.raises(ValueError, match="initial_season"):
+        FourZoneCentralConfig(cu_addr=1, initial_season=2)
+    with pytest.raises(ValueError, match="initial_season"):
+        FourZoneCentralConfig(cu_addr=1, initial_season=True)
+    with pytest.raises(ValueError, match="initial_weekly_prog"):
+        FourZoneCentralConfig(cu_addr=1, initial_weekly_prog=3)
+    with pytest.raises(ValueError, match="initial_weekly_prog"):
+        FourZoneCentralConfig(cu_addr=1, initial_weekly_prog=True)
+
+    # Load shipped cu4695 fixture
+    resp = PlantResponder.from_fixture("cu4695")
+    assert resp.topology.config.active_translators == frozenset(
+        {"bt_termo", "coso", "bt_device"}
+    )
+    cu = resp.topology.four_zone_centrals[1]
+
+    # 1. Central status poll (*#4*#0#1## -> 99 01 30 C0 -> D2 01 03 04 C0 11 02 04)
+    assert resp.respond(b"$04990130C0\r") == [b"$18D2010304C0110204\r"]
+    # 99-zone #0 poll (99 00 30 C0) and D1 00 (#0 / #3) are dropped by 4695
+    assert resp.respond(b"$04990030C0\r") == []
+    assert resp.respond(b"$06D1000302C2030224\r") == []
+
+    # 2. Master pump actuator DIM 20 (*#4*#0*20## -> B9 00 30 10, 99 00 31 10)
+    assert resp.respond(b"$04B9003010\r") == [
+        b"$17B7003101\r",
+        b"$17B7813101\r",
+        b"$17B7833101\r",
+        b"$17B7843101\r",
+    ]
+    assert resp.respond(b"$0499003110\r") == [b"$17B7003101\r"]
+    assert resp.respond(b"$0499003910\r") == []
+
+    # 3. Built-in master Zone 1 drops direct 90/91/92/93 writes (0x0E987C)
+    assert resp.respond(b"$0492013024\r") == []
+    assert resp.respond(b"$049301300F\r") == []
+    # External slave Zone 3 accepts direct 92/93 writes and sets C0 local override bits
+    assert resp.respond(b"$0492033024\r") == [b"$18D20303040E00B403\r"]
+    assert cu.flags_byte() == 0x24  # bit2 (battery) | bit5 (local manual)
+    assert resp.respond(b"$049303300F\r") == [b"$18D203030412FF00B4\r"]
+    assert cu.flags_byte() == 0x0C  # bit2 (battery) | bit3 (local off)
+    cu.record_slave_override(3, 0x93, 0x99)
+    assert cu.flags_byte() == 0x04
+
+    # 4. C2 write (#3#1 / *4*311*#0#1##) is dropped; C2 read (*#4*#3#1## / #2#1) answers
+    assert resp.respond(b"$06D1010302C2030223\r") == []
+    assert resp.respond(b"$06D1010303C2030000\r") == [b"$18D2010304C2031224\r"]
+    assert resp.respond(b"$06D1010303C2020000\r") == [b"$18D2010304C2021224\r"]
+    assert resp.respond(b"$06D1010303C0000000\r") == []
+    assert (
+        cu.handle_extended(bytes.fromhex("D1010309C1000000"), digits=2, zones={}) == []
+    )
+    assert (
+        cu.handle_extended(bytes.fromhex("D2010302C1000000"), digits=2, zones={}) == []
+    )
+
+    # 5. Heating season: M=1 accepted, M=2 dropped, M=3 accepted; bad setpoint dropped
+    assert resp.respond(b"$06D1010302C1122400\r")[0] == b"$18D2010304C0122404\r"
+    assert resp.respond(b"$06D1010302C1222500\r") == []
+    assert resp.respond(b"$06D1010302C1022600\r")[0] == b"$18D2010304C0122604\r"
+    assert resp.respond(b"$06D1010302C1025000\r") == []
+
+    # 6. 0x0F4ED0 season switch: Heat -> Cool enters Protection C0 27 + slave 0xF3
+    assert resp.respond(b"$06D1010302C1F10000\r") == [
+        b"$18D2010304C0270004\r",
+        b"$18D203030412F300BE\r",
+        b"$18D204030412F300BE\r",
+    ]
+    # Same-season C1 F1 produces TX=[]
+    assert resp.respond(b"$06D1010302C1F10000\r") == []
+    # Cooling: M=1 dropped, M=2/M=3 accepted, C2 read uses 0x22, C1 01 resumes
+    assert resp.respond(b"$06D1010302C1122800\r") == []
+    assert resp.respond(b"$06D1010302C1222800\r")[0] == b"$18D2010304C0222804\r"
+    assert resp.respond(b"$06D1010302C1022800\r")[0] == b"$18D2010304C0222804\r"
+    assert resp.respond(b"$06D1010303C2030000\r") == [b"$18D2010304C2032228\r"]
+    assert resp.respond(b"$06D1010302C1070000\r")[0] == b"$18D2010304C0270004\r"
+    assert resp.respond(b"$06D1010302C101FF00\r") == [b"$18D2010304C0210204\r"]
+    # Cool -> Heat enters Antifreeze C0 17 + slave 0xF2
+    assert resp.respond(b"$06D1010302C1F00000\r")[0] == b"$18D2010304C0170004\r"
+
+    # 7. OFF (06) -> same-season C1 F0 stays OFF -> 3100 (01 FF) resumes weekly prog!
+    assert resp.respond(b"$06D1010302C1060000\r")[0] == b"$18D2010304C0160004\r"
+    assert resp.respond(b"$06D1010302C1F00000\r") == []
+    assert resp.respond(b"$04990130C0\r") == [b"$18D2010304C0160004\r"]
+    assert resp.respond(b"$06D1010302C101FF00\r") == [b"$18D2010304C0110204\r"]
+    assert resp.respond(b"$06D1010302C1110000\r") == [b"$18D2010304C0110004\r"]
+    assert resp.respond(b"$06D1010302C1010500\r") == []  # prog > 2 rejected
+
+    # 8. Protection (07), Scenario (04 vs 03), Vacation (05), Timed (09), bad hi_nib
+    assert resp.respond(b"$06D1010302C1170000\r")[0] == b"$18D2010304C0170004\r"
+    assert resp.respond(b"$06D1010302C1130000\r") == []
+    assert resp.respond(b"$06D1010302C1140100\r") == [b"$18D2010304C0140104\r"]
+    assert resp.respond(b"$06D1010302C1140500\r") == []
+    assert resp.respond(b"$06D1010302C1150300\r") == [b"$18D2010304C0150304\r"]
+    assert resp.respond(b"$06D1010302C1192402\r") == [b"$18D2010304C0192404\r"]
+    assert resp.respond(b"$06D1010302C1192400\r") == []
+    assert resp.respond(b"$06D1010302C1300000\r") == []
+
+    # 9. Reset, flags, headless CU, and standalone zone coexistence
+    cu.remote_enabled = True
+    cu.probe_failure = True
+    cu.battery_fault = False
+    cu.local_prot_zones.add(3)
+    assert cu.flags_byte() == 0x13
+    resp.reset()
+    assert cu.flags_byte() == 0x04
+
+    yaml_edge = tmp_path / "cu_edge.yaml"
+    yaml_edge.write_text(
+        "name: cu-edge\n"
+        "active_translators: 'not-a-list'\n"
+        "four_zone_centrals:\n"
+        "  21: null\n"
+        "  31:\n"
+        "    cu_addr: 31\n"
+        "    master_pump_actuators: []\n"
+        "thermo_zones:\n"
+        "  8:\n"
+        "    bus_addr: 8\n"
+        "    initial_humidity: 45\n",
+        encoding="utf-8",
+    )
+    edge_resp = PlantResponder.from_yaml(yaml_edge)
+    assert edge_resp.topology.config.active_translators == frozenset()
+    cu21 = edge_resp.topology.four_zone_centrals[21]
+    assert cu21.config.slave_zones == (23, 24)
+    # Headless CU (no master zone 21 or slaves 23/24 in thermo_zones)
+    assert edge_resp.respond(b"$06D1150302C1022400\r") == [b"$18D2150304C0122404\r"]
+    assert edge_resp.respond(b"$06D1150302C101FF00\r") == [b"$18D2150304C0110204\r"]
+    # Unrelated standalone zone 8 still handles short & extended frames normally
+    assert len(edge_resp.respond(b"$0492083024\r")) == 1
+    assert edge_resp.respond(b"$06D108030308000000\r") == [b"$18D20803040800002D\r"]

@@ -2188,3 +2188,48 @@ def test_prune_boot_exited_translators_preserves_alive_and_catches_step_crash(
     unit_tgt._procs = {"coso": MagicMock(poll=MagicMock(return_value=1))}
     assert unit_tgt._prune_boot_exited_translators() is False
     assert "coso" in unit_tgt._procs
+
+
+def test_qemu_target_plant_active_translators(tmp_path):
+    spec = dataclasses.replace(
+        _dummy_spec(),
+        programs={
+            **_dummy_spec().programs,
+            "bt_termo": target.Program(
+                "bt_termo", "home/bticino/bin/bt_termo", "4" * 64, "app.zip!"
+            ),
+            "bt_difson": target.Program(
+                "bt_difson", "home/bticino/bin/bt_difson", "5" * 64, "app.zip!"
+            ),
+        },
+    )
+    # 1. Plant fixture with active_translators matching a subset (cu4695)
+    cu_tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w1",
+        harness="plant:cu4695",
+        staged_sysroot=tmp_path,
+    )
+    assert cu_tgt._active_clients() == {"bt_termo"}
+
+    # 2. Plant fixture without active_translators (f461-bench) keeps all translators
+    bench_tgt = qemu_target.QemuTarget(
+        spec,
+        tmp_path / "img.zip",
+        tmp_path / "w2",
+        harness="plant:f461-bench",
+        staged_sysroot=tmp_path,
+    )
+    assert bench_tgt._active_clients() == {"bt_luci", "bt_termo", "bt_difson"}
+
+    # 3. Plant fixture whose active_translators match none falls back to all translators
+    only_luci_spec = _dummy_spec()
+    fallback_tgt = qemu_target.QemuTarget(
+        only_luci_spec,
+        tmp_path / "img.zip",
+        tmp_path / "w3",
+        harness="plant:cu4695",
+        staged_sysroot=tmp_path,
+    )
+    assert fallback_tgt._active_clients() == {"bt_luci"}

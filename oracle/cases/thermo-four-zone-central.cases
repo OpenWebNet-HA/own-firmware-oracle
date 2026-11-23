@@ -1,0 +1,118 @@
+; WHO 4 four-zone central unit (#0#1..#0#4, #0#21) vs 99-zone (#0) and zone (Z, #Z, #Z#1)
+; translation across the gateway fleet (OpenWebNet-HA/MyHOME#994, PR #1000).
+;
+; Covers:
+;   1. Central setpoint writes (*#4*#0#C*#14*TTTT*M##) for M=1/2/3 across #0#1..#0#4,
+;      #0#21 (ZA=2, ZB=1 = 0x15, BTicino U1809C pp. 54-55), and #0.
+;   2. Zone setpoint writes across plain Z (1, 3), 99-zone #Z (#1, #3), and BTouch #Z#C
+;      (#1#1, #3#1) -- exposing Gen A (#C -> 00) and Gen B (MH200N / F453 / F453AV NACK
+;      on direct Z writes).
+;   3. Central weekly programs 1101..1103 / 2101..2103 / 3101..3103, 3100 restore,
+;      scenarios 1201..1203 vs holiday 115/315, OFF/protection 303/203/103/302/202/102,
+;      season 1/0, 311, event-only 110#/210#/310#, and zone mode writes (303/102/202/1/0).
+;   4. Central & zone status / dimension queries (*#4*#0#1..#0#4##, #0#21, #0, DIM 14/12/0/20).
+;   5. Inbound PIC telegrams (2-digit $17/$18 and 3-digit $017/$018) from BTicino 4695
+;      v01.01.03 (C0 status + diagnostic flags, C2 controlled-zone read, BF pump) and
+;      external Master Pump Actuator B7 00 31 01 -> *#4*#0#1*20*0##.
+
+; 1. Central setpoint writes (DIMENSION 14)
+down *#4*#0#1*#14*0170*1##
+down *#4*#0#1*#14*0180*1##
+down *#4*#0#1*#14*0180*2##
+down *#4*#0#1*#14*0180*3##
+down *#4*#0#2*#14*0180*3##
+down *#4*#0#3*#14*0180*3##
+down *#4*#0#4*#14*0180*3##
+down *#4*#0#21*#14*0180*3##
+down *#4*#0*#14*0180*3##
+
+; 2. Zone setpoint writes: plain Z vs #Z vs #Z#1
+down *#4*1*#14*0180*1##
+down *#4*1*#14*0180*3##
+down *#4*3*#14*0180*3##
+down *#4*#1*#14*0180*3##
+down *#4*#3*#14*0180*3##
+down *#4*#1#1*#14*0180*3##
+down *#4*#3#1*#14*0175*3##
+
+; 3. Central mode & program writes
+down *4*303*#0#1##
+down *4*203*#0#1##
+down *4*103*#0#1##
+down *4*302*#0#1##
+down *4*202*#0#1##
+down *4*102*#0#1##
+down *4*1*#0#1##
+down *4*0*#0#1##
+down *4*311*#0#1##
+down *4*3100*#0#1##
+down *4*1101*#0#1##
+down *4*1102*#0#1##
+down *4*1103*#0#1##
+down *4*2101*#0#1##
+down *4*2102*#0#1##
+down *4*2103*#0#1##
+down *4*3101*#0#1##
+down *4*3102*#0#1##
+down *4*3103*#0#1##
+down *4*1103*#0##
+down *4*1201*#0#1##
+down *4*1203*#0#1##
+down *4*115#1101*#0#1##
+down *4*315#3101*#0#1##
+down *4*110#0180*#0#1##
+down *4*210#0180*#0#1##
+down *4*310#0180*#0#1##
+
+; 4. Zone mode writes: plain Z vs #Z vs #Z#1
+down *4*303*1##
+down *4*303*3##
+down *4*102*1##
+down *4*202*1##
+down *4*303*#1##
+down *4*303*#1#1##
+
+; 5. Central & zone status / dimension queries
+down *#4*#0#1##
+down *#4*#0#2##
+down *#4*#0#3##
+down *#4*#0#4##
+down *#4*#0#21##
+down *#4*#0##
+down *#4*#0#1*14##
+down *#4*#0#1*12##
+down *#4*#0#1*0##
+down *#4*#0#1*20##
+down *#4*1##
+down *#4*#1##
+down *#4*#3#1##
+down *#4*0##
+
+; 6. Inbound PIC telegrams (2-digit $17/$18 and 3-digit $017/$018)
+; D2 01 03 04 C0 12 20 05  -> Heat Manual 16.0C, flags=05 (*4*21* + *4*31* battery fault)
+; D2 01 03 04 C0 22 28 01  -> Cool Manual 20.0C, flags=01 (*4*21*)
+; D2 01 03 04 C0 11 02 0D  -> Heat Weekly Prog 3 (1103), flags=0D (21 + 31 + 22 local OFF)
+; D2 01 03 04 C0 16 00 05  -> Heat OFF (103), flags=05
+; D2 01 03 04 C0 27 00 01  -> Cool Protection (202), flags=01
+; D2 15 03 04 C0 12 22 00  -> #0#21 (0x15) Heat Manual 17.0C, flags=00 (*4*20*)
+; D2 01 03 04 C2 03 12 22  -> #3#1 controlled-zone read reply (17.0C)
+; B7 00 31 01              -> Master Pump Actuator #0#1 OFF (*#4*#0#1*20*0##)
+; BF 01 30 00              -> 4695 internal pump ON telegram (silent on gateways)
+up 24 31 38 44 32 30 31 30 33 30 34 43 30 31 32 32 30 30 35 0d
+up 24 31 38 44 32 30 31 30 33 30 34 43 30 32 32 32 38 30 31 0d
+up 24 31 38 44 32 30 31 30 33 30 34 43 30 31 31 30 32 30 44 0d
+up 24 31 38 44 32 30 31 30 33 30 34 43 30 31 36 30 30 30 35 0d
+up 24 31 38 44 32 30 31 30 33 30 34 43 30 32 37 30 30 30 31 0d
+up 24 31 38 44 32 31 35 30 33 30 34 43 30 31 32 32 32 30 30 0d
+up 24 31 38 44 32 30 31 30 33 30 34 43 32 30 33 31 32 32 32 0d
+up 24 31 37 42 37 30 30 33 31 30 31 0d
+up 24 31 37 42 46 30 31 33 30 30 30 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 30 31 32 32 30 30 35 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 30 32 32 32 38 30 31 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 30 31 31 30 32 30 44 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 30 31 36 30 30 30 35 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 30 32 37 30 30 30 31 0d
+up 24 30 31 38 44 32 31 35 30 33 30 34 43 30 31 32 32 32 30 30 0d
+up 24 30 31 38 44 32 30 31 30 33 30 34 43 32 30 33 31 32 32 32 0d
+up 24 30 31 37 42 37 30 30 33 31 30 31 0d
+up 24 30 31 37 42 46 30 31 33 30 30 30 0d

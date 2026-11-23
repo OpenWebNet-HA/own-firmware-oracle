@@ -1,0 +1,61 @@
+# Clean-room BTicino 4695 4-zone central unit (#0#1, ThermorCentralUnit v01.01.03)
+# + external slave probes on zones 3 & 4 (Zone 2 unpopulated, matching MyHOME#994)
+# + Master Pump Actuator #0#1 (B7 00 31 01 -> *#4*#0#1*20*0##).
+# active_translators scopes closed-loop execution to WHO=4 / WHO=13 translators so
+# F454/020051 scsserver stays within its 9-client TCP 20001 table (0x0a454: cmp r3, #0xb4).
+name: cu4695
+gateway_product: F454
+gateway_version: "020051"
+active_translators:
+  - bt_termo
+  - coso
+  - bt_device
+four_zone_centrals:
+  1:
+    cu_addr: 1
+    initial_season: 0
+    initial_weekly_prog: 2
+    initial_op: 0x01
+    initial_arg: 0x02
+    remote_enabled: false
+    probe_failure: false
+    battery_fault: true
+    slave_zones:
+      - 3
+      - 4
+    master_pump_actuators:
+      1: 0
+thermo_zones:
+  1:
+    bus_addr: 0x01
+    initial_temp_deci: 194
+    initial_setpoint_deci: 180
+    initial_mode: 1
+    initial_function: 1
+    initial_offset: "00"
+    initial_valve_heating: 0
+    initial_valve_cooling: 0
+    actuators:
+      1: 0
+  3:
+    bus_addr: 0x03
+    initial_temp_deci: 190
+    initial_setpoint_deci: 180
+    initial_mode: 1
+    initial_function: 1
+    initial_offset: "00"
+    initial_valve_heating: 0
+    initial_valve_cooling: 0
+    actuators:
+      1: 0
+  4:
+    bus_addr: 0x04
+    initial_temp_deci: 185
+    initial_setpoint_deci: 180
+    initial_mode: 1
+    initial_function: 1
+    initial_offset: "00"
+    initial_valve_heating: 0
+    initial_valve_cooling: 0
+    actuators:
+      1: 0
