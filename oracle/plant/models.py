@@ -212,6 +212,50 @@ class ThermoZoneConfig:
 
 
 @dataclass(frozen=True)
+class FourZoneCentralConfig:
+    """Configuration for a BTicino 4695 4-zone temperature central unit (WHO=4).
+
+    Models ``ThermorCentralUnit v01.01.03`` (``LH4695_AM5875_010103.fwz``):
+    manages four consecutive zones ``cu_addr .. cu_addr + 3`` with Zone 1
+    (``cu_addr``) integrated on the central unit and optional external slave
+    probes wired on ``slave_zones`` within ``cu_addr + 1 .. cu_addr + 3``.
+    """
+
+    cu_addr: int = 1
+    initial_season: int = 0
+    initial_weekly_prog: int = 2
+    initial_op: int = 0x01
+    initial_arg: int = 0x02
+    remote_enabled: bool = False
+    probe_failure: bool = False
+    battery_fault: bool = True
+    slave_zones: tuple[int, ...] = (3, 4)
+    master_pump_actuators: dict[int, int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.cu_addr, bool)
+            or not isinstance(self.cu_addr, int)
+            or not 1 <= self.cu_addr <= 96
+        ):
+            raise ValueError(
+                f"four_zone_central cu_addr {self.cu_addr!r} must be in 1..96"
+            )
+        if self.initial_season not in (0, 1) or isinstance(self.initial_season, bool):
+            raise ValueError(
+                f"four_zone_central {self.cu_addr}: initial_season "
+                f"{self.initial_season!r} must be 0 (heating) or 1 (cooling)"
+            )
+        if self.initial_weekly_prog not in (0, 1, 2) or isinstance(
+            self.initial_weekly_prog, bool
+        ):
+            raise ValueError(
+                f"four_zone_central {self.cu_addr}: initial_weekly_prog "
+                f"{self.initial_weekly_prog!r} must be 0..2"
+            )
+
+
+@dataclass(frozen=True)
 class EnergyMeterConfig:
     """Configuration for an F520 energy management meter (WHO=18, 5N)."""
 
@@ -257,12 +301,14 @@ class PlantTopologyConfig:
     dimmers: dict[str, DimmerConfig] = field(default_factory=dict)
     covers: dict[str, CoverConfig] = field(default_factory=dict)
     thermo_zones: dict[int, ThermoZoneConfig] = field(default_factory=dict)
+    four_zone_centrals: dict[int, FourZoneCentralConfig] = field(default_factory=dict)
     energy_meters: dict[str, EnergyMeterConfig] = field(default_factory=dict)
     energy_actuators: dict[str, EnergyActuatorConfig] = field(default_factory=dict)
     scenarios: dict[str, ScenarioConfig] = field(default_factory=dict)
     fault_addresses: frozenset[int] = field(default_factory=frozenset)
     fault_masks: dict[int, bytes] = field(default_factory=dict)
     subbus_interfaces: frozenset[int] = field(default_factory=frozenset)
+    active_translators: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)

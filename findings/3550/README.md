@@ -50,4 +50,6 @@ Verified by decoding the S-records; no emulation.
 
 - The routine that builds the central's bus report while a holiday or vacation
   runs (does the report carry the return program; does the day count go down).
-- Whether TiThermoBasic 11.4 (same vendor pages) carries a 4-zone central image.
+- Whether TiThermoBasic 11.4 (same vendor pages) carries a 4-zone central image
+  (resolved for `4695` `v01.01.03` in
+  [`../4695/who4-four-zone-central-unit.md`](../4695/who4-four-zone-central-unit.md)).
