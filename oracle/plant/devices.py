@@ -8,6 +8,7 @@ from oracle.plant.models import (
     DimmerConfig,
     EnergyActuatorConfig,
     EnergyMeterConfig,
+    FourZoneCentralConfig,
     LightConfig,
     ScenarioConfig,
     ThermoZoneConfig,
@@ -998,9 +999,312 @@ class FaultChannel:
         return []
 
 
+class FourZoneCentralDevice:
+    """Clean-room BTicino 4695 4-zone temperature central unit (WHO=4, ``#0#N``).
+
+    Models ``ThermorCentralUnit v01.01.03`` (``LH4695_AM5875_010103.fwz``):
+    - Base address ``0x14B9 = ZA * 10 + ZB`` (``1..96``), managing ``N..N+3``.
+    - Built-in Zone 1 probe at ``Z = N`` drops direct ``90/91/92/93`` writes
+      (``0x0E987C..0x0E989C``); external slave probes ``N+1..N+3`` accept them.
+    - Extended ``D1 00 ...`` and ``D1 <CU> 03 02 C2 ...`` writes are dropped
+      (``0x0EA18B``; ``C2`` is read-only under ``B3 = 0x03`` at ``0x0EACC6``).
+    - ``D1 <CU> 03 02 C1`` enforces the ``0x0EA31F`` season filter (``0x1x``
+      heating only, ``0x2x`` cooling only, ``0x0x`` universal), resumes active
+      weekly program ``0..2`` on ``B5 = 0x01, B6 = 0xFF`` (``*4*3100*#0#N##`` at
+      ``0x0EA383``), and handles ``C1 F0/F1`` via ``0x0F4ED0`` (same season ->
+      ``TX=[]`` leaving ``OFF`` untouched; cross-season -> Protection ``C0 17/27``).
+    """
+
+    def __init__(self, config: FourZoneCentralConfig) -> None:
+        self.config = config
+        self.season: int = config.initial_season
+        self.weekly_prog: int = config.initial_weekly_prog
+        self.active_op: int = config.initial_op
+        self.active_arg: int = config.initial_arg
+        self.remote_enabled: bool = config.remote_enabled
+        self.probe_failure: bool = config.probe_failure
+        self.battery_fault: bool = config.battery_fault
+        self.master_pump_actuators: dict[int, int] = dict(config.master_pump_actuators)
+        self.local_off_zones: set[int] = set()
+        self.local_prot_zones: set[int] = set()
+        self.local_manual_zones: set[int] = set()
+
+    def reset(self) -> None:
+        """Reset 4-zone central unit state to initial fixture values."""
+        self.season = self.config.initial_season
+        self.weekly_prog = self.config.initial_weekly_prog
+        self.active_op = self.config.initial_op
+        self.active_arg = self.config.initial_arg
+        self.remote_enabled = self.config.remote_enabled
+        self.probe_failure = self.config.probe_failure
+        self.battery_fault = self.config.battery_fault
+        self.master_pump_actuators = dict(self.config.master_pump_actuators)
+        self.local_off_zones.clear()
+        self.local_prot_zones.clear()
+        self.local_manual_zones.clear()
+
+    def _clear_local_overrides(self) -> None:
+        self.local_off_zones.clear()
+        self.local_prot_zones.clear()
+        self.local_manual_zones.clear()
+
+    def record_slave_override(self, zone: int, b0: int, b3: int) -> None:
+        """Record a direct bus override on an external slave zone (``C0`` bits 3..5)."""
+        self.local_off_zones.discard(zone)
+        self.local_prot_zones.discard(zone)
+        self.local_manual_zones.discard(zone)
+        if b0 in (0x90, 0x91, 0x92) or (b0 == 0x93 and b3 in (0x00, 0x01)):
+            self.local_manual_zones.add(zone)
+        elif b0 == 0x93 and b3 == 0x0F:
+            self.local_off_zones.add(zone)
+
+    def flags_byte(self) -> int:
+        """Encode the ``0x0EB8FB..0x0EB965`` 6-bit ``C0`` diagnostic flags byte."""
+        flags = 0x01 if self.remote_enabled else 0x00
+        if self.probe_failure:
+            flags |= 0x02
+        if self.battery_fault:
+            flags |= 0x04
+        if self.local_off_zones:
+            flags |= 0x08
+        if self.local_prot_zones:
+            flags |= 0x10
+        if self.local_manual_zones:
+            flags |= 0x20
+        return flags
+
+    def c0_frame(self, *, digits: int) -> bytes:
+        """Encode ``D2 <CU> 03 04 C0 <season|op> <arg> <flags>`` (``0x0EB828``)."""
+        season_nib = 0x10 if self.season == 0 else 0x20
+        op_byte = season_nib | (self.active_op & 0x0F)
+        return encode_extended_inbound(
+            bytes(
+                [
+                    0xD2,
+                    self.config.cu_addr,
+                    0x03,
+                    0x04,
+                    0xC0,
+                    op_byte,
+                    self.active_arg & 0xFF,
+                    self.flags_byte(),
+                ]
+            ),
+            digits=digits,
+        )
+
+    def _pump_frame(self, act_id: int, *, digits: int) -> bytes:
+        return encode_short_inbound(
+            0xB7,
+            0x00,
+            0x30 | (act_id & 0x0F),
+            THERMO_ACTUATOR_STATUS_BYTES.get(self.master_pump_actuators[act_id], 0x01),
+            digits=digits,
+        )
+
+    def handle_short(self, payload: bytes, *, digits: int) -> list[bytes]:
+        """Handle ``99 <CU> 30 C0`` status polls and master pump ``DIM 20`` queries."""
+        b0, b1, b2, b3 = payload[0], payload[1], payload[2], payload[3]
+        if b0 == 0x99 and b1 == self.config.cu_addr and b2 == 0x30 and b3 == 0xC0:
+            return [self.c0_frame(digits=digits)]
+        if payload == b"\xb9\x00\x30\x10":
+            return [
+                self._pump_frame(a, digits=digits)
+                for a in sorted(self.master_pump_actuators)
+            ]
+        if b0 == 0x99 and b1 == 0x00 and (b2 & 0xF0) == 0x30 and b3 == 0x10:
+            act_id = b2 & 0x0F
+            if act_id in self.master_pump_actuators:
+                return [self._pump_frame(act_id, digits=digits)]
+        return []
+
+    def _sync_zones(
+        self,
+        zones: dict[int, ThermoZoneDevice],
+        *,
+        mode: int,
+        mb: int,
+        setpoint_deci: int | None = None,
+        digits: int,
+    ) -> list[bytes]:
+        """Propagate central state to built-in Zone ``N`` and slave probes."""
+        master = zones.get(self.config.cu_addr)
+        if master is not None:
+            master.mode = mode
+            if setpoint_deci is not None:
+                master.setpoint_deci = setpoint_deci
+        out: list[bytes] = []
+        for sz in self.config.slave_zones:
+            slave = zones.get(sz)
+            if slave is not None:
+                slave.mode = mode
+                if setpoint_deci is not None:
+                    slave.setpoint_deci = setpoint_deci
+                sp = slave.setpoint_deci
+                out.append(
+                    encode_extended_inbound(
+                        bytes(
+                            [
+                                0xD2,
+                                sz,
+                                0x03,
+                                0x04,
+                                0x12,
+                                mb,
+                                (sp >> 8) & 0xFF,
+                                sp & 0xFF,
+                            ]
+                        ),
+                        digits=digits,
+                    )
+                )
+        return out
+
+    def _handle_season_switch(
+        self,
+        b5: int,
+        zones: dict[int, ThermoZoneDevice],
+        *,
+        digits: int,
+    ) -> list[bytes]:
+        """Execute ``0x0F4ED0`` remote season switch (``C1 F0`` / ``C1 F1``)."""
+        new_season = 0 if b5 == 0xF0 else 1
+        if new_season == self.season:
+            return []
+        self.season = new_season
+        self.active_op = 0x07
+        self.active_arg = 0x00
+        self._clear_local_overrides()
+        mode = 102 if self.season == 0 else 202
+        mb = 0xF2 if self.season == 0 else 0xF3
+        slave_frames = self._sync_zones(zones, mode=mode, mb=mb, digits=digits)
+        return [self.c0_frame(digits=digits), *slave_frames]
+
+    def _normalize_c1_op(self, b5: int) -> int | None:
+        """Apply ``0x0EA31F..0x0EA347`` season filter to ``C1`` ``B5``."""
+        hi_nib = b5 & 0xF0
+        if hi_nib == 0x10:
+            return (b5 - 0x10) if self.season == 0 else None
+        if hi_nib == 0x20:
+            return (b5 - 0x20) if self.season == 1 else None
+        if hi_nib == 0x00:
+            return b5
+        return None
+
+    def _dispatch_c1_norm(
+        self,
+        norm: int,
+        b6: int,
+        b7: int,
+        zones: dict[int, ThermoZoneDevice],
+        *,
+        digits: int,
+    ) -> list[bytes]:
+        """Dispatch normalized ``C1`` operation (``0x0EA34A..0x0EA4F5``)."""
+        if norm == 0x01 and b6 in (0x00, 0x01, 0x02, 0xFF):
+            if b6 != 0xFF:
+                self.weekly_prog = b6
+            self.active_op = 0x01
+            self.active_arg = self.weekly_prog
+            self._clear_local_overrides()
+            master = zones.get(self.config.cu_addr)
+            if master is not None:
+                master.mode = 1 if self.season == 0 else 0
+            return [self.c0_frame(digits=digits)]
+
+        if norm == 0x02 and 0x0A <= b6 <= 0x46:
+            self.active_op = 0x02
+            self.active_arg = b6
+            self._clear_local_overrides()
+            mode = 1 if self.season == 0 else 0
+            mb = 0xF0 if self.season == 0 else 0xF1
+            slave_frames = self._sync_zones(
+                zones, mode=mode, mb=mb, setpoint_deci=b6 * 5, digits=digits
+            )
+            return [self.c0_frame(digits=digits), *slave_frames]
+
+        if (norm == 0x04 and b6 in (0x00, 0x01, 0x02)) or norm == 0x05:
+            self.active_op = norm
+            self.active_arg = b6
+            self._clear_local_overrides()
+            return [self.c0_frame(digits=digits)]
+
+        if norm in (0x06, 0x07):
+            self.active_op = norm
+            self.active_arg = 0x00
+            self._clear_local_overrides()
+            mode = 303 if norm == 0x06 else (102 if self.season == 0 else 202)
+            mb = 0xFF if norm == 0x06 else (0xF2 if self.season == 0 else 0xF3)
+            slave_frames = self._sync_zones(zones, mode=mode, mb=mb, digits=digits)
+            return [self.c0_frame(digits=digits), *slave_frames]
+
+        if norm == 0x09 and 0x0A <= b6 <= 0x46 and 1 <= b7 <= 0x18:
+            self.active_op = 0x09
+            self.active_arg = b6
+            self._clear_local_overrides()
+            return [self.c0_frame(digits=digits)]
+
+        return []
+
+    def handle_extended(
+        self,
+        payload: bytes,
+        *,
+        digits: int,
+        zones: dict[int, ThermoZoneDevice],
+    ) -> list[bytes]:
+        """Handle an 8-byte ``D1 <CU> 03 <02|03> ...`` central command or query."""
+        addr, rw, sub, b5, b6, b7 = (
+            payload[1],
+            payload[3],
+            payload[4],
+            payload[5],
+            payload[6],
+            payload[7],
+        )
+        if addr != self.config.cu_addr or payload[0] != 0xD1 or payload[2] != 0x03:
+            return []
+        if rw == 0x02:
+            if sub != 0xC1:
+                return []
+            if b5 in (0xF0, 0xF1):
+                return self._handle_season_switch(b5, zones, digits=digits)
+            norm = self._normalize_c1_op(b5)
+            if norm is None:
+                return []
+            return self._dispatch_c1_norm(norm, b6, b7, zones, digits=digits)
+        if (
+            rw == 0x03
+            and sub == 0xC2
+            and self.config.cu_addr <= b5 <= self.config.cu_addr + 3
+        ):
+            season_nib = 0x10 if self.season == 0 else 0x20
+            zdev = zones.get(b5)
+            sp_half = (zdev.setpoint_deci // 5) if zdev is not None else 0x24
+            return [
+                encode_extended_inbound(
+                    bytes(
+                        [
+                            0xD2,
+                            self.config.cu_addr,
+                            0x03,
+                            0x04,
+                            0xC2,
+                            b5,
+                            season_nib | 0x02,
+                            sp_half & 0xFF,
+                        ]
+                    ),
+                    digits=digits,
+                )
+            ]
+        return []
+
+
 RelayChannel = LightDevice
 DimmerChannel = DimmerDevice
 TimedShutter = CoverDevice
 ThermoZone = ThermoZoneDevice
+ThermoCentralUnit4695 = FourZoneCentralDevice
 EnergyMeter = EnergyMeterDevice
 EnergyActuator = EnergyActuatorDevice

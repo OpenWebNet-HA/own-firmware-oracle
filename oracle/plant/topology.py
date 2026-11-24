@@ -18,6 +18,7 @@ from oracle.plant.devices import (
     EnergyActuatorDevice,
     EnergyMeterDevice,
     FaultChannel,
+    FourZoneCentralDevice,
     LightDevice,
     ScenarioDevice,
     ThermoZoneDevice,
@@ -27,6 +28,7 @@ from oracle.plant.models import (
     DimmerConfig,
     EnergyActuatorConfig,
     EnergyMeterConfig,
+    FourZoneCentralConfig,
     LightConfig,
     PlantTopologyConfig,
     ScenarioConfig,
@@ -210,6 +212,44 @@ def _parse_yaml_thermo(raw_thermo: Any) -> dict[int, ThermoZoneConfig]:
     return thermo_zones
 
 
+def _parse_yaml_four_zone_centrals(raw_cus: Any) -> dict[int, FourZoneCentralConfig]:
+    centrals: dict[int, FourZoneCentralConfig] = {}
+    if isinstance(raw_cus, dict):
+        for cu_key, cfg in raw_cus.items():
+            c = cfg if isinstance(cfg, dict) else {}
+            cu_addr = _strict_int(c.get("cu_addr", cu_key), "four_zone_central cu_addr")
+            slaves_raw = c.get("slave_zones")
+            slaves = (
+                tuple(_strict_int(s, "slave_zones") for s in slaves_raw)
+                if isinstance(slaves_raw, list)
+                else (cu_addr + 2, cu_addr + 3)
+            )
+            pump_raw = c.get("master_pump_actuators") or {}
+            pump_map = (
+                {
+                    _strict_int(k, "master_pump_actuators key"): _strict_int(
+                        v, "master_pump_actuators val"
+                    )
+                    for k, v in pump_raw.items()
+                }
+                if isinstance(pump_raw, dict)
+                else {}
+            )
+            centrals[cu_addr] = FourZoneCentralConfig(
+                cu_addr=cu_addr,
+                initial_season=_int_val(c.get("initial_season"), 0),
+                initial_weekly_prog=_int_val(c.get("initial_weekly_prog"), 2),
+                initial_op=_int_val(c.get("initial_op"), 0x01),
+                initial_arg=_int_val(c.get("initial_arg"), 0x02),
+                remote_enabled=bool(c.get("remote_enabled", False)),
+                probe_failure=bool(c.get("probe_failure", False)),
+                battery_fault=bool(c.get("battery_fault", True)),
+                slave_zones=slaves,
+                master_pump_actuators=pump_map,
+            )
+    return centrals
+
+
 def _parse_yaml_energy_meters(raw_meters: Any) -> dict[str, EnergyMeterConfig]:
     energy_meters: dict[str, EnergyMeterConfig] = {}
     if isinstance(raw_meters, dict):
@@ -288,6 +328,12 @@ def load_topology_yaml(path: Path) -> PlantTopologyConfig:
         if isinstance(sub_raw, list)
         else frozenset()
     )
+    trans_raw = raw.get("active_translators") or []
+    active_trans = (
+        frozenset(str(t).strip() for t in trans_raw if str(t).strip())
+        if isinstance(trans_raw, list)
+        else frozenset()
+    )
 
     return PlantTopologyConfig(
         name=str(raw.get("name", path.stem)),
@@ -297,11 +343,15 @@ def load_topology_yaml(path: Path) -> PlantTopologyConfig:
         dimmers=_parse_yaml_dimmers(raw.get("dimmers")),
         covers=_parse_yaml_covers(raw.get("covers")),
         thermo_zones=_parse_yaml_thermo(raw.get("thermo_zones")),
+        four_zone_centrals=_parse_yaml_four_zone_centrals(
+            raw.get("four_zone_centrals")
+        ),
         energy_meters=_parse_yaml_energy_meters(raw.get("energy_meters")),
         energy_actuators=_parse_yaml_energy_actuators(raw.get("energy_actuators")),
         scenarios=_parse_yaml_scenarios(raw.get("scenarios")),
         fault_addresses=fault_addrs,
         subbus_interfaces=sub_ifs,
+        active_translators=active_trans,
     )
 
 
@@ -385,6 +435,10 @@ class PlantTopology:
         self.thermo_zones: dict[int, ThermoZoneDevice] = {
             z: ThermoZoneDevice(cfg) for z, cfg in config.thermo_zones.items()
         }
+        self.four_zone_centrals: dict[int, FourZoneCentralDevice] = {
+            cu: FourZoneCentralDevice(cfg)
+            for cu, cfg in config.four_zone_centrals.items()
+        }
         self.energy_meters: dict[str, EnergyMeterDevice] = {
             w: EnergyMeterDevice(cfg) for w, cfg in config.energy_meters.items()
         }
@@ -414,6 +468,8 @@ class PlantTopology:
             cover.reset()
         for zone in self.thermo_zones.values():
             zone.reset()
+        for cu in self.four_zone_centrals.values():
+            cu.reset()
         for meter in self.energy_meters.values():
             meter.reset()
         for act in self.energy_actuators.values():

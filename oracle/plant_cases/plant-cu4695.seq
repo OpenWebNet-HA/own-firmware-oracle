@@ -1,0 +1,64 @@
+; Closed-loop Tier A plant suite for cu4695 topology (OpenWebNet-HA/MyHOME#994, PR #1000)
+; Exercises BTicino 4695 v01.01.03 (#0#1, built-in Zone 1 + external slave probes Z=3, 4
+; + Master Pump Actuator #0#1) across status polls, Heating vs Cooling M=1/M=2/M=3 central
+; setpoint writes, #Z vs #Z#1 vs direct Z=1 (dropped at 0x0E987C) vs direct Z=3 (accepted
+; + C0 WHAT 22 local-OFF flag), 0x0F4ED0 C1 F0/F1 season switching (cross-season Protection
+; C0 17/27 vs same-season TX=[] leaving OFF untouched), and *4*3100*#0#1## (0x0EA383) resume.
+
+; 1. Poll central unit #0#1 status vs 99-zone #0 status (4695 answers #0#1, drops #0)
+down  *#4*#0#1##
+down  *#4*#0##
+
+; 2. Poll central unit #0#1 dimensions 14, 12, 0, 20
+down  *#4*#0#1*14##
+down  *#4*#0#1*12##
+down  *#4*#0#1*0##
+down  *#4*#0#1*20##
+
+; 3. Poll Zone 1 and Zone 3 directly vs #1 and #3#1 ( plus unpopulated Zone 2 )
+down  *#4*1##
+down  *#4*2##
+down  *#4*3##
+down  *#4*#1##
+down  *#4*#3#1##
+
+; 4. Heating season (season=0): M=1 accepted, M=2 dropped, M=3 accepted
+down  *#4*#0#1*#14*0180*1##
+down  *#4*#0#1*#14*0185*2##
+down  *#4*#0#1*#14*0190*3##
+
+; 5. Switch Heat -> Cool (*4*0*#0#1##, 0x0F4ED0 -> Protection C0 27 = *4*202*#0#1##):
+;    M=1 is DROPPED in Cooling; generic M=3 is ACCEPTED; then Cool -> Heat (*4*1*#0#1## -> 102)
+down  *4*0*#0#1##
+down  *#4*#0#1*#14*0200*1##
+down  *#4*#0#1*#14*0200*3##
+down  *4*1*#0#1##
+
+; 6. Zone writes: #3 (dropped), #3#1 (C2 write dropped), Z=1 direct (dropped by 4695 0x0E987C),
+;    Z=3 direct (accepted on Gen C/D, NACK on Gen A/B) + slave Z=3 OFF setting C0 bit 3 (*4*22*#0#1##)
+down  *#4*#3*#14*0180*3##
+down  *#4*#3#1*#14*0175*3##
+down  *#4*1*#14*0180*3##
+down  *4*303*1##
+down  *#4*3*#14*0180*3##
+down  *4*303*3##
+down  *#4*#0#1##
+
+; 7. Central mode writes on #0#1: OFF (303), Antifreeze (102), Weekly Prog 3 (1103),
+;    311 (C2 write dropped), 3100 (C1 01 FF resumes active weekly program 3)
+down  *4*303*#0#1##
+down  *4*102*#0#1##
+down  *4*1103*#0#1##
+down  *4*311*#0#1##
+down  *4*3100*#0#1##
+
+; 8. Actuator queries (#0*20 emits Master Pump Actuator *#4*#0#1*20*0## + 1#1, 3#1, 4#1)
+down  *#4*#0*20##
+down  *#4*1#1*20##
+down  *#4*3#1*20##
+
+; 9. OFF (303) -> same-season *4*1*#0#1## (0x0F4ED0 TX=[], stays 103 OFF) -> poll -> *4*3100*#0#1## wake
+down  *4*303*#0#1##
+down  *4*1*#0#1##
+down  *#4*#0#1##
+down  *4*3100*#0#1##

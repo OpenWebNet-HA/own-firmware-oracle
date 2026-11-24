@@ -447,11 +447,22 @@ class QemuTarget:
     def _active_clients(self) -> set[str]:
         if self.harness.startswith("unit:"):
             return {self.harness[len("unit:") :]}
-        return {
+        translators = {
             name
             for name, prog in self.spec.programs.items()
             if prog.role == "translator"
         }
+        if self.harness.startswith("plant:"):
+            inner = getattr(self._responder, "inner", self._responder)
+            topo = getattr(inner, "topology", None)
+            allowed: frozenset[str] = getattr(
+                getattr(topo, "config", None), "active_translators", frozenset()
+            )
+            if allowed:
+                matched = translators & allowed
+                if matched:
+                    return matched
+        return translators
 
     def _start_program(
         self,
