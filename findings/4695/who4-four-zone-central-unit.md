@@ -2,6 +2,14 @@
 
 **Epistemic status:** `firmware_observed` (static analysis + M16C/60 P-code verification of `LH4695_AM5875_010103.fwz`, emulated `harness=full` across all 13 active gateways, and closed-loop `harness=plant:cu4695` across 6 gateways). Nothing here is labelled `experimentally_confirmed` beyond cross-referencing the reporter's `F454 2.0.51` captures in [OpenWebNet-HA/MyHOME#994](https://github.com/OpenWebNet-HA/MyHOME/issues/994).
 
+- **Original `4695` M16C/60 P-Code Runner:** [`tools/pcode_4695.py`](../../tools/pcode_4695.py) (`pypcode` `4.1.0`, SLEIGH `M16C/60:LE:16:default`, `4` suites / `79` steps). Executes the unmodified 128 KB `flat_0E0000_0FFFFF.bin` image from hardware reset with deterministic peripheral stubs (32 KB I2C EEPROM, UART0 PIC RX/TX queue, fast-return non-protocol hardware wait hooks, periodic 10-bit `AN0` ADC load-check input) and the architectural 20-bit `LDE.B`/`LDE.W disp20[A0]` SLEIGH adjustment:
+  ```bash
+  python tools/pcode_4695.py \
+    --fwz LH4695_AM5875_010103.fwz \
+    --mot 4695_010103.mot \
+    --flash-bin flat_0E0000_0FFFFF.bin \
+    --out who4-4695-pcode-execution.json
+  ```
 - **Stateless Fleet Suite:** [`oracle/cases/thermo-four-zone-central.cases`](../../oracle/cases/thermo-four-zone-central.cases) (`81` steps: `63` `down` + `18` `up`, `suite_sha256=fb5095d09c78753cd3909431989650e986cecce36f661356d50a2c6ceb960c0d`) -> `results/<Product>/<Version>/oracle/full/thermo-four-zone-central.tsv` (13 gateways).
 - **Closed-Loop Virtual Plant Fixture & Suite:**
   - Fixture: [`oracle/plant/fixtures/cu4695.yaml`](../../oracle/plant/fixtures/cu4695.yaml) (`plant_sha256=cc56acd2db907083f1b54e6c2aa0b26823e358ff5ad923ac2559d39adb1b0dc9`)
@@ -38,7 +46,7 @@
    - Conversely, `*4*1*#0#1##` (`C1 F0`) and `*4*0*#0#1##` (`C1 F1`) call `0x0F4ED0`:
      - If `requested_season == 0x17B5` (`0x0F4ED6`), `4695` exits immediately with **`TX=[]`**, leaving `0x17B4 = 6` (`OFF`) untouched!
      - If `requested_season != 0x17B5` (`0x0F4EEE`), `4695` switches season into **Protection (`C0 17`/`C0 27` -> `*4*102/202*#0#N##`)**, not weekly program or manual.
-   - Scenarios `1201..1203` / `3200` (`B5 = 0x13/0x03`) are dropped (`0x03` absent from `0x0EA34A`); `4695` implements its 3 scenarios under `B5 = 0x04` (encoded by gateways as `*4*115#1101*#0#1##` / `*4*315#3101*#0#1##`).
+   - Scenarios `1201..1203` / `3200` (`B5 = 0x13/0x03`) are dropped (`0x03` absent from `0x0EA34A`); `4695` implements daily Holiday mode with weekly return program `1..3` (`B6 = 0x00..0x02`) under `B5 = 0x04/0x14/0x24` (`*4*115#1101..315#3103*#0#N##`, per `U1809F_U_EN.pdf` p. 15) and multi-day vacation entry/exit under `B5 = 0x05/0x15/0x25` (`*4*13DDD#P..33DDD#P*#0#N##`, `*4*3000*#0#N##`, `*4*3000#P*#0#N##`). Manual `DIMENSION 14` setpoints (`B5 = 0x02/0x12/0x22`) accept `5.0..35.0 °C` (`B6 = 0x0A..0x46`) and drop `35.5..40.0 °C` (`0x47..0x50`).
 6. **`C0` Diagnostic Flags (`0x0EB8FB..0x0EB965`) & Real ADC Backup-Battery Fault (`WHAT 31`)**:
    - `D2 <CU> 03 04 C0 <op> <arg> <flags>` encodes: bit 0 (`0`=`*4*20*` remote disabled, `1`=`*4*21*` remote enabled), bit 1 (`0x02`=`*4*30*` probe failure), bit 2 (`0x04`=`*4*31*` backup battery fault from 10-bit `AD0` `0x03C0` load check at `0x0EC9E9..0x0ECBFD`), bit 3 (`0x08`=`*4*22*` >=1 zone in Local OFF), bit 4 (`0x10`=`*4*23*` Local Protection), bit 5 (`0x20`=`*4*24*` Local Manual).
 7. **Actuator `DIMENSION 20` (`WHERE = #0#1` Spec Collision vs Gateway Decoding)**:
