@@ -460,6 +460,34 @@ def test_run_main_ticks_and_budget_exhaustion() -> None:
     assert snap["zone1_local_mode"] == "local_offset"
 
 
+def _make_srec(rec_type: str, addr_hex: str, data: bytes) -> str:
+    body = bytes.fromhex(addr_hex) + data
+    bc = len(body) + 1
+    chk = (~(bc + sum(body))) & 0xFF
+    return f"{rec_type}{bc:02X}{body.hex().upper()}{chk:02X}"
+
+
+def test_decode_mot_to_flash_and_errors() -> None:
+    s0 = _make_srec("S0", "0000", b"HDR")
+    s2_vec = _make_srec("S2", "0FFFFC", (0x0E84EF).to_bytes(3, "little"))
+    s8 = _make_srec("S8", "0E84EF", b"")
+    mot_bytes = f"\n{s0}\n{s2_vec}\n{s8}\n".encode("ascii")
+    decoded = pcode_4695.decode_mot_to_flash(mot_bytes)
+    assert decoded == _blank_rom(reset_pc=0x0E84EF)
+
+    with pytest.raises(ValueError, match="Invalid S-record header"):
+        pcode_4695.decode_mot_to_flash(b"BADLINE\n")
+    with pytest.raises(ValueError, match="length mismatch"):
+        pcode_4695.decode_mot_to_flash(b"S2040E0000\n")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        pcode_4695.decode_mot_to_flash(b"S2040E000000\n")
+    s1_low = _make_srec("S1", "1000", b"\x00")
+    with pytest.raises(ValueError, match="outside M16C/60 Flash"):
+        pcode_4695.decode_mot_to_flash(s1_low.encode("ascii"))
+    with pytest.raises(ValueError, match="no data records"):
+        pcode_4695.decode_mot_to_flash(s0.encode("ascii"))
+
+
 def test_sanitization_digest_checks_and_cli_build_record(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -469,6 +497,10 @@ def test_sanitization_digest_checks_and_cli_build_record(
         pcode_4695.validate_sanitized_json('{"leak": "0x0E987C"}\n')
     with pytest.raises(ValueError, match="Private filesystem path"):
         pcode_4695.validate_sanitized_json('{"leak": "/mnt/c/secret"}\n')
+
+    # Missing both --mot and --flash-bin raises ValueError
+    with pytest.raises(ValueError, match="Provide at least one"):
+        pcode_4695.build_record()
 
     # Digest mismatch raises ValueError
     bad_file = tmp_path / "bad.bin"
@@ -484,13 +516,16 @@ def test_sanitization_digest_checks_and_cli_build_record(
         ),
     }
     rom_bytes = _blank_rom(reset_pc=0x0E84EF)
+    mot_bytes = (
+        _make_srec("S2", "0FFFFC", (0x0E84EF).to_bytes(3, "little")) + "\n"
+    ).encode("ascii")
     flash_bin = tmp_path / "flat_0E0000_0FFFFF.bin"
     fwz_file = tmp_path / "LH4695_AM5875_010103.fwz"
     mot_file = tmp_path / "4695_010103.mot"
     out_json = tmp_path / "record.json"
     flash_bin.write_bytes(rom_bytes)
     fwz_file.write_bytes(b"synthetic-fwz")
-    mot_file.write_bytes(b"synthetic-mot")
+    mot_file.write_bytes(mot_bytes)
 
     monkeypatch.setattr(
         pcode_4695, "EXPECTED_FLASH_SHA256", hashlib.sha256(rom_bytes).hexdigest()
@@ -499,17 +534,34 @@ def test_sanitization_digest_checks_and_cli_build_record(
         pcode_4695, "EXPECTED_FWZ_SHA256", hashlib.sha256(b"synthetic-fwz").hexdigest()
     )
     monkeypatch.setattr(
-        pcode_4695, "EXPECTED_MOT_SHA256", hashlib.sha256(b"synthetic-mot").hexdigest()
+        pcode_4695, "EXPECTED_MOT_SHA256", hashlib.sha256(mot_bytes).hexdigest()
     )
     fake_mod = FakePypcodeModule(loop_prog)
     monkeypatch.setattr(pcode_4695, "load_pypcode", lambda: fake_mod)
 
-    # Call build_record without optional fwz/mot/runner_commit
-    rec_min = pcode_4695.build_record(flash_bin)
+    # Call build_record with --mot only (decodes S-records directly)
+    rec_min = pcode_4695.build_record(mot_path=mot_file)
     tool_min = rec_min["tool"]
     assert isinstance(tool_min, dict)
     assert "runner_commit" not in tool_min
     assert tool_min["runner_sha256"] == pcode_4695.runner_sha256()
+
+    # Mismatched --mot decoded digest vs EXPECTED_FLASH_SHA256
+    with monkeypatch.context() as mp:
+        mp.setattr(pcode_4695, "EXPECTED_FLASH_SHA256", "0" * 64)
+        with pytest.raises(ValueError, match="Decoded S-record Flash image"):
+            pcode_4695.build_record(mot_path=mot_file)
+
+    # Mismatched --flash-bin bytes vs decoded --mot bytes
+    with monkeypatch.context() as mp:
+        other_rom = _blank_rom(reset_pc=0x0E851B)
+        other_bin = tmp_path / "other.bin"
+        other_bin.write_bytes(other_rom)
+        mp.setattr(
+            pcode_4695, "_verify_pinned_digest", lambda p, _s, _l: p.read_bytes()
+        )
+        with pytest.raises(ValueError, match="do not match decoded --mot"):
+            pcode_4695.build_record(other_bin, mot_path=mot_file)
 
     # Call CLI main() with all options
     rc = pcode_4695.main(

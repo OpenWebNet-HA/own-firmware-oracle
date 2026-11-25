@@ -28,12 +28,12 @@
 
 ### Verified `4695 v01.01.03` Protocol Facts (`firmware_observed`)
 
-1. **Base Address `0x14B9 = ZA * 10 + ZB` (`1..96`, `#0#1..#0#96`)**:
+1. **Base Address `0x14B9 = ZA * 10 + ZB` (`1..99`, `#0#1..#0#99`; `1..96` when all four zones `N..N+3` lie in `1..99`)**:
    - Computed at `0x0E9532` from configurators `ZA` and `ZB` (`1..99`, managing 4 consecutive zones `N .. N+3`; e.g. `ZA=2, ZB=1` -> `0x15 = 21` `#0#21` managing zones `21..24`, matching BTicino Technical Guide `U1809C` pp. 54–55).
    - At `0x0EA185..0x0EA19B`, incoming extended frames with `B1 == 0x00` (`#0`, `#1`, `#3`) or `B1 != 0x14B9` are unconditionally dropped.
 2. **Built-In Master Zone `N` Drops Direct `90/91/92/93` Writes (`0x0E987C..0x0E989C`)**:
    - The `4695` contains the Zone `N` temperature probe internally (answering `99 <N> 30 <00|12|0E|0D|13>` polls at `0x0E9C7F..0x0EA180`), but its short-frame RX dispatcher (`0x0E987C`) handles only `0x99` (read) and `0x95` on `B1 == 0x14B9`.
-   - Direct zone setpoint (`90/91/92 <N> 30 <T*2>`) and zone mode (`93 <N> 30 <cmd>`) writes to Zone `N` (`Z=1` on `#0#1`) are **silently dropped**, and no external slave probe exists at `Z=N`. External slave probes (`N+1..N+3`, e.g. `Z=3, 4`) DO accept direct `90/91/92/93` writes on gateways that forward them.
+   - Direct zone setpoint (`90/91/92 <N> 30 <T*2>`) and zone mode (`93 <N> 30 <cmd>`) writes to Zone `N` (`Z=1` on `#0#1`) are **silently dropped**, and no external slave probe exists at `Z=N`. External slave probes (`N+1..N+3`, e.g. `Z=3, 4`) DO accept direct `90/91/92/93` writes on gateways that forward them. On `#0#N` writes while built-in Zone `N` follows central (`0x1557 == 0x0E`), original `4695` `01.01.03` emits Zone `N` `DIMENSION 12` (`$06 D2 <N> 03 04 12 ...`) when central operating mode or Zone `N` effective setpoint changes (`dim14-10`) and omits it when repeating an identical mode and setpoint (`dim14-11`) or when Zone `N` is in local override (whereas the simplified `plant:cu4695` Python model omits immediate Zone `N` `DIMENSION 12` unconditionally).
 3. **`C2` Controlled-Zone Subcode (`#Z` / `#Z#N` / `*4*311*#0#N##`) Has NO Write Handler**:
    - Under `B3 = 0x02` (`0x0EA1D2..0x0EA222`), `4695` handles `B4 = 0xC1` and `0xBA` — **`B4 = 0xC2` is absent**.
    - Both `*#4*#3*#14*0180*3##` (`D1 00 03 02 C2 03 02 24`) and BTouch `*#4*#3#1*#14*0175*3##` (`D1 01 03 02 C2 03 02 23`, `#994` trace 2 frame 37), as well as `*4*311*#0#1##` (`D1 01 03 02 C2 00 00 00`), are dropped by `4695`. `C2` is implemented **read-only** under `B3 = 0x03` (`0x0EACC6` -> `0x0EBD1A`, `*#4*#3#1##`).
@@ -51,7 +51,7 @@
    - `D2 <CU> 03 04 C0 <op> <arg> <flags>` encodes: bit 0 (`0`=`*4*20*` remote disabled, `1`=`*4*21*` remote enabled), bit 1 (`0x02`=`*4*30*` probe failure), bit 2 (`0x04`=`*4*31*` backup battery fault from 10-bit `AD0` `0x03C0` load check at `0x0EC9E9..0x0ECBFD`), bit 3 (`0x08`=`*4*22*` >=1 zone in Local OFF), bit 4 (`0x10`=`*4*23*` Local Protection), bit 5 (`0x20`=`*4*24*` Local Manual).
 7. **Actuator `DIMENSION 20` (`WHERE = #0#1` Spec Collision vs Gateway Decoding)**:
    - `4695`'s own pump/actuator bus frames (`BF <CU> 30 00/01`, `BA 00/<CU> 30 00/01`) are `silent` on all gateways.
-   - Although the OpenWebNet WHO=4 PDF specification (`ownkb:claim:c003280`) writes Master Pump Actuator 1 as `*#4*#0#1*20*V##` (creating a grammar collision with 4-zone central unit `#0#1`), actual Gen B/C/D gateway translators (`bt_termo` / `coso`) decode `B7 80 31 01` (`0x80 | 0`, `N=1`) as `*#4*0#1*20*0##`, `B7 00 31 01` (`0x00`, `N=1`) as `*#4*100*20*0##`, and `B7 00 30 01` (`0x00`, `N=0`) as `*#4*#0*20*0##`, while outbound `*#4*#0#1*20##` on Gen C/D sends `A9 01 30 10` (querying Zone 1 actuator `1#1` -> `*#4*1#1*20*0##`).
+   - Although the OpenWebNet WHO=4 PDF specification (`ownkb:claim:c003280`) writes Master Pump Actuator 1 as `*#4*#0#1*20*V##` (creating a grammar collision with 4-zone central unit `#0#1`), actual Gen B/C/D gateway translators (`bt_termo` / `coso`) decode `B7 80 31 01` (`0x80 | 0`, `N=1`) as `*#4*0#1*20*0##`, `B7 00 31 01` (`0x00`, `N=1`) as `*#4*100*20*0##`, and `B7 00 30 01` (`0x00`, `N=0`) as `*#4*#0*20*0##`, while outbound `*#4*#0#1*20##` on Gen C/D (`F454`, `F459`, `F450`, `MyHomeServer1`, `F461`, `F460`, `3488`; `MH202` `010024` returns `nack, silent` with no bus output) sends `A9 01 30 10` (querying Zone 1 actuator `1#1` -> `*#4*1#1*20*0##`).
 
 ---
 
