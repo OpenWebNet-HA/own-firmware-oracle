@@ -55,38 +55,42 @@ CANONICAL_COMMAND = (
     "--out who4-4695-pcode-execution.json"
 )
 
+# Main-loop UART0 RX-ready (`0x15AD`) poll checkpoints where queued PIC frames
+# and periodic timer ticks are delivered deterministically between iterations.
 MAIN_LOOP_PCS: frozenset[int] = frozenset({0x0E84EF, 0x0E851B, 0x0E8535})
 
-# Non-protocol hardware wait loops (watchdog/LCD/RTC/keypad/buzzer) and the
-# periodic ADC polling entry (0x0EFA38, unhooked during explicit ADC pulse steps).
+# Non-protocol hardware wait / UI subroutines stubbed via immediate 3-byte RTS
+# pop on SP; 0x0EFA38 is unhooked during explicit backup-battery ADC pulse steps.
 FAST_RTS_HOOKS: frozenset[int] = frozenset(
     {
-        0x0EE60A,
-        0x0EE634,
-        0x0EE660,
-        0x0EE672,
-        0x0EE7DC,
-        0x0EEB40,
-        0x0EEB8E,
-        0x0EEBAC,
-        0x0EF178,
-        0x0EF15C,
-        0x0EF254,
-        0x0EEE46,
-        0x0EEE8A,
-        0x0EEEB4,
-        0x0EFA38,
-        0x0FB264,
-        0x0FB2A0,
-        0x0FB362,
-        0x0FB3DC,
-        0x0FB422,
+        0x0EE60A,  # watchdog refresh
+        0x0EE634,  # busy-wait delay_ms(R1)
+        0x0EE660,  # LCD controller init phase 1
+        0x0EE672,  # LCD controller init phase 2
+        0x0EE7DC,  # hardware startup settle wait
+        0x0EEB40,  # LCD clear row
+        0x0EEB8E,  # LCD clear screen
+        0x0EEBAC,  # LCD render string
+        0x0EEE46,  # backlight / buzzer PWM control
+        0x0EEE8A,  # buzzer beep
+        0x0EEEB4,  # front-panel keypad scan
+        0x0EF15C,  # external RTC I2C bus wait
+        0x0EF178,  # external RTC I2C init
+        0x0EF254,  # external RTC I2C read/sync
+        0x0EFA38,  # periodic RTC / AN0 ADC hardware poll entry
+        0x0FB264,  # LCD status icon update
+        0x0FB2A0,  # LCD status icon draw
+        0x0FB362,  # LCD segment draw
+        0x0FB3DC,  # LCD glyph draw
+        0x0FB422,  # LCD glyph clear
     }
 )
 ADC_POLL_HOOK_PC = 0x0EFA38
-EEPROM_READ_HOOK_PC = 0x0EF6E6
-EEPROM_WRITE_HOOK_PC = 0x0EF8D6
-UART0_TX_HOOK_PC = 0x0EE61C
+EEPROM_READ_HOOK_PC = 0x0EF6E6  # I2C EEPROM read(ee_addr:u32, dst:u32, len:u16) -> R0L
+EEPROM_WRITE_HOOK_PC = (
+    0x0EF8D6  # I2C EEPROM write(src:u32, ee_addr:u32, len:u16) -> R0L
+)
+UART0_TX_HOOK_PC = 0x0EE61C  # UART0 start TX from 0x12D6[0..0x15B2] to on-board PIC
 
 MODE_NAMES: dict[int, str] = {
     1: "weekly_program",
@@ -518,9 +522,13 @@ class M16CEmulator:
         ilen, ops = self.translate_one(pc)
         next_pc = pc + ilen
         uniq: dict[int, int] = {}
-        # Stock Ghidra SLEIGH M16C/60:LE:16:default truncates 20-bit disp20 in
-        # LDE.B/LDE.W disp20[A0], dst (opcodes 0x74 0x9x / 0x75 0x9x) to 16 bits;
-        # compute the architectural 20-bit effective address.
+        # Stock Ghidra SLEIGH M16C/60:LE:16:default translator quirks:
+        # 1. LDE.B/LDE.W disp20[A0], dst (opcodes 0x74 0x9x / 0x75 0x9x, single LOAD
+        #    op, trailing 3-byte LE disp20) truncates disp20 to 16 bits; _exec_pcode_op
+        #    computes the architectural 20-bit address (disp20 + A0) & 0xFFFFF.
+        # 2. CMP.B:G sets CF via signed s<= instead of unsigned <=; no runtime patch
+        #    is required here because all tested program indices (0x00..0x03) and
+        #    setpoint half-degree bounds (0x0A..0x50) lie in 0x00..0x7F.
         is_lde_disp20 = (
             self.ram[pc] in (0x74, 0x75) and (self.ram[pc + 1] & 0xF0) == 0x90
         )
@@ -1583,6 +1591,44 @@ def build_suite_4_dim14_bounds_and_queries(
     }
 
 
+_SREC_ADDR_BYTES: dict[str, int] = {"S1": 2, "S2": 3, "S3": 4}
+
+
+def decode_mot_to_flash(mot_bytes: bytes) -> bytes:
+    """Decode Motorola S-Record (`4695_010103.mot`) into 128 KB `0xFF`-padded Flash."""
+    flash = bytearray(b"\xff" * FLASH_SIZE)
+    saw_data = False
+    for line_no, raw_line in enumerate(mot_bytes.decode("ascii").splitlines(), 1):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if not line.startswith("S") or len(line) < 4:
+            raise ValueError(f"Invalid S-record header at line {line_no}")
+        rec_type = line[:2]
+        byte_count = int(line[2:4], 16)
+        expected_hex_len = 4 + byte_count * 2
+        if len(line) != expected_hex_len:
+            raise ValueError(f"S-record length mismatch at line {line_no}")
+        raw = bytes.fromhex(line[2:])
+        if (sum(raw[:-1]) & 0xFF) != (~raw[-1] & 0xFF):
+            raise ValueError(f"S-record checksum mismatch at line {line_no}")
+        addr_len = _SREC_ADDR_BYTES.get(rec_type)
+        if addr_len is None:
+            continue
+        addr = int.from_bytes(raw[1 : 1 + addr_len], "big")
+        payload = raw[1 + addr_len : -1]
+        if addr < FLASH_BASE or addr + len(payload) > FLASH_BASE + FLASH_SIZE:
+            raise ValueError(
+                f"S-record address 0x{addr:06X} outside M16C/60 Flash at line {line_no}"
+            )
+        off = addr - FLASH_BASE
+        flash[off : off + len(payload)] = payload
+        saw_data = True
+    if not saw_data:
+        raise ValueError("Motorola S-record file contained no data records")
+    return bytes(flash)
+
+
 def _verify_pinned_digest(path: Path, expected_sha256: str, label: str) -> bytes:
     data = path.read_bytes()
     actual = hashlib.sha256(data).hexdigest()
@@ -1591,6 +1637,27 @@ def _verify_pinned_digest(path: Path, expected_sha256: str, label: str) -> bytes
             f"{label} SHA-256 mismatch: expected {expected_sha256}, got {actual}"
         )
     return data
+
+
+def _resolve_flash_image(*, flash_bin: Path | None, mot_path: Path | None) -> bytes:
+    if flash_bin is None and mot_path is None:
+        raise ValueError("Provide at least one of --mot or --flash-bin")
+    decoded_mot: bytes | None = None
+    if mot_path is not None:
+        mot_bytes = _verify_pinned_digest(
+            mot_path, EXPECTED_MOT_SHA256, EXPECTED_MOT_NAME
+        )
+        decoded_mot = decode_mot_to_flash(mot_bytes)
+        if hashlib.sha256(decoded_mot).hexdigest() != EXPECTED_FLASH_SHA256:
+            raise ValueError("Decoded S-record Flash image SHA-256 mismatch")
+    if flash_bin is not None:
+        flat_bytes = _verify_pinned_digest(
+            flash_bin, EXPECTED_FLASH_SHA256, EXPECTED_FLASH_NAME
+        )
+        if decoded_mot is not None and flat_bytes != decoded_mot:
+            raise ValueError("--flash-bin bytes do not match decoded --mot image")
+        return flat_bytes
+    return decoded_mot  # type: ignore[return-value]
 
 
 def validate_sanitized_json(serialized: str) -> None:
@@ -1613,7 +1680,7 @@ def _count_steps(suites: list[dict[str, Any]]) -> int:
 
 
 def build_record(
-    flash_bin: Path,
+    flash_bin: Path | None = None,
     *,
     fwz_path: Path | None = None,
     mot_path: Path | None = None,
@@ -1623,11 +1690,7 @@ def build_record(
     """Verify input digests, run all four 4695 suites, and assemble the record."""
     if fwz_path is not None:
         _verify_pinned_digest(fwz_path, EXPECTED_FWZ_SHA256, EXPECTED_FWZ_NAME)
-    if mot_path is not None:
-        _verify_pinned_digest(mot_path, EXPECTED_MOT_SHA256, EXPECTED_MOT_NAME)
-    flat_bytes = _verify_pinned_digest(
-        flash_bin, EXPECTED_FLASH_SHA256, EXPECTED_FLASH_NAME
-    )
+    flat_bytes = _resolve_flash_image(flash_bin=flash_bin, mot_path=mot_path)
 
     mod = load_pypcode() if pypcode_mod is None else pypcode_mod
     suites = [
@@ -1730,7 +1793,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--flash-bin",
         type=Path,
-        required=True,
+        default=None,
         help="Path to the decoded 128 KB flat_0E0000_0FFFFF.bin Flash image.",
     )
     parser.add_argument(
@@ -1743,7 +1806,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--mot",
         type=Path,
         default=None,
-        help="Optional path to 4695_010103.mot to verify its SHA-256.",
+        help=(
+            "Path to 4695_010103.mot (verified and decoded directly into the "
+            "128 KB M16C/60 Flash image when --flash-bin is omitted)."
+        ),
     )
     parser.add_argument(
         "--runner-commit",
