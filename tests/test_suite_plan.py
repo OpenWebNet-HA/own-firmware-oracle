@@ -148,30 +148,91 @@ def test_plan_runs_every_suite_on_every_target(repo: Path) -> None:
     ]
 
 
+def _steps(cases: Path, name: str, count: int) -> None:
+    lines = ["# comment", "; comment", ""] + [f"down *1*1*{i}##" for i in range(count)]
+    (cases / f"{name}.cases").write_text("\n".join(lines) + "\n")
+
+
+def _gw1_shards(repo: Path, max_shards: int | None = None) -> list[list[str]]:
+    return [
+        j["runs"].split()
+        for j in suite_plan.plan(repo, max_shards=max_shards)
+        if j["target"] == "oracle/targets/GW1/010000.yaml"
+    ]
+
+
 def test_plan_shards_long_target_runs(repo: Path) -> None:
     cases = repo / "oracle" / "cases"
     for idx, name in enumerate(("c1", "c2", "c3", "c4")):
-        lines = ["# comment", "; comment", ""] + [
-            f"down *1*1*{i}##" for i in range(idx + 1)
-        ]
-        (cases / f"{name}.cases").write_text("\n".join(lines) + "\n")
+        _steps(cases, name, idx + 1)
     _tsv(repo, "GW1", "010000", "alpha", reset="each")
     _tsv(repo, "GW1", "010000", "beta", reset="each")
     _tsv(repo, "GW1", "010000", "c4", reset="0")
-    jobs = [
-        j
-        for j in suite_plan.plan(repo)
-        if j["target"] == "oracle/targets/GW1/010000.yaml"
-    ]
-    assert len(jobs) == suite_plan.SHARDS_PER_TARGET
-    all_runs = [tok for j in jobs for tok in j["runs"].split()]
-    assert sorted(all_runs) == [
+    # six runs, fewer than the limit of a reset=each target: one shard each
+    assert suite_plan.SHARDS_PER_TARGET >= 6
+    shards = _gw1_shards(repo)
+    assert len(shards) == 6
+    assert sorted(tok for shard in shards for tok in shard) == [
         "alpha:each",
         "beta:each",
         "c1:each",
         "c2:each",
         "c3:each",
         "c4:0",
+    ]
+    # with three shards the runs are packed: the heaviest run first, each into
+    # the lightest shard (a reset=each step weighs two, a reset=0 step one)
+    assert _gw1_shards(repo, max_shards=3) == [
+        ["c1:each", "c3:each"],
+        ["alpha:each", "c2:each"],
+        ["beta:each", "c4:0"],
+    ]
+
+
+def test_plan_packs_many_suites_into_the_shards_of_the_reset_policy(
+    repo: Path,
+) -> None:
+    cases = repo / "oracle" / "cases"
+    extra = [f"s{i:02d}" for i in range(2 * suite_plan.SHARDS_PER_TARGET + 1)]
+    steps = {"alpha": 1, "beta": 1}
+    for idx, name in enumerate(extra):
+        _steps(cases, name, idx + 1)
+        steps[name] = idx + 1
+
+    def loads(shards: list[list[str]], per_step: int) -> list[int]:
+        return [sum(steps[tok.split(":")[0]] * per_step for tok in s) for s in shards]
+
+    # no committed result: every run is reset=each, the larger limit applies
+    each = _gw1_shards(repo)
+    assert len(each) == suite_plan.SHARDS_PER_TARGET
+    assert sorted(tok for s in each for tok in s) == sorted(f"{n}:each" for n in steps)
+    assert all(len(s) > 1 for s in each)  # more suites than shards: they share
+    assert max(loads(each, 2)) - min(loads(each, 2)) <= 2 * max(steps.values())
+    # a target whose suites share a gateway (reset=0) gets the smaller limit
+    _tsv(repo, "GW1", "010000", "alpha", reset="0")
+    shared = _gw1_shards(repo)
+    assert suite_plan.SHARDS_PER_SHARED_TARGET < suite_plan.SHARDS_PER_TARGET
+    assert len(shared) == suite_plan.SHARDS_PER_SHARED_TARGET
+    assert sorted(tok for s in shared for tok in s) == sorted(f"{n}:0" for n in steps)
+    assert max(loads(shared, 1)) - min(loads(shared, 1)) <= max(steps.values())
+    # the other target keeps its own policy and limit
+    gw2 = [
+        j
+        for j in suite_plan.plan(repo)
+        if j["target"] == "oracle/targets/GW2/020000.yaml"
+    ]
+    assert len(gw2) == suite_plan.SHARDS_PER_TARGET
+
+
+def test_plan_runs_a_no_reply_suite_with_reset_each(repo: Path) -> None:
+    cases = repo / "oracle" / "cases"
+    (cases / "quiet-no-reply.cases").write_text("down *1*19*31##\n")
+    _tsv(repo, "GW1", "010000", "alpha", reset="0")  # GW1's usual policy
+    # even a committed result with another policy does not keep it
+    _tsv(repo, "GW1", "010000", "quiet-no-reply", reset="0")
+    assert [j["runs"] for j in suite_plan.plan(repo)] == [
+        "alpha:0 beta:0 quiet-no-reply:each",
+        "alpha:each beta:each quiet-no-reply:each",
     ]
 
 
@@ -593,3 +654,97 @@ def test_main(repo, tmp_path, monkeypatch, capsys) -> None:
     )
     assert got == 0
     assert len(seen) == 2  # a new result is reproduced before it is kept
+
+
+@pytest.mark.parametrize(
+    ("suite", "tod_sec", "want"),
+    [
+        ("lights-level", 0 * 3600 + 5 * 60, 0.0),
+        ("who13-clock", 10 * 3600, 0.0),
+        ("who13-clock", 14 * 3600 + 25 * 60, 6 * 60 + 5.0),
+        ("who13-clock-readback", 22 * 3600 + 50 * 60, 1 * 60 + 5.0),
+        ("who13-clock", 23 * 3600 + 55 * 60, 16 * 60 + 5.0),
+        ("who13-clock", 0 * 3600 + 9 * 60, 2 * 60 + 5.0),
+        ("who13-clock", 0 * 3600 + 11 * 60 + 5, 0.0),
+    ],
+)
+def test_clock_blackout_wait(suite: str, tod_sec: int, want: float) -> None:
+    day = 1763683200.0  # exact UTC midnight
+    assert suite_plan.clock_blackout_wait(suite, day + tod_sec) == want
+
+
+def test_run_target_defers_and_waits_for_clock_blackout(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    cases = repo / "oracle" / "cases"
+    (cases / "who13-clock.cases").write_text("down *#13**0##\n")
+    _tsv(repo, "GW1", "010000", "alpha")
+    _tsv(repo, "GW1", "010000", "who13-clock")
+
+    day = 1763683200.0  # UTC midnight
+    # 1. During blackout with another non-clock suite left: defer without sleep
+    now = [day + 5 * 60]  # 00:05 UTC (inside blackout)
+    sleeps: list[float] = []
+    order: list[str] = []
+
+    def fake_runner_defer(argv: list[str]) -> int:
+        suite = Path(argv[5]).stem
+        order.append(suite)
+        # Running alpha advances the wall clock past 00:11:05 UTC
+        if suite == "alpha":
+            now[0] = day + 12 * 60
+        out = Path(argv[argv.index("-o") + 1])
+        ref = suite_plan.result_file(repo, "GW1", "010000", suite)
+        out.write_text(ref.read_text())
+        return 0
+
+    got = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "who13-clock:each alpha:each",
+        tmp_path / "out1",
+        fake_runner_defer,
+        now_fn=lambda: now[0],
+        sleep_fn=sleeps.append,
+    )
+    assert got == 0
+    assert order == ["alpha", "who13-clock"]
+    assert sleeps == []
+
+    # 2. When only who13-clock remains (and for a second run that drifts back
+    # into a blackout window): sleep until the window clears
+    (cases / "who13-clock-readback.seq").write_text("down *#13**0##\n")
+    now2 = [day + 23 * 3600 + 55 * 60]  # 23:55 UTC
+    sleeps2: list[float] = []
+    calls = {"n": 0}
+
+    def fake_sleep(sec: float) -> None:
+        sleeps2.append(sec)
+        now2[0] += sec
+
+    def fake_runner_new(argv: list[str]) -> int:
+        calls["n"] += 1
+        out = Path(argv[argv.index("-o") + 1])
+        out.write_text("# suite=who13-clock-readback\nrow\n")
+        # Push clock into the 14:20..14:31:05 blackout before the second run
+        if calls["n"] == 1:
+            now2[0] = day + 14 * 3600 + 29 * 60
+        return 0
+
+    got2 = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "who13-clock-readback:0",
+        tmp_path / "out2",
+        fake_runner_new,
+        now_fn=lambda: now2[0],
+        sleep_fn=fake_sleep,
+    )
+    assert got2 == 0
+    assert sleeps2 == [16 * 60 + 5.0, 2 * 60 + 5.0]
+    err = capsys.readouterr().err
+    assert "waiting 965s to clear UTC clock blackout window" in err
+    assert "waiting 125s before second run to clear UTC clock blackout window" in err
