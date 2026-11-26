@@ -68,8 +68,32 @@ INPUT_KEYS = (
 )
 RESET = re.compile(r"^(each|0|batch-[1-9][0-9]*)$")
 CASE_SUFFIXES = (".cases", ".seq")
-SHARDS_PER_TARGET = 2
+# Shards per target, by the reset policy most of the target's suites use.
+# reset=each is sized for the slowest target: 3488/030205 needs about 12.5 s per
+# step and run, a new suite runs twice, and one shard must stay well below the
+# 270-minute step timeout of suites.yml. A target that keeps one gateway for the
+# steps of a suite is several times faster and needs far fewer shards.
+SHARDS_PER_TARGET = 10
+SHARDS_PER_SHARED_TARGET = 4
 MIN_RUNS_TO_SHARD = 6
+# A frame a gateway does not answer at all (no ACK, no NACK) can leave it
+# answering nothing behind it in the same run, and the driver restarts a gateway
+# only after a crash. A suite named *-no-reply therefore always runs with
+# reset=each: a fresh gateway for every step, on every target.
+NO_REPLY_SUFFIX = "-no-reply"
+# Suites whose firmware behaviour depends on host UTC time-of-day:
+# - 23:50..00:10:59 UTC: bt_device suppresses SCS bus clock broadcasts on
+#   2-digit PIC gateways (and 00:00 rolls the date).
+# - 14:30 UTC / 22:50 UTC: who13-clock writes 14:30:00 and 22:50:00, which
+#   bt_device skips when the host UTC hour:minute already matches.
+# Each window includes a 10-minute lead buffer so a run started just before it
+# completes cleanly before the boundary, plus 5 seconds of tail margin.
+CLOCK_BLACKOUT_PREFIX = "who13-clock"
+CLOCK_BLACKOUT_WINDOWS: tuple[tuple[int, int], ...] = (
+    (14 * 3600 + 20 * 60, 14 * 3600 + 31 * 60 + 5),
+    (22 * 3600 + 40 * 60, 22 * 3600 + 51 * 60 + 5),
+    (23 * 3600 + 40 * 60, 24 * 3600 + 11 * 60 + 5),
+)
 SMOKE_SUITES: tuple[str, ...] = (
     "lights-level",
     "what19",
@@ -215,13 +239,19 @@ def plan(
     scope: set[Pair] | None = None,
     *,
     mode: str = "full",
-    max_shards: int = SHARDS_PER_TARGET,
+    max_shards: int | None = None,
 ) -> list[dict[str, str]]:
-    """Matrix items per target (sharded when a target runs many suites)."""
+    """Matrix items per target (sharded when a target runs many suites).
+    max_shards=None takes the limit of the target's usual reset policy."""
     names = suites(root)
     jobs: list[dict[str, str]] = []
     for product, version in targets(root):
         fallback = default_reset(root, product, version)
+        limit = max_shards
+        if limit is None:
+            limit = (
+                SHARDS_PER_TARGET if fallback == "each" else SHARDS_PER_SHARED_TARGET
+            )
         runs: list[tuple[str, str]] = []
         for suite in names:
             if scope is not None:
@@ -230,14 +260,15 @@ def plan(
             elif mode == "smoke" and suite not in SMOKE_SUITES:
                 continue
             committed = result_file(root, product, version, suite)
-            reset = (
-                header(committed).get("reset", fallback)
-                if committed.is_file()
-                else fallback
-            )
+            if suite.endswith(NO_REPLY_SUFFIX):
+                reset = "each"
+            elif committed.is_file():
+                reset = header(committed).get("reset", fallback)
+            else:
+                reset = fallback
             runs.append((suite, reset))
         if runs:
-            for shard in _shard_runs(runs, names, max_shards=max_shards):
+            for shard in _shard_runs(runs, names, max_shards=limit):
                 jobs.append(
                     {
                         "catalog": f"catalog/{product}/{version}.yaml",
@@ -375,6 +406,19 @@ def _keep_evidence(
     dest.with_name(f"{dest.name}.diff").write_text(diff, encoding="utf-8")
 
 
+def clock_blackout_wait(suite: str, now: float) -> float:
+    """Seconds to wait before starting `suite` at UTC epoch `now`."""
+    if not suite.startswith(CLOCK_BLACKOUT_PREFIX):
+        return 0.0
+    tod = now % 86400.0
+    for start, end in CLOCK_BLACKOUT_WINDOWS:
+        if start <= tod < end:
+            return end - tod
+        if start <= tod + 86400.0 < end:
+            return end - (tod + 86400.0)
+    return 0.0
+
+
 def run_target(
     root: Path,
     target: str,
@@ -385,6 +429,8 @@ def run_target(
     evidence_dir: Path | None = None,
     *,
     allow_crash_increase: bool = False,
+    now_fn: Callable[[], float] = time.time,
+    sleep_fn: Callable[[float], None] = time.sleep,
 ) -> int:
     """Run each suite on one target; keep only new and stale files in out_dir.
 
@@ -405,7 +451,21 @@ def run_target(
         prefix="own-sysroot-", ignore_cleanup_errors=True
     ) as tmp_sysroot:
         sysroot = Path(tmp_sysroot).resolve() / "sysroot"
-        for suite, reset in parse_runs(runs, root):
+        pending = parse_runs(runs, root)
+        while pending:
+            suite, reset = pending.pop(0)
+            now = now_fn()
+            wait = clock_blackout_wait(suite, now)
+            if wait > 0:
+                if any(clock_blackout_wait(s, now) == 0 for s, _ in pending):
+                    pending.append((suite, reset))
+                    continue
+                print(
+                    f"{product} {version} {suite}: waiting {wait:.0f}s to clear "
+                    "UTC clock blackout window",
+                    file=sys.stderr,
+                )
+                sleep_fn(wait)
             rel = (
                 Path("results") / product / version / "oracle" / "full" / f"{suite}.tsv"
             )
@@ -442,6 +502,14 @@ def run_target(
                 evidence = (old_side, produced, "re-run")
             elif v in ("new", "stale"):
                 # A result only enters results/ if it reproduces: run it again.
+                second_wait = clock_blackout_wait(suite, now_fn())
+                if second_wait > 0:
+                    print(
+                        f"{product} {version} {suite}: waiting {second_wait:.0f}s "
+                        "before second run to clear UTC clock blackout window",
+                        file=sys.stderr,
+                    )
+                    sleep_fn(second_wait)
                 again = produced.with_name(produced.name + ".again")
                 if not run_once(again):
                     again.write_text("", encoding="ascii")
@@ -543,8 +611,12 @@ def main(argv: list[str] | None = None, runner: Runner = _subprocess_runner) -> 
     ap.add_argument(
         "--shards",
         type=int,
-        default=SHARDS_PER_TARGET,
-        help=f"maximum shards per target (default: {SHARDS_PER_TARGET})",
+        default=None,
+        help=(
+            "maximum shards per target (default: "
+            f"{SHARDS_PER_TARGET} for a reset=each target, "
+            f"{SHARDS_PER_SHARED_TARGET} for the others)"
+        ),
     )
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--target")

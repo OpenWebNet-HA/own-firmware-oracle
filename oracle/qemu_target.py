@@ -217,6 +217,44 @@ def prepare_stack_open(cfg_path: Path, active_clients: set[str]) -> None:
     _trim_openserver_ini(cfg_path.parent / "openserver", active_clients)
 
 
+def _strip_empty_clock_coords(conf_path: Path) -> None:
+    """Remove empty <latitude>/<longitude> tags from a staged conf.xml file.
+
+    Factory conf.xml.def on MH202 ships empty <latitude></latitude> and
+    <longitude></longitude> elements, which bt_device parses as (0.0, 0.0)
+    instead of its unconfigured sentinel and uses to emit unsolicited
+    sunrise/sunset events (*13*26## / *13*27##) twice a day.
+    """
+    if not conf_path.is_file():
+        return
+    try:
+        tree = ET.parse(conf_path)  # noqa: S314 - verified sysroot file
+    except ET.ParseError:
+        return
+    clock_el = tree.find("setup/generale/clock")
+    if clock_el is None:
+        return
+    removed = False
+    for tag in ("latitude", "longitude"):
+        for child in list(clock_el.findall(tag)):
+            if not (child.text or "").strip():
+                clock_el.remove(child)
+                removed = True
+    if removed:
+        tree.write(
+            conf_path,
+            encoding="utf-8",
+            xml_declaration=True,
+            short_empty_elements=False,
+        )
+
+
+def prepare_conf_xml(cfg_dir: Path) -> None:
+    """Sanitize staged conf.xml / restore/conf.xml.def in the work sysroot."""
+    for rel in ("conf.xml", "restore/conf.xml.def"):
+        _strip_empty_clock_coords(cfg_dir / rel)
+
+
 def read_ports_from_stack_open(cfg_path: Path) -> dict[str, int]:
     """Read the listening ports for each daemon from stack_open.xml."""
     ports: dict[str, int] = {}
@@ -691,6 +729,7 @@ class QemuTarget:
         cfg_path = self.sysroot / self.spec.runtime.stack_config
         active = self._active_clients()
         prepare_stack_open(cfg_path, active)
+        prepare_conf_xml(cfg_path.parent)
         ports = read_ports_from_stack_open(cfg_path)
 
         self._devices = run.open_devices(self.spec.runtime)
