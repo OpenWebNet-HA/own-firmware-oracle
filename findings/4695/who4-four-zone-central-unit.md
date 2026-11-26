@@ -2,6 +2,14 @@
 
 **Epistemic status:** `firmware_observed` (static analysis + M16C/60 P-code verification of `LH4695_AM5875_010103.fwz`, emulated `harness=full` across all 13 active gateways, and closed-loop `harness=plant:cu4695` across 6 gateways). Nothing here is labelled `experimentally_confirmed` beyond cross-referencing the reporter's `F454 2.0.51` captures in [OpenWebNet-HA/MyHOME#994](https://github.com/OpenWebNet-HA/MyHOME/issues/994).
 
+- **Original `4695` M16C/60 P-Code Runner:** [`tools/pcode_4695.py`](../../tools/pcode_4695.py) (`pypcode` `4.1.0`, SLEIGH `M16C/60:LE:16:default`, `4` suites / `79` steps). Executes the unmodified 128 KB `flat_0E0000_0FFFFF.bin` image from hardware reset with deterministic peripheral stubs (32 KB I2C EEPROM, UART0 PIC RX/TX queue, fast-return non-protocol hardware wait hooks, periodic 10-bit `AN0` ADC load-check input) and the architectural 20-bit `LDE.B`/`LDE.W disp20[A0]` SLEIGH adjustment:
+  ```bash
+  python tools/pcode_4695.py \
+    --fwz LH4695_AM5875_010103.fwz \
+    --mot 4695_010103.mot \
+    --flash-bin flat_0E0000_0FFFFF.bin \
+    --out who4-4695-pcode-execution.json
+  ```
 - **Stateless Fleet Suite:** [`oracle/cases/thermo-four-zone-central.cases`](../../oracle/cases/thermo-four-zone-central.cases) (`81` steps: `63` `down` + `18` `up`, `suite_sha256=fb5095d09c78753cd3909431989650e986cecce36f661356d50a2c6ceb960c0d`) -> `results/<Product>/<Version>/oracle/full/thermo-four-zone-central.tsv` (13 gateways).
 - **Closed-Loop Virtual Plant Fixture & Suite:**
   - Fixture: [`oracle/plant/fixtures/cu4695.yaml`](../../oracle/plant/fixtures/cu4695.yaml) (`plant_sha256=cc56acd2db907083f1b54e6c2aa0b26823e358ff5ad923ac2559d39adb1b0dc9`)
@@ -20,12 +28,12 @@
 
 ### Verified `4695 v01.01.03` Protocol Facts (`firmware_observed`)
 
-1. **Base Address `0x14B9 = ZA * 10 + ZB` (`1..96`, `#0#1..#0#96`)**:
+1. **Base Address `0x14B9 = ZA * 10 + ZB` (`1..99`, `#0#1..#0#99`; `1..96` when all four zones `N..N+3` lie in `1..99`)**:
    - Computed at `0x0E9532` from configurators `ZA` and `ZB` (`1..99`, managing 4 consecutive zones `N .. N+3`; e.g. `ZA=2, ZB=1` -> `0x15 = 21` `#0#21` managing zones `21..24`, matching BTicino Technical Guide `U1809C` pp. 54–55).
    - At `0x0EA185..0x0EA19B`, incoming extended frames with `B1 == 0x00` (`#0`, `#1`, `#3`) or `B1 != 0x14B9` are unconditionally dropped.
 2. **Built-In Master Zone `N` Drops Direct `90/91/92/93` Writes (`0x0E987C..0x0E989C`)**:
    - The `4695` contains the Zone `N` temperature probe internally (answering `99 <N> 30 <00|12|0E|0D|13>` polls at `0x0E9C7F..0x0EA180`), but its short-frame RX dispatcher (`0x0E987C`) handles only `0x99` (read) and `0x95` on `B1 == 0x14B9`.
-   - Direct zone setpoint (`90/91/92 <N> 30 <T*2>`) and zone mode (`93 <N> 30 <cmd>`) writes to Zone `N` (`Z=1` on `#0#1`) are **silently dropped**, and no external slave probe exists at `Z=N`. External slave probes (`N+1..N+3`, e.g. `Z=3, 4`) DO accept direct `90/91/92/93` writes on gateways that forward them.
+   - Direct zone setpoint (`90/91/92 <N> 30 <T*2>`) and zone mode (`93 <N> 30 <cmd>`) writes to Zone `N` (`Z=1` on `#0#1`) are **silently dropped**, and no external slave probe exists at `Z=N`. External slave probes (`N+1..N+3`, e.g. `Z=3, 4`) DO accept direct `90/91/92/93` writes on gateways that forward them. On `#0#N` writes while built-in Zone `N` follows central (`0x1557 == 0x0E`), original `4695` `01.01.03` emits Zone `N` `DIMENSION 12` (`$06 D2 <N> 03 04 12 ...`) when central operating mode or Zone `N` effective setpoint changes (`dim14-10`) and omits it when repeating an identical mode and setpoint (`dim14-11`) or when Zone `N` is in local override (whereas the simplified `plant:cu4695` Python model omits immediate Zone `N` `DIMENSION 12` unconditionally).
 3. **`C2` Controlled-Zone Subcode (`#Z` / `#Z#N` / `*4*311*#0#N##`) Has NO Write Handler**:
    - Under `B3 = 0x02` (`0x0EA1D2..0x0EA222`), `4695` handles `B4 = 0xC1` and `0xBA` — **`B4 = 0xC2` is absent**.
    - Both `*#4*#3*#14*0180*3##` (`D1 00 03 02 C2 03 02 24`) and BTouch `*#4*#3#1*#14*0175*3##` (`D1 01 03 02 C2 03 02 23`, `#994` trace 2 frame 37), as well as `*4*311*#0#1##` (`D1 01 03 02 C2 00 00 00`), are dropped by `4695`. `C2` is implemented **read-only** under `B3 = 0x03` (`0x0EACC6` -> `0x0EBD1A`, `*#4*#3#1##`).
@@ -38,12 +46,12 @@
    - Conversely, `*4*1*#0#1##` (`C1 F0`) and `*4*0*#0#1##` (`C1 F1`) call `0x0F4ED0`:
      - If `requested_season == 0x17B5` (`0x0F4ED6`), `4695` exits immediately with **`TX=[]`**, leaving `0x17B4 = 6` (`OFF`) untouched!
      - If `requested_season != 0x17B5` (`0x0F4EEE`), `4695` switches season into **Protection (`C0 17`/`C0 27` -> `*4*102/202*#0#N##`)**, not weekly program or manual.
-   - Scenarios `1201..1203` / `3200` (`B5 = 0x13/0x03`) are dropped (`0x03` absent from `0x0EA34A`); `4695` implements its 3 scenarios under `B5 = 0x04` (encoded by gateways as `*4*115#1101*#0#1##` / `*4*315#3101*#0#1##`).
+   - Scenarios `1201..1203` / `3200` (`B5 = 0x13/0x03`) are dropped (`0x03` absent from `0x0EA34A`); `4695` implements daily Holiday mode with weekly return program `1..3` (`B6 = 0x00..0x02`) under `B5 = 0x04/0x14/0x24` (`*4*115#1101..315#3103*#0#N##`, per `U1809F_U_EN.pdf` p. 15) and multi-day vacation entry/exit under `B5 = 0x05/0x15/0x25` (`*4*13DDD#P..33DDD#P*#0#N##`, `*4*3000*#0#N##`, `*4*3000#P*#0#N##`). Manual `DIMENSION 14` setpoints (`B5 = 0x02/0x12/0x22`) accept `5.0..35.0 °C` (`B6 = 0x0A..0x46`) and drop `35.5..40.0 °C` (`0x47..0x50`).
 6. **`C0` Diagnostic Flags (`0x0EB8FB..0x0EB965`) & Real ADC Backup-Battery Fault (`WHAT 31`)**:
    - `D2 <CU> 03 04 C0 <op> <arg> <flags>` encodes: bit 0 (`0`=`*4*20*` remote disabled, `1`=`*4*21*` remote enabled), bit 1 (`0x02`=`*4*30*` probe failure), bit 2 (`0x04`=`*4*31*` backup battery fault from 10-bit `AD0` `0x03C0` load check at `0x0EC9E9..0x0ECBFD`), bit 3 (`0x08`=`*4*22*` >=1 zone in Local OFF), bit 4 (`0x10`=`*4*23*` Local Protection), bit 5 (`0x20`=`*4*24*` Local Manual).
 7. **Actuator `DIMENSION 20` (`WHERE = #0#1` Spec Collision vs Gateway Decoding)**:
    - `4695`'s own pump/actuator bus frames (`BF <CU> 30 00/01`, `BA 00/<CU> 30 00/01`) are `silent` on all gateways.
-   - Although the OpenWebNet WHO=4 PDF specification (`ownkb:claim:c003280`) writes Master Pump Actuator 1 as `*#4*#0#1*20*V##` (creating a grammar collision with 4-zone central unit `#0#1`), actual Gen B/C/D gateway translators (`bt_termo` / `coso`) decode `B7 80 31 01` (`0x80 | 0`, `N=1`) as `*#4*0#1*20*0##`, `B7 00 31 01` (`0x00`, `N=1`) as `*#4*100*20*0##`, and `B7 00 30 01` (`0x00`, `N=0`) as `*#4*#0*20*0##`, while outbound `*#4*#0#1*20##` on Gen C/D sends `A9 01 30 10` (querying Zone 1 actuator `1#1` -> `*#4*1#1*20*0##`).
+   - Although the OpenWebNet WHO=4 PDF specification (`ownkb:claim:c003280`) writes Master Pump Actuator 1 as `*#4*#0#1*20*V##` (creating a grammar collision with 4-zone central unit `#0#1`), actual Gen B/C/D gateway translators (`bt_termo` / `coso`) decode `B7 80 31 01` (`0x80 | 0`, `N=1`) as `*#4*0#1*20*0##`, `B7 00 31 01` (`0x00`, `N=1`) as `*#4*100*20*0##`, and `B7 00 30 01` (`0x00`, `N=0`) as `*#4*#0*20*0##`, while outbound `*#4*#0#1*20##` on Gen C/D (`F454`, `F459`, `F450`, `MyHomeServer1`, `F461`, `F460`, `3488`; `MH202` `010024` returns `nack, silent` with no bus output) sends `A9 01 30 10` (querying Zone 1 actuator `1#1` -> `*#4*1#1*20*0##`).
 
 ---
 

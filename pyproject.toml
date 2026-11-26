@@ -70,6 +70,7 @@ known-first-party = [
     "live_probe",
     "mcp_index",
     "oracle",
+    "pcode_4695",
     "plan",
     "schema",
     "suite_plan",
@@ -85,7 +86,7 @@ mypy_path = "tools"
 files = ["tools", "oracle"]
 
 [[tool.mypy.overrides]]
-module = ["boto3", "OWNd", "OWNd.*"]  # optional; external dependencies
+module = ["boto3", "OWNd", "OWNd.*", "pypcode"]  # optional; external dependencies
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
