@@ -654,3 +654,97 @@ def test_main(repo, tmp_path, monkeypatch, capsys) -> None:
     )
     assert got == 0
     assert len(seen) == 2  # a new result is reproduced before it is kept
+
+
+@pytest.mark.parametrize(
+    ("suite", "tod_sec", "want"),
+    [
+        ("lights-level", 0 * 3600 + 5 * 60, 0.0),
+        ("who13-clock", 10 * 3600, 0.0),
+        ("who13-clock", 14 * 3600 + 25 * 60, 6 * 60 + 5.0),
+        ("who13-clock-readback", 22 * 3600 + 50 * 60, 1 * 60 + 5.0),
+        ("who13-clock", 23 * 3600 + 55 * 60, 16 * 60 + 5.0),
+        ("who13-clock", 0 * 3600 + 9 * 60, 2 * 60 + 5.0),
+        ("who13-clock", 0 * 3600 + 11 * 60 + 5, 0.0),
+    ],
+)
+def test_clock_blackout_wait(suite: str, tod_sec: int, want: float) -> None:
+    day = 1763683200.0  # exact UTC midnight
+    assert suite_plan.clock_blackout_wait(suite, day + tod_sec) == want
+
+
+def test_run_target_defers_and_waits_for_clock_blackout(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    cases = repo / "oracle" / "cases"
+    (cases / "who13-clock.cases").write_text("down *#13**0##\n")
+    _tsv(repo, "GW1", "010000", "alpha")
+    _tsv(repo, "GW1", "010000", "who13-clock")
+
+    day = 1763683200.0  # UTC midnight
+    # 1. During blackout with another non-clock suite left: defer without sleep
+    now = [day + 5 * 60]  # 00:05 UTC (inside blackout)
+    sleeps: list[float] = []
+    order: list[str] = []
+
+    def fake_runner_defer(argv: list[str]) -> int:
+        suite = Path(argv[5]).stem
+        order.append(suite)
+        # Running alpha advances the wall clock past 00:11:05 UTC
+        if suite == "alpha":
+            now[0] = day + 12 * 60
+        out = Path(argv[argv.index("-o") + 1])
+        ref = suite_plan.result_file(repo, "GW1", "010000", suite)
+        out.write_text(ref.read_text())
+        return 0
+
+    got = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "who13-clock:each alpha:each",
+        tmp_path / "out1",
+        fake_runner_defer,
+        now_fn=lambda: now[0],
+        sleep_fn=sleeps.append,
+    )
+    assert got == 0
+    assert order == ["alpha", "who13-clock"]
+    assert sleeps == []
+
+    # 2. When only who13-clock remains (and for a second run that drifts back
+    # into a blackout window): sleep until the window clears
+    (cases / "who13-clock-readback.seq").write_text("down *#13**0##\n")
+    now2 = [day + 23 * 3600 + 55 * 60]  # 23:55 UTC
+    sleeps2: list[float] = []
+    calls = {"n": 0}
+
+    def fake_sleep(sec: float) -> None:
+        sleeps2.append(sec)
+        now2[0] += sec
+
+    def fake_runner_new(argv: list[str]) -> int:
+        calls["n"] += 1
+        out = Path(argv[argv.index("-o") + 1])
+        out.write_text("# suite=who13-clock-readback\nrow\n")
+        # Push clock into the 14:20..14:31:05 blackout before the second run
+        if calls["n"] == 1:
+            now2[0] = day + 14 * 3600 + 29 * 60
+        return 0
+
+    got2 = suite_plan.run_target(
+        repo,
+        "oracle/targets/GW1/010000.yaml",
+        "/img.zip",
+        "who13-clock-readback:0",
+        tmp_path / "out2",
+        fake_runner_new,
+        now_fn=lambda: now2[0],
+        sleep_fn=fake_sleep,
+    )
+    assert got2 == 0
+    assert sleeps2 == [16 * 60 + 5.0, 2 * 60 + 5.0]
+    err = capsys.readouterr().err
+    assert "waiting 965s to clear UTC clock blackout window" in err
+    assert "waiting 125s before second run to clear UTC clock blackout window" in err

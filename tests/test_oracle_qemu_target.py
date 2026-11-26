@@ -192,6 +192,58 @@ def test_prepare_stack_open(tmp_path):
     assert "Key=Value" in ini_content
 
 
+def test_prepare_conf_xml(tmp_path: Path) -> None:
+    # Missing files are a no-op
+    qemu_target.prepare_conf_xml(tmp_path)
+
+    # Malformed XML is ignored without raising
+    conf = tmp_path / "conf.xml"
+    conf.write_text("<not-closed", encoding="utf-8")
+    qemu_target.prepare_conf_xml(tmp_path)
+    assert conf.read_text(encoding="utf-8") == "<not-closed"
+
+    # XML without setup/generale/clock is left untouched
+    no_clock = "<configuratore><setup/></configuratore>"
+    conf.write_text(no_clock, encoding="utf-8")
+    qemu_target.prepare_conf_xml(tmp_path)
+    assert conf.read_text(encoding="utf-8") == no_clock
+
+    # Non-empty coordinates are preserved and file is not rewritten
+    populated = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<configuratore><setup><generale><clock>"
+        "<fuso>001</fuso><latitude>45.5</latitude><longitude>9.2</longitude>"
+        "</clock></generale></setup></configuratore>\n"
+    )
+    conf.write_text(populated, encoding="utf-8")
+    qemu_target.prepare_conf_xml(tmp_path)
+    assert conf.read_text(encoding="utf-8") == populated
+
+    # Empty latitude/longitude tags in restore/conf.xml.def are removed while
+    # keeping sibling fields and non-self-closing empty elements elsewhere
+    restore_dir = tmp_path / "restore"
+    restore_dir.mkdir()
+    conf_def = restore_dir / "conf.xml.def"
+    conf_def.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<configuratore isValid="false">\n'
+        "<setup><generale><clock>\n"
+        "<fuso>001</fuso>\n"
+        "<latitude></latitude>\n"
+        "<longitude>   </longitude>\n"
+        "</clock></generale></setup>\n"
+        "<impianto></impianto>\n"
+        "</configuratore>\n",
+        encoding="utf-8",
+    )
+    qemu_target.prepare_conf_xml(tmp_path)
+    result = conf_def.read_text(encoding="utf-8")
+    assert "<latitude" not in result
+    assert "<longitude" not in result
+    assert "<fuso>001</fuso>" in result
+    assert "<impianto></impianto>" in result
+
+
 def test_read_ports_from_stack_open(tmp_path):
     assert qemu_target.read_ports_from_stack_open(tmp_path / "nope.xml") == {}
 

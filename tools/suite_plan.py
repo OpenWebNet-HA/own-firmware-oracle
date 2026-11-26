@@ -81,6 +81,19 @@ MIN_RUNS_TO_SHARD = 6
 # only after a crash. A suite named *-no-reply therefore always runs with
 # reset=each: a fresh gateway for every step, on every target.
 NO_REPLY_SUFFIX = "-no-reply"
+# Suites whose firmware behaviour depends on host UTC time-of-day:
+# - 23:50..00:10:59 UTC: bt_device suppresses SCS bus clock broadcasts on
+#   2-digit PIC gateways (and 00:00 rolls the date).
+# - 14:30 UTC / 22:50 UTC: who13-clock writes 14:30:00 and 22:50:00, which
+#   bt_device skips when the host UTC hour:minute already matches.
+# Each window includes a 10-minute lead buffer so a run started just before it
+# completes cleanly before the boundary, plus 5 seconds of tail margin.
+CLOCK_BLACKOUT_PREFIX = "who13-clock"
+CLOCK_BLACKOUT_WINDOWS: tuple[tuple[int, int], ...] = (
+    (14 * 3600 + 20 * 60, 14 * 3600 + 31 * 60 + 5),
+    (22 * 3600 + 40 * 60, 22 * 3600 + 51 * 60 + 5),
+    (23 * 3600 + 40 * 60, 24 * 3600 + 11 * 60 + 5),
+)
 SMOKE_SUITES: tuple[str, ...] = (
     "lights-level",
     "what19",
@@ -393,6 +406,19 @@ def _keep_evidence(
     dest.with_name(f"{dest.name}.diff").write_text(diff, encoding="utf-8")
 
 
+def clock_blackout_wait(suite: str, now: float) -> float:
+    """Seconds to wait before starting `suite` at UTC epoch `now`."""
+    if not suite.startswith(CLOCK_BLACKOUT_PREFIX):
+        return 0.0
+    tod = now % 86400.0
+    for start, end in CLOCK_BLACKOUT_WINDOWS:
+        if start <= tod < end:
+            return end - tod
+        if start <= tod + 86400.0 < end:
+            return end - (tod + 86400.0)
+    return 0.0
+
+
 def run_target(
     root: Path,
     target: str,
@@ -403,6 +429,8 @@ def run_target(
     evidence_dir: Path | None = None,
     *,
     allow_crash_increase: bool = False,
+    now_fn: Callable[[], float] = time.time,
+    sleep_fn: Callable[[float], None] = time.sleep,
 ) -> int:
     """Run each suite on one target; keep only new and stale files in out_dir.
 
@@ -423,7 +451,21 @@ def run_target(
         prefix="own-sysroot-", ignore_cleanup_errors=True
     ) as tmp_sysroot:
         sysroot = Path(tmp_sysroot).resolve() / "sysroot"
-        for suite, reset in parse_runs(runs, root):
+        pending = parse_runs(runs, root)
+        while pending:
+            suite, reset = pending.pop(0)
+            now = now_fn()
+            wait = clock_blackout_wait(suite, now)
+            if wait > 0:
+                if any(clock_blackout_wait(s, now) == 0 for s, _ in pending):
+                    pending.append((suite, reset))
+                    continue
+                print(
+                    f"{product} {version} {suite}: waiting {wait:.0f}s to clear "
+                    "UTC clock blackout window",
+                    file=sys.stderr,
+                )
+                sleep_fn(wait)
             rel = (
                 Path("results") / product / version / "oracle" / "full" / f"{suite}.tsv"
             )
@@ -460,6 +502,14 @@ def run_target(
                 evidence = (old_side, produced, "re-run")
             elif v in ("new", "stale"):
                 # A result only enters results/ if it reproduces: run it again.
+                second_wait = clock_blackout_wait(suite, now_fn())
+                if second_wait > 0:
+                    print(
+                        f"{product} {version} {suite}: waiting {second_wait:.0f}s "
+                        "before second run to clear UTC clock blackout window",
+                        file=sys.stderr,
+                    )
+                    sleep_fn(second_wait)
                 again = produced.with_name(produced.name + ".again")
                 if not run_once(again):
                     again.write_text("", encoding="ascii")
