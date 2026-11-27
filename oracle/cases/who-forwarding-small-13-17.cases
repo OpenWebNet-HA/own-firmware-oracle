@@ -1,7 +1,8 @@
 ; Which command frames of WHO 13, 14, 15 and 17 leave a gateway (*13*WHAT*##, *14*WHAT*32##,
 ; *15*WHAT*0001##, *17*WHAT*1##).
 ; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same values for
-; every WHO, WHAT 0..36, 40, 50, 60, 99, 100, 101, 255, 256, 1000, 9999.
+; every WHO, WHAT 0..36, 40, 50, 60, 99, 100, 101, 255, 256, 1000, 9999 (omitting *13*35*##,
+; which is nondeterministic under QEMU thread scheduling -- see section 1 below).
 ;
 ; Result (stock settings, two identical runs per target, 13 targets): per group below, the
 ; gateways that forward the frame to the bus or answer it on the event session, and the
