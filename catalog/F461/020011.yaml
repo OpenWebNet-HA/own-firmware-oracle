@@ -35,6 +35,6 @@ thermo:
   translator: "home/bticino/bin/bt_termo"
   binary_sha256: "23958a97b4808421de65c13ab254bc76c0f68b10416e3c6f24b9adb108bcf29f"
   findings: "findings/bt-termo.md"
-  notes: "Gen D bt_termo (AArch64, primary reference binary for findings/bt-termo.md): 0 instruction diffs vs F460/020012; DIM 2..8/11..22/27..32/60, actuator codes 0..22 & 100..200, full inbound #DIM echoes, WHAT 39/41/42/45 outbound & 43/44 inbound, 4001/4002 pump calls; WHO 1004 dead code."
+  notes: "Gen D bt_termo (AArch64, primary reference binary for findings/bt-termo.md): 0 instruction diffs vs F460/020012; DIM 2..8/11..22/27..32/60, actuator codes 0..22 & 100..200, full inbound #DIM echoes, WHAT 39/41/42/45 outbound & 43/44 inbound, 4001/4002 pump calls; WHO 1004 routed via bt_device (dead code inside bt_termo)."
 
 status: unpackable
