@@ -8,10 +8,10 @@
 # bus=pty
 # framer=line
 # responder=pic:plant:cu4695
-# plant_sha256=cc56acd2db907083f1b54e6c2aa0b26823e358ff5ad923ac2559d39adb1b0dc9
+# plant_sha256=9450834f28e11fc6a0703f8d0d44c691e7fff9b3d8931d87fbad2caa433e3c0f
 # settle_ms=3000
 # suite=plant-cu4695
-# suite_sha256=7c9c0e5fdbdd51b5ea416505f83082769120cb8183d050370055adf1369b4fc7
+# suite_sha256=92fc6fb2bac6a406ab2a07402d407b1e4b992c88237423e6a2ca8323ca5db144
 # oracle_version=3
 direction	input	reply	verdict	output
 down	*#4*#0#1##	nack	out	bus:24 30 34 39 39 30 30 33 30 43 30 0d | bus_rx:24 30 30 0d
@@ -45,6 +45,7 @@ down	*4*1103*#0#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 31 31 30 
 down	*4*311*#0#1##	nack	silent	-
 down	*4*3100*#0#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 46 46 30 30 0d | bus_rx:24 30 30 0d
 down	*#4*#0*20##	nack	silent	-
+down	*#4*0#1*20##	nack	silent	-
 down	*#4*1#1*20##	nack	silent	-
 down	*#4*3#1*20##	nack	silent	-
 down	*4*303*#0#1##	ack	out	bus:24 30 36 44 31 30 30 30 33 30 32 43 31 30 36 30 30 30 30 0d | bus_rx:24 30 30 0d
