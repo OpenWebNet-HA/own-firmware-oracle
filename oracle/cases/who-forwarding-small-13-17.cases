@@ -56,8 +56,11 @@ down *13*1000*##
 down *13*9999*##
 ;    forwarded by 3488, F459, F460, F461, MyHomeServer1
 down *13*29*##
-;    forwarded by 3488, F460, F461, MyHomeServer1
-down *13*35*##
+;    *13*35*## (answered on event session by 3488, F460, F461, MyHomeServer1) is omitted:
+;    bt_device calls libapplogger.so logger::send_log_tcp(), which spawns send_log_tcp_thread
+;    setting upload_status 1 -> 2 while bt_device's select() loop polls and emits *#13**86*%d##.
+;    Depending on QEMU thread scheduling, F460/020012 and F461/020011 nondeterministically emit
+;    either own:*#13**86*2## alone or own:*#13**86*1## | own:*#13**86*2##.
 
 ; 2. *14*N*32##
 ;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
