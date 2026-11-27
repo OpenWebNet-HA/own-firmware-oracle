@@ -45,4 +45,11 @@ password_scheme:
 limits:
   max_expand_mib: 4096   # uncompressed ext4 rootfs images
 
+thermo:
+  generation: "D"
+  translator: "home/bticino/bin/bt_termo"
+  binary_sha256: "f755a29d1d6604b215d34925fcf23e9b270e6ad4cf86d840c0565db5ee1af25d"
+  findings: "findings/bt-termo.md"
+  notes: "Gen D bt_termo (ARM EABI5-HF): protocol-identical WHO 4 core to F460/F461 (DIM 2..8/11..22/27..32/60, actuator codes 0..22 & 100..200, full inbound #DIM echoes, WHAT 39..45, 4001/4002 pump calls); WHO 1004 stripped/dead code."
+
 status: unpackable

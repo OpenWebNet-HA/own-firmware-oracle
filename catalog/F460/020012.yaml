@@ -30,4 +30,11 @@ undecoded_ok:
   - path: "F460_020012.fwz!Image.zip.sha256.sig.zip!Image.zip!Image"
     reason: "ARM64 Linux kernel uncompressed Image"
 
+thermo:
+  generation: "D"
+  translator: "home/bticino/bin/bt_termo"
+  binary_sha256: "8df7400eb9364f77a23c9ca170b2238586e95ecb12acc32591177cd7b1c7b0d5"
+  findings: "findings/bt-termo.md"
+  notes: "Gen D bt_termo (AArch64): 0 instruction diffs vs F461/020011 (DIM 2..8/11..22/27..32/60, actuator codes 0..22 & 100..200, full inbound #DIM echoes, WHAT 39..45, 4001/4002 pump calls); WHO 1004 dead code."
+
 status: unpackable

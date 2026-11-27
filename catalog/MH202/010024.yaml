@@ -27,4 +27,11 @@ password_scheme:
 limits:
   max_expand_mib: 4096
 
+thermo:
+  generation: "C-coso"
+  translator: "home/bticino/libcoso/libplug_thermo_tr.so"
+  binary_sha256: "5e2da864f01b19f4f14dde76e11786234b36c97f4f6778966d6a32f597d1452b"
+  findings: "findings/bt-termo.md"
+  notes: "Gen C-coso independent GLib plugin (coso + libplug_thermo_tr.so + libthermo.so): no DIM 22 crash, no DIM 60, no WHO 1004, actuator codes 0..13 (Z#N only); SIGSEGV on *#4*Z#N##, *#4*Z#4#II##, and *#4*001..099*."
+
 status: unpackable

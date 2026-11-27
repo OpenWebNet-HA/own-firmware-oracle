@@ -23,4 +23,10 @@ password_scheme:
     - "MH201"
     - "bticino"
 
+thermo:
+  generation: "bare-metal"
+  translator: "bare-metal-mcu"
+  findings: "findings/bt-termo.md"
+  notes: "Bare-metal STM32F217 Cortex-M3 scenario module (not Linux bt_termo; not emulated in oracle; see findings/MH201/emulation-strategy.md)."
+
 status: unpackable

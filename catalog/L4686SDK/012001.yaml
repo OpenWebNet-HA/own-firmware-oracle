@@ -31,4 +31,10 @@ password_scheme:
     - "4686SDK"
     - "bticino"
 
+thermo:
+  generation: "bare-metal"
+  translator: "bare-metal-mcu"
+  findings: "findings/bt-termo.md"
+  notes: "Bare-metal Microchip PIC18 USB/RS-232 OpenWebNet-SCS interface (not Linux bt_termo; not emulated; see findings/L4686SDK/README.md)."
+
 status: unpackable
