@@ -1,0 +1,29 @@
+# product=H4684
+# version=020054
+# image_sha256=dd8fbfdfe19fb655a7460c8ea52c86e97167df2a2cdc2bd45cdcd02ebb9d01f4
+# harness=full
+# target_sha256=5a4597747e20d9c3a839467a5ab4b4b45b0069e9bf9c387ce58024f821563bdd
+# adapter=pty-1
+# reset=0
+# bus=pty
+# framer=line
+# responder=pic
+# settle_ms=3000
+# suite=sound-who22-power-area
+# suite_sha256=92ec24fbc7df6ab63d56ab0539eaaff6c5f1b2e4f0d760aef21a41795336537e
+# oracle_version=3
+direction	input	reply	verdict	output
+down	*22*0#4#3*2#1##	nack	silent	-
+down	*22*0#4#3*3#3#1##	nack	silent	-
+down	*22*1#4#1*2#2##	nack	silent	-
+down	*22*1#4#1*2#4##	nack	silent	-
+down	*22*1#4#1*2#5##	nack	silent	-
+down	*22*1#4#3*3#3#1##	nack	silent	-
+down	*22*1#4#5*2#1##	nack	silent	-
+down	*22*1#4#8*2#1##	nack	silent	-
+down	*22*1#4#8*3#3#1##	nack	silent	-
+down	*22*1#4#9*2#1##	nack	silent	-
+down	*22*2#4#3*5#2#1##	nack	silent	-
+down	*22*21#4#3*5#2#1##	nack	silent	-
+down	*22*22#4#3*2#1##	nack	silent	-
+down	*22*23#4#3*5#2#1##	nack	silent	-
