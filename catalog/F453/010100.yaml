@@ -52,6 +52,6 @@ thermo:
   translator: "home/bticino/bin/bt_termo"
   binary_sha256: "b28d02b1ec8ac565bc23c6c621d2b1d4a791c67c8f2bc2c1924e671198f6590f"
   findings: "findings/bt-termo.md"
-  notes: "Gen B bt_termo (ARM OABI): %04d temp, #0#C multi-CU, DIM 15/16/17/18/20(0..13, Z#N & #0 only)/22(bare-WHERE SIGSEGV)/32, no holiday timer; *#4*0## polls zone 0 ($049900) due to missing zone>0 guard; WHO 1004 hooks compiled in."
+  notes: "Gen B bt_termo (ARM OABI): %04d temp, #0#C multi-CU, DIM 2/3/11/15/16/17/18/20(0..13, Z#N & #0 only)/22(bare-WHERE SIGSEGV)/32, no holiday timer; *#4*0## polls zone 0 ($049900) due to missing zone>0 guard; WHO 1004 hooks compiled in."
 
 status: unpackable

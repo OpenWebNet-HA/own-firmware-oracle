@@ -73,7 +73,7 @@ Use the stable IDs and section anchors below when querying this document:
   - `/home/bticino/bin/coso` (28,600 B, `6865c2d1d441d25effa31275080ded70ad3538a8a49288e3002ffb196b066175`)
   - `/home/bticino/lib/libthermo.so` (10,796 B, `a84ac5be4d01eaadceafa4bbc54bee58e6794bf144398d64bb54c1f944686ff2` — byte-identical to `F450/020010` `/home/bticino/lib/libthermo.so`)
 
-> **Binary equivalence within Generation D:** `F460/020012` and `F461/020011` `bt_termo` have **0 instruction differences** (only ELF build-id metadata differs). Across all 11 committed WHO 4 oracle suites, `MyHomeServer1/028206`, `3488/030205`, `F460/020012`, and `F461/020011` have **0 semantic WHO 4 differences** (differing only in the `scsserver` wire prefix `$04`/`$06` vs `$004`/`$006` and in `WHO 1004` / `sendemail` presence on `MyHomeServer1`).
+> **Binary equivalence within Generation D:** `F460/020012` and `F461/020011` `bt_termo` have **0 instruction differences** (only ELF build-id metadata differs). Across all 11 committed WHO 4 oracle suites, `MyHomeServer1/028206`, `3488/030205`, `F460/020012`, and `F461/020011` have **0 semantic WHO 4 differences** (differing only in the `scsserver` wire prefix `$04`/`$06` on `MyHomeServer1`, `$004`/`$006` on `F460`/`F461`, `$104`/`$106` on `3488`, and in `WHO 1004` / `sendemail` presence on `MyHomeServer1`).
 
 ### 1.2 Per-Generation Capability Matrix
 
@@ -83,15 +83,15 @@ Use the stable IDs and section anchors below when querying this document:
 | Central `#0#C` multi-CU addressing | No (hardcodes `#0`) | Yes | Yes | Yes | Yes |
 | `*#4*0##` behavior | Dropped (`silent`) | **BUG: sends `$04990030{00,12,0E,0D}` (zone 0!)** | Dropped (`silent`) | Dropped (`silent`) | Dropped (`silent`) |
 | `*#4*Z##` (4-frame zone poll) | Yes | Yes | Yes | Yes | Yes |
-| `DIM 2..8, 11, 21, 27, 28` | No | No | Yes | `2..8, 11, 21` (no `27/28`) | Yes |
-| `DIM 15, 16, 17, 18, 32` | No | Yes | Yes | `15, 17, 32` | Yes |
+| `DIM 2..8, 11, 21, 27, 28` | No | `2, 3, 11` only | Yes | `2..8, 11` (no `21/27/28`) | Yes |
+| `DIM 15, 16, 17, 18, 32` | No | Yes | Yes | `15, 16, 17, 32` | Yes |
 | `DIM 20` read forms supported | None (`silent`) | `Z#N`, `0#0`, `#0` (no plain `Z`) | `Z#N`, `Z`, `0#0`, `#0` | **`Z#N` only** | `Z#N`, `Z`, `0#0`, `#0` |
-| `DIM 19` / `DIM 20` actuator codes | Basic only (no `2F`/`3F`) | `0..13` | `0..13` | `0..13` | **`0..22` + `100..200` (0–10V)** |
+| `DIM 19` / `DIM 20` actuator codes | Basic only (no `2F`/`3F`) | `0..13` | `0..13` (`DIM 20`: +`100..200`) | `0..13` (`DIM 20`: +`100..200`) | **`0..22` + `100..200` (`DIM 19` & `20`)** |
 | `DIM 22` split control | Rejected (`silent`) | `3#Z#N` only; **bare WHERE `SIGSEGV`** | `3#Z#N` only; **bare WHERE `SIGSEGV`** | Works (`3#Z#N` & `Z#N`), **no crash** | `3#Z#N` only; **bare WHERE `SIGSEGV`** |
 | `DIM 29` | No | No | No | No | Yes |
 | `DIM 60` humidity | No | No | **`F459` only** (`F450`/`F454` no) | No | Yes |
 | Inbound `D1 02` / short `#DIM` write echoes | None | None | `#2,#3,#4,#5,#7,#8#,#11,#17` | None | **`#0,#2..5,#7,#8#,#11,#14,#17,#18,#20,#21,#22,#29,#30..32`** |
-| `WHAT 39..45` & `4001`/`4002` pump calls | No | No | No | No | Yes |
+| `WHAT 39, 41..45` & `4001`/`4002` pump calls (`WHAT 40` = all 13/13) | `40` only | `40` only | `40` only | `40` only | Yes (`39..42, 45, 4001/4002` outbound; `43/44` inbound only) |
 | `D2 04 C1` `3000#` & `112#/212#/312#` (`#HH`) | No | No | No | No | Yes |
 | `D2 04 C2` manual setpoint emission | 1 frame (`*4*110*#Z##`) | 1 frame | 1 frame | 1 frame | **2 frames (`*4*110*#Z##` + `*#4*#Z*14*...##`)** |
 | Holiday synthetic timer (`0x5f50`) | No | `F453AV`, `MH200N` (not `F453`) | Yes | Yes | Yes |
@@ -141,7 +141,7 @@ Verified at `F461/020011` `libopentrsl.so.1.0.0:0x15760..0x15cbc` (identical in 
 ## 3. `OWN -> SCS` Complete Specification (`F461/020011` Gen D Reference)
 
 ### 3.1 SCS Framing Primitives
-`bt_termo` formats ASCII hex strings with `$04` / `$06` prefixes (which `scsserver` forwards as `$04`/`$06` on 2-digit UART gateways or `$004`/`$006` on 3-digit RPMsg gateways `F460`/`F461`/`3488`):
+`bt_termo` formats ASCII hex strings with `$04` / `$06` prefixes (which `scsserver` forwards as `$04`/`$06` on 2-digit UART gateways, `$004`/`$006` on 3-digit RPMsg gateways `F460`/`F461`, or `$104`/`$106` on Channel 1 UART gateway `3488`):
 
 | Primitive | Addr (`F461`) | Wire Template (`{D}`=`dest_type`, `{AL}`=`scs_addr & 0xFF`, `{AH}`=`(scs_addr >> 8) & 0xF`) |
 |---|---|---|
@@ -298,7 +298,7 @@ Identical across short `96` (`#20` echo), short `B7` (`20` status), extended `D2
 | `0x20` | `5` | A, B, C, C-coso, D | `0x32` | `12` | B, C, C-coso, D | `0x43` | `20` | **D only** |
 | `0x21` | `6` | A, B, C, C-coso, D | `0x3F` | `13` | B, C, C-coso, D | `0x44` | `21` | **D only** |
 | | | | `0x24` | `14` | **D only** | `0x45` | `22` | **D only** |
-| | | | | | | `0x80..0xE4` | `B - 0x1C` (`100..200`) | **D only** (0–10V `0..100%`) |
+| | | | | | | `0x80..0xE4` | `B - 0x1C` (`100..200`) | **C, C-coso (`DIM 20` only), D (`DIM 19` & `20`)** (0–10V `0..100%`) |
 
 All other byte values return `-1` in `96`/`B7` and produce an **empty field `""`** in `D2 04 13` (`DIM 19`, e.g. `*#4*Z*19**1##`, `*#4*Z*19*0*##`).
 
@@ -397,7 +397,7 @@ Invoked ONLY from `D1 02 C3` (`0xbfc8`) and `D1 02 C4` (`0xc078`) when `B1 == "0
 
 1. **Gen A (`H4684/020054`, `MH200/020102`) temperature truncation (`QUIRK-11`):** `DIM 0` formats temperatures with `*#4*%d*0*0%d##` and `*#4*%d%02d*0*0%d##` (`MH200:0xda90..daf0`), emitting 2–3 digit strings (`00`, `050`, `095`) for `0.0..9.9 °C` instead of 4 digits (`0000`, `0050`, `0095`).
 2. **Gen B (`F453/010100`, `F453AV/030014`, `MH200N/010108`) `*#4*0##` non-broadcast bug (`QUIRK-15`):** Only Gen B forwards `*#4*0##` — because its `is_plain_zone` check omits `zone > 0`. It transmits point-to-point `$04 99 00 30 {00,12,0E,0D}` to non-existent zone `0` (confirmed in `thermo-four-zone-central.tsv:41`, `trace-corpus.tsv:52`, and physical `F453`/`MH200N`/`F453AV` captures yielding 0 replies and 1.3–8.8 s stalls). Gen B also omits `is_plain_zone` and `<= 3` validation on `DIM 11` write (`thermo-fan-speed.tsv`), and `F453/010100` lacks the holiday timer (`0x5f50`) added in `F453AV`/`MH200N`.
-3. **Gen C (`F450/020010`, `F454/020051`, `F459/020105`):** Adds `DIM 2..8, 11, 21, 27, 28`, plain-zone `*#4*Z*20##` (`$04 A9 ZZ 30 10`), and inbound `D1 02` write echoes for `#2, #3, #4, #5, #7, #8#, #11, #17`. Only **`F459/020105`** supports `DIM 60` humidity (`thermo-zone-requests.tsv:18, 30, 38`). Unlike Gen D, Gen C `D2 04 C2` manual reports emit only 1 frame (`*4*110*#Z#C##`, omitting `*#4*#Z#C*14*...##`, `thermo-four-zone-central.tsv:81`), and `DIM 14` read still enforces `is_plain_zone` (rejecting `*#4*#0#1*14##`, `thermo-four-zone-central.tsv:10`).
+3. **Gen C (`F450/020010`, `F454/020051`, `F459/020105`):** Adds `DIM 4..8, 21, 27, 28` (Gen B already forwards `DIM 2, 3, 11`), plain-zone `*#4*Z*20##` (`$04 A9 ZZ 30 10`), `100..200` proportional codes on `DIM 20`, and inbound `D1 02` write echoes for `#2, #3, #4, #5, #7, #8#, #11, #17`. Only **`F459/020105`** supports `DIM 60` humidity (`thermo-zone-requests.tsv:18, 30, 38`). Unlike Gen D, Gen C `D2 04 C2` manual reports emit only 1 frame (`*4*110*#Z#C##`, omitting `*#4*#Z#C*14*...##`, `thermo-four-zone-central.tsv:95` on `F459` vs `:86` on `F461`), and `DIM 14` read still enforces `is_plain_zone` (rejecting `*#4*#0#1*14##`, `thermo-four-zone-central.tsv:24`).
 4. **Gen C-coso (`MH202/010024`):** Independent GLib plugin (`libplug_thermo_tr.so` + `libthermo.so`). Never crashes on `DIM 22` (`thermo-dim22.tsv`), rejects `*#4*#0*20##` and `*#4*Z*20##` (`thermo-actuator.tsv`), accepts `*#4*#Z*#11*1##` (misaddressing `00`, `ownd-pr82-heating.tsv`), and crashes (`SIGSEGV`) on `*#4*Z#N##`, `*#4*Z#4#II##`, and `*#4*001..099*` (`CRASH-06`).
 5. **Gen D (`MyHomeServer1/028206`, `3488/030205`, `F460/020012`, `F461/020011`):** Identical WHO 4 translation core across all four models. `MyHomeServer1/028206` retains compiled-in `WHO 1004` (`open2scs diagnostica`) and `sendemail` support, whereas `3488/030205`, `F460/020012`, and `F461/020011` stripped `WHO 1004` out (leaving dead code behind `chi != "4"` guards).
 
@@ -411,7 +411,7 @@ Invoked ONLY from `D1 02 C3` (`0xbfc8`) and `D1 02 C4` (`0xc078`) when `B1 == "0
 |---|---|---|---|---|
 | **`CRASH-01`** | Gen B, C, D (`bt_termo`) | Any WHO 4 frame with bare `WHERE == "#"` (e.g. `*#4*###`, `*4*1*###`) | `ThermoWhereTransl::scsDest` (`libopentrsl:0x15618`) -> `OpenMsg::where()` dereferences empty `std::vector` (`begin == NULL`) at `0x96f0`. | `SIGSEGV` |
 | **`CRASH-02`** | Gen B, C, D (`bt_termo`, 10 gateways) | `*#4*<W>*22##` or `*#4*<W>*#22*...##` where `<W>` has no `'#'` (e.g. `0`, `#0`, `2`) | Pre-rewrite at `0x6f60..0x70f0` produces `"#"`, triggering `CRASH-01` (`thermo-dim22.tsv`). | `SIGSEGV` |
-| **`CRASH-03`** | Gen D (`bt_termo`; check B/C) | Any WHO 4 dim write with `strlen(V0) >= 5` (e.g. `*#4*1*#14*00200*1##`), OR any WHO 4 frame with `strlen(WHERE) >= 10` | Unconditional `__strcpy_chk(..., 5)` on `Extract_valori(0)` at `0x7c54` and `__strcpy_chk(..., 10)` on `Extract_dove()` at `0x6efc`. | `SIGABRT` |
+| **`CRASH-03`** | `3488`, `F460`, `F461` (`bt_termo` with `_FORTIFY_SOURCE`; `MyHomeServer1/028206` & Gen B/C drop cleanly) | Any WHO 4 dim write with `strlen(V0) >= 5` (e.g. `*#4*1*#14*00200*1##`), OR any WHO 4 frame with `strlen(WHERE) >= 10` | Unconditional `__strcpy_chk(..., 5)` on `Extract_valori(0)` at `0x7c54` and `__strcpy_chk(..., 10)` on `Extract_dove()` at `0x6efc` (`thermo-setpoint-writes-high.cases:80-86, 147-153`). | `SIGABRT` |
 | **`CRASH-04`** | Gen D (`bt_termo`) | `*#4*Z*#14*0200##` (`< 2` args) OR `*#4*Z*#7*{0..3}*1##` (`< 3` args) | Missing `num_valori` guard before `OpenMsg::whatArgN()` throws uncaught `std::runtime_error` (`0x94cc..0x9984`, `0x90d8..0x9780`). | `SIGABRT` |
 | **`CRASH-05`** | Gen D (`bt_termo`, bus-side) | Inbound `$18 D2 ... 04 C1 {09\|19\|29} <B6> <B7>` with `B7 >= 0x64` (`100..255`) | `__sprintf_chk` writes 13 bytes (`"112#%04u#%02u"`) into 12-byte stack buffer `[sp+0x78]` (`0xdb38..0xdba8`). | `SIGABRT` |
 | **`CRASH-06`** | `MH202/010024` (`coso`) | `*#4*Z#N##`, `*#4*Z#4#II##`, `*#4*001..099*...##` | NULL dereference in `libplug_thermo_tr.so` (`thermo-zone-requests.tsv`, `audit-crash-frames.md`). | `SIGSEGV` |

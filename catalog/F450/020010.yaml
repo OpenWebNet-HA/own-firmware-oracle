@@ -31,6 +31,6 @@ thermo:
   translator: "home/bticino/bin/bt_termo"
   binary_sha256: "963cf11bddd078a8e2ad86c8d98efd0136f1cf83c3c79792064eb834f087cd3d"
   findings: "findings/bt-termo.md"
-  notes: "Gen C bt_termo (ARM EABI5): adds DIM 2..8/11/21/27/28, plain Z*20, inbound #2/#3/#4/#5/#7/#8/#11/#17 echoes; drops *#4*0##; no DIM 60; actuator codes 0..13; DIM 22 bare-WHERE SIGSEGV; WHO 1004 hooks compiled in."
+  notes: "Gen C bt_termo (ARM EABI5): adds DIM 4..8/21/27/28, plain Z*20, inbound #2/#3/#4/#5/#7/#8/#11/#17 echoes; drops *#4*0##; no DIM 60; actuator codes 0..13 (DIM 20 also 100..200); DIM 22 bare-WHERE SIGSEGV; WHO 1004 hooks compiled in."
 
 status: unpackable

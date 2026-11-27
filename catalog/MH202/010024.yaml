@@ -32,6 +32,6 @@ thermo:
   translator: "home/bticino/libcoso/libplug_thermo_tr.so"
   binary_sha256: "5e2da864f01b19f4f14dde76e11786234b36c97f4f6778966d6a32f597d1452b"
   findings: "findings/bt-termo.md"
-  notes: "Gen C-coso independent GLib plugin (coso + libplug_thermo_tr.so + libthermo.so): no DIM 22 crash, no DIM 60, no WHO 1004, actuator codes 0..13 (Z#N only); SIGSEGV on *#4*Z#N##, *#4*Z#4#II##, and *#4*001..099*."
+  notes: "Gen C-coso independent GLib plugin (coso + libplug_thermo_tr.so + libthermo.so): supports DIM 2..8/11/15/16/17/32 (no 21/27/28/60), no DIM 22 crash, no WHO 1004, actuator codes 0..13 (DIM 20 also 100..200, Z#N only); SIGSEGV on *#4*Z#N##, *#4*Z#4#II##, and *#4*001..099*."
 
 status: unpackable
