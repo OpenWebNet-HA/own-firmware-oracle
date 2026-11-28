@@ -1,0 +1,63 @@
+; WHO 4 thermoregulation: the DIMENSION request numbers a gateway forwards on zone 1
+; (*#4*1*DIM##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: DIMENSION 0..31, 40,
+; 50, 59, 60, 61, 100, 255.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#4*1*N##
+;    forwarded by all 13
+down *#4*1*0##
+down *#4*1*12##
+down *#4*1*13##
+down *#4*1*14##
+down *#4*1*19##
+;    dropped by every gateway
+down *#4*1*1##
+down *#4*1*8##
+down *#4*1*9##
+down *#4*1*10##
+down *#4*1*17##
+down *#4*1*23##
+down *#4*1*24##
+down *#4*1*25##
+down *#4*1*26##
+down *#4*1*40##
+down *#4*1*50##
+down *#4*1*59##
+down *#4*1*61##
+down *#4*1*100##
+down *#4*1*255##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *#4*1*2##
+down *#4*1*3##
+down *#4*1*11##
+down *#4*1*15##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#4*1*4##
+down *#4*1*5##
+down *#4*1*6##
+down *#4*1*7##
+;    forwarded by MH202
+down *#4*1*16##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#4*1*18##
+down *#4*1*30##
+down *#4*1*31##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MyHomeServer1
+down *#4*1*20##
+down *#4*1*21##
+down *#4*1*27##
+down *#4*1*28##
+;    CRASH on 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#4*1*22##
+;    forwarded by 3488, F460, F461, MyHomeServer1
+down *#4*1*29##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *#4*1*60##

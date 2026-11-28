@@ -1,0 +1,40 @@
+; WHO 4 thermoregulation: zone WHAT values 36..47, on the zone (*4*WHAT*1##) and on the zone's
+; control-unit form (*4*WHAT*#1##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: every value 36..47
+; on both WHERE forms.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *4*N*1##
+;    dropped by every gateway
+down *4*36*1##
+down *4*37*1##
+down *4*38*1##
+down *4*43*1##
+down *4*44*1##
+down *4*46*1##
+down *4*47*1##
+;    forwarded by 3488, F460, F461, MyHomeServer1
+down *4*39*1##
+down *4*41*1##
+down *4*42*1##
+down *4*45*1##
+;    forwarded by all 13
+down *4*40*1##
+
+; 2. *4*N*#1##
+;    dropped by every gateway
+down *4*36*#1##
+down *4*37*#1##
+down *4*38*#1##
+down *4*39*#1##
+down *4*40*#1##
+down *4*41*#1##
+down *4*42*#1##
+down *4*43*#1##
+down *4*44*#1##
+down *4*45*#1##
+down *4*46*#1##
+down *4*47*#1##

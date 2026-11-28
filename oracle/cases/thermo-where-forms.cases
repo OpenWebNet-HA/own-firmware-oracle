@@ -1,0 +1,170 @@
+; WHO 4 thermoregulation: the WHERE forms a gateway forwards (the 3..99 boundary, zero-padded,
+; 3- and 4-digit, control-unit, interface and local-bus forms), as a status request
+; (*#4*WHERE##), as a command (*4*303*WHERE##) and as a dimension request (*#4*WHERE*0##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same 43 WHERE
+; forms in all three series.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#4*WHERE## (status request)
+;    forwarded by all 13
+down *#4*1##
+down *#4*2##
+down *#4*#1##
+down *#4*3##
+down *#4*99##
+down *#4*10##
+down *#4*20##
+down *#4*50##
+down *#4*90##
+down *#4*#0##
+down *#4*#10##
+down *#4*#99##
+down *#4*#4#01##
+down *#4*#1#4#01##
+;    CRASH on MH202
+down *#4*100##
+down *#4*0#4#01##
+;    forwarded by MH202
+down *#4*101##
+;    forwarded by F453, F453AV, MH200N; CRASH on MH202
+down *#4*000##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N,
+;    MyHomeServer1; CRASH on MH202
+down *#4*0001##
+down *#4*0010##
+down *#4*0099##
+down *#4*00001##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#4*#100##
+;    forwarded by H4684, MH200; CRASH on MH202
+down *#4*1#4#01##
+down *#4*11#4#01##
+down *#4*11#4#1##
+down *#4*11#4#001##
+down *#4*11#3#1##
+down *#4*11#4##
+down *#4*11#3##
+down *#4*11#5##
+down *#4*11#9##
+down *#4*11#4#01#1##
+;    dropped by every gateway
+down *#4*1000##
+down *#4*1001##
+down *#4*0100##
+down *#4*0101##
+down *#4*9999##
+;    forwarded by F453, F453AV, MH200N
+down *#4*0000##
+;    forwarded by H4684, MH200
+down *#4*11#4#16##
+down *#4*11#4#00##
+down *#4*11#4#0##
+down *#4*11#4#99##
+
+; 2. *4*303*WHERE## (command)
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *4*303*1##
+down *4*303*2##
+down *4*303*3##
+down *4*303*99##
+down *4*303*0001##
+down *4*303*0010##
+down *4*303*0099##
+down *4*303*00001##
+down *4*303*10##
+down *4*303*20##
+down *4*303*50##
+down *4*303*90##
+;    forwarded by all 13
+down *4*303*#1##
+down *4*303*#0##
+down *4*303*#10##
+down *4*303*#99##
+down *4*303*#4#01##
+down *4*303*#1#4#01##
+;    forwarded by MH202
+down *4*303*100##
+down *4*303*101##
+down *4*303*000##
+down *4*303*0#4#01##
+down *4*303*1#4#01##
+down *4*303*11#4#01##
+down *4*303*11#4#1##
+down *4*303*11#4#001##
+down *4*303*11#3#1##
+down *4*303*11#4##
+down *4*303*11#3##
+down *4*303*11#5##
+down *4*303*11#9##
+down *4*303*11#4#01#1##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *4*303*#100##
+;    dropped by every gateway
+down *4*303*1000##
+down *4*303*1001##
+down *4*303*0000##
+down *4*303*0100##
+down *4*303*0101##
+down *4*303*9999##
+down *4*303*11#4#16##
+down *4*303*11#4#00##
+down *4*303*11#4#0##
+down *4*303*11#4#99##
+
+; 3. *#4*WHERE*0## (dimension request)
+;    forwarded by all 13
+down *#4*1*0##
+down *#4*2*0##
+down *#4*3*0##
+down *#4*99*0##
+down *#4*101*0##
+down *#4*10*0##
+down *#4*20*0##
+down *#4*50*0##
+down *#4*90*0##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *#4*#1*0##
+down *#4*0001*0##
+down *#4*0010*0##
+down *#4*0099*0##
+down *#4*00001*0##
+down *#4*#10*0##
+down *#4*#99*0##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1
+down *#4*100*0##
+down *#4*000*0##
+down *#4*#100*0##
+down *#4*1000*0##
+down *#4*1001*0##
+down *#4*0000*0##
+down *#4*0100*0##
+down *#4*0101*0##
+down *#4*9999*0##
+down *#4*#0*0##
+;    dropped by every gateway
+down *#4*0#4#01*0##
+;    forwarded by H4684, MH200
+down *#4*1#4#01*0##
+down *#4*11#4#01*0##
+down *#4*11#4#1*0##
+down *#4*11#4#001*0##
+down *#4*11#3#1*0##
+down *#4*11#4*0##
+down *#4*11#3*0##
+down *#4*11#5*0##
+down *#4*11#9*0##
+down *#4*11#4#01#1*0##
+down *#4*11#4#16*0##
+down *#4*11#4#00*0##
+down *#4*11#4#0*0##
+down *#4*11#4#99*0##
+;    forwarded by MH202
+down *#4*#4#01*0##
+down *#4*#1#4#01*0##

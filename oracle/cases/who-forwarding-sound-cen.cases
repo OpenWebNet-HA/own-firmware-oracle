@@ -1,0 +1,202 @@
+; Which command frames of WHO 16 and WHO 25 leave a gateway: WHO 16 on WHERE 31 and on WHERE
+; 101 (*16*WHAT*31##, *16*WHAT*101##), WHO 25 with the plain WHAT and with the WHAT#1 form on
+; WHERE 21 (*25*WHAT*21##, *25*WHAT#1*21##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same values in
+; all four series, WHAT 0..36, 40, 50, 99, 100, 255, 1000, 9999.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *16*N*31##
+;    dropped by every gateway
+down *16*0*31##
+down *16*1*31##
+down *16*2*31##
+down *16*4*31##
+down *16*5*31##
+down *16*6*31##
+down *16*7*31##
+down *16*8*31##
+down *16*9*31##
+down *16*10*31##
+down *16*11*31##
+down *16*12*31##
+down *16*14*31##
+down *16*15*31##
+down *16*16*31##
+down *16*17*31##
+down *16*18*31##
+down *16*19*31##
+down *16*20*31##
+down *16*21*31##
+down *16*22*31##
+down *16*23*31##
+down *16*24*31##
+down *16*25*31##
+down *16*26*31##
+down *16*27*31##
+down *16*28*31##
+down *16*29*31##
+down *16*31*31##
+down *16*32*31##
+down *16*33*31##
+down *16*34*31##
+down *16*35*31##
+down *16*36*31##
+down *16*50*31##
+down *16*99*31##
+down *16*100*31##
+down *16*255*31##
+down *16*1000*31##
+down *16*9999*31##
+;    forwarded by F453, F453AV, F454, H4684, MH200, MH200N
+down *16*3*31##
+down *16*13*31##
+down *16*30*31##
+down *16*40*31##
+
+; 2. *16*N*101##
+;    dropped by every gateway
+down *16*0*101##
+down *16*1*101##
+down *16*2*101##
+down *16*4*101##
+down *16*5*101##
+down *16*6*101##
+down *16*7*101##
+down *16*8*101##
+down *16*9*101##
+down *16*10*101##
+down *16*11*101##
+down *16*12*101##
+down *16*14*101##
+down *16*15*101##
+down *16*16*101##
+down *16*17*101##
+down *16*18*101##
+down *16*19*101##
+down *16*20*101##
+down *16*21*101##
+down *16*22*101##
+down *16*23*101##
+down *16*24*101##
+down *16*25*101##
+down *16*26*101##
+down *16*27*101##
+down *16*28*101##
+down *16*29*101##
+down *16*30*101##
+down *16*31*101##
+down *16*32*101##
+down *16*33*101##
+down *16*34*101##
+down *16*35*101##
+down *16*36*101##
+down *16*40*101##
+down *16*50*101##
+down *16*99*101##
+down *16*100*101##
+down *16*255*101##
+down *16*1000*101##
+down *16*9999*101##
+;    forwarded by F453, F453AV, F454, H4684, MH200, MH200N
+down *16*3*101##
+down *16*13*101##
+
+; 3. *25*N*21##
+;    dropped by every gateway
+down *25*0*21##
+down *25*1*21##
+down *25*2*21##
+down *25*3*21##
+down *25*4*21##
+down *25*5*21##
+down *25*6*21##
+down *25*7*21##
+down *25*8*21##
+down *25*9*21##
+down *25*10*21##
+down *25*16*21##
+down *25*17*21##
+down *25*18*21##
+down *25*19*21##
+down *25*20*21##
+down *25*21*21##
+down *25*22*21##
+down *25*23*21##
+down *25*24*21##
+down *25*25*21##
+down *25*26*21##
+down *25*27*21##
+down *25*28*21##
+down *25*29*21##
+down *25*30*21##
+down *25*31*21##
+down *25*32*21##
+down *25*33*21##
+down *25*34*21##
+down *25*35*21##
+down *25*36*21##
+down *25*40*21##
+down *25*50*21##
+down *25*99*21##
+down *25*100*21##
+down *25*255*21##
+down *25*1000*21##
+down *25*9999*21##
+;    forwarded by MH202
+down *25*11*21##
+down *25*12*21##
+down *25*13*21##
+down *25*14*21##
+down *25*15*21##
+
+; 4. *25*N#1*21##
+;    dropped by every gateway
+down *25*0#1*21##
+down *25*1#1*21##
+down *25*2#1*21##
+down *25*3#1*21##
+down *25*4#1*21##
+down *25*5#1*21##
+down *25*6#1*21##
+down *25*7#1*21##
+down *25*8#1*21##
+down *25*9#1*21##
+down *25*10#1*21##
+down *25*16#1*21##
+down *25*17#1*21##
+down *25*18#1*21##
+down *25*19#1*21##
+down *25*20#1*21##
+down *25*29#1*21##
+down *25*30#1*21##
+down *25*31#1*21##
+down *25*32#1*21##
+down *25*33#1*21##
+down *25*34#1*21##
+down *25*35#1*21##
+down *25*36#1*21##
+down *25*40#1*21##
+down *25*50#1*21##
+down *25*99#1*21##
+down *25*100#1*21##
+down *25*255#1*21##
+down *25*1000#1*21##
+down *25*9999#1*21##
+;    forwarded by MH202
+down *25*11#1*21##
+down *25*12#1*21##
+down *25*13#1*21##
+down *25*14#1*21##
+down *25*15#1*21##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *25*21#1*21##
+down *25*22#1*21##
+down *25*23#1*21##
+down *25*24#1*21##
+down *25*25#1*21##
+down *25*26#1*21##
+down *25*27#1*21##
+down *25*28#1*21##
