@@ -1,0 +1,217 @@
+; Which command frames of WHO 13, 14, 15 and 17 leave a gateway (*13*WHAT*##, *14*WHAT*32##,
+; *15*WHAT*0001##, *17*WHAT*1##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same values for
+; every WHO, WHAT 0..36, 40, 50, 60, 99, 100, 101, 255, 256, 1000, 9999 (omitting *13*35*##,
+; which is nondeterministic under QEMU thread scheduling -- see section 1 below).
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *13*N*##
+;    dropped by every gateway
+down *13*0*##
+down *13*1*##
+down *13*2*##
+down *13*3*##
+down *13*4*##
+down *13*5*##
+down *13*6*##
+down *13*7*##
+down *13*8*##
+down *13*9*##
+down *13*10*##
+down *13*11*##
+down *13*12*##
+down *13*13*##
+down *13*14*##
+down *13*15*##
+down *13*16*##
+down *13*17*##
+down *13*18*##
+down *13*19*##
+down *13*20*##
+down *13*21*##
+down *13*22*##
+down *13*23*##
+down *13*24*##
+down *13*25*##
+down *13*26*##
+down *13*27*##
+down *13*28*##
+down *13*30*##
+down *13*31*##
+down *13*32*##
+down *13*33*##
+down *13*34*##
+down *13*36*##
+down *13*40*##
+down *13*50*##
+down *13*60*##
+down *13*99*##
+down *13*100*##
+down *13*101*##
+down *13*255*##
+down *13*256*##
+down *13*1000*##
+down *13*9999*##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *13*29*##
+;    *13*35*## (answered on event session by 3488, F460, F461, MyHomeServer1) is omitted:
+;    bt_device calls libapplogger.so logger::send_log_tcp(), which spawns send_log_tcp_thread
+;    setting upload_status 1 -> 2 while bt_device's select() loop polls and emits *#13**86*%d##.
+;    Depending on QEMU thread scheduling, F460/020012 and F461/020011 nondeterministically emit
+;    either own:*#13**86*2## alone or own:*#13**86*1## | own:*#13**86*2##.
+
+; 2. *14*N*32##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *14*0*32##
+down *14*1*32##
+;    dropped by every gateway
+down *14*2*32##
+down *14*3*32##
+down *14*4*32##
+down *14*5*32##
+down *14*6*32##
+down *14*7*32##
+down *14*8*32##
+down *14*9*32##
+down *14*10*32##
+down *14*11*32##
+down *14*12*32##
+down *14*13*32##
+down *14*14*32##
+down *14*15*32##
+down *14*16*32##
+down *14*17*32##
+down *14*18*32##
+down *14*19*32##
+down *14*20*32##
+down *14*21*32##
+down *14*22*32##
+down *14*23*32##
+down *14*24*32##
+down *14*25*32##
+down *14*26*32##
+down *14*27*32##
+down *14*28*32##
+down *14*29*32##
+down *14*30*32##
+down *14*31*32##
+down *14*32*32##
+down *14*33*32##
+down *14*34*32##
+down *14*35*32##
+down *14*36*32##
+down *14*40*32##
+down *14*50*32##
+down *14*60*32##
+down *14*99*32##
+down *14*100*32##
+down *14*101*32##
+down *14*255*32##
+down *14*256*32##
+down *14*1000*32##
+down *14*9999*32##
+
+; 3. *15*N*0001##
+;    forwarded by MH202
+down *15*0*0001##
+down *15*1*0001##
+down *15*2*0001##
+down *15*3*0001##
+down *15*4*0001##
+down *15*5*0001##
+down *15*6*0001##
+down *15*7*0001##
+down *15*8*0001##
+down *15*9*0001##
+down *15*10*0001##
+down *15*11*0001##
+down *15*12*0001##
+down *15*13*0001##
+down *15*14*0001##
+down *15*15*0001##
+down *15*16*0001##
+down *15*17*0001##
+down *15*18*0001##
+down *15*19*0001##
+down *15*20*0001##
+down *15*21*0001##
+down *15*22*0001##
+down *15*23*0001##
+down *15*24*0001##
+down *15*25*0001##
+down *15*26*0001##
+down *15*27*0001##
+down *15*28*0001##
+down *15*29*0001##
+down *15*30*0001##
+down *15*31*0001##
+down *15*32*0001##
+down *15*33*0001##
+down *15*34*0001##
+down *15*35*0001##
+down *15*36*0001##
+down *15*40*0001##
+down *15*50*0001##
+down *15*60*0001##
+down *15*99*0001##
+down *15*100*0001##
+down *15*101*0001##
+down *15*255*0001##
+;    dropped by every gateway
+down *15*256*0001##
+down *15*1000*0001##
+down *15*9999*0001##
+
+; 4. *17*N*1##
+;    dropped by every gateway
+down *17*0*1##
+down *17*1*1##
+down *17*2*1##
+down *17*3*1##
+down *17*4*1##
+down *17*5*1##
+down *17*6*1##
+down *17*7*1##
+down *17*8*1##
+down *17*9*1##
+down *17*10*1##
+down *17*11*1##
+down *17*12*1##
+down *17*13*1##
+down *17*14*1##
+down *17*15*1##
+down *17*16*1##
+down *17*17*1##
+down *17*18*1##
+down *17*19*1##
+down *17*20*1##
+down *17*21*1##
+down *17*22*1##
+down *17*23*1##
+down *17*24*1##
+down *17*25*1##
+down *17*26*1##
+down *17*27*1##
+down *17*28*1##
+down *17*29*1##
+down *17*30*1##
+down *17*31*1##
+down *17*32*1##
+down *17*33*1##
+down *17*34*1##
+down *17*35*1##
+down *17*36*1##
+down *17*40*1##
+down *17*50*1##
+down *17*60*1##
+down *17*99*1##
+down *17*100*1##
+down *17*101*1##
+down *17*255*1##
+down *17*256*1##
+down *17*1000*1##
+down *17*9999*1##

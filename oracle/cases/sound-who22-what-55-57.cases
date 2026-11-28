@@ -1,0 +1,17 @@
+; WHO 22 sound diffusion: WHAT 55, 56 and 57 on the amplifier 3#1#1 (*22*WHAT*3#1#1##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways. A file of its own so
+; that no other step runs behind these frames.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *22*N*3#1#1##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *22*55*3#1#1##
+down *22*56*3#1#1##
+;    CRASH on 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *22*57*3#1#1##

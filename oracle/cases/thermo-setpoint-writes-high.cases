@@ -1,0 +1,160 @@
+; WHO 4 thermoregulation: the zone setpoint write from 0400 up, the 5-digit and the short
+; forms, on the zone (*#4*1*#14*TTTT*MODE##) and on the zone's control-unit form
+; (*#4*#1*#14*TTTT*MODE##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same 11 setpoint
+; values with every mode 0..5 on both WHERE forms: 0400, 0401, 0404, 0405, 0434, 0435, 0500,
+; 1000, the 5-digit 02500 and the short forms 50 and 250. The values up to 0351 are in
+; thermo-setpoint-writes.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+;
+; ORACLE ONLY: frames of this file crash a daemon on at least one emulated gateway; do not send
+; them to a real gateway.
+
+; 1. *#4*1*#14*N*N## (setpoint, mode)
+;    dropped by every gateway
+down *#4*1*#14*0400*0##
+down *#4*1*#14*0400*4##
+down *#4*1*#14*0400*5##
+down *#4*1*#14*0401*0##
+down *#4*1*#14*0401*4##
+down *#4*1*#14*0401*5##
+down *#4*1*#14*0404*0##
+down *#4*1*#14*0404*4##
+down *#4*1*#14*0404*5##
+down *#4*1*#14*0405*0##
+down *#4*1*#14*0405*4##
+down *#4*1*#14*0405*5##
+down *#4*1*#14*0434*0##
+down *#4*1*#14*0434*1##
+down *#4*1*#14*0434*2##
+down *#4*1*#14*0434*3##
+down *#4*1*#14*0434*4##
+down *#4*1*#14*0434*5##
+down *#4*1*#14*0435*0##
+down *#4*1*#14*0435*1##
+down *#4*1*#14*0435*2##
+down *#4*1*#14*0435*3##
+down *#4*1*#14*0435*4##
+down *#4*1*#14*0435*5##
+down *#4*1*#14*0500*0##
+down *#4*1*#14*0500*1##
+down *#4*1*#14*0500*2##
+down *#4*1*#14*0500*3##
+down *#4*1*#14*0500*4##
+down *#4*1*#14*0500*5##
+down *#4*1*#14*1000*0##
+down *#4*1*#14*1000*1##
+down *#4*1*#14*1000*2##
+down *#4*1*#14*1000*3##
+down *#4*1*#14*1000*4##
+down *#4*1*#14*1000*5##
+down *#4*1*#14*50*0##
+down *#4*1*#14*50*4##
+down *#4*1*#14*50*5##
+down *#4*1*#14*250*0##
+down *#4*1*#14*250*4##
+down *#4*1*#14*250*5##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#4*1*#14*0400*1##
+down *#4*1*#14*0400*2##
+down *#4*1*#14*0400*3##
+down *#4*1*#14*0401*1##
+down *#4*1*#14*0401*2##
+down *#4*1*#14*0401*3##
+down *#4*1*#14*0404*1##
+down *#4*1*#14*0404*2##
+down *#4*1*#14*0404*3##
+down *#4*1*#14*50*1##
+down *#4*1*#14*50*2##
+down *#4*1*#14*50*3##
+down *#4*1*#14*250*1##
+down *#4*1*#14*250*2##
+down *#4*1*#14*250*3##
+;    forwarded by MH202
+down *#4*1*#14*0405*1##
+down *#4*1*#14*0405*2##
+down *#4*1*#14*0405*3##
+;    CRASH on 3488, F460, F461
+down *#4*1*#14*02500*0##
+down *#4*1*#14*02500*1##
+down *#4*1*#14*02500*2##
+down *#4*1*#14*02500*3##
+down *#4*1*#14*02500*4##
+down *#4*1*#14*02500*5##
+
+; 2. *#4*#1*#14*N*N## (setpoint, mode)
+;    dropped by every gateway
+down *#4*#1*#14*0400*0##
+down *#4*#1*#14*0400*4##
+down *#4*#1*#14*0400*5##
+down *#4*#1*#14*0401*0##
+down *#4*#1*#14*0401*4##
+down *#4*#1*#14*0401*5##
+down *#4*#1*#14*0404*0##
+down *#4*#1*#14*0404*4##
+down *#4*#1*#14*0404*5##
+down *#4*#1*#14*0405*0##
+down *#4*#1*#14*0405*4##
+down *#4*#1*#14*0405*5##
+down *#4*#1*#14*0434*0##
+down *#4*#1*#14*0434*4##
+down *#4*#1*#14*0434*5##
+down *#4*#1*#14*0435*0##
+down *#4*#1*#14*0435*1##
+down *#4*#1*#14*0435*2##
+down *#4*#1*#14*0435*3##
+down *#4*#1*#14*0435*4##
+down *#4*#1*#14*0435*5##
+down *#4*#1*#14*0500*0##
+down *#4*#1*#14*0500*1##
+down *#4*#1*#14*0500*2##
+down *#4*#1*#14*0500*3##
+down *#4*#1*#14*0500*4##
+down *#4*#1*#14*0500*5##
+down *#4*#1*#14*1000*0##
+down *#4*#1*#14*1000*1##
+down *#4*#1*#14*1000*2##
+down *#4*#1*#14*1000*3##
+down *#4*#1*#14*1000*4##
+down *#4*#1*#14*1000*5##
+down *#4*#1*#14*50*0##
+down *#4*#1*#14*50*4##
+down *#4*#1*#14*50*5##
+down *#4*#1*#14*250*0##
+down *#4*#1*#14*250*4##
+down *#4*#1*#14*250*5##
+;    forwarded by all 13
+down *#4*#1*#14*0400*1##
+down *#4*#1*#14*0400*2##
+down *#4*#1*#14*0400*3##
+down *#4*#1*#14*0401*1##
+down *#4*#1*#14*0401*2##
+down *#4*#1*#14*0401*3##
+down *#4*#1*#14*0404*1##
+down *#4*#1*#14*0404*2##
+down *#4*#1*#14*0404*3##
+;    forwarded by F453, F453AV, H4684, MH200, MH200N, MH202
+down *#4*#1*#14*0405*1##
+down *#4*#1*#14*0405*2##
+down *#4*#1*#14*0405*3##
+;    forwarded by F453, F453AV, H4684, MH200, MH200N
+down *#4*#1*#14*0434*1##
+down *#4*#1*#14*0434*2##
+down *#4*#1*#14*0434*3##
+;    CRASH on 3488, F460, F461
+down *#4*#1*#14*02500*0##
+down *#4*#1*#14*02500*1##
+down *#4*#1*#14*02500*2##
+down *#4*#1*#14*02500*3##
+down *#4*#1*#14*02500*4##
+down *#4*#1*#14*02500*5##
+;    forwarded by MH202
+down *#4*#1*#14*50*1##
+down *#4*#1*#14*50*2##
+down *#4*#1*#14*50*3##
+down *#4*#1*#14*250*1##
+down *#4*#1*#14*250*2##
+down *#4*#1*#14*250*3##

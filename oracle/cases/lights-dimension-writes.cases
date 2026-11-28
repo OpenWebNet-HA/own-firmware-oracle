@@ -1,0 +1,71 @@
+; WHO 1 lighting: the dimension write frames a gateway forwards on point 31: DIMENSION 1 (level
+; and speed), DIMENSION 2 (timer hours, minutes, seconds) and DIMENSION 9.
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: level 0, 1, 50,
+; 99..102, 110..190 step 10, 199..201, 255, 256, 1000; speed 1, 10, 100, 255, 256, 1000; the
+; timer 0*0*0 and each timer field alone at 1, 60 and 255; DIMENSION 9 values 0, 1, 100, 1000,
+; 10000.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *#1*31*#9*N##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#1*31*#9*0##
+down *#1*31*#9*1##
+down *#1*31*#9*100##
+down *#1*31*#9*1000##
+down *#1*31*#9*10000##
+
+; 2. *#1*31*#1*N*0## (level)
+;    forwarded by MH202
+down *#1*31*#1*0*0##
+down *#1*31*#1*1*0##
+down *#1*31*#1*50*0##
+down *#1*31*#1*99*0##
+down *#1*31*#1*100*0##
+down *#1*31*#1*201*0##
+down *#1*31*#1*255*0##
+down *#1*31*#1*256*0##
+down *#1*31*#1*1000*0##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*#1*101*0##
+down *#1*31*#1*102*0##
+down *#1*31*#1*110*0##
+down *#1*31*#1*120*0##
+down *#1*31*#1*130*0##
+down *#1*31*#1*140*0##
+down *#1*31*#1*150*0##
+down *#1*31*#1*160*0##
+down *#1*31*#1*170*0##
+down *#1*31*#1*180*0##
+down *#1*31*#1*190*0##
+down *#1*31*#1*199*0##
+down *#1*31*#1*200*0##
+
+; 3. *#1*31*#1*150*N## (speed)
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*#1*150*1##
+down *#1*31*#1*150*10##
+down *#1*31*#1*150*100##
+down *#1*31*#1*150*255##
+;    forwarded by MH202
+down *#1*31*#1*150*256##
+down *#1*31*#1*150*1000##
+
+; 4. *#1*31*#2*N*N*N## (hours, minutes, seconds)
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*#2*0*0*0##
+down *#1*31*#2*1*0*0##
+down *#1*31*#2*60*0*0##
+down *#1*31*#2*255*0*0##
+down *#1*31*#2*0*1*0##
+down *#1*31*#2*0*60*0##
+down *#1*31*#2*0*0*1##
+down *#1*31*#2*0*0*60##
+;    forwarded by MH202
+down *#1*31*#2*0*255*0##
+down *#1*31*#2*0*0*255##
