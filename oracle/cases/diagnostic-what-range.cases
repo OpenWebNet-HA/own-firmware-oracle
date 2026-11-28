@@ -1,0 +1,79 @@
+; Diagnostic WHO 1001, 1004, 1005, 1013 and 1018: the WHAT values around 80 and 1000 a gateway
+; forwards (*1001*WHAT*74##, *1004*WHAT*31##, *1005*WHAT*31##, *1013*WHAT*0##,
+; *1018*WHAT*31##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: the same values for
+; every WHO, WHAT 79, 80, 81, 990, 999, 1000, 1001, 1002, 1010.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *1001*N*74##
+;    dropped by every gateway
+down *1001*79*74##
+down *1001*81*74##
+down *1001*990*74##
+down *1001*999*74##
+down *1001*1002*74##
+down *1001*1010*74##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1001*80*74##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1001*1000*74##
+down *1001*1001*74##
+
+; 2. *1004*N*31##
+;    dropped by every gateway
+down *1004*79*31##
+down *1004*81*31##
+down *1004*990*31##
+down *1004*999*31##
+down *1004*1002*31##
+down *1004*1010*31##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1004*80*31##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1004*1000*31##
+down *1004*1001*31##
+
+; 3. *1005*N*31##
+;    dropped by every gateway
+down *1005*79*31##
+down *1005*81*31##
+down *1005*990*31##
+down *1005*999*31##
+down *1005*1002*31##
+down *1005*1010*31##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1005*80*31##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1005*1000*31##
+down *1005*1001*31##
+
+; 4. *1013*N*0##
+;    dropped by every gateway
+down *1013*79*0##
+down *1013*81*0##
+down *1013*990*0##
+down *1013*999*0##
+down *1013*1002*0##
+down *1013*1010*0##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1013*80*0##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1013*1000*0##
+down *1013*1001*0##
+
+; 5. *1018*N*31##
+;    dropped by every gateway
+down *1018*79*31##
+down *1018*81*31##
+down *1018*990*31##
+down *1018*999*31##
+down *1018*1002*31##
+down *1018*1010*31##
+;    forwarded by 3488, F459, F460, F461, MyHomeServer1
+down *1018*80*31##
+;    forwarded by 3488, F450, F454, F459, F460, F461, MH202, MyHomeServer1
+down *1018*1000*31##
+down *1018*1001*31##

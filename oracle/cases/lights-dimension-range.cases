@@ -1,0 +1,59 @@
+; WHO 1 lighting: the DIMENSION request numbers a gateway forwards on point 31 (*#1*31*DIM##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: DIMENSION 0..30, 40,
+; 50, 51, 54, 60, 100, 113, 255, 256, 1200.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *#1*31*N##
+;    forwarded by MH202
+down *#1*31*0##
+down *#1*31*3##
+down *#1*31*10##
+down *#1*31*11##
+down *#1*31*13##
+down *#1*31*15##
+down *#1*31*16##
+down *#1*31*17##
+down *#1*31*18##
+down *#1*31*19##
+down *#1*31*20##
+down *#1*31*21##
+down *#1*31*22##
+down *#1*31*23##
+down *#1*31*24##
+down *#1*31*25##
+down *#1*31*26##
+down *#1*31*27##
+down *#1*31*28##
+down *#1*31*29##
+down *#1*31*30##
+down *#1*31*40##
+down *#1*31*50##
+down *#1*31*51##
+down *#1*31*54##
+down *#1*31*60##
+down *#1*31*100##
+down *#1*31*113##
+down *#1*31*255##
+down *#1*31*256##
+down *#1*31*1200##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, H4684, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*1##
+down *#1*31*2##
+;    forwarded by 3488, F454, F459, F460, F461, MH200, MH202, MyHomeServer1
+down *#1*31*4##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200, MH200N, MH202,
+;    MyHomeServer1
+down *#1*31*5##
+;    forwarded by 3488, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1
+down *#1*31*6##
+down *#1*31*7##
+down *#1*31*8##
+down *#1*31*9##
+;    forwarded by 3488, F454, F459, F460, F461, MH202, MyHomeServer1
+down *#1*31*12##
+;    forwarded by 3488, F460, F461, MH202, MyHomeServer1
+down *#1*31*14##

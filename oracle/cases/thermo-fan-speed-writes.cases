@@ -1,0 +1,53 @@
+; WHO 4 thermoregulation: the DIMENSION 11 (fan speed) write, on the zone (*#4*1*#11*N##) and
+; on the zone's control-unit form (*#4*#1*#11*N##).
+; Boundary probe of 2026-11-16 and 2026-11-17 on the 13 emulated gateways: every value 0..16 on
+; both WHERE forms.
+;
+; Result (stock settings, two identical runs per target, 13 targets): per group below, the
+; gateways that forward the frame to the bus or answer it on the event session, and the
+; gateways whose daemon crashes. Gateways not named drop the frame.
+
+; 1. *#4*1*#11*N##
+;    forwarded by 3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202,
+;    MyHomeServer1
+down *#4*1*#11*0##
+down *#4*1*#11*1##
+down *#4*1*#11*2##
+down *#4*1*#11*3##
+;    forwarded by F453, F453AV, MH200N
+down *#4*1*#11*4##
+down *#4*1*#11*5##
+down *#4*1*#11*6##
+down *#4*1*#11*7##
+down *#4*1*#11*8##
+down *#4*1*#11*9##
+down *#4*1*#11*10##
+down *#4*1*#11*11##
+down *#4*1*#11*12##
+down *#4*1*#11*13##
+down *#4*1*#11*14##
+down *#4*1*#11*15##
+;    dropped by every gateway
+down *#4*1*#11*16##
+
+; 2. *#4*#1*#11*N##
+;    forwarded by F453, F453AV, MH200N, MH202
+down *#4*#1*#11*0##
+down *#4*#1*#11*1##
+down *#4*#1*#11*2##
+down *#4*#1*#11*3##
+;    forwarded by F453, F453AV, MH200N
+down *#4*#1*#11*4##
+down *#4*#1*#11*5##
+down *#4*#1*#11*6##
+down *#4*#1*#11*7##
+down *#4*#1*#11*8##
+down *#4*#1*#11*9##
+down *#4*#1*#11*10##
+down *#4*#1*#11*11##
+down *#4*#1*#11*12##
+down *#4*#1*#11*13##
+down *#4*#1*#11*14##
+down *#4*#1*#11*15##
+;    dropped by every gateway
+down *#4*#1*#11*16##
