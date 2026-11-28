@@ -23,4 +23,10 @@ password_scheme:
     - "L4561N"
     - "bticino"
 
+thermo:
+  generation: "none"
+  translator: "none"
+  findings: "findings/bt-termo.md"
+  notes: "Microchip PIC18 Stereo Control Interface 4 DIN (audio/IR bus device, no WHO 4 OpenWebNet translator)."
+
 status: unpackable

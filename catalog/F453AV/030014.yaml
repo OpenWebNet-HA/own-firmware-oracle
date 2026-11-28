@@ -27,4 +27,11 @@ password_scheme:
 limits:
   max_expand_mib: 4096
 
+thermo:
+  generation: "B"
+  translator: "home/bticino/bin/bt_termo"
+  binary_sha256: "45d4c4529876dd7e64bac2153382f138005838f186a26955c7c563ec6ec6a3e0"
+  findings: "findings/bt-termo.md"
+  notes: "Gen B bt_termo (ARM OABI): %04d temp, #0#C multi-CU, holiday timer, DIM 2/3/11/15/16/17/18/20(0..13, Z#N/0#N/Z#0/0#0/#0; no plain Z)/22(bare-WHERE SIGSEGV)/32; *#4*0## polls zone 0 ($049900) due to missing zone>0 guard; WHO 1004 hooks in bt_termo (routed via bt_device)."
+
 status: unpackable

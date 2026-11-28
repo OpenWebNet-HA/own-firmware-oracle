@@ -45,4 +45,11 @@ password_scheme:
 limits:
   max_expand_mib: 4096   # uncompressed ext4 rootfs expands to ~1 GiB
 
+thermo:
+  generation: "D"
+  translator: "home/bticino/bin/bt_termo"
+  binary_sha256: "ef2054ede288b166d5c8ea1e8951316b0172691f47f36181c2bb998caa1c45c6"
+  findings: "findings/bt-termo.md"
+  notes: "Gen D bt_termo (ARM EABI5-HF): full WHO 4 parity with 3488/F460/F461 (adds DIM 29/60, actuator codes 14..22 & DIM 19 100..200, full inbound #DIM echoes, WHAT 39/41/42/45 outbound & 43/44 inbound, 4001/4002 pump calls, 2-frame C2 manual); retains WHO 1004 diagnostic hooks and sendemail."
+
 status: unpackable

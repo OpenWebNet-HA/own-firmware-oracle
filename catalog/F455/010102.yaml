@@ -24,4 +24,10 @@ password_scheme:
     - "F455"
     - "bticino"
 
+thermo:
+  generation: "bare-metal"
+  translator: "bare-metal-mcu"
+  findings: "findings/bt-termo.md"
+  notes: "Bare-metal ARM Cortex-M gateway (not Linux bt_termo; not emulated in oracle; see findings/F455/emulation-strategy.md)."
+
 status: unpackable
