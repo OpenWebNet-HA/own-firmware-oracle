@@ -1846,15 +1846,17 @@ def test_four_zone_central_4695_protocol_and_yaml(tmp_path: Path) -> None:
     assert resp.respond(b"$04990030C0\r") == []
     assert resp.respond(b"$06D1000302C2030224\r") == []
 
-    # 2. Master pump actuator DIM 20 (*#4*#0*20## -> B9 00 30 10, 99 00 31 10)
+    # 2. Master pump actuator DIM 20
+    # (*#4*#0*20## -> B9 00 30 10, *#4*0#1*20## -> 99 80 31 10)
     assert resp.respond(b"$04B9003010\r") == [
-        b"$17B7003101\r",
+        b"$17B7803101\r",
         b"$17B7813101\r",
         b"$17B7833101\r",
         b"$17B7843101\r",
     ]
-    assert resp.respond(b"$0499003110\r") == [b"$17B7003101\r"]
-    assert resp.respond(b"$0499003910\r") == []
+    assert resp.respond(b"$0499803110\r") == [b"$17B7803101\r"]
+    assert resp.respond(b"$0499003110\r") == []
+    assert resp.respond(b"$0499803910\r") == []
 
     # 3. Built-in master Zone 1 drops direct 90/91/92/93 writes (0x0E987C)
     assert resp.respond(b"$0492013024\r") == []

@@ -1096,7 +1096,7 @@ class FourZoneCentralDevice:
     def _pump_frame(self, act_id: int, *, digits: int) -> bytes:
         return encode_short_inbound(
             0xB7,
-            0x00,
+            0x80,
             0x30 | (act_id & 0x0F),
             THERMO_ACTUATOR_STATUS_BYTES.get(self.master_pump_actuators[act_id], 0x01),
             digits=digits,
@@ -1112,7 +1112,7 @@ class FourZoneCentralDevice:
                 self._pump_frame(a, digits=digits)
                 for a in sorted(self.master_pump_actuators)
             ]
-        if b0 == 0x99 and b1 == 0x00 and (b2 & 0xF0) == 0x30 and b3 == 0x10:
+        if b0 == 0x99 and b1 == 0x80 and (b2 & 0xF0) == 0x30 and b3 == 0x10:
             act_id = b2 & 0x0F
             if act_id in self.master_pump_actuators:
                 return [self._pump_frame(act_id, digits=digits)]

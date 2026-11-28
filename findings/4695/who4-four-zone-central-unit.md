@@ -10,10 +10,10 @@
     --flash-bin flat_0E0000_0FFFFF.bin \
     --out who4-4695-pcode-execution.json
   ```
-- **Stateless Fleet Suite:** [`oracle/cases/thermo-four-zone-central.cases`](../../oracle/cases/thermo-four-zone-central.cases) (`81` steps: `63` `down` + `18` `up`, `suite_sha256=fb5095d09c78753cd3909431989650e986cecce36f661356d50a2c6ceb960c0d`) -> `results/<Product>/<Version>/oracle/full/thermo-four-zone-central.tsv` (13 gateways).
+- **Stateless Fleet Suite:** [`oracle/cases/thermo-four-zone-central.cases`](../../oracle/cases/thermo-four-zone-central.cases) (`83` steps: `63` `down` + `20` `up`, `suite_sha256=cb6fc697aa434a0b048f8cee1cfad6d4c58449a849847acfb1d47bf11d44d5a9`) -> `results/<Product>/<Version>/oracle/full/thermo-four-zone-central.tsv` (13 gateways).
 - **Closed-Loop Virtual Plant Fixture & Suite:**
-  - Fixture: [`oracle/plant/fixtures/cu4695.yaml`](../../oracle/plant/fixtures/cu4695.yaml) (`plant_sha256=cc56acd2db907083f1b54e6c2aa0b26823e358ff5ad923ac2559d39adb1b0dc9`)
-  - Suite: [`oracle/plant_cases/plant-cu4695.seq`](../../oracle/plant_cases/plant-cu4695.seq) (`37` steps, `suite_sha256=7c9c0e5fdbdd51b5ea416505f83082769120cb8183d050370055adf1369b4fc7`) -> `results/<Product>/<Version>/oracle/plant-cu4695/plant-cu4695.tsv` (`F454/020051`, `MyHomeServer1/028206`, `MH200N/010108`, `MH200/020102`, `H4684/020054`, `F461/020011`).
+  - Fixture: [`oracle/plant/fixtures/cu4695.yaml`](../../oracle/plant/fixtures/cu4695.yaml) (`plant_sha256=9450834f28e11fc6a0703f8d0d44c691e7fff9b3d8931d87fbad2caa433e3c0f`)
+  - Suite: [`oracle/plant_cases/plant-cu4695.seq`](../../oracle/plant_cases/plant-cu4695.seq) (`38` steps, `suite_sha256=92fc6fb2bac6a406ab2a07402d407b1e4b992c88237423e6a2ca8323ca5db144`) -> `results/<Product>/<Version>/oracle/plant-cu4695/plant-cu4695.tsv` (`F454/020051`, `MyHomeServer1/028206`, `MH200N/010108`, `MH200/020102`, `H4684/020054`, `F461/020011`).
 
 ---
 
@@ -80,7 +80,8 @@ Note: Weekly program commands `*4*1101..1103*#0#1##`, `*4*2101..2103*#0#1##`, an
 | 21 | `*#4*1*#14*0180*3##` *(Z=1 direct)* | `ack` *(`92 01` dropped by 4695!)* | `ack` *(`92 01` dropped by 4695!)* | **`nack, silent`** | **`nack, silent`** |
 | 23 | `*#4*3*#14*0180*3##` *(Z=3 direct)* | `ack` -> Z3 `0180` | `ack` -> `evt:*#4*3*14*0180*3##` | **`nack, silent` (Gen B!)** | **`nack, silent`** |
 | 25 | `*#4*#0#1##` *(after `*4*303*3##`)* | `ack` -> `cmd` includes **`*4*22*#0#1##`** | `ack` -> `cmd`+`evt` includes **`*4*22*#0#1##`** | `ack` *(Z=3 `303` was NACKed)* | `nack` |
-| 31 | `*#4*#0*20##` | `ack` -> `cmd:*#4*100*20*0## \| 1#1 \| 3#1 \| 4#1` | `ack` -> `cmd`+`evt` `100*20*0` + `1#1`, `3#1`, `4#1` | `nack` -> `evt:*#4*100*20*0##` + `1#1`, `3#1`, `4#1` | `nack, silent` |
-| 35 | `*4*1*#0#1##` *(same season while `OFF`)* | `ack` *(`TX=[]`, stays `103` OFF!)* | **`nack`** *(`TX=[]`, stays `103` OFF!)* | `ack` *(`TX=[]`, stays `103` OFF!)* | `nack, silent` |
-| 36 | `*#4*#0#1##` *(poll after `*4*1*#0#1##`)* | `ack` -> **`cmd:*4*103*#0#1##` (still OFF!)** | `ack` -> **`cmd`+`evt` `*4*103*#0#1##` (still OFF!)** | `ack` -> **`cmd`+`evt` `*4*103*#0#1##` (still OFF!)** | `nack` |
-| 37 | `*4*3100*#0#1##` *(restore)* | `ack` (`C1 01 FF` -> `C0 11 02 04`) | **`ack`** -> **`evt:*4*1103*#0#1##`** *(wakes from OFF!)* | **`ack`** -> **`evt:*4*1103*#0#1##`** *(wakes from OFF!)* | `ack` *(dropped)* |
+| 31 | `*#4*#0*20##` | `ack` -> `cmd:*#4*0#1*20*0## \| 1#1 \| 3#1 \| 4#1` | `ack` -> `cmd`+`evt` `0#1*20*0` + `1#1`, `3#1`, `4#1` | `ack` -> `cmd:*#4*0#1*20*0## \| evt:*#4*0#1*20*0##` + `1#1`, `3#1`, `4#1` | `nack, silent` |
+| 32 | `*#4*0#1*20##` | `nack, silent` *(Gen C drops `0#N`)* | `ack` -> `cmd`+`evt` `*#4*0#1*20*0##` | `ack` -> `cmd`+`evt` `*#4*0#1*20*0##` | `nack, silent` |
+| 36 | `*4*1*#0#1##` *(same season while `OFF`)* | `ack` *(`TX=[]`, stays `103` OFF!)* | **`nack`** *(`TX=[]`, stays `103` OFF!)* | `ack` *(`TX=[]`, stays `103` OFF!)* | `nack, silent` |
+| 37 | `*#4*#0#1##` *(poll after `*4*1*#0#1##`)* | `ack` -> **`cmd:*4*103*#0#1##` (still OFF!)** | `ack` -> **`cmd`+`evt` `*4*103*#0#1##` (still OFF!)** | `ack` -> **`cmd`+`evt` `*4*103*#0#1##` (still OFF!)** | `nack` |
+| 38 | `*4*3100*#0#1##` *(restore)* | `ack` (`C1 01 FF` -> `C0 11 02 04`) | **`ack`** -> **`evt:*4*1103*#0#1##`** *(wakes from OFF!)* | **`ack`** -> **`evt:*4*1103*#0#1##`** *(wakes from OFF!)* | `ack` *(dropped)* |
